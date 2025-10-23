@@ -54,7 +54,6 @@ class EntryReaderScreen(Screen):
 
         # Entry metadata
         star_icon = "★" if self.entry.starred else "☆"
-        status_icon = "●" if self.entry.is_unread else "○"
 
         # Create scrollable container with entry content
         with VerticalScroll():

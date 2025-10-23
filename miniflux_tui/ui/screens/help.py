@@ -1,7 +1,7 @@
 """Help screen showing keyboard shortcuts."""
 
 from textual.app import ComposeResult
-from textual.containers import Container, VerticalScroll
+from textual.containers import VerticalScroll
 from textual.screen import Screen
 from textual.widgets import Header, Footer, Static
 from textual.binding import Binding
