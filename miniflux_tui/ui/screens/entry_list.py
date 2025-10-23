@@ -4,8 +4,9 @@ from typing import List, Optional
 from textual.app import ComposeResult
 from textual.containers import Container, VerticalScroll
 from textual.screen import Screen
-from textual.widgets import Header, Footer, Static, ListItem, ListView
+from textual.widgets import Header, Footer, Static, ListItem, ListView, Label
 from textual.binding import Binding
+from rich.text import Text
 
 from ...api.models import Entry
 
@@ -14,24 +15,19 @@ class EntryListItem(ListItem):
     """Custom list item for displaying a feed entry."""
 
     def __init__(self, entry: Entry, unread_color: str = "cyan", read_color: str = "gray"):
-        super().__init__()
         self.entry = entry
         self.unread_color = unread_color
         self.read_color = read_color
 
-    def compose(self) -> ComposeResult:
-        """Create child widgets."""
         # Format the entry display
-        status_icon = "●" if self.entry.is_unread else "○"
-        star_icon = "★" if self.entry.starred else "☆"
+        status_icon = "●" if entry.is_unread else "○"
+        star_icon = "★" if entry.starred else "☆"
 
-        # Determine color based on read status
-        color = self.unread_color if self.entry.is_unread else self.read_color
+        # Create the label text
+        label_text = f"{status_icon} {star_icon} {entry.feed.title} | {entry.title}"
 
-        # Format: [status] [star] Feed Name | Entry Title
-        label = f"[{color}]{status_icon} {star_icon} {self.entry.feed.title} | {self.entry.title}[/{color}]"
-
-        yield Static(label)
+        # Initialize with the label
+        super().__init__(Label(label_text))
 
 
 class EntryListScreen(Screen):
@@ -72,33 +68,54 @@ class EntryListScreen(Screen):
     def compose(self) -> ComposeResult:
         """Create child widgets."""
         yield Header()
-
-        # Create the list view
-        self.list_view = ListView()
-        yield self.list_view
+        yield ListView()
         yield Footer()
 
     def on_mount(self) -> None:
         """Called when screen is mounted."""
-        # Populate the list after the widgets are mounted
-        self._populate_list()
+        # Get reference to the ListView after it's mounted
+        self.list_view = self.query_one(ListView)
+        self.log(f"on_mount: list_view is now {self.list_view}")
+
+        # Only populate if we have entries
+        if self.entries:
+            self.log(f"on_mount: Populating with {len(self.entries)} entries")
+            self._populate_list()
+        else:
+            self.log("on_mount: No entries yet, skipping initial population")
 
     def _populate_list(self):
         """Populate the list with sorted entries."""
+        self.log(f"_populate_list called with {len(self.entries)} entries")
+        self.notify(f"DEBUG: Populating list with {len(self.entries)} entries")
+
+        # Get reference to ListView if we don't have it
         if not self.list_view:
-            return
+            try:
+                self.list_view = self.query_one(ListView)
+                self.log(f"Got list_view via query_one: {self.list_view}")
+            except Exception as e:
+                self.log(f"Failed to get list_view: {e}")
+                self.notify("DEBUG: list_view is None!", severity="error")
+                return
 
         # Clear existing items
         self.list_view.clear()
 
         # Sort entries
         sorted_entries = self._sort_entries(self.entries)
+        self.log(f"Sorted {len(sorted_entries)} entries")
 
         # Add entries to list
         if self.group_by_feed:
+            self.log("Adding grouped entries")
             self._add_grouped_entries(sorted_entries)
         else:
+            self.log("Adding flat entries")
             self._add_flat_entries(sorted_entries)
+
+        self.log(f"ListView now has {len(self.list_view.children)} children")
+        self.notify(f"DEBUG: ListView has {len(self.list_view.children)} children")
 
     def _sort_entries(self, entries: List[Entry]) -> List[Entry]:
         """Sort entries based on current sort mode."""
@@ -124,9 +141,17 @@ class EntryListScreen(Screen):
 
     def _add_flat_entries(self, entries: List[Entry]):
         """Add entries as a flat list."""
-        for entry in entries:
-            item = EntryListItem(entry, self.unread_color, self.read_color)
-            self.list_view.append(item)
+        self.log(f"_add_flat_entries: Adding {len(entries)} entries")
+        for i, entry in enumerate(entries):
+            try:
+                item = EntryListItem(entry, self.unread_color, self.read_color)
+                self.list_view.append(item)
+                if i == 0:
+                    self.log(f"First entry added: {entry.title[:50]}")
+            except Exception as e:
+                self.log(f"Error adding entry {i}: {e}")
+                import traceback
+                self.log(traceback.format_exc())
 
     def _add_grouped_entries(self, entries: List[Entry]):
         """Add entries grouped by feed."""
@@ -137,9 +162,8 @@ class EntryListScreen(Screen):
             if current_feed != entry.feed.title:
                 current_feed = entry.feed.title
                 # Add a header item
-                header = ListItem()
-                header_static = Static(f"[bold cyan]━━ {current_feed} ━━[/bold cyan]")
-                header.mount(header_static)
+                header_label = Label(f"━━ {current_feed} ━━", classes="feed-header")
+                header = ListItem(header_label)
                 self.list_view.append(header)
 
             # Add the entry
@@ -158,39 +182,42 @@ class EntryListScreen(Screen):
 
     def action_select_entry(self):
         """Select and open the current entry."""
-        if not self.list_view or self.list_view.index is None:
+        if not self.list_view:
             return
 
-        item = self.list_view.children[self.list_view.index]
-        if isinstance(item, EntryListItem):
+        # Get the highlighted item
+        highlighted = self.list_view.highlighted_child
+        if highlighted and isinstance(highlighted, EntryListItem):
             # Open entry reader screen
             from ..app import MinifluxTUI
             if isinstance(self.app, MinifluxTUI):
-                self.app.push_entry_reader(item.entry)
+                self.app.push_entry_reader(highlighted.entry)
+            else:
+                self.notify("Cannot open entry: app is not MinifluxTUI", severity="error")
 
     def action_toggle_read(self):
         """Toggle read/unread status of current entry."""
-        if not self.list_view or self.list_view.index is None:
+        if not self.list_view:
             return
 
-        item = self.list_view.children[self.list_view.index]
-        if isinstance(item, EntryListItem):
+        highlighted = self.list_view.highlighted_child
+        if highlighted and isinstance(highlighted, EntryListItem):
             # Toggle the status
-            new_status = "read" if item.entry.is_unread else "unread"
-            item.entry.status = new_status
+            new_status = "read" if highlighted.entry.is_unread else "unread"
+            highlighted.entry.status = new_status
             # TODO: Call API to update status
             # Refresh display
             self._populate_list()
 
     def action_toggle_star(self):
         """Toggle star status of current entry."""
-        if not self.list_view or self.list_view.index is None:
+        if not self.list_view:
             return
 
-        item = self.list_view.children[self.list_view.index]
-        if isinstance(item, EntryListItem):
+        highlighted = self.list_view.highlighted_child
+        if highlighted and isinstance(highlighted, EntryListItem):
             # Toggle the star
-            item.entry.starred = not item.entry.starred
+            highlighted.entry.starred = not highlighted.entry.starred
             # TODO: Call API to update star status
             # Refresh display
             self._populate_list()

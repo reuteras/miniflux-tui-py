@@ -138,10 +138,17 @@ class MinifluxTUI(App):
 
             # Update the entry list screen if it exists
             if self.is_screen_installed("entry_list"):
+                self.log("entry_list screen is installed")
                 screen = self.get_screen("entry_list")
+                self.log(f"Got screen: {type(screen)}")
                 if isinstance(screen, EntryListScreen):
+                    self.log(f"Updating screen with {len(self.entries)} entries")
                     screen.entries = self.entries
                     screen._populate_list()
+                else:
+                    self.log("Screen is not EntryListScreen!")
+            else:
+                self.log("entry_list screen is NOT installed!")
 
             # Show message if no entries
             if len(self.entries) == 0:

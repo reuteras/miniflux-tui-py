@@ -21,7 +21,7 @@ classifiers = [
 
 dependencies = [
     "textual>=0.82.0",
-    "httpx>=0.27.0",
+    "miniflux>=0.0.11",
     "html2text>=2024.2.26",
     "tomli>=2.0.1; python_version < '3.11'",
 ]

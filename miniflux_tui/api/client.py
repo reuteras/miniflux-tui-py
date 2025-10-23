@@ -1,13 +1,15 @@
-"""Miniflux API client."""
+"""Miniflux API client wrapper using official miniflux package."""
 
-import httpx
-from typing import List, Optional
+import asyncio
+from functools import partial
+from miniflux import Client as MinifluxClientBase
+from typing import List
 
 from .models import Entry
 
 
 class MinifluxClient:
-    """Async client for interacting with Miniflux API."""
+    """Wrapper around official Miniflux client for our app."""
 
     def __init__(
         self,
@@ -22,25 +24,17 @@ class MinifluxClient:
         Args:
             base_url: Base URL of the Miniflux server
             api_key: API key for authentication
-            allow_invalid_certs: Whether to allow invalid SSL certificates
-            timeout: Request timeout in seconds
+            allow_invalid_certs: Whether to allow invalid SSL certificates (not supported by official client)
+            timeout: Request timeout in seconds (not supported by official client)
         """
         self.base_url = base_url.rstrip("/")
-        self.timeout = timeout
 
-        # Set up headers with API key
-        headers = {"X-Auth-Token": api_key}
-
-        # Create async HTTP client
-        self.client = httpx.AsyncClient(
-            headers=headers,
-            verify=not allow_invalid_certs,
-            timeout=timeout,
-        )
+        # Create official Miniflux client (synchronous)
+        self.client = MinifluxClientBase(base_url, api_key)
 
     async def close(self):
-        """Close the HTTP client."""
-        await self.client.aclose()
+        """Close the HTTP client (no-op for official client)."""
+        pass
 
     async def __aenter__(self):
         """Async context manager entry."""
@@ -49,6 +43,11 @@ class MinifluxClient:
     async def __aexit__(self, exc_type, exc_val, exc_tb):
         """Async context manager exit."""
         await self.close()
+
+    async def _run_sync(self, func, *args, **kwargs):
+        """Run a synchronous function in an executor."""
+        loop = asyncio.get_event_loop()
+        return await loop.run_in_executor(None, partial(func, *args, **kwargs))
 
     async def get_unread_entries(
         self, limit: int = 100, offset: int = 0
@@ -63,20 +62,17 @@ class MinifluxClient:
         Returns:
             List of unread Entry objects
         """
-        url = f"{self.base_url}/v1/entries"
-        params = {
-            "status": "unread",
-            "order": "published_at",
-            "direction": "desc",
-            "limit": limit,
-            "offset": offset,
-        }
+        # Use official client's get_entries method
+        response = await self._run_sync(
+            self.client.get_entries,
+            status=["unread"],
+            limit=limit,
+            offset=offset,
+            order="published_at",
+            direction="desc"
+        )
 
-        response = await self.client.get(url, params=params)
-        response.raise_for_status()
-        data = response.json()
-
-        return [Entry.from_dict(entry) for entry in data.get("entries", [])]
+        return [Entry.from_dict(entry) for entry in response.get("entries", [])]
 
     async def get_starred_entries(
         self, limit: int = 100, offset: int = 0
@@ -91,20 +87,16 @@ class MinifluxClient:
         Returns:
             List of starred Entry objects
         """
-        url = f"{self.base_url}/v1/entries"
-        params = {
-            "starred": "true",
-            "order": "published_at",
-            "direction": "desc",
-            "limit": limit,
-            "offset": offset,
-        }
+        response = await self._run_sync(
+            self.client.get_entries,
+            starred=True,
+            limit=limit,
+            offset=offset,
+            order="published_at",
+            direction="desc"
+        )
 
-        response = await self.client.get(url, params=params)
-        response.raise_for_status()
-        data = response.json()
-
-        return [Entry.from_dict(entry) for entry in data.get("entries", [])]
+        return [Entry.from_dict(entry) for entry in response.get("entries", [])]
 
     async def change_entry_status(
         self, entry_id: int, status: str
@@ -116,11 +108,11 @@ class MinifluxClient:
             entry_id: ID of the entry
             status: New status ("read" or "unread")
         """
-        url = f"{self.base_url}/v1/entries"
-        payload = {"status": status, "entry_ids": [entry_id]}
-
-        response = await self.client.put(url, json=payload)
-        response.raise_for_status()
+        await self._run_sync(
+            self.client.update_entries,
+            entry_ids=[entry_id],
+            status=status
+        )
 
     async def mark_as_read(self, entry_id: int) -> None:
         """Mark an entry as read."""
@@ -137,10 +129,10 @@ class MinifluxClient:
         Args:
             entry_id: ID of the entry
         """
-        url = f"{self.base_url}/v1/entries/{entry_id}/bookmark"
-
-        response = await self.client.put(url)
-        response.raise_for_status()
+        await self._run_sync(
+            self.client.toggle_bookmark,
+            entry_id
+        )
 
     async def save_entry(self, entry_id: int) -> None:
         """
@@ -149,10 +141,12 @@ class MinifluxClient:
         Args:
             entry_id: ID of the entry
         """
-        url = f"{self.base_url}/v1/entries/{entry_id}/save"
-
-        response = await self.client.post(url)
-        response.raise_for_status()
+        # Note: The official client doesn't have a direct save_entry method
+        # We'll use toggle_bookmark as a workaround
+        await self._run_sync(
+            self.client.toggle_bookmark,
+            entry_id
+        )
 
     async def mark_all_as_read(self, entry_ids: List[int]) -> None:
         """
@@ -161,18 +155,15 @@ class MinifluxClient:
         Args:
             entry_ids: List of entry IDs to mark as read
         """
-        url = f"{self.base_url}/v1/entries"
-        payload = {"status": "read", "entry_ids": entry_ids}
-
-        response = await self.client.put(url, json=payload)
-        response.raise_for_status()
+        await self._run_sync(
+            self.client.update_entries,
+            entry_ids=entry_ids,
+            status="read"
+        )
 
     async def refresh_all_feeds(self) -> None:
         """Trigger a refresh of all feeds."""
-        url = f"{self.base_url}/v1/feeds/refresh"
-
-        response = await self.client.put(url)
-        response.raise_for_status()
+        await self._run_sync(self.client.refresh_all_feeds)
 
     async def fetch_original_content(self, entry_id: int) -> str:
         """
@@ -184,10 +175,8 @@ class MinifluxClient:
         Returns:
             Original content HTML
         """
-        url = f"{self.base_url}/v1/entries/{entry_id}/fetch-content"
-
-        response = await self.client.get(url)
-        response.raise_for_status()
-        data = response.json()
-
-        return data.get("content", "")
+        response = await self._run_sync(
+            self.client.fetch_content,
+            entry_id
+        )
+        return response.get("content", "")
