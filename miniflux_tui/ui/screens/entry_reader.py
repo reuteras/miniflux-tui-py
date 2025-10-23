@@ -179,15 +179,38 @@ class EntryReaderScreen(Screen):
 
     def refresh_screen(self):
         """Refresh the screen with current entry."""
-        # Remove all children and re-compose
-        self.query("*").remove()
+        # Instead of removing and re-mounting, just update the content widgets
+        scroll = self.query_one(VerticalScroll)
 
-        # Re-compose with new entry
-        for widget in self.compose():
-            self.mount(widget)
+        # Remove only the content inside the scroll container
+        for child in scroll.children:
+            child.remove()
 
-        # Reset scroll position
-        self.scroll_container = self.query_one(VerticalScroll)
+        # Entry metadata
+        star_icon = "★" if self.entry.starred else "☆"
+
+        # Re-mount the content
+        scroll.mount(
+            Static(
+                f"[bold cyan]{star_icon} {self.entry.title}[/bold cyan]",
+                classes="entry-title",
+            )
+        )
+        scroll.mount(
+            Static(
+                f"[dim]{self.entry.feed.title} | {self.entry.published_at.strftime('%Y-%m-%d %H:%M')}[/dim]",
+                classes="entry-meta",
+            )
+        )
+        scroll.mount(Static(f"[dim]{self.entry.url}[/dim]", classes="entry-url"))
+        scroll.mount(Static("─" * 80, classes="separator"))
+
+        # Convert HTML content to markdown
+        content = self._html_to_markdown(self.entry.content)
+        scroll.mount(Markdown(content, classes="entry-content"))
+
+        # Scroll to top
+        scroll.scroll_home(animate=False)
 
         # Mark as read
         if self.entry.is_unread:
