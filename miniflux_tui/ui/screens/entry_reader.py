@@ -47,14 +47,12 @@ class EntryReaderScreen(Screen):
         """Create child widgets."""
         yield Header()
 
-        # Create scrollable container
-        with VerticalScroll() as scroll:
-            self.scroll_container = scroll
+        # Entry metadata
+        star_icon = "★" if self.entry.starred else "☆"
+        status_icon = "●" if self.entry.is_unread else "○"
 
-            # Entry metadata
-            star_icon = "★" if self.entry.starred else "☆"
-            status_icon = "●" if self.entry.is_unread else "○"
-
+        # Create scrollable container with entry content
+        with VerticalScroll():
             # Title and metadata
             yield Static(
                 f"[bold cyan]{star_icon} {self.entry.title}[/bold cyan]",
@@ -73,6 +71,16 @@ class EntryReaderScreen(Screen):
 
         yield Footer()
 
+    def on_mount(self) -> None:
+        """Called when screen is mounted."""
+        # Get reference to the scroll container after mount
+        self.scroll_container = self.query_one(VerticalScroll)
+
+        # Mark entry as read when opened
+        if self.entry.is_unread:
+            self.entry.status = "read"
+            # TODO: Call API to mark as read
+
     def _html_to_markdown(self, html_content: str) -> str:
         """Convert HTML content to markdown."""
         h = html2text.HTML2Text()
@@ -82,32 +90,29 @@ class EntryReaderScreen(Screen):
         h.body_width = 0  # No wrapping
         return h.handle(html_content)
 
-    def on_mount(self) -> None:
-        """Called when screen is mounted."""
-        # Mark entry as read when opened
-        if self.entry.is_unread:
-            self.entry.status = "read"
-            # TODO: Call API to mark as read
-
     def action_scroll_down(self):
         """Scroll down one line."""
-        if self.scroll_container:
-            self.scroll_container.scroll_down()
+        if not self.scroll_container:
+            self.scroll_container = self.query_one(VerticalScroll)
+        self.scroll_container.scroll_down()
 
     def action_scroll_up(self):
         """Scroll up one line."""
-        if self.scroll_container:
-            self.scroll_container.scroll_up()
+        if not self.scroll_container:
+            self.scroll_container = self.query_one(VerticalScroll)
+        self.scroll_container.scroll_up()
 
     def action_page_down(self):
         """Scroll down one page."""
-        if self.scroll_container:
-            self.scroll_container.scroll_page_down()
+        if not self.scroll_container:
+            self.scroll_container = self.query_one(VerticalScroll)
+        self.scroll_container.scroll_page_down()
 
     def action_page_up(self):
         """Scroll up one page."""
-        if self.scroll_container:
-            self.scroll_container.scroll_page_up()
+        if not self.scroll_container:
+            self.scroll_container = self.query_one(VerticalScroll)
+        self.scroll_container.scroll_page_up()
 
     def action_back(self):
         """Return to entry list."""
