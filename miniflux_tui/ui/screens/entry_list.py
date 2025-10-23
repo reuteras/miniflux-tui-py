@@ -5,7 +5,6 @@ from textual.app import ComposeResult
 from textual.containers import Container, VerticalScroll
 from textual.screen import Screen
 from textual.widgets import Header, Footer, Static, ListItem, ListView, Label
-from textual.widgets.list_view import ListView as ListViewWidget
 from textual.binding import Binding
 from rich.text import Text
 
