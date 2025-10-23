@@ -2,13 +2,8 @@
 
 import os
 import sys
+import tomllib
 from pathlib import Path
-from typing import Optional
-
-if sys.version_info >= (3, 11):
-    import tomllib
-else:
-    import tomli as tomllib
 
 
 class Config:
@@ -48,16 +43,19 @@ class Config:
             ValueError: If config file is invalid
         """
         if not path.exists():
-            raise FileNotFoundError(f"Config file not found: {path}")
+            msg = f"Config file not found: {path}"
+            raise FileNotFoundError(msg)
 
-        with open(path, "rb") as f:
+        with Path.open(path, "rb") as f:
             data = tomllib.load(f)
 
         # Required fields
         if "server_url" not in data:
-            raise ValueError("Missing required field: server_url")
+            msg = "Missing required field: server_url"
+            raise ValueError(msg)
         if "api_key" not in data:
-            raise ValueError("Missing required field: api_key")
+            msg = "Missing required field: api_key"
+            raise ValueError(msg)
 
         # Theme settings
         theme = data.get("theme", {})
@@ -149,13 +147,13 @@ default_sort = "date"
 default_group_by_feed = false
 """
 
-    with open(config_path, "w") as f:
+    with Path.open(config_path, "w") as f:
         f.write(default_config)
 
     return config_path
 
 
-def load_config() -> Optional[Config]:
+def load_config() -> Config | None:
     """
     Load configuration from the default location.
 

@@ -1,20 +1,23 @@
 """Entry reader screen for viewing feed entry content."""
 
-import html2text
+import traceback
 import webbrowser
+
+import html2text
 from textual.app import ComposeResult
+from textual.binding import Binding
 from textual.containers import VerticalScroll
 from textual.screen import Screen
-from textual.widgets import Header, Footer, Static, Markdown
-from textual.binding import Binding
+from textual.widgets import Footer, Header, Markdown, Static
 
-from ...api.models import Entry
+from miniflux_tui.api.models import Entry
+from miniflux_tui.ui.app import MinifluxTUI
 
 
 class EntryReaderScreen(Screen):
     """Screen for reading a single feed entry."""
 
-    BINDINGS = [
+    BINDINGS = [  # noqa: RUF012
         Binding("j", "scroll_down", "Scroll Down", show=False),
         Binding("k", "scroll_up", "Scroll Up", show=False),
         Binding("J", "next_entry", "Next Entry", show=True),
@@ -34,7 +37,7 @@ class EntryReaderScreen(Screen):
     def __init__(
         self,
         entry: Entry,
-        entry_list: list = None,
+        entry_list: list | None = None,
         current_index: int = 0,
         unread_color: str = "cyan",
         read_color: str = "gray",
@@ -86,15 +89,12 @@ class EntryReaderScreen(Screen):
 
     async def _mark_entry_as_read(self):
         """Mark the current entry as read via API."""
-        from ..app import MinifluxTUI
-
         if isinstance(self.app, MinifluxTUI) and self.app.client:
             try:
                 await self.app.client.mark_as_read(self.entry.id)
                 self.entry.status = "read"
             except Exception as e:
                 self.log(f"Error marking as read: {e}")
-                import traceback
                 self.log(traceback.format_exc())
                 self.notify(f"Error marking as read: {e}", severity="error")
 
@@ -137,7 +137,6 @@ class EntryReaderScreen(Screen):
 
     async def action_mark_unread(self):
         """Mark entry as unread."""
-        from ..app import MinifluxTUI
         if isinstance(self.app, MinifluxTUI) and self.app.client:
             try:
                 await self.app.client.mark_as_unread(self.entry.id)
@@ -148,7 +147,6 @@ class EntryReaderScreen(Screen):
 
     async def action_toggle_star(self):
         """Toggle star status."""
-        from ..app import MinifluxTUI
         if isinstance(self.app, MinifluxTUI) and self.app.client:
             try:
                 await self.app.client.toggle_starred(self.entry.id)
@@ -171,7 +169,6 @@ class EntryReaderScreen(Screen):
 
     async def action_fetch_original(self):
         """Fetch original content from source."""
-        from ..app import MinifluxTUI
         if isinstance(self.app, MinifluxTUI) and self.app.client:
             try:
                 self.notify("Fetching original content...")
@@ -191,7 +188,6 @@ class EntryReaderScreen(Screen):
                     self.notify("No original content available", severity="warning")
             except Exception as e:
                 self.log(f"Error fetching original content: {e}")
-                import traceback
                 self.log(traceback.format_exc())
                 self.notify(f"Error fetching content: {e}", severity="error")
 

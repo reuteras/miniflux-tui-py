@@ -2,8 +2,8 @@
 
 import asyncio
 from functools import partial
+
 from miniflux import Client as MinifluxClientBase
-from typing import List
 
 from .models import Entry
 
@@ -33,9 +33,14 @@ class MinifluxClient:
         # The official client expects api_key as a keyword argument
         self.client = MinifluxClientBase(base_url, api_key=api_key)
 
+        # Allow invalid certs
+        self.allow_invalid_certs: bool = allow_invalid_certs
+
+        # Timeout for network calls
+        self.timeout: float = timeout
+
     async def close(self):
         """Close the HTTP client (no-op for official client)."""
-        pass
 
     async def __aenter__(self):
         """Async context manager entry."""
@@ -52,7 +57,7 @@ class MinifluxClient:
 
     async def get_unread_entries(
         self, limit: int = 100, offset: int = 0
-    ) -> List[Entry]:
+    ) -> list[Entry]:
         """
         Get unread feed entries.
 
@@ -77,7 +82,7 @@ class MinifluxClient:
 
     async def get_starred_entries(
         self, limit: int = 100, offset: int = 0
-    ) -> List[Entry]:
+    ) -> list[Entry]:
         """
         Get starred feed entries.
 
@@ -149,7 +154,7 @@ class MinifluxClient:
             entry_id
         )
 
-    async def mark_all_as_read(self, entry_ids: List[int]) -> None:
+    async def mark_all_as_read(self, entry_ids: list[int]) -> None:
         """
         Mark multiple entries as read.
 

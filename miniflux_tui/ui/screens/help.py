@@ -1,16 +1,16 @@
 """Help screen showing keyboard shortcuts."""
 
 from textual.app import ComposeResult
+from textual.binding import Binding
 from textual.containers import VerticalScroll
 from textual.screen import Screen
-from textual.widgets import Header, Footer, Static
-from textual.binding import Binding
+from textual.widgets import Footer, Header, Static
 
 
 class HelpScreen(Screen):
     """Screen displaying keyboard shortcuts and help information."""
 
-    BINDINGS = [
+    BINDINGS = [  # noqa: RUF012
         Binding("escape", "close", "Close"),
         Binding("q", "close", "Close"),
     ]

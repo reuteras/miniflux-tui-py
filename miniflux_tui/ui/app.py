@@ -1,11 +1,13 @@
 """Main TUI application."""
+import traceback
 
 from textual.app import App
 from textual.driver import Driver
 
-from ..api.client import MinifluxClient
-from ..api.models import Entry
-from ..config import Config
+from miniflux_tui.api.client import MinifluxClient
+from miniflux_tui.api.models import Entry
+from miniflux_tui.config import Config
+
 from .screens.entry_list import EntryListScreen
 from .screens.entry_reader import EntryReaderScreen
 from .screens.help import HelpScreen
@@ -155,13 +157,12 @@ class MinifluxTUI(App):
                 self.notify(f"No {view} entries found", severity="warning")
 
         except Exception as e:
-            import traceback
             error_details = traceback.format_exc()
             self.notify(f"Error loading entries: {e}", severity="error")
             # Log full error for debugging
             self.log(f"Full error:\n{error_details}")
 
-    def push_entry_reader(self, entry: Entry, entry_list: list = None, current_index: int = 0) -> None:
+    def push_entry_reader(self, entry: Entry, entry_list: list | None = None, current_index: int = 0) -> None:
         """
         Push entry reader screen for a specific entry.
 

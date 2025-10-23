@@ -2,7 +2,6 @@
 
 from dataclasses import dataclass
 from datetime import datetime
-from typing import Optional
 
 
 @dataclass
@@ -38,7 +37,7 @@ class Entry:
     status: str  # "read" or "unread"
     starred: bool
     published_at: datetime
-    original_content: Optional[str] = None
+    original_content: str | None = None
 
     @classmethod
     def from_dict(cls, data: dict) -> "Entry":

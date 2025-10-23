@@ -1,9 +1,12 @@
 """Main entry point for Miniflux TUI application."""
 
-import sys
 import argparse
+import asyncio
+import sys
+import traceback
 
-from .config import load_config, create_default_config, get_config_file_path
+from .config import create_default_config, get_config_file_path, load_config
+from .ui.app import run_tui
 
 
 def main():
@@ -72,20 +75,19 @@ def main():
         return 1
 
     # Start the TUI application
-    import asyncio
-    from .ui.app import run_tui
 
     try:
         asyncio.run(run_tui(config))
-        return 0
+        error_code = 0
     except KeyboardInterrupt:
         print("\nGoodbye!")
-        return 0
+        error_code = 0
     except Exception as e:
         print(f"\nError running application: {e}")
-        import traceback
         traceback.print_exc()
-        return 1
+        error_code = 1
+
+    return error_code
 
 
 if __name__ == "__main__":

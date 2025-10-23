@@ -1,12 +1,13 @@
 """Entry list screen with feed sorting capabilities."""
 
-from typing import List, Optional
-from textual.app import ComposeResult
-from textual.screen import Screen
-from textual.widgets import Header, Footer, ListItem, ListView, Label
-from textual.binding import Binding
 
-from ...api.models import Entry
+from textual.app import ComposeResult
+from textual.binding import Binding
+from textual.screen import Screen
+from textual.widgets import Footer, Header, Label, ListItem, ListView
+
+from miniflux_tui.api.models import Entry
+from miniflux_tui.ui.app import MinifluxTUI
 
 
 class EntryListItem(ListItem):
@@ -34,7 +35,7 @@ class EntryListItem(ListItem):
 class EntryListScreen(Screen):
     """Screen for displaying a list of feed entries with sorting."""
 
-    BINDINGS = [
+    BINDINGS = [  # noqa: RUF012
         Binding("j", "cursor_down", "Down", show=False),
         Binding("k", "cursor_up", "Up", show=False),
         Binding("enter", "select_entry", "Open Entry"),
@@ -51,7 +52,7 @@ class EntryListScreen(Screen):
 
     def __init__(
         self,
-        entries: List[Entry],
+        entries: list[Entry],
         unread_color: str = "cyan",
         read_color: str = "gray",
         default_sort: str = "date",
@@ -64,7 +65,7 @@ class EntryListScreen(Screen):
         self.read_color = read_color
         self.current_sort = default_sort
         self.group_by_feed = group_by_feed
-        self.list_view: Optional[ListView] = None
+        self.list_view: ListView | None = None
 
     def compose(self) -> ComposeResult:
         """Create child widgets."""
@@ -103,7 +104,6 @@ class EntryListScreen(Screen):
                     break
 
             # Open entry reader screen with navigation context
-            from ..app import MinifluxTUI
             if isinstance(self.app, MinifluxTUI):
                 self.app.push_entry_reader(
                     entry=event.item.entry,
@@ -140,7 +140,7 @@ class EntryListScreen(Screen):
         else:
             self._add_flat_entries(sorted_entries)
 
-    def _sort_entries(self, entries: List[Entry]) -> List[Entry]:
+    def _sort_entries(self, entries: list[Entry]) -> list[Entry]:
         """Sort entries based on current sort mode."""
         if self.current_sort == "feed":
             # Sort by feed name, then by date
@@ -149,26 +149,25 @@ class EntryListScreen(Screen):
                 key=lambda e: (e.feed.title.lower(), e.published_at),
                 reverse=True,
             )
-        elif self.current_sort == "date":
+        if self.current_sort == "date":
             # Sort by published date
             return sorted(entries, key=lambda e: e.published_at, reverse=True)
-        elif self.current_sort == "status":
+        if self.current_sort == "status":
             # Sort by status (unread first), then by date
             return sorted(
                 entries,
                 key=lambda e: (e.is_read, e.published_at),
                 reverse=False,
             )
-        else:
-            return entries
+        return entries
 
-    def _add_flat_entries(self, entries: List[Entry]):
+    def _add_flat_entries(self, entries: list[Entry]):
         """Add entries as a flat list."""
         for entry in entries:
             item = EntryListItem(entry, self.unread_color, self.read_color)
             self.list_view.append(item)
 
-    def _add_grouped_entries(self, entries: List[Entry]):
+    def _add_grouped_entries(self, entries: list[Entry]):
         """Add entries grouped by feed."""
         current_feed = None
 
@@ -241,7 +240,6 @@ class EntryListScreen(Screen):
 
     async def action_refresh(self):
         """Refresh the entry list from API."""
-        from ..app import MinifluxTUI
         if isinstance(self.app, MinifluxTUI):
             self.notify("Refreshing entries...")
             # Reload entries from API (this will fetch only unread entries)
@@ -251,12 +249,10 @@ class EntryListScreen(Screen):
     def action_show_unread(self):
         """Show only unread entries."""
         # TODO: Filter to show only unread
-        pass
 
     def action_show_starred(self):
         """Show only starred entries."""
         # TODO: Filter to show only starred
-        pass
 
     def action_show_help(self):
         """Show keyboard help."""
