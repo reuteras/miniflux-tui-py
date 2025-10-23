@@ -234,10 +234,14 @@ class EntryListScreen(Screen):
         self.group_by_feed = not self.group_by_feed
         self._populate_list()
 
-    def action_refresh(self):
-        """Refresh the entry list."""
-        # TODO: Call API to refresh entries
-        self.notify("Refreshing entries...")
+    async def action_refresh(self):
+        """Refresh the entry list from API."""
+        from ..app import MinifluxTUI
+        if isinstance(self.app, MinifluxTUI):
+            self.notify("Refreshing entries...")
+            # Reload entries from API (this will fetch only unread entries)
+            await self.app.load_entries(self.app.current_view)
+            self.notify("Entries refreshed")
 
     def action_show_unread(self):
         """Show only unread entries."""

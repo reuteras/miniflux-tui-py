@@ -170,10 +170,31 @@ class EntryReaderScreen(Screen):
         except Exception as e:
             self.notify(f"Error opening browser: {e}", severity="error")
 
-    def action_fetch_original(self):
+    async def action_fetch_original(self):
         """Fetch original content from source."""
-        # TODO: Call API to fetch original content
-        self.notify("Fetching original content...")
+        from ..app import MinifluxTUI
+        if isinstance(self.app, MinifluxTUI) and self.app.client:
+            try:
+                self.notify("Fetching original content...")
+
+                # Fetch original content from API
+                original_content = await self.app.client.fetch_original_content(self.entry.id)
+
+                if original_content:
+                    # Update the entry's content
+                    self.entry.content = original_content
+
+                    # Refresh the screen to show new content
+                    await self.refresh_screen()
+
+                    self.notify("Original content loaded")
+                else:
+                    self.notify("No original content available", severity="warning")
+            except Exception as e:
+                self.log(f"Error fetching original content: {e}")
+                import traceback
+                self.log(traceback.format_exc())
+                self.notify(f"Error fetching content: {e}", severity="error")
 
     async def action_next_entry(self):
         """Navigate to next entry."""
