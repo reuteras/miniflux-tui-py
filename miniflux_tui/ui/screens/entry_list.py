@@ -5,6 +5,7 @@ from textual.app import ComposeResult
 from textual.containers import Container, VerticalScroll
 from textual.screen import Screen
 from textual.widgets import Header, Footer, Static, ListItem, ListView, Label
+from textual.widgets.list_view import ListView as ListViewWidget
 from textual.binding import Binding
 from rich.text import Text
 
@@ -83,6 +84,22 @@ class EntryListScreen(Screen):
             self._populate_list()
         else:
             self.log("on_mount: No entries yet, skipping initial population")
+
+    def on_list_view_selected(self, event: ListView.Selected) -> None:
+        """Handle ListView selection (Enter key)."""
+        self.notify("DEBUG: ListView.Selected event received")
+
+        # Get the selected item
+        if event.item and isinstance(event.item, EntryListItem):
+            self.notify(f"DEBUG: Opening entry: {event.item.entry.title[:30]}")
+            # Open entry reader screen
+            from ..app import MinifluxTUI
+            if isinstance(self.app, MinifluxTUI):
+                self.app.push_entry_reader(event.item.entry)
+            else:
+                self.notify("Cannot open entry: app is not MinifluxTUI", severity="error")
+        else:
+            self.notify(f"DEBUG: Selected item is not EntryListItem: {type(event.item)}", severity="warning")
 
     def _populate_list(self):
         """Populate the list with sorted entries."""
@@ -182,18 +199,26 @@ class EntryListScreen(Screen):
 
     def action_select_entry(self):
         """Select and open the current entry."""
+        self.notify("DEBUG: select_entry called")
+
         if not self.list_view:
+            self.notify("DEBUG: list_view is None!", severity="error")
             return
 
         # Get the highlighted item
         highlighted = self.list_view.highlighted_child
+        self.notify(f"DEBUG: highlighted = {highlighted}, type = {type(highlighted)}")
+
         if highlighted and isinstance(highlighted, EntryListItem):
+            self.notify(f"DEBUG: Opening entry: {highlighted.entry.title[:30]}")
             # Open entry reader screen
             from ..app import MinifluxTUI
             if isinstance(self.app, MinifluxTUI):
                 self.app.push_entry_reader(highlighted.entry)
             else:
                 self.notify("Cannot open entry: app is not MinifluxTUI", severity="error")
+        else:
+            self.notify(f"DEBUG: highlighted is not EntryListItem! It's {type(highlighted)}", severity="warning")
 
     def action_toggle_read(self):
         """Toggle read/unread status of current entry."""
