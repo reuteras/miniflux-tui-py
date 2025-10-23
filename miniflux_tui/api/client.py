@@ -177,7 +177,7 @@ class MinifluxClient:
             Original content HTML
         """
         response = await self._run_sync(
-            self.client.fetch_content,
+            self.client.fetch_entry_content,
             entry_id
         )
         return response.get("content", "")
