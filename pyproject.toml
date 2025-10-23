@@ -51,8 +51,7 @@ packages = ["miniflux_tui"]
 
 [dependency-groups]
 dev = [
-    "pytest>=8.0.0",
-    "pytest-asyncio>=0.23.0",
+    "pylint>=4.0.2",
     "ruff>=0.6.0",
 ]
 
