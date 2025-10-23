@@ -30,7 +30,8 @@ class MinifluxClient:
         self.base_url = base_url.rstrip("/")
 
         # Create official Miniflux client (synchronous)
-        self.client = MinifluxClientBase(base_url, api_key)
+        # The official client expects api_key as a keyword argument
+        self.client = MinifluxClientBase(base_url, api_key=api_key)
 
     async def close(self):
         """Close the HTTP client (no-op for official client)."""
