@@ -1,5 +1,6 @@
 """Entry list screen with feed sorting capabilities."""
 
+from typing import TYPE_CHECKING
 
 from textual.app import ComposeResult
 from textual.binding import Binding
@@ -7,7 +8,9 @@ from textual.screen import Screen
 from textual.widgets import Footer, Header, Label, ListItem, ListView
 
 from miniflux_tui.api.models import Entry
-from miniflux_tui.ui.app import MinifluxTUI
+
+if TYPE_CHECKING:
+    pass
 
 
 class EntryListItem(ListItem):
@@ -61,11 +64,13 @@ class EntryListScreen(Screen):
     ):
         super().__init__(**kwargs)
         self.entries = entries
+        self.sorted_entries = entries.copy()  # Store sorted entries for navigation
         self.unread_color = unread_color
         self.read_color = read_color
         self.current_sort = default_sort
         self.group_by_feed = group_by_feed
         self.list_view: ListView | None = None
+        self.displayed_items: list[ListItem] = []  # Track items in display order
 
     def compose(self) -> ComposeResult:
         """Create child widgets."""
@@ -96,18 +101,18 @@ class EntryListScreen(Screen):
         """Handle ListView selection (Enter key)."""
         # Get the selected item
         if event.item and isinstance(event.item, EntryListItem):
-            # Find the index of this entry in the current entry list
+            # Find the index of this entry in the sorted entry list
             entry_index = 0
-            for i, entry in enumerate(self.entries):
+            for i, entry in enumerate(self.sorted_entries):
                 if entry.id == event.item.entry.id:
                     entry_index = i
                     break
 
             # Open entry reader screen with navigation context
-            if isinstance(self.app, MinifluxTUI):
+            if isinstance(self.app, self.app.__class__) and hasattr(self.app, "push_entry_reader"):
                 self.app.push_entry_reader(
                     entry=event.item.entry,
-                    entry_list=self.entries,
+                    entry_list=self.sorted_entries,
                     current_index=entry_index
                 )
 
@@ -129,10 +134,13 @@ class EntryListScreen(Screen):
             sorted_entries = sorted(
                 self.entries,
                 key=lambda e: (e.feed.title.lower(), e.published_at),
-                reverse=True
+                reverse=False
             )
         else:
             sorted_entries = self._sort_entries(self.entries)
+
+        # Store sorted entries for proper navigation order
+        self.sorted_entries = sorted_entries
 
         # Add entries to list
         if self.group_by_feed:
@@ -163,13 +171,16 @@ class EntryListScreen(Screen):
 
     def _add_flat_entries(self, entries: list[Entry]):
         """Add entries as a flat list."""
+        self.displayed_items = []
         for entry in entries:
             item = EntryListItem(entry, self.unread_color, self.read_color)
+            self.displayed_items.append(item)
             self.list_view.append(item)
 
     def _add_grouped_entries(self, entries: list[Entry]):
         """Add entries grouped by feed."""
         current_feed = None
+        self.displayed_items = []
 
         for entry in entries:
             # Add feed header if this is a new feed
@@ -179,20 +190,26 @@ class EntryListScreen(Screen):
                 header_label = Label(f"━━ {current_feed} ━━", classes="feed-header")
                 header = ListItem(header_label)
                 self.list_view.append(header)
+                # Don't add headers to displayed_items for navigation
 
             # Add the entry
             item = EntryListItem(entry, self.unread_color, self.read_color)
+            self.displayed_items.append(item)
             self.list_view.append(item)
 
     def action_cursor_down(self):
-        """Move cursor down."""
-        if self.list_view:
-            self.list_view.action_cursor_down()
+        """Move cursor down to next entry item."""
+        if not self.list_view:
+            return
+        # Delegate to ListView's built-in cursor movement
+        self.list_view.action_cursor_down()
 
     def action_cursor_up(self):
-        """Move cursor up."""
-        if self.list_view:
-            self.list_view.action_cursor_up()
+        """Move cursor up to previous entry item."""
+        if not self.list_view:
+            return
+        # Delegate to ListView's built-in cursor movement
+        self.list_view.action_cursor_up()
 
     def action_toggle_read(self):
         """Toggle read/unread status of current entry."""
@@ -240,7 +257,7 @@ class EntryListScreen(Screen):
 
     async def action_refresh(self):
         """Refresh the entry list from API."""
-        if isinstance(self.app, MinifluxTUI):
+        if hasattr(self.app, "load_entries"):
             self.notify("Refreshing entries...")
             # Reload entries from API (this will fetch only unread entries)
             await self.app.load_entries(self.app.current_view)

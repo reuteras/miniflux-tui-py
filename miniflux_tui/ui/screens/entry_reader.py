@@ -2,6 +2,7 @@
 
 import traceback
 import webbrowser
+from typing import TYPE_CHECKING
 
 import html2text
 from textual.app import ComposeResult
@@ -11,7 +12,9 @@ from textual.screen import Screen
 from textual.widgets import Footer, Header, Markdown, Static
 
 from miniflux_tui.api.models import Entry
-from miniflux_tui.ui.app import MinifluxTUI
+
+if TYPE_CHECKING:
+    pass
 
 
 class EntryReaderScreen(Screen):
@@ -89,7 +92,7 @@ class EntryReaderScreen(Screen):
 
     async def _mark_entry_as_read(self):
         """Mark the current entry as read via API."""
-        if isinstance(self.app, MinifluxTUI) and self.app.client:
+        if hasattr(self.app, "client") and self.app.client:
             try:
                 await self.app.client.mark_as_read(self.entry.id)
                 self.entry.status = "read"
@@ -137,7 +140,7 @@ class EntryReaderScreen(Screen):
 
     async def action_mark_unread(self):
         """Mark entry as unread."""
-        if isinstance(self.app, MinifluxTUI) and self.app.client:
+        if hasattr(self.app, "client") and self.app.client:
             try:
                 await self.app.client.mark_as_unread(self.entry.id)
                 self.entry.status = "unread"
@@ -147,7 +150,7 @@ class EntryReaderScreen(Screen):
 
     async def action_toggle_star(self):
         """Toggle star status."""
-        if isinstance(self.app, MinifluxTUI) and self.app.client:
+        if hasattr(self.app, "client") and self.app.client:
             try:
                 await self.app.client.toggle_starred(self.entry.id)
                 self.entry.starred = not self.entry.starred
@@ -169,7 +172,7 @@ class EntryReaderScreen(Screen):
 
     async def action_fetch_original(self):
         """Fetch original content from source."""
-        if isinstance(self.app, MinifluxTUI) and self.app.client:
+        if hasattr(self.app, "client") and self.app.client:
             try:
                 self.notify("Fetching original content...")
 
