@@ -107,7 +107,7 @@ uv run ruff check .
 
 ## Project Structure
 
-```
+```bash
 miniflux-tui-py/
 ├── miniflux_tui/
 │   ├── api/
