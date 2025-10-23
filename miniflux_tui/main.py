@@ -72,13 +72,21 @@ def main():
         print("\nRun 'miniflux-tui --init' to create a default configuration.")
         return 1
 
-    # TODO: Start the TUI application
-    print("Starting Miniflux TUI...")
-    print("(TUI implementation coming soon)")
-    print("\nConfiguration loaded successfully!")
-    print(f"Server: {config.server_url}")
+    # Start the TUI application
+    import asyncio
+    from .ui.app import run_tui
 
-    return 0
+    try:
+        asyncio.run(run_tui(config))
+        return 0
+    except KeyboardInterrupt:
+        print("\nGoodbye!")
+        return 0
+    except Exception as e:
+        print(f"\nError running application: {e}")
+        import traceback
+        traceback.print_exc()
+        return 1
 
 
 if __name__ == "__main__":
