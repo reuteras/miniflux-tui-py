@@ -1,0 +1,30 @@
+# Miniflux TUI Configuration Example
+# Copy this file to your config directory and rename it to config.toml
+
+# Required: Your Miniflux server URL
+server_url = "https://miniflux.example.com"
+
+# Required: Your Miniflux API key
+# Generate this from Settings > API Keys in your Miniflux web interface
+api_key = "your-api-key-here"
+
+# Optional: Allow invalid SSL certificates (default: false)
+# Set to true only if you're using self-signed certificates
+allow_invalid_certs = false
+
+[theme]
+# Color for unread entries (default: cyan)
+# Supported colors: black, red, green, yellow, blue, magenta, cyan, white, gray
+# Or use hex colors like "#FF5733"
+unread_color = "cyan"
+
+# Color for read entries (default: gray)
+read_color = "gray"
+
+[sorting]
+# Default sort mode: "feed", "date", or "status" (default: date)
+default_sort = "date"
+
+# Default grouping by feed (default: false)
+# When true, entries will be grouped by feed name in the list
+default_group_by_feed = false
