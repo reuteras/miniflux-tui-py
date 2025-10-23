@@ -2,11 +2,9 @@
 
 from typing import List, Optional
 from textual.app import ComposeResult
-from textual.containers import Container, VerticalScroll
 from textual.screen import Screen
-from textual.widgets import Header, Footer, Static, ListItem, ListView, Label
+from textual.widgets import Header, Footer, ListItem, ListView, Label
 from textual.binding import Binding
-from rich.text import Text
 
 from ...api.models import Entry
 

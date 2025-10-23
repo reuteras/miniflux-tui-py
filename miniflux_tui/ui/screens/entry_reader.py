@@ -3,7 +3,7 @@
 import html2text
 import webbrowser
 from textual.app import ComposeResult
-from textual.containers import Container, VerticalScroll
+from textual.containers import VerticalScroll
 from textual.screen import Screen
 from textual.widgets import Header, Footer, Static, Markdown
 from textual.binding import Binding

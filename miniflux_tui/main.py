@@ -2,7 +2,6 @@
 
 import sys
 import argparse
-from pathlib import Path
 
 from .config import load_config, create_default_config, get_config_file_path
 
@@ -53,10 +52,10 @@ def main():
                 print(f"\nServer URL: {config.server_url}")
                 print(f"API Key: {'*' * 20} (hidden)")
                 print(f"Allow Invalid Certs: {config.allow_invalid_certs}")
-                print(f"\nTheme:")
+                print("\nTheme:")
                 print(f"  Unread Color: {config.unread_color}")
                 print(f"  Read Color: {config.read_color}")
-                print(f"\nSorting:")
+                print("\nSorting:")
                 print(f"  Default Sort: {config.default_sort}")
                 print(f"  Group by Feed: {config.default_group_by_feed}")
                 return 0
