@@ -161,15 +161,19 @@ class MinifluxTUI(App):
             # Log full error for debugging
             self.log(f"Full error:\n{error_details}")
 
-    def push_entry_reader(self, entry: Entry) -> None:
+    def push_entry_reader(self, entry: Entry, entry_list: list = None, current_index: int = 0) -> None:
         """
         Push entry reader screen for a specific entry.
 
         Args:
             entry: Entry to display
+            entry_list: Full list of entries for navigation
+            current_index: Current position in the entry list
         """
         reader_screen = EntryReaderScreen(
             entry=entry,
+            entry_list=entry_list or self.entries,
+            current_index=current_index,
             unread_color=self.config.unread_color,
             read_color=self.config.read_color,
         )

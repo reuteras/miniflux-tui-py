@@ -15,8 +15,10 @@ class EntryReaderScreen(Screen):
     """Screen for reading a single feed entry."""
 
     BINDINGS = [
-        Binding("j", "scroll_down", "Down", show=False),
-        Binding("k", "scroll_up", "Up", show=False),
+        Binding("j", "scroll_down", "Scroll Down", show=False),
+        Binding("k", "scroll_up", "Scroll Up", show=False),
+        Binding("J", "next_entry", "Next Entry", show=True),
+        Binding("K", "previous_entry", "Previous Entry", show=True),
         Binding("pagedown", "page_down", "Page Down"),
         Binding("pageup", "page_up", "Page Up"),
         Binding("b", "back", "Back to List"),
@@ -24,8 +26,6 @@ class EntryReaderScreen(Screen):
         Binding("asterisk", "toggle_star", "Toggle Star"),
         Binding("o", "open_browser", "Open in Browser"),
         Binding("f", "fetch_original", "Fetch Original"),
-        Binding("n", "next_entry", "Next Entry"),
-        Binding("p", "previous_entry", "Previous Entry"),
         Binding("question_mark", "show_help", "Help"),
         Binding("escape", "back", "Back", show=False),
     ]
@@ -33,12 +33,16 @@ class EntryReaderScreen(Screen):
     def __init__(
         self,
         entry: Entry,
+        entry_list: list = None,
+        current_index: int = 0,
         unread_color: str = "cyan",
         read_color: str = "gray",
         **kwargs,
     ):
         super().__init__(**kwargs)
         self.entry = entry
+        self.entry_list = entry_list or []
+        self.current_index = current_index
         self.unread_color = unread_color
         self.read_color = read_color
         self.scroll_container = None
@@ -149,13 +153,45 @@ class EntryReaderScreen(Screen):
 
     def action_next_entry(self):
         """Navigate to next entry."""
-        # TODO: Implement navigation to next entry
-        self.notify("Next entry (not yet implemented)")
+        if not self.entry_list or self.current_index >= len(self.entry_list) - 1:
+            self.notify("No next entry", severity="warning")
+            return
+
+        # Move to next entry
+        self.current_index += 1
+        self.entry = self.entry_list[self.current_index]
+
+        # Refresh the screen with new entry
+        self.refresh_screen()
 
     def action_previous_entry(self):
         """Navigate to previous entry."""
-        # TODO: Implement navigation to previous entry
-        self.notify("Previous entry (not yet implemented)")
+        if not self.entry_list or self.current_index <= 0:
+            self.notify("No previous entry", severity="warning")
+            return
+
+        # Move to previous entry
+        self.current_index -= 1
+        self.entry = self.entry_list[self.current_index]
+
+        # Refresh the screen with new entry
+        self.refresh_screen()
+
+    def refresh_screen(self):
+        """Refresh the screen with current entry."""
+        # Remove all children and re-compose
+        self.query("*").remove()
+
+        # Re-compose with new entry
+        for widget in self.compose():
+            self.mount(widget)
+
+        # Reset scroll position
+        self.scroll_container = self.query_one(VerticalScroll)
+
+        # Mark as read
+        if self.entry.is_unread:
+            self.entry.status = "read"
 
     def action_show_help(self):
         """Show keyboard help."""

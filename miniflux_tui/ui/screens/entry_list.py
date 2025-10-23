@@ -86,33 +86,32 @@ class EntryListScreen(Screen):
 
     def on_list_view_selected(self, event: ListView.Selected) -> None:
         """Handle ListView selection (Enter key)."""
-        self.notify("DEBUG: ListView.Selected event received")
-
         # Get the selected item
         if event.item and isinstance(event.item, EntryListItem):
-            self.notify(f"DEBUG: Opening entry: {event.item.entry.title[:30]}")
-            # Open entry reader screen
+            # Find the index of this entry in the current entry list
+            entry_index = 0
+            for i, entry in enumerate(self.entries):
+                if entry.id == event.item.entry.id:
+                    entry_index = i
+                    break
+
+            # Open entry reader screen with navigation context
             from ..app import MinifluxTUI
             if isinstance(self.app, MinifluxTUI):
-                self.app.push_entry_reader(event.item.entry)
-            else:
-                self.notify("Cannot open entry: app is not MinifluxTUI", severity="error")
-        else:
-            self.notify(f"DEBUG: Selected item is not EntryListItem: {type(event.item)}", severity="warning")
+                self.app.push_entry_reader(
+                    entry=event.item.entry,
+                    entry_list=self.entries,
+                    current_index=entry_index
+                )
 
     def _populate_list(self):
         """Populate the list with sorted entries."""
-        self.log(f"_populate_list called with {len(self.entries)} entries")
-        self.notify(f"DEBUG: Populating list with {len(self.entries)} entries")
-
         # Get reference to ListView if we don't have it
         if not self.list_view:
             try:
                 self.list_view = self.query_one(ListView)
-                self.log(f"Got list_view via query_one: {self.list_view}")
             except Exception as e:
                 self.log(f"Failed to get list_view: {e}")
-                self.notify("DEBUG: list_view is None!", severity="error")
                 return
 
         # Clear existing items
@@ -120,18 +119,12 @@ class EntryListScreen(Screen):
 
         # Sort entries
         sorted_entries = self._sort_entries(self.entries)
-        self.log(f"Sorted {len(sorted_entries)} entries")
 
         # Add entries to list
         if self.group_by_feed:
-            self.log("Adding grouped entries")
             self._add_grouped_entries(sorted_entries)
         else:
-            self.log("Adding flat entries")
             self._add_flat_entries(sorted_entries)
-
-        self.log(f"ListView now has {len(self.list_view.children)} children")
-        self.notify(f"DEBUG: ListView has {len(self.list_view.children)} children")
 
     def _sort_entries(self, entries: List[Entry]) -> List[Entry]:
         """Sort entries based on current sort mode."""
@@ -157,17 +150,9 @@ class EntryListScreen(Screen):
 
     def _add_flat_entries(self, entries: List[Entry]):
         """Add entries as a flat list."""
-        self.log(f"_add_flat_entries: Adding {len(entries)} entries")
-        for i, entry in enumerate(entries):
-            try:
-                item = EntryListItem(entry, self.unread_color, self.read_color)
-                self.list_view.append(item)
-                if i == 0:
-                    self.log(f"First entry added: {entry.title[:50]}")
-            except Exception as e:
-                self.log(f"Error adding entry {i}: {e}")
-                import traceback
-                self.log(traceback.format_exc())
+        for entry in entries:
+            item = EntryListItem(entry, self.unread_color, self.read_color)
+            self.list_view.append(item)
 
     def _add_grouped_entries(self, entries: List[Entry]):
         """Add entries grouped by feed."""
@@ -195,29 +180,6 @@ class EntryListScreen(Screen):
         """Move cursor up."""
         if self.list_view:
             self.list_view.action_cursor_up()
-
-    def action_select_entry(self):
-        """Select and open the current entry."""
-        self.notify("DEBUG: select_entry called")
-
-        if not self.list_view:
-            self.notify("DEBUG: list_view is None!", severity="error")
-            return
-
-        # Get the highlighted item
-        highlighted = self.list_view.highlighted_child
-        self.notify(f"DEBUG: highlighted = {highlighted}, type = {type(highlighted)}")
-
-        if highlighted and isinstance(highlighted, EntryListItem):
-            self.notify(f"DEBUG: Opening entry: {highlighted.entry.title[:30]}")
-            # Open entry reader screen
-            from ..app import MinifluxTUI
-            if isinstance(self.app, MinifluxTUI):
-                self.app.push_entry_reader(highlighted.entry)
-            else:
-                self.notify("Cannot open entry: app is not MinifluxTUI", severity="error")
-        else:
-            self.notify(f"DEBUG: highlighted is not EntryListItem! It's {type(highlighted)}", severity="warning")
 
     def action_toggle_read(self):
         """Toggle read/unread status of current entry."""
