@@ -75,10 +75,13 @@ class EntryListScreen(Screen):
 
         # Create the list view
         self.list_view = ListView()
-        self._populate_list()
-
         yield self.list_view
         yield Footer()
+
+    def on_mount(self) -> None:
+        """Called when screen is mounted."""
+        # Populate the list after the widgets are mounted
+        self._populate_list()
 
     def _populate_list(self):
         """Populate the list with sorted entries."""

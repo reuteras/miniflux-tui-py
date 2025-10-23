@@ -94,10 +94,7 @@ class MinifluxTUI(App):
             allow_invalid_certs=self.config.allow_invalid_certs,
         )
 
-        # Load initial entries
-        await self.load_entries()
-
-        # Install screens
+        # Install screens first
         self.install_screen(
             EntryListScreen(
                 entries=self.entries,
@@ -114,6 +111,10 @@ class MinifluxTUI(App):
         # Push initial screen
         self.push_screen("entry_list")
 
+        # Load initial entries after screen is shown
+        self.notify("Loading entries...")
+        await self.load_entries()
+
     async def load_entries(self, view: str = "unread") -> None:
         """
         Load entries from Miniflux API.
@@ -122,15 +123,18 @@ class MinifluxTUI(App):
             view: View type - "unread" or "starred"
         """
         if not self.client:
+            self.notify("API client not initialized", severity="error")
             return
 
         try:
             if view == "starred":
                 self.entries = await self.client.get_starred_entries(limit=100)
                 self.current_view = "starred"
+                self.notify(f"Loaded {len(self.entries)} starred entries")
             else:
                 self.entries = await self.client.get_unread_entries(limit=100)
                 self.current_view = "unread"
+                self.notify(f"Loaded {len(self.entries)} unread entries")
 
             # Update the entry list screen if it exists
             if self.is_screen_installed("entry_list"):
@@ -139,8 +143,16 @@ class MinifluxTUI(App):
                     screen.entries = self.entries
                     screen._populate_list()
 
+            # Show message if no entries
+            if len(self.entries) == 0:
+                self.notify(f"No {view} entries found", severity="warning")
+
         except Exception as e:
+            import traceback
+            error_details = traceback.format_exc()
             self.notify(f"Error loading entries: {e}", severity="error")
+            # Log full error for debugging
+            self.log(f"Full error:\n{error_details}")
 
     def push_entry_reader(self, entry: Entry) -> None:
         """
