@@ -89,27 +89,15 @@ class EntryReaderScreen(Screen):
         """Mark the current entry as read via API."""
         from ..app import MinifluxTUI
 
-        self.log(f"_mark_entry_as_read called for entry {self.entry.id}")
-        self.notify(f"DEBUG: Marking entry {self.entry.id} as read")
-
-        if isinstance(self.app, MinifluxTUI):
-            self.log(f"App is MinifluxTUI")
-            if self.app.client:
-                self.log(f"Client exists: {self.app.client}")
-                try:
-                    self.notify(f"DEBUG: Calling API mark_as_read for {self.entry.id}")
-                    await self.app.client.mark_as_read(self.entry.id)
-                    self.entry.status = "read"
-                    self.notify(f"DEBUG: Successfully marked as read")
-                except Exception as e:
-                    self.log(f"Error marking as read: {e}")
-                    import traceback
-                    self.log(traceback.format_exc())
-                    self.notify(f"Error marking as read: {e}", severity="error")
-            else:
-                self.notify("DEBUG: No client!", severity="error")
-        else:
-            self.notify(f"DEBUG: App is not MinifluxTUI: {type(self.app)}", severity="error")
+        if isinstance(self.app, MinifluxTUI) and self.app.client:
+            try:
+                await self.app.client.mark_as_read(self.entry.id)
+                self.entry.status = "read"
+            except Exception as e:
+                self.log(f"Error marking as read: {e}")
+                import traceback
+                self.log(traceback.format_exc())
+                self.notify(f"Error marking as read: {e}", severity="error")
 
     def _html_to_markdown(self, html_content: str) -> str:
         """Convert HTML content to markdown."""

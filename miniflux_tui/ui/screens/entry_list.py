@@ -23,8 +23,11 @@ class EntryListItem(ListItem):
         status_icon = "●" if entry.is_unread else "○"
         star_icon = "★" if entry.starred else "☆"
 
-        # Create the label text
-        label_text = f"{status_icon} {star_icon} {entry.feed.title} | {entry.title}"
+        # Determine color based on read status
+        color = unread_color if entry.is_unread else read_color
+
+        # Create the label text with color markup
+        label_text = f"[{color}]{status_icon} {star_icon} {entry.feed.title} | {entry.title}[/{color}]"
 
         # Initialize with the label
         super().__init__(Label(label_text))
@@ -83,6 +86,12 @@ class EntryListScreen(Screen):
             self._populate_list()
         else:
             self.log("on_mount: No entries yet, skipping initial population")
+
+    def on_screen_resume(self) -> None:
+        """Called when screen is resumed (e.g., after returning from entry reader)."""
+        # Refresh the list to reflect any status changes
+        if self.entries and self.list_view:
+            self._populate_list()
 
     def on_list_view_selected(self, event: ListView.Selected) -> None:
         """Handle ListView selection (Enter key)."""
