@@ -126,8 +126,15 @@ class EntryListScreen(Screen):
         # Clear existing items
         self.list_view.clear()
 
-        # Sort entries
-        sorted_entries = self._sort_entries(self.entries)
+        # Sort entries - if grouping is enabled, force sort by feed
+        if self.group_by_feed:
+            sorted_entries = sorted(
+                self.entries,
+                key=lambda e: (e.feed.title.lower(), e.published_at),
+                reverse=True
+            )
+        else:
+            sorted_entries = self._sort_entries(self.entries)
 
         # Add entries to list
         if self.group_by_feed:
