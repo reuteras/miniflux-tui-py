@@ -1,20 +1,6 @@
 # miniflux-tui-py
 
-A Python TUI (Terminal User Interface) client for the Miniflux self-hosted RSS reader with enhanced feed sorting and filtering capabilities.
-
-## Features
-
-- View unread and starred feed entries
-- Star/unstar entries
-- Mark entries as read/unread
-- Refresh feeds
-- Open entries in browser
-- Fetch original article content
-- **Sort entries by feed name** (key feature!)
-- **Group entries by feed**
-- **Filter by specific feed**
-- Fast, async API client
-- Customizable themes
+A [Python](https://www.python.org) TUI (Terminal User Interface) client for the Miniflux self-hosted RSS reader built with [textual](https://github.com/textualize/textual/).
 
 ## Installation
 
@@ -30,6 +16,9 @@ cd miniflux-tui-py
 
 # Install dependencies
 uv sync
+
+# Create default configuration
+uv run miniflux-tui --init
 
 # Run the application
 uv run miniflux-tui
@@ -66,6 +55,7 @@ To generate an API key for your Miniflux account:
 ## Keyboard Shortcuts
 
 ### Entry List View
+
 - Up/Down or k/j - Navigate entries
 - Enter - Open entry
 - m - Toggle read/unread
@@ -78,6 +68,7 @@ To generate an API key for your Miniflux account:
 - q - Quit
 
 ### Entry Reader View
+
 - Up/Down or k/j - Scroll
 - PageUp/PageDown - Fast scroll
 - u - Mark as unread
@@ -93,49 +84,22 @@ To generate an API key for your Miniflux account:
 
 ```bash
 # Install development dependencies
-uv sync --all-extras
-
-# Run tests
-uv run pytest
-
-# Format code
-uv run black .
+uv sync --dev
 
 # Lint code
 uv run ruff check .
 ```
 
-## Project Structure
-
-```bash
-miniflux-tui-py/
-├── miniflux_tui/
-│   ├── api/
-│   │   ├── client.py        # Miniflux API client
-│   │   └── models.py        # Data models (Feed, Entry)
-│   ├── ui/
-│   │   ├── app.py           # Main TUI application
-│   │   └── screens/         # TUI screens
-│   ├── config.py            # Configuration loading
-│   └── main.py              # CLI entry point
-├── pyproject.toml
-└── README.md
-```
-
 ## Why Python?
 
-This project is a Python reimplementation of cliflux (Rust), created to:
-
-- Simplify maintenance and contribution
-- Add enhanced feed sorting and filtering features
-- Leverage Python's rich ecosystem for TUI development
-- Provide faster prototyping for new features
+This project is a Python implementation of [cliflux](https://github.com/spencerwi/cliflux) (Rust), created since I don't now Rust and wanted to do some changes to that code.
 
 ## License
 
-MIT License - see LICENSE file for details
+MIT License - see LICENSE file for details.
 
 ## Related Projects
 
-- cliflux - Original Rust TUI client for Miniflux
-- Miniflux - The RSS reader this client connects to
+- [cliflux](https://github.com/spencerwi/cliflux) - Original Rust TUI client for Miniflux that inspired this tool.
+- [Miniflux](https://miniflux.app) is a minimalist and opinionated feed reader.
+- [textual](https://github.com/textualize/textual/)
