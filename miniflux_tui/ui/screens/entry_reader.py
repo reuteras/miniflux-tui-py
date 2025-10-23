@@ -75,15 +75,24 @@ class EntryReaderScreen(Screen):
 
         yield Footer()
 
-    def on_mount(self) -> None:
+    async def on_mount(self) -> None:
         """Called when screen is mounted."""
         # Get reference to the scroll container after mount
         self.scroll_container = self.query_one(VerticalScroll)
 
         # Mark entry as read when opened
         if self.entry.is_unread:
-            self.entry.status = "read"
-            # TODO: Call API to mark as read
+            await self._mark_entry_as_read()
+
+    async def _mark_entry_as_read(self):
+        """Mark the current entry as read via API."""
+        from ..app import MinifluxTUI
+        if isinstance(self.app, MinifluxTUI) and self.app.client:
+            try:
+                await self.app.client.mark_as_read(self.entry.id)
+                self.entry.status = "read"
+            except Exception as e:
+                self.notify(f"Error marking as read: {e}", severity="error")
 
     def _html_to_markdown(self, html_content: str) -> str:
         """Convert HTML content to markdown."""
@@ -122,21 +131,31 @@ class EntryReaderScreen(Screen):
         """Return to entry list."""
         self.app.pop_screen()
 
-    def action_mark_unread(self):
+    async def action_mark_unread(self):
         """Mark entry as unread."""
-        self.entry.status = "unread"
-        # TODO: Call API to mark as unread
-        self.notify("Marked as unread")
+        from ..app import MinifluxTUI
+        if isinstance(self.app, MinifluxTUI) and self.app.client:
+            try:
+                await self.app.client.mark_as_unread(self.entry.id)
+                self.entry.status = "unread"
+                self.notify("Marked as unread")
+            except Exception as e:
+                self.notify(f"Error marking as unread: {e}", severity="error")
 
-    def action_toggle_star(self):
+    async def action_toggle_star(self):
         """Toggle star status."""
-        self.entry.starred = not self.entry.starred
-        # TODO: Call API to toggle star
-        status = "starred" if self.entry.starred else "unstarred"
-        self.notify(f"Entry {status}")
+        from ..app import MinifluxTUI
+        if isinstance(self.app, MinifluxTUI) and self.app.client:
+            try:
+                await self.app.client.toggle_starred(self.entry.id)
+                self.entry.starred = not self.entry.starred
+                status = "starred" if self.entry.starred else "unstarred"
+                self.notify(f"Entry {status}")
 
-        # Refresh display to update star icon
-        self.refresh()
+                # Refresh display to update star icon
+                await self.refresh_screen()
+            except Exception as e:
+                self.notify(f"Error toggling star: {e}", severity="error")
 
     def action_open_browser(self):
         """Open entry URL in web browser."""
@@ -151,7 +170,7 @@ class EntryReaderScreen(Screen):
         # TODO: Call API to fetch original content
         self.notify("Fetching original content...")
 
-    def action_next_entry(self):
+    async def action_next_entry(self):
         """Navigate to next entry."""
         if not self.entry_list or self.current_index >= len(self.entry_list) - 1:
             self.notify("No next entry", severity="warning")
@@ -162,9 +181,9 @@ class EntryReaderScreen(Screen):
         self.entry = self.entry_list[self.current_index]
 
         # Refresh the screen with new entry
-        self.refresh_screen()
+        await self.refresh_screen()
 
-    def action_previous_entry(self):
+    async def action_previous_entry(self):
         """Navigate to previous entry."""
         if not self.entry_list or self.current_index <= 0:
             self.notify("No previous entry", severity="warning")
@@ -175,9 +194,9 @@ class EntryReaderScreen(Screen):
         self.entry = self.entry_list[self.current_index]
 
         # Refresh the screen with new entry
-        self.refresh_screen()
+        await self.refresh_screen()
 
-    def refresh_screen(self):
+    async def refresh_screen(self):
         """Refresh the screen with current entry."""
         # Instead of removing and re-mounting, just update the content widgets
         scroll = self.query_one(VerticalScroll)
@@ -214,7 +233,7 @@ class EntryReaderScreen(Screen):
 
         # Mark as read
         if self.entry.is_unread:
-            self.entry.status = "read"
+            await self._mark_entry_as_read()
 
     def action_show_help(self):
         """Show keyboard help."""
