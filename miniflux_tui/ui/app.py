@@ -1,5 +1,4 @@
 """Main TUI application."""
-
 import traceback
 
 from textual.app import App
@@ -135,20 +134,9 @@ class MinifluxTUI(App):
                 self.current_view = "starred"
                 self.notify(f"Loaded {len(self.entries)} starred entries")
             else:
-                # Load both unread and starred entries for the default view
-                # This ensures starred entries are always visible, even if read
-                unread_entries = await self.client.get_unread_entries(limit=100)
-                starred_entries = await self.client.get_starred_entries(limit=100)
-
-                # Merge entries, avoiding duplicates (entry could be both unread and starred)
-                seen_ids = {e.id for e in unread_entries}
-                for entry in starred_entries:
-                    if entry.id not in seen_ids:
-                        unread_entries.append(entry)
-
-                self.entries = unread_entries
+                self.entries = await self.client.get_unread_entries(limit=100)
                 self.current_view = "unread"
-                self.notify(f"Loaded {len(self.entries)} entries (unread + starred)")
+                self.notify(f"Loaded {len(self.entries)} unread entries")
 
             # Update the entry list screen if it exists
             if self.is_screen_installed("entry_list"):
