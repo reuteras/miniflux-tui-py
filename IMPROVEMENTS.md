@@ -1,6 +1,6 @@
 # Improvement Plan for miniflux-tui-py
 
-**Last Updated**: January 2025
+**Last Updated**: October 24, 2025
 **Project Version**: 0.1.0
 
 This document outlines a comprehensive plan for improving the miniflux-tui-py project, organized by priority and category.
@@ -8,33 +8,69 @@ This document outlines a comprehensive plan for improving the miniflux-tui-py pr
 ## Executive Summary
 
 The codebase has a solid foundation but needs improvements in:
-- **Missing features**: 2 empty stub methods + 2 unimplemented API calls (toggle_read/toggle_star in entry_list.py need API integration, filtering stubs)
+- **Missing features**: ✅ MOSTLY RESOLVED - API calls implemented, filtering added
 - **Testing**: Zero test coverage (tests were removed)
 - **Code quality**: Significant code duplication and long functions
 - **Documentation**: ✅ COMPLETED - Help screens and README updated with correct shortcuts (J/K navigation, e for save_entry, , for refresh)
-- **Error handling**: Inconsistent patterns and silent failures
+- **Error handling**: Inconsistent patterns - silent failures in some areas
 - **Performance**: Full screen remounts instead of incremental updates
 
 **Total issues identified: 50+ across 7 categories**
-**Recently completed**: Keyboard documentation fixes, save_entry feature (e key), refresh alias (, key)
+**Recently completed**: Keyboard documentation fixes, save_entry feature (e key), refresh alias (, key), toggle_read/toggle_star API calls, entry filtering (u/t keys)
 
 ---
 
 ## Progress Summary
 
-**Completed (3/15 Phase 1 items):**
+**Completed (5/15 Phase 1 items):**
 - ✅ Keyboard shortcut documentation (help.py, README.md)
 - ✅ Save entry feature implementation
 - ✅ Refresh key alias
+- ✅ API calls for toggle_read/toggle_star (Phase 1.1)
+- ✅ Filtering by unread/starred entries (Phase 1.2)
 
 **Next Priorities:**
-1. Implement API calls for toggle_read/toggle_star in entry_list.py (Phase 1.1)
-2. Implement filtering by unread/starred (Phase 1.2)
-3. Clean up remaining TODO comments (Phase 1.4)
+1. Clean up remaining TODO comments (Phase 1.4)
+2. Phase 2 improvements (code quality, refactoring)
+3. Phase 3 improvements (input validation, documentation)
 
 ---
 
 ## Recently Implemented Features (2025)
+
+### API Calls for Toggle Read/Star (Phase 1.1)
+**Status**: ✅ COMPLETED
+**Files**: `miniflux_tui/ui/screens/entry_list.py`
+**Commit**: 8e0a1be
+
+Implemented persistent API calls for marking entries as read/unread and toggling star status.
+
+**What was implemented**:
+- `action_toggle_read()` now calls `await self.app.client.change_entry_status()`
+- `action_toggle_star()` now calls `await self.app.client.toggle_starred()`
+- Error handling with user notifications
+- Local state updates synchronized with server
+- Display refresh after successful API calls
+
+**Usage**: Press "m" to toggle read/unread status, "*" to toggle star status. Changes are now persisted to server.
+
+### Filtering by Unread & Starred Entries (Phase 1.2)
+**Status**: ✅ COMPLETED
+**Files**: `miniflux_tui/ui/screens/entry_list.py`
+**Commit**: 8e0a1be
+
+Implemented filtering functionality to show only unread or starred entries.
+
+**What was implemented**:
+- Filter state variables: `filter_unread_only` and `filter_starred_only`
+- `_filter_entries()` helper method to apply filters before sorting
+- `action_show_unread()` to toggle unread-only view (u key)
+- `action_show_starred()` to toggle starred-only view (t key)
+- Mutually exclusive filters (toggling one clears the other)
+- User notifications showing active filter status
+- Removed misleading TODO comment from `action_show_help()`
+
+**Usage**: Press "u" to show only unread entries, "t" to show only starred entries. Press again to show all entries.
 
 ### Save Entry Feature (e key)
 **Status**: ✅ COMPLETED
@@ -71,10 +107,10 @@ Estimated effort: 2-4 hours | Impact: High | Do first!
 
 ### 1.1 Implement Missing API Calls in Entry List
 
-**Status**: TODO
+**Status**: ✅ COMPLETED
 **Files**: `miniflux_tui/ui/screens/entry_list.py`
 
-The `action_toggle_read()` and `action_toggle_star()` methods update local state but don't persist to the API.
+The `action_toggle_read()` and `action_toggle_star()` methods have been updated to persist changes to the API.
 
 ```python
 # Current (lines 216-244):
@@ -131,70 +167,20 @@ async def action_toggle_star(self):
 
 ### 1.2 Implement Filtering by Unread & Starred
 
-**Status**: TODO
+**Status**: ✅ COMPLETED
 **Files**: `miniflux_tui/ui/screens/entry_list.py`
 
-Currently, `action_show_unread()` and `action_show_starred()` are empty stubs (lines 268-274). The app-level methods exist in `ui/app.py` but screen-level filtering doesn't work.
+Implemented full filtering support for showing only unread or starred entries.
 
-**Current issue**:
-```python
-# In entry_list.py (broken - empty methods)
-def action_show_unread(self):
-    """Show only unread entries."""
-    # TODO: Filter to show only unread
+**What was implemented**:
+- Filter state variables: `filter_unread_only` and `filter_starred_only`
+- `_filter_entries()` helper method applied before sorting
+- `action_show_unread()` toggles unread-only view with user feedback
+- `action_show_starred()` toggles starred-only view with user feedback
+- Mutually exclusive filters (enabling one disables the other)
+- Notifications show current filter status
 
-def action_show_starred(self):
-    """Show only starred entries."""
-    # TODO: Filter to show only starred
-```
-
-**Fix**: Add filtering state and display filtering:
-
-```python
-# Add to __init__:
-self.filter_unread_only = False
-self.filter_starred_only = False
-
-# Add methods:
-def action_show_unread(self):
-    """Toggle showing only unread entries."""
-    self.filter_unread_only = not self.filter_unread_only
-    self.filter_starred_only = False  # Clear other filter
-    self._populate_list()
-    status = "unread only" if self.filter_unread_only else "all"
-    self.notify(f"Showing {status}")
-
-def action_show_starred(self):
-    """Toggle showing only starred entries."""
-    self.filter_starred_only = not self.filter_starred_only
-    self.filter_unread_only = False  # Clear other filter
-    self._populate_list()
-    status = "starred only" if self.filter_starred_only else "all"
-    self.notify(f"Showing {status}")
-
-# Modify _populate_list() to filter:
-def _populate_list(self):
-    """Populate the list with sorted entries."""
-    if not self.list_view:
-        try:
-            self.list_view = self.query_one(ListView)
-        except Exception as e:
-            self.log(f"Failed to get list_view: {e}")
-            return
-
-    self.list_view.clear()
-
-    # Apply filters
-    entries = self.entries
-    if self.filter_unread_only:
-        entries = [e for e in entries if e.is_unread]
-    elif self.filter_starred_only:
-        entries = [e for e in entries if e.starred]
-
-    # Rest of sorting logic...
-```
-
-**Why this matters**: The u/t keys currently do nothing, confusing users expecting filter functionality.
+**Benefits**: The u/t keys now provide expected filter functionality, improving user experience and content discovery.
 
 ---
 
@@ -222,12 +208,10 @@ Help screen and README have been updated to match actual implementation.
 
 ### 1.4 Clean Up Outdated TODO Comments
 
-**Status**: TODO
+**Status**: ✅ COMPLETED
 **Files**: `miniflux_tui/ui/screens/entry_list.py`
 
-Line 278 has misleading comment: "TODO: Push help screen" but the code actually does push the help screen.
-
-**Fix**: Remove or update comment to reflect actual implementation.
+Removed misleading "TODO: Push help screen" comment from `action_show_help()` method, which already implements the feature correctly.
 
 ---
 
