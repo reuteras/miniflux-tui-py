@@ -16,7 +16,7 @@ This is a Python reimplementation of [cliflux](https://github.com/spencerwi/clif
 
 ## Directory Structure
 
-```
+```bash
 miniflux-tui-py/
 ├── miniflux_tui/                    # Main package
 │   ├── __init__.py
@@ -58,12 +58,12 @@ miniflux-tui-py/
 - **Navigation**: `j`/`k` (or arrow keys) to navigate; uses ListView's built-in cursor movement
 - **Stored state**: `self.sorted_entries` tracks currently sorted order for proper J/K navigation in entry reader
 - **Key bindings**:
-    - `j/k` - cursor down/up
-    - `enter` - select entry
-    - `m` - toggle read/unread
-    - `*` - toggle starred
-    - `s` - cycle sort mode
-    - `g` - toggle group by feed
+  - `j/k` - cursor down/up
+  - `enter` - select entry
+  - `m` - toggle read/unread
+  - `*` - toggle starred
+  - `s` - cycle sort mode
+  - `g` - toggle group by feed
 
 #### entry_reader.py
 - **Display**: Shows entry title, feed name, publish date, URL, and HTML content (converted to Markdown)
@@ -84,12 +84,12 @@ miniflux-tui-py/
 - Back button pops screen and returns to entry list
 
 ### Data Flow
-```
+```bash
 config.py (load/validate)
-    → app.py (create MinifluxTUI)
-    → client.py (async API calls)
-    → models.py (Entry/Feed objects)
-    → screens (display & user interaction)
+  → app.py (create MinifluxTUI)
+  → client.py (async API calls)
+  → models.py (Entry/Feed objects)
+  → screens (display & user interaction)
 ```
 
 ## Setup & Development

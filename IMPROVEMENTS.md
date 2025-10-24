@@ -651,7 +651,7 @@ Estimated effort: 8+ hours | Impact: Medium
 **Current state**: Zero tests, pytest removed from dependencies
 
 **Recommendation**: Add pytest back and create minimal test suite
-```
+```bash
 tests/
 ├── conftest.py                  # Pytest fixtures
 ├── test_api_client.py           # API client tests
@@ -866,10 +866,10 @@ Copy this to your issue tracker or notes:
 
 ## Resource Links
 
-- **Textual Framework**: https://textual.textualize.io/
-- **Miniflux API**: https://miniflux.app/api.html
-- **Python Best Practices**: https://pep8.org/
-- **Async/Await Pattern**: https://docs.python.org/3/library/asyncio.html
+- **Textual Framework**: [https://textual.textualize.io/](https://textual.textualize.io/)
+- **Miniflux API**: [https://miniflux.app/api.html](https://miniflux.app/api.html)
+- **Python Best Practices**: [https://pep8.org/](https://pep8.org/)
+- **Async/Await Pattern**: [https://docs.python.org/3/library/asyncio.html](https://docs.python.org/3/library/asyncio.html)
 
 ---
 
