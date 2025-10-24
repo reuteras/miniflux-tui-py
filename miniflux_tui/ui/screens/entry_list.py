@@ -47,6 +47,7 @@ class EntryListScreen(Screen):
         Binding("s", "cycle_sort", "Cycle Sort"),
         Binding("g", "toggle_group", "Group by Feed"),
         Binding("r", "refresh", "Refresh"),
+        Binding("comma", "refresh", "Refresh", show=False),
         Binding("u", "show_unread", "Unread"),
         Binding("t", "show_starred", "Starred"),
         Binding("question_mark", "show_help", "Help"),

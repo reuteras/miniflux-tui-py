@@ -29,7 +29,7 @@ class HelpScreen(Screen):
             yield Static("  *               Toggle star")
             yield Static("  s               Cycle sort mode (date/feed/status)")
             yield Static("  g               Toggle grouping by feed")
-            yield Static("  r               Refresh entries")
+            yield Static("  r or ,          Refresh entries")
             yield Static("  u               Show unread entries")
             yield Static("  t               Show starred entries")
             yield Static("  ?               Show this help")

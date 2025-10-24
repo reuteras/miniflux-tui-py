@@ -63,7 +63,7 @@ To generate an API key for your Miniflux account:
 - s - Cycle sort mode (feed/date/status)
 - g - Toggle grouping by feed
 - f - Filter by feed
-- r - Refresh entries
+- r or , - Refresh entries
 - ? - Show keyboard help
 - q - Quit
 
