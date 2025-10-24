@@ -71,6 +71,8 @@ class EntryListScreen(Screen):
         self.read_color = read_color
         self.current_sort = default_sort
         self.group_by_feed = group_by_feed
+        self.filter_unread_only = False  # Filter to show only unread entries
+        self.filter_starred_only = False  # Filter to show only starred entries
         self.list_view: ListView | None = None
         self.displayed_items: list[ListItem] = []  # Track items in display order
 
@@ -112,14 +114,10 @@ class EntryListScreen(Screen):
 
             # Open entry reader screen with navigation context
             if isinstance(self.app, self.app.__class__) and hasattr(self.app, "push_entry_reader"):
-                self.app.push_entry_reader(
-                    entry=event.item.entry,
-                    entry_list=self.sorted_entries,
-                    current_index=entry_index
-                )
+                self.app.push_entry_reader(entry=event.item.entry, entry_list=self.sorted_entries, current_index=entry_index)
 
     def _populate_list(self):
-        """Populate the list with sorted entries."""
+        """Populate the list with sorted and filtered entries."""
         # Get reference to ListView if we don't have it
         if not self.list_view:
             try:
@@ -131,15 +129,14 @@ class EntryListScreen(Screen):
         # Clear existing items
         self.list_view.clear()
 
+        # Apply filters to entries
+        entries = self._filter_entries(self.entries)
+
         # Sort entries - if grouping is enabled, force sort by feed
         if self.group_by_feed:
-            sorted_entries = sorted(
-                self.entries,
-                key=lambda e: (e.feed.title.lower(), e.published_at),
-                reverse=False
-            )
+            sorted_entries = sorted(entries, key=lambda e: (e.feed.title.lower(), e.published_at), reverse=False)
         else:
-            sorted_entries = self._sort_entries(self.entries)
+            sorted_entries = self._sort_entries(entries)
 
         # Store sorted entries for proper navigation order
         self.sorted_entries = sorted_entries
@@ -169,6 +166,14 @@ class EntryListScreen(Screen):
                 key=lambda e: (e.is_read, e.published_at),
                 reverse=False,
             )
+        return entries
+
+    def _filter_entries(self, entries: list[Entry]) -> list[Entry]:
+        """Apply active filters to entries."""
+        if self.filter_unread_only:
+            return [e for e in entries if e.is_unread]
+        if self.filter_starred_only:
+            return [e for e in entries if e.starred]
         return entries
 
     def _add_flat_entries(self, entries: list[Entry]):
@@ -225,10 +230,7 @@ class EntryListScreen(Screen):
                 new_status = "read" if highlighted.entry.is_unread else "unread"
 
                 # Call API to persist change
-                await self.app.client.change_entry_status(
-                    highlighted.entry.id,
-                    new_status
-                )
+                await self.app.client.change_entry_status(highlighted.entry.id, new_status)
 
                 # Update local state
                 highlighted.entry.status = new_status
@@ -303,16 +305,23 @@ class EntryListScreen(Screen):
             self.notify("Entries refreshed")
 
     def action_show_unread(self):
-        """Show only unread entries."""
-        # TODO: Filter to show only unread
+        """Toggle showing only unread entries."""
+        self.filter_unread_only = not self.filter_unread_only
+        self.filter_starred_only = False  # Clear other filter
+        self._populate_list()
+        status = "unread only" if self.filter_unread_only else "all"
+        self.notify(f"Showing {status}")
 
     def action_show_starred(self):
-        """Show only starred entries."""
-        # TODO: Filter to show only starred
+        """Toggle showing only starred entries."""
+        self.filter_starred_only = not self.filter_starred_only
+        self.filter_unread_only = False  # Clear other filter
+        self._populate_list()
+        status = "starred only" if self.filter_starred_only else "all"
+        self.notify(f"Showing {status}")
 
     def action_show_help(self):
         """Show keyboard help."""
-        # TODO: Push help screen
         self.app.push_screen("help")
 
     def action_quit(self):
