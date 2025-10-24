@@ -12,6 +12,8 @@ from textual.screen import Screen
 from textual.widgets import Footer, Header, Markdown, Static
 
 from miniflux_tui.api.models import Entry
+from miniflux_tui.constants import CONTENT_SEPARATOR
+from miniflux_tui.utils import get_star_icon
 
 if TYPE_CHECKING:
     pass
@@ -60,7 +62,7 @@ class EntryReaderScreen(Screen):
         yield Header()
 
         # Entry metadata
-        star_icon = "★" if self.entry.starred else "☆"
+        star_icon = get_star_icon(self.entry.starred)
 
         # Create scrollable container with entry content
         with VerticalScroll():
@@ -74,7 +76,7 @@ class EntryReaderScreen(Screen):
                 classes="entry-meta",
             )
             yield Static(f"[dim]{self.entry.url}[/dim]", classes="entry-url")
-            yield Static("─" * 80, classes="separator")
+            yield Static(CONTENT_SEPARATOR, classes="separator")
 
             # Convert HTML content to markdown for better display
             content = self._html_to_markdown(self.entry.content)
@@ -240,7 +242,7 @@ class EntryReaderScreen(Screen):
             child.remove()
 
         # Entry metadata
-        star_icon = "★" if self.entry.starred else "☆"
+        star_icon = get_star_icon(self.entry.starred)
 
         # Re-mount the content
         scroll.mount(
@@ -256,7 +258,7 @@ class EntryReaderScreen(Screen):
             )
         )
         scroll.mount(Static(f"[dim]{self.entry.url}[/dim]", classes="entry-url"))
-        scroll.mount(Static("─" * 80, classes="separator"))
+        scroll.mount(Static(CONTENT_SEPARATOR, classes="separator"))
 
         # Convert HTML content to markdown
         content = self._html_to_markdown(self.entry.content)

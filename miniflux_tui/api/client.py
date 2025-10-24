@@ -1,11 +1,17 @@
 """Miniflux API client wrapper using official miniflux package."""
 
 import asyncio
+from collections.abc import Callable
 from functools import partial
+from typing import TypeVar
 
 from miniflux import Client as MinifluxClientBase
 
+from miniflux_tui.constants import BACKOFF_FACTOR, MAX_RETRIES
+
 from .models import Entry
+
+T = TypeVar("T")
 
 
 class MinifluxClient:
@@ -55,11 +61,48 @@ class MinifluxClient:
         loop = asyncio.get_event_loop()
         return await loop.run_in_executor(None, partial(func, *args, **kwargs))
 
-    async def get_unread_entries(
-        self, limit: int = 100, offset: int = 0
-    ) -> list[Entry]:
+    async def _call_with_retry(
+        self,
+        func: Callable[..., T],
+        *args,
+        max_retries: int = MAX_RETRIES,
+        backoff_factor: float = BACKOFF_FACTOR,
+        **kwargs,
+    ) -> T:
+        """Call function with exponential backoff retry logic.
+
+        Args:
+            func: Synchronous function to call
+            *args: Positional arguments for func
+            max_retries: Maximum number of retry attempts
+            backoff_factor: Multiplier for exponential backoff
+            **kwargs: Keyword arguments for func
+
+        Returns:
+            Result from func call
+
+        Raises:
+            Exception: Last exception encountered if all retries fail
         """
-        Get unread feed entries.
+        last_exception = None
+
+        for attempt in range(max_retries):
+            try:
+                return await self._run_sync(func, *args, **kwargs)
+            except (ConnectionError, TimeoutError) as e:
+                last_exception = e
+                if attempt < max_retries - 1:
+                    wait_time = backoff_factor**attempt
+                    await asyncio.sleep(wait_time)
+            except Exception:
+                # Don't retry on non-network errors
+                raise
+
+        raise last_exception or Exception("Unknown error in retry logic")
+
+    async def get_unread_entries(self, limit: int = 100, offset: int = 0) -> list[Entry]:
+        """
+        Get unread feed entries with retry logic.
 
         Args:
             limit: Maximum number of entries to retrieve
@@ -68,23 +111,15 @@ class MinifluxClient:
         Returns:
             List of unread Entry objects
         """
-        # Use official client's get_entries method
-        response = await self._run_sync(
-            self.client.get_entries,
-            status=["unread"],
-            limit=limit,
-            offset=offset,
-            order="published_at",
-            direction="desc"
+        response = await self._call_with_retry(
+            self.client.get_entries, status=["unread"], limit=limit, offset=offset, order="published_at", direction="desc"
         )
 
         return [Entry.from_dict(entry) for entry in response.get("entries", [])]
 
-    async def get_starred_entries(
-        self, limit: int = 100, offset: int = 0
-    ) -> list[Entry]:
+    async def get_starred_entries(self, limit: int = 100, offset: int = 0) -> list[Entry]:
         """
-        Get starred feed entries.
+        Get starred feed entries with retry logic.
 
         Args:
             limit: Maximum number of entries to retrieve
@@ -93,20 +128,13 @@ class MinifluxClient:
         Returns:
             List of starred Entry objects
         """
-        response = await self._run_sync(
-            self.client.get_entries,
-            starred=True,
-            limit=limit,
-            offset=offset,
-            order="published_at",
-            direction="desc"
+        response = await self._call_with_retry(
+            self.client.get_entries, starred=True, limit=limit, offset=offset, order="published_at", direction="desc"
         )
 
         return [Entry.from_dict(entry) for entry in response.get("entries", [])]
 
-    async def change_entry_status(
-        self, entry_id: int, status: str
-    ) -> None:
+    async def change_entry_status(self, entry_id: int, status: str) -> None:
         """
         Change the read status of an entry.
 
@@ -114,11 +142,7 @@ class MinifluxClient:
             entry_id: ID of the entry
             status: New status ("read" or "unread")
         """
-        await self._run_sync(
-            self.client.update_entries,
-            entry_ids=[entry_id],
-            status=status
-        )
+        await self._run_sync(self.client.update_entries, entry_ids=[entry_id], status=status)
 
     async def mark_as_read(self, entry_id: int) -> None:
         """Mark an entry as read."""
@@ -135,10 +159,7 @@ class MinifluxClient:
         Args:
             entry_id: ID of the entry
         """
-        await self._run_sync(
-            self.client.toggle_bookmark,
-            entry_id
-        )
+        await self._run_sync(self.client.toggle_bookmark, entry_id)
 
     async def save_entry(self, entry_id: int) -> None:
         """
@@ -147,10 +168,7 @@ class MinifluxClient:
         Args:
             entry_id: ID of the entry
         """
-        await self._run_sync(
-            self.client.save_entry,
-            entry_id
-        )
+        await self._run_sync(self.client.save_entry, entry_id)
 
     async def mark_all_as_read(self, entry_ids: list[int]) -> None:
         """
@@ -159,11 +177,7 @@ class MinifluxClient:
         Args:
             entry_ids: List of entry IDs to mark as read
         """
-        await self._run_sync(
-            self.client.update_entries,
-            entry_ids=entry_ids,
-            status="read"
-        )
+        await self._run_sync(self.client.update_entries, entry_ids=entry_ids, status="read")
 
     async def refresh_all_feeds(self) -> None:
         """Trigger a refresh of all feeds."""
@@ -179,8 +193,5 @@ class MinifluxClient:
         Returns:
             Original content HTML
         """
-        response = await self._run_sync(
-            self.client.fetch_entry_content,
-            entry_id
-        )
+        response = await self._run_sync(self.client.fetch_entry_content, entry_id)
         return response.get("content", "")

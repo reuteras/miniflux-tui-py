@@ -1,4 +1,5 @@
 """Main TUI application."""
+
 import traceback
 
 from textual.app import App
@@ -7,6 +8,7 @@ from textual.driver import Driver
 from miniflux_tui.api.client import MinifluxClient
 from miniflux_tui.api.models import Entry
 from miniflux_tui.config import Config
+from miniflux_tui.constants import DEFAULT_ENTRY_LIMIT
 
 from .screens.entry_list import EntryListScreen
 from .screens.entry_reader import EntryReaderScreen
@@ -130,11 +132,11 @@ class MinifluxTUI(App):
 
         try:
             if view == "starred":
-                self.entries = await self.client.get_starred_entries(limit=100)
+                self.entries = await self.client.get_starred_entries(limit=DEFAULT_ENTRY_LIMIT)
                 self.current_view = "starred"
                 self.notify(f"Loaded {len(self.entries)} starred entries")
             else:
-                self.entries = await self.client.get_unread_entries(limit=100)
+                self.entries = await self.client.get_unread_entries(limit=DEFAULT_ENTRY_LIMIT)
                 self.current_view = "unread"
                 self.notify(f"Loaded {len(self.entries)} unread entries")
 

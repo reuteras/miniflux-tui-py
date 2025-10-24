@@ -11,9 +11,7 @@ from .ui.app import run_tui
 
 def main():
     """Main entry point for the application."""
-    parser = argparse.ArgumentParser(
-        description="A Python TUI client for Miniflux RSS reader"
-    )
+    parser = argparse.ArgumentParser(description="A Python TUI client for Miniflux RSS reader")
     parser.add_argument(
         "--init",
         action="store_true",

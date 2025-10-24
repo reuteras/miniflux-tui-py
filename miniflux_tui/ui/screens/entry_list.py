@@ -8,6 +8,11 @@ from textual.screen import Screen
 from textual.widgets import Footer, Header, Label, ListItem, ListView
 
 from miniflux_tui.api.models import Entry
+from miniflux_tui.constants import (
+    FEED_HEADER_FORMAT,
+    SORT_MODES,
+)
+from miniflux_tui.utils import get_star_icon, get_status_icon
 
 if TYPE_CHECKING:
     pass
@@ -22,8 +27,8 @@ class EntryListItem(ListItem):
         self.read_color = read_color
 
         # Format the entry display
-        status_icon = "●" if entry.is_unread else "○"
-        star_icon = "★" if entry.starred else "☆"
+        status_icon = get_status_icon(entry.is_unread)
+        star_icon = get_star_icon(entry.starred)
 
         # Determine color based on read status
         color = unread_color if entry.is_unread else read_color
@@ -194,7 +199,7 @@ class EntryListScreen(Screen):
             if current_feed != entry.feed.title:
                 current_feed = entry.feed.title
                 # Add a header item
-                header_label = Label(f"━━ {current_feed} ━━", classes="feed-header")
+                header_label = Label(FEED_HEADER_FORMAT.format(feed_title=current_feed), classes="feed-header")
                 header = ListItem(header_label)
                 self.list_view.append(header)
                 # Don't add headers to displayed_items for navigation
@@ -281,9 +286,8 @@ class EntryListScreen(Screen):
 
     def action_cycle_sort(self):
         """Cycle through sort modes."""
-        sort_modes = ["date", "feed", "status"]
-        current_index = sort_modes.index(self.current_sort)
-        self.current_sort = sort_modes[(current_index + 1) % len(sort_modes)]
+        current_index = SORT_MODES.index(self.current_sort)
+        self.current_sort = SORT_MODES[(current_index + 1) % len(SORT_MODES)]
 
         # Update title to show current sort
         self.sub_title = f"Sort: {self.current_sort.title()}"
