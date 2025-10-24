@@ -304,21 +304,21 @@ class EntryListScreen(Screen):
             await self.app.load_entries(self.app.current_view)
             self.notify("Entries refreshed")
 
-    def action_show_unread(self):
-        """Toggle showing only unread entries."""
-        self.filter_unread_only = not self.filter_unread_only
-        self.filter_starred_only = False  # Clear other filter
-        self._populate_list()
-        status = "unread only" if self.filter_unread_only else "all"
-        self.notify(f"Showing {status}")
+    async def action_show_unread(self):
+        """Load and show only unread entries."""
+        if hasattr(self.app, "load_entries"):
+            await self.app.load_entries("unread")
+            self.filter_unread_only = False
+            self.filter_starred_only = False
+            self._populate_list()
 
-    def action_show_starred(self):
-        """Toggle showing only starred entries."""
-        self.filter_starred_only = not self.filter_starred_only
-        self.filter_unread_only = False  # Clear other filter
-        self._populate_list()
-        status = "starred only" if self.filter_starred_only else "all"
-        self.notify(f"Showing {status}")
+    async def action_show_starred(self):
+        """Load and show only starred entries."""
+        if hasattr(self.app, "load_entries"):
+            await self.app.load_entries("starred")
+            self.filter_unread_only = False
+            self.filter_starred_only = False
+            self._populate_list()
 
     def action_show_help(self):
         """Show keyboard help."""
