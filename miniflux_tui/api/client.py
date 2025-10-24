@@ -142,15 +142,13 @@ class MinifluxClient:
 
     async def save_entry(self, entry_id: int) -> None:
         """
-        Save an entry for later.
+        Save an entry to third-party service (e.g., Wallabag, Shiori, Shaarli).
 
         Args:
             entry_id: ID of the entry
         """
-        # Note: The official client doesn't have a direct save_entry method
-        # We'll use toggle_bookmark as a workaround
         await self._run_sync(
-            self.client.toggle_bookmark,
+            self.client.save_entry,
             entry_id
         )
 

@@ -60,6 +60,7 @@ To generate an API key for your Miniflux account:
 - Enter - Open entry
 - m - Toggle read/unread
 - * - Toggle starred
+- e - Save entry to third-party service
 - s - Cycle sort mode (feed/date/status)
 - g - Toggle grouping by feed
 - f - Filter by feed
@@ -73,10 +74,11 @@ To generate an API key for your Miniflux account:
 - PageUp/PageDown - Fast scroll
 - u - Mark as unread
 - * - Toggle starred
+- e - Save entry to third-party service
 - o - Open in browser
 - f - Fetch original content
-- n - Next entry
-- p - Previous entry
+- J - Next entry
+- K - Previous entry
 - b - Back to list
 - ? - Show keyboard help
 

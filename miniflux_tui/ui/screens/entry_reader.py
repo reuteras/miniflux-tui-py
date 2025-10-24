@@ -30,6 +30,7 @@ class EntryReaderScreen(Screen):
         Binding("b", "back", "Back to List"),
         Binding("u", "mark_unread", "Mark Unread"),
         Binding("asterisk", "toggle_star", "Toggle Star"),
+        Binding("e", "save_entry", "Save Entry"),
         Binding("o", "open_browser", "Open in Browser"),
         Binding("f", "fetch_original", "Fetch Original"),
         Binding("question_mark", "show_help", "Help"),
@@ -161,6 +162,15 @@ class EntryReaderScreen(Screen):
                 await self.refresh_screen()
             except Exception as e:
                 self.notify(f"Error toggling star: {e}", severity="error")
+
+    async def action_save_entry(self):
+        """Save entry to third-party service."""
+        if hasattr(self.app, "client") and self.app.client:
+            try:
+                await self.app.client.save_entry(self.entry.id)
+                self.notify(f"Entry saved: {self.entry.title}")
+            except Exception as e:
+                self.notify(f"Failed to save entry: {e}", severity="error")
 
     def action_open_browser(self):
         """Open entry URL in web browser."""

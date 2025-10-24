@@ -44,6 +44,7 @@ class EntryListScreen(Screen):
         Binding("enter", "select_entry", "Open Entry"),
         Binding("m", "toggle_read", "Mark Read/Unread"),
         Binding("asterisk", "toggle_star", "Toggle Star"),
+        Binding("e", "save_entry", "Save Entry"),
         Binding("s", "cycle_sort", "Cycle Sort"),
         Binding("g", "toggle_group", "Group by Feed"),
         Binding("r", "refresh", "Refresh"),
@@ -238,6 +239,20 @@ class EntryListScreen(Screen):
             # TODO: Call API to update star status
             # Refresh display
             self._populate_list()
+
+    async def action_save_entry(self):
+        """Save entry to third-party service."""
+        if not self.list_view:
+            return
+
+        highlighted = self.list_view.highlighted_child
+        if highlighted and isinstance(highlighted, EntryListItem):
+            if hasattr(self.app, "client") and self.app.client:
+                try:
+                    await self.app.client.save_entry(highlighted.entry.id)
+                    self.notify(f"Entry saved: {highlighted.entry.title}")
+                except Exception as e:
+                    self.notify(f"Failed to save entry: {e}", severity="error")
 
     def action_cycle_sort(self):
         """Cycle through sort modes."""
