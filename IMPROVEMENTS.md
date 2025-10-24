@@ -1,18 +1,67 @@
 # Improvement Plan for miniflux-tui-py
 
+**Last Updated**: January 2025
+**Project Version**: 0.1.0
+
 This document outlines a comprehensive plan for improving the miniflux-tui-py project, organized by priority and category.
 
 ## Executive Summary
 
 The codebase has a solid foundation but needs improvements in:
-- **Missing features**: 2 empty stub methods + 2 unimplemented API calls
+- **Missing features**: 2 empty stub methods + 2 unimplemented API calls (toggle_read/toggle_star in entry_list.py need API integration, filtering stubs)
 - **Testing**: Zero test coverage (tests were removed)
 - **Code quality**: Significant code duplication and long functions
-- **Documentation**: Outdated help screens and keyboard shortcut mismatches
+- **Documentation**: ✅ COMPLETED - Help screens and README updated with correct shortcuts (J/K navigation, e for save_entry, , for refresh)
 - **Error handling**: Inconsistent patterns and silent failures
 - **Performance**: Full screen remounts instead of incremental updates
 
 **Total issues identified: 50+ across 7 categories**
+**Recently completed**: Keyboard documentation fixes, save_entry feature (e key), refresh alias (, key)
+
+---
+
+## Progress Summary
+
+**Completed (3/15 Phase 1 items):**
+- ✅ Keyboard shortcut documentation (help.py, README.md)
+- ✅ Save entry feature implementation
+- ✅ Refresh key alias
+
+**Next Priorities:**
+1. Implement API calls for toggle_read/toggle_star in entry_list.py (Phase 1.1)
+2. Implement filtering by unread/starred (Phase 1.2)
+3. Clean up remaining TODO comments (Phase 1.4)
+
+---
+
+## Recently Implemented Features (2025)
+
+### Save Entry Feature (e key)
+**Status**: ✅ COMPLETED
+**Files**: `miniflux_tui/api/client.py`, `miniflux_tui/ui/screens/entry_list.py`, `miniflux_tui/ui/screens/entry_reader.py`
+
+Implemented the "e" key binding to save entries to third-party services using Miniflux's `save_entry` API method.
+
+**What was implemented**:
+- API client method using official `client.save_entry()` function
+- Key binding in entry list screen (line 47)
+- Action method `action_save_entry()` with error handling and notifications (lines 243-255)
+- Key binding in entry reader screen (line 33)
+- Action method in reader with success/error notifications (lines 166-173)
+- Documentation in help screen and README
+
+**Usage**: Press "e" on any entry to save it to configured third-party services (Wallabag, Shiori, or Shaarli).
+
+### Refresh Alias (, key)
+**Status**: ✅ COMPLETED
+**Files**: `miniflux_tui/ui/screens/entry_list.py`
+
+Added comma (,) as an alternative key binding for refreshing the entry list.
+
+**What was implemented**:
+- Additional binding `Binding("comma", "refresh", "Refresh", show=False)` (line 50)
+- Both "r" and "," now trigger the same refresh action
+- Documentation updated in help screen and README
 
 ---
 
@@ -151,43 +200,23 @@ def _populate_list(self):
 
 ### 1.3 Fix Keyboard Shortcut Documentation
 
-**Status**: TODO
+**Status**: ✅ COMPLETED
 **Files**: `miniflux_tui/ui/screens/help.py`, `README.md`
 
-Help screen and README have outdated/incorrect keyboard bindings.
+Help screen and README have been updated to match actual implementation.
 
-**Current issues**:
-- Help screen shows 'n'/'p' for next/previous entry, but actual bindings are 'J'/'K'
-- README lists "f - Filter by feed" which doesn't exist
-- Help screen doesn't mention 'g' for grouping
+**What was fixed**:
+- ✅ Help screen now correctly shows 'J'/'K' for next/previous entry (was showing 'n'/'p')
+- ✅ README updated to show correct bindings
+- ✅ Added "e" key binding for saving entries to third-party services (Wallabag, Shiori, Shaarli)
+- ✅ Added "," (comma) as alias for refresh entries
+- ✅ All keyboard shortcuts now documented in both help screen and README
 
-**Fix help.py**:
-```python
-# Fix keyboard shortcuts to match actual bindings
-# Around line 46-47, change from:
-"n                     : Next entry",
-"p                     : Previous entry",
-# To:
-"J                     : Next entry",
-"K                     : Previous entry",
+**Current documentation includes**:
+- Entry List View: j/k navigation, m (read/unread), * (star), e (save), s (cycle sort), g (group), r/, (refresh), u (unread), t (starred)
+- Entry Reader View: j/k scroll, u (mark unread), * (star), e (save), o (browser), f (fetch original), J/K (next/prev entry)
 
-# Add missing shortcuts:
-"g                     : Toggle group by feed",
-"s                     : Cycle sort mode",
-```
-
-**Fix README.md**:
-```markdown
-# Current (incorrect, line ~65):
-- f - Filter by feed
-
-# Change to:
-- u - Show unread entries
-- t - Show starred entries
-- g - Group by feed
-```
-
-**Why this matters**: Users can't learn the application if documentation doesn't match implementation.
+**Why this was important**: Users now have accurate documentation that matches implementation. The new save_entry feature is properly documented.
 
 ---
 
@@ -816,8 +845,10 @@ Add keybinding: `Binding("ctrl+z", "undo_change", "Undo")`
 ### Week 1: Phase 1 (4 hours)
 - [ ] Implement API calls for toggle_read/toggle_star
 - [ ] Implement filtering (show_unread/show_starred)
-- [ ] Fix keyboard shortcut documentation
-- [ ] Clean up TODO comments
+- [x] Fix keyboard shortcut documentation ✅ COMPLETED
+- [x] Implement save_entry feature (e key) ✅ COMPLETED
+- [x] Add refresh alias (, key) ✅ COMPLETED
+- [ ] Clean up TODO comments (partially done)
 
 ### Week 2: Phase 2 Part 1 (4 hours)
 - [ ] Extract repeated code patterns
@@ -846,12 +877,19 @@ Add keybinding: `Binding("ctrl+z", "undo_change", "Undo")`
 
 Copy this to your issue tracker or notes:
 
+**Phase 1 - API Integration:**
 - [ ] Fix `action_toggle_read()` - add API call
 - [ ] Fix `action_toggle_star()` - add API call
 - [ ] Implement `action_show_unread()`
 - [ ] Implement `action_show_starred()`
-- [ ] Update help.py keyboard shortcuts
-- [ ] Update README.md keyboard shortcuts
+
+**Phase 1 - Documentation:** ✅ COMPLETED
+- [x] Update help.py keyboard shortcuts (J/K, e, ,)
+- [x] Update README.md keyboard shortcuts (J/K, e, ,)
+- [x] Implement save_entry feature (e key)
+- [x] Add refresh alias (, key)
+
+**Phase 2 - Code Quality:**
 - [ ] Create constants.py file
 - [ ] Create utils.py with helper functions
 - [ ] Extract _get_scroll_container() helper

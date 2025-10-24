@@ -213,32 +213,56 @@ class EntryListScreen(Screen):
         # Delegate to ListView's built-in cursor movement
         self.list_view.action_cursor_up()
 
-    def action_toggle_read(self):
+    async def action_toggle_read(self):
         """Toggle read/unread status of current entry."""
         if not self.list_view:
             return
 
         highlighted = self.list_view.highlighted_child
-        if highlighted and isinstance(highlighted, EntryListItem):
-            # Toggle the status
-            new_status = "read" if highlighted.entry.is_unread else "unread"
-            highlighted.entry.status = new_status
-            # TODO: Call API to update status
-            # Refresh display
-            self._populate_list()
+        if highlighted and isinstance(highlighted, EntryListItem) and hasattr(self.app, "client") and self.app.client:
+            try:
+                # Determine new status
+                new_status = "read" if highlighted.entry.is_unread else "unread"
 
-    def action_toggle_star(self):
+                # Call API to persist change
+                await self.app.client.change_entry_status(
+                    highlighted.entry.id,
+                    new_status
+                )
+
+                # Update local state
+                highlighted.entry.status = new_status
+
+                # Refresh display
+                self._populate_list()
+
+                # Notify user
+                self.notify(f"Entry marked as {new_status}")
+            except Exception as e:
+                self.notify(f"Error updating status: {e}", severity="error")
+
+    async def action_toggle_star(self):
         """Toggle star status of current entry."""
         if not self.list_view:
             return
 
         highlighted = self.list_view.highlighted_child
-        if highlighted and isinstance(highlighted, EntryListItem):
-            # Toggle the star
-            highlighted.entry.starred = not highlighted.entry.starred
-            # TODO: Call API to update star status
-            # Refresh display
-            self._populate_list()
+        if highlighted and isinstance(highlighted, EntryListItem) and hasattr(self.app, "client") and self.app.client:
+            try:
+                # Call API to toggle star
+                await self.app.client.toggle_starred(highlighted.entry.id)
+
+                # Update local state
+                highlighted.entry.starred = not highlighted.entry.starred
+
+                # Refresh display
+                self._populate_list()
+
+                # Notify user
+                status = "starred" if highlighted.entry.starred else "unstarred"
+                self.notify(f"Entry {status}")
+            except Exception as e:
+                self.notify(f"Error toggling star: {e}", severity="error")
 
     async def action_save_entry(self):
         """Save entry to third-party service."""
@@ -246,13 +270,12 @@ class EntryListScreen(Screen):
             return
 
         highlighted = self.list_view.highlighted_child
-        if highlighted and isinstance(highlighted, EntryListItem):
-            if hasattr(self.app, "client") and self.app.client:
-                try:
-                    await self.app.client.save_entry(highlighted.entry.id)
-                    self.notify(f"Entry saved: {highlighted.entry.title}")
-                except Exception as e:
-                    self.notify(f"Failed to save entry: {e}", severity="error")
+        if highlighted and isinstance(highlighted, EntryListItem) and hasattr(self.app, "client") and self.app.client:
+            try:
+                await self.app.client.save_entry(highlighted.entry.id)
+                self.notify(f"Entry saved: {highlighted.entry.title}")
+            except Exception as e:
+                self.notify(f"Failed to save entry: {e}", severity="error")
 
     def action_cycle_sort(self):
         """Cycle through sort modes."""
