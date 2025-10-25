@@ -535,8 +535,6 @@ class EntryListScreen(Screen):
         if not feed_title:
             return
 
-        self.last_highlighted_feed = feed_title
-
         # Ensure fold state exists
         if feed_title not in self.feed_fold_state:
             self.feed_fold_state[feed_title] = not self.group_collapsed
@@ -546,16 +544,6 @@ class EntryListScreen(Screen):
         if is_currently_expanded:
             self.feed_fold_state[feed_title] = False
             self._populate_list()
-            # Find and position cursor at the collapsed feed header
-            if feed_title in self.feed_header_map:
-                try:
-                    idx = self.list_view.children.index(
-                        self.feed_header_map[feed_title]
-                    )
-                    if 0 <= idx < len(self.list_view.children):
-                        self.list_view.index = idx
-                except (ValueError, IndexError):
-                    pass
             self.notify(f"Feed collapsed: {feed_title}")
 
     def action_expand_feed(self):
@@ -580,8 +568,6 @@ class EntryListScreen(Screen):
         if not feed_title:
             return
 
-        self.last_highlighted_feed = feed_title
-
         # Ensure fold state exists
         if feed_title not in self.feed_fold_state:
             self.feed_fold_state[feed_title] = not self.group_collapsed
@@ -591,16 +577,6 @@ class EntryListScreen(Screen):
         if is_currently_collapsed:
             self.feed_fold_state[feed_title] = True
             self._populate_list()
-            # Find and position cursor at the expanded feed header
-            if feed_title in self.feed_header_map:
-                try:
-                    idx = self.list_view.children.index(
-                        self.feed_header_map[feed_title]
-                    )
-                    if 0 <= idx < len(self.list_view.children):
-                        self.list_view.index = idx
-                except (ValueError, IndexError):
-                    pass
             self.notify(f"Feed expanded: {feed_title}")
 
     async def action_refresh(self):
