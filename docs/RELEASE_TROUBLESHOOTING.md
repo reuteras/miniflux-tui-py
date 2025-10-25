@@ -31,17 +31,17 @@ During release, you see:
   ```
 
 2. **Analyze the failure:**
-  - Look for test names with `FAILED` status
-  - Read the assertion errors carefully
-  - Check the test file to understand what's being tested
+- Look for test names with `FAILED` status
+- Read the assertion errors carefully
+- Check the test file to understand what's being tested
 
 3. **Fix the issue:**
-  - Edit the relevant source code or test file
-  - Common issues:
-    - Logic bugs in features
-    - Missing type hints
-    - Incorrect mocks/fixtures
-    - Test isolation problems
+- Edit the relevant source code or test file
+- Common issues:
+  - Logic bugs in features
+  - Missing type hints
+  - Incorrect mocks/fixtures
+  - Test isolation problems
 
 4. **Verify the fix:**
   ```bash
@@ -113,11 +113,11 @@ During release, you see:
   ```
 
 3. **Fix remaining issues manually:**
-  - Import ordering: Put stdlib imports first, then third-party, then local
-  - Naming: Use snake_case for variables/functions, PascalCase for classes
-  - Unused imports: Remove lines that aren't used
-  - Docstring format: Ensure proper docstring formatting
-  - Line length: Keep lines under 140 characters
+- Import ordering: Put stdlib imports first, then third-party, then local
+- Naming: Use snake_case for variables/functions, PascalCase for classes
+- Unused imports: Remove lines that aren't used
+- Docstring format: Ensure proper docstring formatting
+- Line length: Keep lines under 140 characters
 
 4. **Verify the fixes:**
   ```bash
@@ -197,9 +197,9 @@ During release, you see:
   ```
 
 2. **Understand the error:**
-  - Read the error message carefully
-  - Look for the file path and line number
-  - Understand what type was expected vs. what was provided
+- Read the error message carefully
+- Look for the file path and line number
+- Understand what type was expected vs. what was provided
 
 3. **Fix type issues:**
   ```python
@@ -213,9 +213,9 @@ During release, you see:
   ```
 
 4. **Add type annotations:**
-  - Function parameters: `def func(x: int) -> str:`
-  - Class attributes: `name: str = ""`
-  - List/Dict types: `items: list[str]` or `data: dict[str, int]`
+- Function parameters: `def func(x: int) -> str:`
+- Class attributes: `name: str = ""`
+- List/Dict types: `items: list[str]` or `data: dict[str, int]`
 
 5. **Use TYPE_CHECKING for circular imports:**
   ```python
@@ -367,9 +367,9 @@ git push origin main
   ```
 
 3. **Verify CHANGELOG.md:**
-  - Make sure it's well-formatted
-  - Add entry for new version if needed
-  - Check for typos
+- Make sure it's well-formatted
+- Add entry for new version if needed
+- Check for typos
 
 4. **Ensure clean working directory:**
   ```bash
@@ -379,30 +379,30 @@ git push origin main
 ### During Release
 
 1. **Review suggested version:**
-  - Release script suggests next patch version
-  - Press Enter to accept, or type custom version
+- Release script suggests next patch version
+- Press Enter to accept, or type custom version
 
 2. **Review auto-generated changelog:**
-  - Script can auto-generate from commits
-  - Review the entries for accuracy
-  - Can edit manually if needed
+- Script can auto-generate from commits
+- Review the entries for accuracy
+- Can edit manually if needed
 
 3. **Double-check before confirming:**
-  - Version number is correct
-  - CHANGELOG.md looks good
-  - All checks passed
+- Version number is correct
+- CHANGELOG.md looks good
+- All checks passed
 
 ### After Release
 
 1. **Monitor GitHub Actions:**
-  - Go to https://github.com/reuteras/miniflux-tui-py/actions
-  - Watch the build job
-  - Verify publish job succeeds
+- Go to <https://github.com/reuteras/miniflux-tui-py/actions>
+- Watch the build job
+- Verify publish job succeeds
 
 2. **Check PyPI:**
-  - https://pypi.org/project/miniflux-tui-py/
-  - Verify new version appears (may take 1-2 minutes)
-  - Check that all files are uploaded
+- <https://pypi.org/project/miniflux-tui-py/>
+- Verify new version appears (may take 1-2 minutes)
+- Check that all files are uploaded
 
 3. **Verify installation:**
   ```bash
@@ -417,7 +417,7 @@ git push origin main
 - **Release documentation**: See [RELEASE.md](../RELEASE.md)
 - **Contributing guide**: See [CONTRIBUTING.md](./contributing.md)
 - **Project README**: See [README.md](../README.md)
-- **GitHub Issues**: https://github.com/reuteras/miniflux-tui-py/issues
+- **GitHub Issues**: <https://github.com/reuteras/miniflux-tui-py/issues>
 
 If you encounter an issue not covered here, please open a GitHub issue with:
 - The exact command you ran

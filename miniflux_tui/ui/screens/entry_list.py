@@ -151,7 +151,9 @@ class EntryListScreen(Screen):
             self.log("on_mount: No entries yet, skipping initial population")
 
         # Ensure ListView has focus so keyboard input works
-        self.list_view.focus()
+        if self.list_view and len(self.list_view.children) > 0:
+            with suppress(Exception):
+                self.list_view.focus()
 
     def on_screen_resume(self) -> None:
         """Called when screen is resumed (e.g., after returning from entry reader)."""
@@ -163,8 +165,9 @@ class EntryListScreen(Screen):
                 self._restore_cursor_position()
 
         # Ensure ListView has focus so keyboard input works
-        if self.list_view:
-            self.list_view.focus()
+        if self.list_view and len(self.list_view.children) > 0:
+            with suppress(Exception):
+                self.list_view.focus()
 
     def on_list_view_selected(self, event: ListView.Selected) -> None:
         """Handle ListView selection (Enter key)."""

@@ -17,30 +17,30 @@ This Python script automates the entire release workflow and works across Window
 The release script handles:
 
 1. ✅ **Pre-Release Checks**
-  - Runs all tests (pytest with coverage)
-  - Checks code formatting (ruff)
-  - Validates type hints (pyright)
+- Runs all tests (pytest with coverage)
+- Checks code formatting (ruff)
+- Validates type hints (pyright)
 
 2. ✅ **Version Management**
-  - Prompts for new version number
-  - Validates semantic versioning format (e.g., 0.2.1)
-  - Updates `pyproject.toml`
+- Prompts for new version number
+- Validates semantic versioning format (e.g., 0.2.1)
+- Updates `pyproject.toml`
 
 3. ✅ **Documentation**
-  - Opens `CHANGELOG.md` for editing
-  - Verifies the changelog was updated
+- Opens `CHANGELOG.md` for editing
+- Verifies the changelog was updated
 
 4. ✅ **Git Operations**
-  - Creates a commit with version bump and changelog
-  - Creates an annotated git tag
-  - Pushes everything to GitHub
+- Creates a commit with version bump and changelog
+- Creates an annotated git tag
+- Pushes everything to GitHub
 
 5. ✅ **Automatic CI/CD**
-  - GitHub Actions workflow triggers automatically
-  - Runs full test suite
-  - Builds distribution packages
-  - Publishes to PyPI
-  - Creates GitHub Release with artifacts
+- GitHub Actions workflow triggers automatically
+- Runs full test suite
+- Builds distribution packages
+- Publishes to PyPI
+- Creates GitHub Release with artifacts
 
 ## Prerequisites
 
