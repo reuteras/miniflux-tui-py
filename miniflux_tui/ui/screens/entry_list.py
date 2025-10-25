@@ -15,7 +15,7 @@ from miniflux_tui.constants import (
     SORT_MODES,
 )
 from miniflux_tui.performance import ScreenRefreshOptimizer
-from miniflux_tui.utils import get_star_icon, get_status_icon
+from miniflux_tui.utils import api_call, get_star_icon, get_status_icon
 
 if TYPE_CHECKING:
     from miniflux_tui.ui.app import MinifluxTUI
@@ -495,13 +495,14 @@ class EntryListScreen(Screen):
             return
 
         highlighted = self.list_view.highlighted_child
-        if highlighted and isinstance(highlighted, EntryListItem) and hasattr(self.app, "client") and self.app.client:
-            try:
-                # Determine new status
-                new_status = "read" if highlighted.entry.is_unread else "unread"
+        if highlighted and isinstance(highlighted, EntryListItem):
+            # Determine new status
+            new_status = "read" if highlighted.entry.is_unread else "unread"
 
+            # Use consistent error handling context
+            async with api_call(self, f"marking entry as {new_status}") as client:
                 # Call API to persist change
-                await self.app.client.change_entry_status(highlighted.entry.id, new_status)
+                await client.change_entry_status(highlighted.entry.id, new_status)
 
                 # Update local state
                 highlighted.entry.status = new_status
@@ -511,10 +512,8 @@ class EntryListScreen(Screen):
                     # Fall back to full refresh if incremental update fails
                     self._populate_list()
 
-                # Notify user
+                # Notify user of success
                 self.notify(f"Entry marked as {new_status}")
-            except Exception as e:
-                self.notify(f"Error updating status: {e}", severity="error")
 
     async def action_toggle_star(self):
         """Toggle star status of current entry."""
@@ -522,10 +521,11 @@ class EntryListScreen(Screen):
             return
 
         highlighted = self.list_view.highlighted_child
-        if highlighted and isinstance(highlighted, EntryListItem) and hasattr(self.app, "client") and self.app.client:
-            try:
+        if highlighted and isinstance(highlighted, EntryListItem):
+            # Use consistent error handling context
+            async with api_call(self, "toggling star status") as client:
                 # Call API to toggle star
-                await self.app.client.toggle_starred(highlighted.entry.id)
+                await client.toggle_starred(highlighted.entry.id)
 
                 # Update local state
                 highlighted.entry.starred = not highlighted.entry.starred
@@ -535,11 +535,9 @@ class EntryListScreen(Screen):
                     # Fall back to full refresh if incremental update fails
                     self._populate_list()
 
-                # Notify user
+                # Notify user of success
                 status = "starred" if highlighted.entry.starred else "unstarred"
                 self.notify(f"Entry {status}")
-            except Exception as e:
-                self.notify(f"Error toggling star: {e}", severity="error")
 
     async def action_save_entry(self):
         """Save entry to third-party service."""
@@ -547,12 +545,11 @@ class EntryListScreen(Screen):
             return
 
         highlighted = self.list_view.highlighted_child
-        if highlighted and isinstance(highlighted, EntryListItem) and hasattr(self.app, "client") and self.app.client:
-            try:
-                await self.app.client.save_entry(highlighted.entry.id)
+        if highlighted and isinstance(highlighted, EntryListItem):
+            # Use consistent error handling context
+            async with api_call(self, "saving entry") as client:
+                await client.save_entry(highlighted.entry.id)
                 self.notify(f"Entry saved: {highlighted.entry.title}")
-            except Exception as e:
-                self.notify(f"Failed to save entry: {e}", severity="error")
 
     def action_cycle_sort(self):
         """Cycle through sort modes."""
