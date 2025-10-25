@@ -200,10 +200,8 @@ class EntryListScreen(Screen):
         self._display_entries(sorted_entries)
         self.refresh_optimizer.track_full_refresh()
 
-        # Set initial index to 0 to highlight the first item
-        if len(self.list_view.children) > 0:
-            with suppress(IndexError, ValueError):
-                self.list_view.index = 0
+        # Don't set initial index here - let _restore_cursor_position handle it
+        # This prevents overwriting the cursor position when returning from entry reader
 
     def _restore_cursor_position(self) -> None:
         """Restore cursor position based on mode.
@@ -211,8 +209,9 @@ class EntryListScreen(Screen):
         In grouped mode: restore position to the last highlighted entry.
         In non-grouped mode: restore position to the last cursor index.
         Used after rebuilding the list to restore user's position.
+        On initial mount, defaults to first item.
         """
-        if not self.list_view:
+        if not self.list_view or len(self.list_view.children) == 0:
             return
 
         # Try to restore to the last highlighted entry (works in both grouped and non-grouped modes)
@@ -235,16 +234,16 @@ class EntryListScreen(Screen):
                         self.list_view.index = i
                         return
 
-        # Fallback: use last cursor index
+        # Fallback: use last cursor index if valid, otherwise go to first item
         max_index = len(self.list_view.children) - 1
         if max_index >= 0:
+            # On initial mount, last_cursor_index will be 0, which is correct
             cursor_index = min(self.last_cursor_index, max_index)
             with suppress(Exception):
                 self.list_view.index = cursor_index
         else:
-            # If nothing else works, go to first item
-            with suppress(Exception):
-                self.list_view.index = 0
+            # If list is empty, don't try to set index
+            pass
 
     def _restore_cursor_position_and_focus(self) -> None:
         """Restore cursor position and ensure focus (called after ListView update)."""
