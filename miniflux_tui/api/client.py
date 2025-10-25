@@ -154,56 +154,56 @@ class MinifluxClient:
 
     async def change_entry_status(self, entry_id: int, status: str) -> None:
         """
-        Change the read status of an entry.
+        Change the read status of an entry with retry logic.
 
         Args:
             entry_id: ID of the entry
             status: New status ("read" or "unread")
         """
-        await self._run_sync(self.client.update_entries, entry_ids=[entry_id], status=status)
+        await self._call_with_retry(self.client.update_entries, entry_ids=[entry_id], status=status)
 
     async def mark_as_read(self, entry_id: int) -> None:
-        """Mark an entry as read."""
+        """Mark an entry as read with retry logic."""
         await self.change_entry_status(entry_id, "read")
 
     async def mark_as_unread(self, entry_id: int) -> None:
-        """Mark an entry as unread."""
+        """Mark an entry as unread with retry logic."""
         await self.change_entry_status(entry_id, "unread")
 
     async def toggle_starred(self, entry_id: int) -> None:
         """
-        Toggle the starred status of an entry.
+        Toggle the starred status of an entry with retry logic.
 
         Args:
             entry_id: ID of the entry
         """
-        await self._run_sync(self.client.toggle_bookmark, entry_id)
+        await self._call_with_retry(self.client.toggle_bookmark, entry_id)
 
     async def save_entry(self, entry_id: int) -> None:
         """
-        Save an entry to third-party service (e.g., Wallabag, Shiori, Shaarli).
+        Save an entry to third-party service (e.g., Wallabag, Shiori, Shaarli) with retry logic.
 
         Args:
             entry_id: ID of the entry
         """
-        await self._run_sync(self.client.save_entry, entry_id)
+        await self._call_with_retry(self.client.save_entry, entry_id)
 
     async def mark_all_as_read(self, entry_ids: list[int]) -> None:
         """
-        Mark multiple entries as read.
+        Mark multiple entries as read with retry logic.
 
         Args:
             entry_ids: List of entry IDs to mark as read
         """
-        await self._run_sync(self.client.update_entries, entry_ids=entry_ids, status="read")
+        await self._call_with_retry(self.client.update_entries, entry_ids=entry_ids, status="read")
 
     async def refresh_all_feeds(self) -> None:
-        """Trigger a refresh of all feeds."""
-        await self._run_sync(self.client.refresh_all_feeds)
+        """Trigger a refresh of all feeds with retry logic."""
+        await self._call_with_retry(self.client.refresh_all_feeds)
 
     async def fetch_original_content(self, entry_id: int) -> str:
         """
-        Fetch the original content of an entry.
+        Fetch the original content of an entry with retry logic.
 
         Args:
             entry_id: ID of the entry
@@ -211,5 +211,5 @@ class MinifluxClient:
         Returns:
             Original content HTML
         """
-        response = await self._run_sync(self.client.fetch_entry_content, entry_id)
+        response = await self._call_with_retry(self.client.fetch_entry_content, entry_id)
         return response.get("content", "")
