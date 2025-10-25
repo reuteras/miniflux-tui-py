@@ -47,7 +47,7 @@ jobs:
       - name: Check coverage threshold
         run: |
           coverage_percent=$(python -c "import xml.etree.ElementTree as ET; root = ET.parse('coverage.xml').getroot(); print(float(root.get('line-rate')) * 100)")
-          threshold=35
+          threshold=40
           if (( $(echo "$coverage_percent < $threshold" | bc -l) )); then
             echo "Coverage $coverage_percent% is below threshold $threshold%"
             exit 1
