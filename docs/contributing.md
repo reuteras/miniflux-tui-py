@@ -106,11 +106,11 @@ git push origin feature/your-feature-name
 ```
 
 2. **Create a pull request on GitHub:**
-   - Go to the main repository
-   - Click "New Pull Request"
-   - Select your feature branch
-   - Fill in a descriptive title and description
-   - Reference any related issues
+  - Go to the main repository
+  - Click "New Pull Request"
+  - Select your feature branch
+  - Fill in a descriptive title and description
+  - Reference any related issues
 
 ### What to Expect
 
@@ -169,9 +169,9 @@ Documentation is built with MkDocs and located in the `docs/` folder.
 
 1. Edit files in the `docs/` folder (Markdown format)
 2. Preview locally:
-   ```bash
-   uv run mkdocs serve
-   ```
+  ```bash
+  uv run mkdocs serve
+  ```
 3. View at http://localhost:8000
 
 ### Documentation Guidelines
