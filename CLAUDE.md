@@ -227,14 +227,14 @@ The main branch has protection rules enabled via GitHub Settings. These prevent 
 1. Go to **Settings** → **Branches** → **Add rule**
 2. Apply to `main` branch
 3. Enable these settings:
-  - ✅ **Require a pull request before merging**
-    - Require approvals: 0 (adjust if peer review needed)
-    - Dismiss stale pull request approvals when new commits are pushed: ✓
-  - ✅ **Require status checks to pass before merging**
-    - Require branches to be up to date before merging: ✓
-    - Select required checks: All CI checks (test, docs-deploy)
-  - ✅ **Include administrators** (optional, for consistency)
-  - ✅ **Restrict who can push to matching branches** (optional, admin-only)
+- ✅ **Require a pull request before merging**
+  - Require approvals: 0 (adjust if peer review needed)
+  - Dismiss stale pull request approvals when new commits are pushed: ✓
+- ✅ **Require status checks to pass before merging**
+  - Require branches to be up to date before merging: ✓
+  - Select required checks: All CI checks (test, docs-deploy)
+- ✅ **Include administrators** (optional, for consistency)
+- ✅ **Restrict who can push to matching branches** (optional, admin-only)
 
 These settings ensure:
 - No one can push directly to main (must use PRs)
