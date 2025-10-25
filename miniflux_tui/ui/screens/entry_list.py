@@ -12,6 +12,7 @@ from miniflux_tui.constants import (
     FEED_HEADER_FORMAT,
     SORT_MODES,
 )
+from miniflux_tui.performance import ScreenRefreshOptimizer
 from miniflux_tui.utils import get_star_icon, get_status_icon
 
 if TYPE_CHECKING:
@@ -80,6 +81,8 @@ class EntryListScreen(Screen):
         self.filter_starred_only = False  # Filter to show only starred entries
         self.list_view: ListView | None = None
         self.displayed_items: list[ListItem] = []  # Track items in display order
+        self.refresh_optimizer = ScreenRefreshOptimizer()  # Track refresh performance
+        self.entry_item_map: dict[int, EntryListItem] = {}  # Map entry IDs to list items
 
     def compose(self) -> ComposeResult:
         """Create child widgets."""
@@ -130,6 +133,7 @@ class EntryListScreen(Screen):
         sorted_entries = self._get_sorted_entries()
         self.sorted_entries = sorted_entries
         self._display_entries(sorted_entries)
+        self.refresh_optimizer.track_full_refresh()
 
     def _ensure_list_view(self) -> bool:
         """Ensure list_view is available. Returns False if unavailable."""
@@ -215,18 +219,11 @@ class EntryListScreen(Screen):
         # No filters active, return all entries
         return entries
 
-    def _add_flat_entries(self, entries: list[Entry]):
-        """Add entries as a flat list."""
-        self.displayed_items = []
-        for entry in entries:
-            item = EntryListItem(entry, self.unread_color, self.read_color)
-            self.displayed_items.append(item)
-            self.list_view.append(item)
-
     def _add_grouped_entries(self, entries: list[Entry]):
         """Add entries grouped by feed."""
         current_feed = None
         self.displayed_items = []
+        self.entry_item_map.clear()
 
         for entry in entries:
             # Add feed header if this is a new feed
@@ -241,7 +238,53 @@ class EntryListScreen(Screen):
             # Add the entry
             item = EntryListItem(entry, self.unread_color, self.read_color)
             self.displayed_items.append(item)
+            self.entry_item_map[entry.id] = item
             self.list_view.append(item)
+
+    def _add_flat_entries(self, entries: list[Entry]):
+        """Add entries as a flat list."""
+        self.displayed_items = []
+        self.entry_item_map.clear()
+        for entry in entries:
+            item = EntryListItem(entry, self.unread_color, self.read_color)
+            self.displayed_items.append(item)
+            self.entry_item_map[entry.id] = item
+            self.list_view.append(item)
+
+    def _update_single_item(self, entry: Entry) -> bool:
+        """Update a single entry item in the list (incremental refresh).
+
+        This avoids rebuilding the entire list when only one entry changes.
+
+        Args:
+            entry: The entry to update
+
+        Returns:
+            True if item was updated, False if item not found or refresh needed
+        """
+        # Check if item is in the current view
+        if entry.id not in self.entry_item_map:
+            return False
+
+        old_item = self.entry_item_map[entry.id]
+
+        # Create new item with updated data
+        new_item = EntryListItem(entry, self.unread_color, self.read_color)
+        self.entry_item_map[entry.id] = new_item
+
+        # Find the index of the old item in the list view
+        try:
+            index = self.list_view.children.index(old_item)
+            # Replace the old item with the new one
+            self.list_view.children[index] = new_item
+            # Update displayed_items if it's in there
+            if old_item in self.displayed_items:
+                item_index = self.displayed_items.index(old_item)
+                self.displayed_items[item_index] = new_item
+            self.refresh_optimizer.track_partial_refresh()
+            return True
+        except (ValueError, IndexError):
+            return False
 
     def action_cursor_down(self):
         """Move cursor down to next entry item."""
@@ -274,8 +317,10 @@ class EntryListScreen(Screen):
                 # Update local state
                 highlighted.entry.status = new_status
 
-                # Refresh display
-                self._populate_list()
+                # Try incremental update first; fall back to full refresh if needed
+                if not self._update_single_item(highlighted.entry):
+                    # Fall back to full refresh if incremental update fails
+                    self._populate_list()
 
                 # Notify user
                 self.notify(f"Entry marked as {new_status}")
@@ -296,8 +341,10 @@ class EntryListScreen(Screen):
                 # Update local state
                 highlighted.entry.starred = not highlighted.entry.starred
 
-                # Refresh display
-                self._populate_list()
+                # Try incremental update first; fall back to full refresh if needed
+                if not self._update_single_item(highlighted.entry):
+                    # Fall back to full refresh if incremental update fails
+                    self._populate_list()
 
                 # Notify user
                 status = "starred" if highlighted.entry.starred else "unstarred"
