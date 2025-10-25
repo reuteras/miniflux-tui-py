@@ -22,7 +22,7 @@ if TYPE_CHECKING:
 class EntryReaderScreen(Screen):
     """Screen for reading a single feed entry."""
 
-    BINDINGS = [  # noqa: RUF012
+    BINDINGS: list[Binding] = [  # noqa: RUF012
         Binding("j", "scroll_down", "Scroll Down", show=False),
         Binding("k", "scroll_up", "Scroll Up", show=False),
         Binding("J", "next_entry", "Next Entry", show=True),

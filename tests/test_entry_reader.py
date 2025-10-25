@@ -1,7 +1,7 @@
 """Tests for entry reader screen."""
 
 from datetime import UTC, datetime
-from unittest.mock import AsyncMock, MagicMock
+from unittest.mock import MagicMock
 
 import pytest
 from textual.binding import Binding
@@ -183,11 +183,6 @@ class TestEntryReaderScreenActions:
         """Test mark_unread action."""
         screen = EntryReaderScreen(entry=sample_entry)
 
-        mock_app = MagicMock()
-        mock_client = AsyncMock()
-        mock_app.client = mock_client
-        screen._app = mock_app
-
         assert hasattr(screen, "action_mark_unread")
         assert callable(screen.action_mark_unread)
 
@@ -196,11 +191,6 @@ class TestEntryReaderScreenActions:
         """Test toggle_star action."""
         screen = EntryReaderScreen(entry=sample_entry)
 
-        mock_app = MagicMock()
-        mock_client = AsyncMock()
-        mock_app.client = mock_client
-        screen._app = mock_app
-
         assert hasattr(screen, "action_toggle_star")
         assert callable(screen.action_toggle_star)
 
@@ -208,11 +198,6 @@ class TestEntryReaderScreenActions:
     async def test_action_save_entry(self, sample_entry):
         """Test save_entry action."""
         screen = EntryReaderScreen(entry=sample_entry)
-
-        mock_app = MagicMock()
-        mock_client = AsyncMock()
-        mock_app.client = mock_client
-        screen._app = mock_app
 
         assert hasattr(screen, "action_save_entry")
         assert callable(screen.action_save_entry)
@@ -230,11 +215,6 @@ class TestEntryReaderScreenActions:
     async def test_action_fetch_original(self, sample_entry):
         """Test fetch_original action."""
         screen = EntryReaderScreen(entry=sample_entry)
-
-        mock_app = MagicMock()
-        mock_client = AsyncMock()
-        mock_app.client = mock_client
-        screen._app = mock_app
 
         assert hasattr(screen, "action_fetch_original")
         assert callable(screen.action_fetch_original)
@@ -273,9 +253,6 @@ class TestEntryReaderScreenActions:
         """Test back action."""
         screen = EntryReaderScreen(entry=sample_entry)
 
-        mock_app = MagicMock()
-        screen._app = mock_app
-
         assert hasattr(screen, "action_back")
         assert callable(screen.action_back)
 
@@ -283,18 +260,12 @@ class TestEntryReaderScreenActions:
         """Test show_help action."""
         screen = EntryReaderScreen(entry=sample_entry)
 
-        mock_app = MagicMock()
-        screen._app = mock_app
-
         assert hasattr(screen, "action_show_help")
         assert callable(screen.action_show_help)
 
     def test_action_quit(self, sample_entry):
         """Test quit action."""
         screen = EntryReaderScreen(entry=sample_entry)
-
-        mock_app = MagicMock()
-        screen._app = mock_app
 
         assert hasattr(screen, "action_quit")
         assert callable(screen.action_quit)
