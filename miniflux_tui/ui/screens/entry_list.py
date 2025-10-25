@@ -218,10 +218,16 @@ class EntryListScreen(Screen):
                         self.list_view.index = index + 1
                     else:
                         self.list_view.index = index
+                    # Ensure ListView has focus and cursor is active
+                    self.list_view.focus()
+                    # Scroll to make sure the item is visible
+                    self.list_view.scroll_visible()
             except (ValueError, IndexError):
                 # Feed header not found or index out of range, reset to first item
                 if len(self.list_view.children) > 0:
                     self.list_view.index = 0
+                    self.list_view.focus()
+                    self.list_view.scroll_visible()
 
     def _ensure_list_view(self) -> bool:
         """Ensure list_view is available. Returns False if unavailable."""
