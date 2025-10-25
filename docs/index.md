@@ -1,5 +1,9 @@
 # miniflux-tui-py
 
+<div align="center">
+  <img src="../assets/logo-128.png" alt="miniflux-tui-py logo" width="128" height="128">
+</div>
+
 A Python Terminal User Interface (TUI) client for [Miniflux](https://miniflux.app) - a self-hosted RSS reader. This tool provides a keyboard-driven interface to browse, read, and manage RSS feeds directly from the terminal.
 
 ## Features
