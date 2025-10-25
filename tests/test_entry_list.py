@@ -237,3 +237,27 @@ class TestEntryListScreen:
         # Feed header map should be tracked
         assert hasattr(screen, "feed_header_map")
         assert isinstance(screen.feed_header_map, dict)
+
+    def test_last_highlighted_feed_tracking(self, diverse_entries):
+        """Test that last highlighted feed is tracked for position persistence."""
+        screen = EntryListScreen(entries=diverse_entries, group_by_feed=True)
+        assert hasattr(screen, "last_highlighted_feed")
+        # Initially None or will be set to first feed
+        assert screen.last_highlighted_feed is None or isinstance(
+            screen.last_highlighted_feed, str
+        )
+
+    def test_vim_navigation_attributes(self, diverse_entries):
+        """Test that vim navigation actions exist."""
+        screen = EntryListScreen(entries=diverse_entries, group_by_feed=True)
+        # Check that the vim navigation actions are defined
+        assert hasattr(screen, "action_expand_feed")
+        assert hasattr(screen, "action_collapse_feed")
+        assert callable(screen.action_expand_feed)
+        assert callable(screen.action_collapse_feed)
+
+    def test_restore_cursor_position_method_exists(self, diverse_entries):
+        """Test that cursor position restore method exists."""
+        screen = EntryListScreen(entries=diverse_entries, group_by_feed=True)
+        assert hasattr(screen, "_restore_cursor_position")
+        assert callable(screen._restore_cursor_position)

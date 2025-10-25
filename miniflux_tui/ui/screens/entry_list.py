@@ -79,6 +79,10 @@ class EntryListScreen(Screen):
         Binding("s", "cycle_sort", "Cycle Sort"),
         Binding("g", "toggle_group", "Group by Feed"),
         Binding("o", "toggle_fold", "Fold/Unfold Feed"),
+        Binding("h", "collapse_feed", "Collapse Feed"),
+        Binding("l", "expand_feed", "Expand Feed"),
+        Binding("left", "collapse_feed", "Collapse Feed", show=False),
+        Binding("right", "expand_feed", "Expand Feed", show=False),
         Binding("r", "refresh", "Refresh"),
         Binding("comma", "refresh", "Refresh", show=False),
         Binding("u", "show_unread", "Unread"),
@@ -113,6 +117,7 @@ class EntryListScreen(Screen):
         self.entry_item_map: dict[int, EntryListItem] = {}  # Map entry IDs to list items
         self.feed_header_map: dict[str, FeedHeaderItem] = {}  # Map feed names to header items
         self.feed_fold_state: dict[str, bool] = {}  # Track fold state per feed (True = expanded)
+        self.last_highlighted_feed: str | None = None  # Track last highlighted feed for position persistence
 
     def compose(self) -> ComposeResult:
         """Create child widgets."""
@@ -130,6 +135,9 @@ class EntryListScreen(Screen):
         if self.entries:
             self.log(f"on_mount: Populating with {len(self.entries)} entries")
             self._populate_list()
+            # Restore position to last highlighted feed in grouped mode
+            if self.group_by_feed:
+                self._restore_cursor_position()
         else:
             self.log("on_mount: No entries yet, skipping initial population")
 
@@ -164,6 +172,22 @@ class EntryListScreen(Screen):
         self.sorted_entries = sorted_entries
         self._display_entries(sorted_entries)
         self.refresh_optimizer.track_full_refresh()
+
+    def _restore_cursor_position(self) -> None:
+        """Restore cursor position to the last highlighted feed if possible."""
+        if not self.list_view or not self.last_highlighted_feed:
+            return
+
+        # Find the feed header in the list
+        if self.last_highlighted_feed in self.feed_header_map:
+            feed_header = self.feed_header_map[self.last_highlighted_feed]
+            # Find the index of this header in the list view
+            try:
+                index = self.list_view.children.index(feed_header)
+                self.list_view.index = index
+            except ValueError:
+                # Feed header not found, that's okay
+                pass
 
     def _ensure_list_view(self) -> bool:
         """Ensure list_view is available. Returns False if unavailable."""
@@ -252,6 +276,7 @@ class EntryListScreen(Screen):
     def _add_grouped_entries(self, entries: list[Entry]):
         """Add entries grouped by feed with optional collapsible headers."""
         current_feed = None
+        first_feed = None
         self.displayed_items = []
         self.entry_item_map.clear()
         self.feed_header_map.clear()
@@ -260,6 +285,12 @@ class EntryListScreen(Screen):
             # Add feed header if this is a new feed
             if current_feed != entry.feed.title:
                 current_feed = entry.feed.title
+                if first_feed is None:
+                    first_feed = current_feed
+                    # Set default position to first feed if not already set
+                    if not self.last_highlighted_feed:
+                        self.last_highlighted_feed = first_feed
+
                 # Initialize fold state for this feed if needed
                 if current_feed not in self.feed_fold_state:
                     # Default: expanded if not set, unless group_collapsed is True
@@ -426,15 +457,52 @@ class EntryListScreen(Screen):
         highlighted = self.list_view.highlighted_child
         if highlighted and isinstance(highlighted, FeedHeaderItem):
             feed_title = highlighted.feed_title
+            # Save current position
+            self.last_highlighted_feed = feed_title
             # Toggle the fold state
             self.feed_fold_state[feed_title] = not self.feed_fold_state[feed_title]
             highlighted.toggle_fold()
 
-            # Rebuild the list to show/hide entries
+            # Rebuild the list to show/hide entries, then restore position
             self._populate_list()
+            self._restore_cursor_position()
             self.notify(
                 f"Feed {'expanded' if self.feed_fold_state[feed_title] else 'collapsed'}: {feed_title}"
             )
+
+    def action_collapse_feed(self):
+        """Collapse the highlighted feed (h or left arrow)."""
+        if not self.list_view or not self.group_by_feed:
+            return
+
+        highlighted = self.list_view.highlighted_child
+        if highlighted and isinstance(highlighted, FeedHeaderItem):
+            feed_title = highlighted.feed_title
+            # Only collapse if not already collapsed
+            if self.feed_fold_state.get(feed_title, True):
+                self.last_highlighted_feed = feed_title
+                self.feed_fold_state[feed_title] = False
+                highlighted.toggle_fold()
+                self._populate_list()
+                self._restore_cursor_position()
+                self.notify(f"Feed collapsed: {feed_title}")
+
+    def action_expand_feed(self):
+        """Expand the highlighted feed (l or right arrow)."""
+        if not self.list_view or not self.group_by_feed:
+            return
+
+        highlighted = self.list_view.highlighted_child
+        if highlighted and isinstance(highlighted, FeedHeaderItem):
+            feed_title = highlighted.feed_title
+            # Only expand if not already expanded
+            if not self.feed_fold_state.get(feed_title, True):
+                self.last_highlighted_feed = feed_title
+                self.feed_fold_state[feed_title] = True
+                highlighted.toggle_fold()
+                self._populate_list()
+                self._restore_cursor_position()
+                self.notify(f"Feed expanded: {feed_title}")
 
     async def action_refresh(self):
         """Refresh the entry list from API."""
