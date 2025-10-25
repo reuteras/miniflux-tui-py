@@ -1,5 +1,17 @@
 # Changelog
 
+## [0.2.2] - 2025-10-25
+
+### Features
+- Add changelog automation from conventional commits
+
+### Bug Fixes
+- Use timezone.utc instead of datetime.UTC for Python 3.11 compatibility
+
+### Documentation
+- Add release troubleshooting guide and update README
+
+
 All notable changes to miniflux-tui-py will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
