@@ -105,12 +105,24 @@ class EntryReaderScreen(Screen):
                 self.notify(f"Error marking as read: {e}", severity="error")
 
     def _html_to_markdown(self, html_content: str) -> str:
-        """Convert HTML content to markdown."""
+        """Convert HTML content to markdown for display.
+
+        Converts HTML from RSS feed entries to markdown format for better
+        terminal display. Preserves links, images, and formatting information.
+
+        Args:
+            html_content: Raw HTML content from the entry
+
+        Returns:
+            Markdown-formatted string suitable for terminal display
+        """
         h = html2text.HTML2Text()
+        # Preserve links, images, and emphasis in the output
         h.ignore_links = False
         h.ignore_images = False
         h.ignore_emphasis = False
-        h.body_width = 0  # No wrapping
+        # Disable body width wrapping - let Textual handle terminal wrapping
+        h.body_width = 0
         return h.handle(html_content)
 
     def action_scroll_down(self):
@@ -234,42 +246,65 @@ class EntryReaderScreen(Screen):
 
     async def refresh_screen(self):
         """Refresh the screen with current entry."""
-        # Instead of removing and re-mounting, just update the content widgets
-        scroll = self.query_one(VerticalScroll)
+        scroll = self._get_scroll_container()
+        self._clear_scroll_content(scroll)
+        self._mount_entry_content(scroll)
+        scroll.scroll_home(animate=False)
 
-        # Remove only the content inside the scroll container
+        # Mark as read after displaying
+        if self.entry.is_unread:
+            await self._mark_entry_as_read()
+
+    def _get_scroll_container(self) -> VerticalScroll:
+        """Get scroll container widget."""
+        if not self.scroll_container:
+            self.scroll_container = self.query_one(VerticalScroll)
+        return self.scroll_container
+
+    def _clear_scroll_content(self, scroll: VerticalScroll):
+        """Remove all children from scroll container."""
         for child in scroll.children:
             child.remove()
 
-        # Entry metadata
-        star_icon = get_star_icon(self.entry.starred)
+    def _mount_entry_content(self, scroll: VerticalScroll):
+        """Mount entry content widgets (title, metadata, URL, content)."""
+        self._mount_title(scroll)
+        self._mount_metadata(scroll)
+        self._mount_url(scroll)
+        self._mount_separator(scroll)
+        self._mount_content(scroll)
 
-        # Re-mount the content
+    def _mount_title(self, scroll: VerticalScroll):
+        """Mount entry title widget with star icon."""
+        star_icon = get_star_icon(self.entry.starred)
         scroll.mount(
             Static(
                 f"[bold cyan]{star_icon} {self.entry.title}[/bold cyan]",
                 classes="entry-title",
             )
         )
+
+    def _mount_metadata(self, scroll: VerticalScroll):
+        """Mount entry metadata widget (feed name and published date)."""
         scroll.mount(
             Static(
                 f"[dim]{self.entry.feed.title} | {self.entry.published_at.strftime('%Y-%m-%d %H:%M')}[/dim]",
                 classes="entry-meta",
             )
         )
+
+    def _mount_url(self, scroll: VerticalScroll):
+        """Mount entry URL widget."""
         scroll.mount(Static(f"[dim]{self.entry.url}[/dim]", classes="entry-url"))
+
+    def _mount_separator(self, scroll: VerticalScroll):
+        """Mount visual separator widget."""
         scroll.mount(Static(CONTENT_SEPARATOR, classes="separator"))
 
-        # Convert HTML content to markdown
+    def _mount_content(self, scroll: VerticalScroll):
+        """Mount entry content widget (converted HTML to Markdown)."""
         content = self._html_to_markdown(self.entry.content)
         scroll.mount(Markdown(content, classes="entry-content"))
-
-        # Scroll to top
-        scroll.scroll_home(animate=False)
-
-        # Mark as read
-        if self.entry.is_unread:
-            await self._mark_entry_as_read()
 
     def action_show_help(self):
         """Show keyboard help."""

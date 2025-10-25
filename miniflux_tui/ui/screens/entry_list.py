@@ -123,49 +123,68 @@ class EntryListScreen(Screen):
 
     def _populate_list(self):
         """Populate the list with sorted and filtered entries."""
-        # Get reference to ListView if we don't have it
+        if not self._ensure_list_view():
+            return
+
+        self.list_view.clear()
+        sorted_entries = self._get_sorted_entries()
+        self.sorted_entries = sorted_entries
+        self._display_entries(sorted_entries)
+
+    def _ensure_list_view(self) -> bool:
+        """Ensure list_view is available. Returns False if unavailable."""
         if not self.list_view:
             try:
                 self.list_view = self.query_one(ListView)
             except Exception as e:
                 self.log(f"Failed to get list_view: {e}")
-                return
+                return False
+        return True
 
-        # Clear existing items
-        self.list_view.clear()
-
-        # Apply filters to entries
+    def _get_sorted_entries(self) -> list[Entry]:
+        """Get entries sorted/grouped according to current settings."""
         entries = self._filter_entries(self.entries)
 
-        # Sort entries - if grouping is enabled, force sort by feed
         if self.group_by_feed:
-            sorted_entries = sorted(entries, key=lambda e: (e.feed.title.lower(), e.published_at), reverse=False)
-        else:
-            sorted_entries = self._sort_entries(entries)
+            # When grouping by feed, sort by feed name then by date
+            return sorted(
+                entries,
+                key=lambda e: (e.feed.title.lower(), e.published_at),
+                reverse=False,
+            )
+        return self._sort_entries(entries)
 
-        # Store sorted entries for proper navigation order
-        self.sorted_entries = sorted_entries
-
-        # Add entries to list
+    def _display_entries(self, entries: list[Entry]):
+        """Display entries in list view based on grouping setting."""
         if self.group_by_feed:
-            self._add_grouped_entries(sorted_entries)
+            self._add_grouped_entries(entries)
         else:
-            self._add_flat_entries(sorted_entries)
+            self._add_flat_entries(entries)
 
     def _sort_entries(self, entries: list[Entry]) -> list[Entry]:
-        """Sort entries based on current sort mode."""
+        """Sort entries based on current sort mode.
+
+        Sort modes:
+        - "feed": Alphabetically by feed name, then newest entries first
+        - "date": Newest entries first (most recent publication date)
+        - "status": Unread entries first, then by date (oldest first)
+        """
         if self.current_sort == "feed":
-            # Sort by feed name, then by date
+            # Sort by feed name (A-Z), then by date (newest first within each feed)
+            # reverse=True moves newest to top when combined with negative key
             return sorted(
                 entries,
                 key=lambda e: (e.feed.title.lower(), e.published_at),
                 reverse=True,
             )
         if self.current_sort == "date":
-            # Sort by published date
+            # Sort by published date (newest entries first)
+            # reverse=True puts most recent at top
             return sorted(entries, key=lambda e: e.published_at, reverse=True)
         if self.current_sort == "status":
-            # Sort by status (unread first), then by date
+            # Sort by read status (unread first), then by date (oldest first)
+            # is_read sorts False (unread) before True (read)
+            # reverse=False keeps oldest first within each status group
             return sorted(
                 entries,
                 key=lambda e: (e.is_read, e.published_at),
@@ -174,11 +193,26 @@ class EntryListScreen(Screen):
         return entries
 
     def _filter_entries(self, entries: list[Entry]) -> list[Entry]:
-        """Apply active filters to entries."""
+        """Apply active filters to entries.
+
+        Filters are mutually exclusive - only one can be active at a time.
+        - filter_unread_only: Show only entries with status="unread"
+        - filter_starred_only: Show only entries with starred=True
+        - Neither active: Show all entries passed in
+
+        Args:
+            entries: List of entries to filter
+
+        Returns:
+            Filtered list of entries
+        """
         if self.filter_unread_only:
+            # Show only unread entries
             return [e for e in entries if e.is_unread]
         if self.filter_starred_only:
+            # Show only starred entries
             return [e for e in entries if e.starred]
+        # No filters active, return all entries
         return entries
 
     def _add_flat_entries(self, entries: list[Entry]):

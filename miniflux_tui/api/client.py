@@ -71,33 +71,51 @@ class MinifluxClient:
     ) -> T:
         """Call function with exponential backoff retry logic.
 
+        Automatically retries on network errors (ConnectionError, TimeoutError)
+        with exponential backoff. Other exceptions are raised immediately.
+
+        Backoff calculation:
+        - Attempt 0: Immediate retry
+        - Attempt 1: Wait backoff_factor^1 = 1 second
+        - Attempt 2: Wait backoff_factor^2 = 1 second (with factor=1.0)
+
+        Example with backoff_factor=2.0:
+        - Attempt 1: Wait 2 seconds
+        - Attempt 2: Wait 4 seconds
+        - Attempt 3: Wait 8 seconds
+
         Args:
             func: Synchronous function to call
             *args: Positional arguments for func
-            max_retries: Maximum number of retry attempts
-            backoff_factor: Multiplier for exponential backoff
+            max_retries: Maximum number of retry attempts (default 3)
+            backoff_factor: Multiplier for exponential backoff (default 1.0)
             **kwargs: Keyword arguments for func
 
         Returns:
             Result from func call
 
         Raises:
-            Exception: Last exception encountered if all retries fail
+            ConnectionError/TimeoutError: Last network error if all retries fail
+            Exception: Other exceptions are raised immediately without retry
         """
         last_exception = None
 
         for attempt in range(max_retries):
             try:
+                # Try the function call
                 return await self._run_sync(func, *args, **kwargs)
             except (ConnectionError, TimeoutError) as e:
+                # Transient network errors - retry with backoff
                 last_exception = e
                 if attempt < max_retries - 1:
+                    # Calculate exponential backoff delay
                     wait_time = backoff_factor**attempt
                     await asyncio.sleep(wait_time)
             except Exception:
-                # Don't retry on non-network errors
+                # Non-network errors - don't retry, raise immediately
                 raise
 
+        # All retries exhausted - raise last exception
         raise last_exception or Exception("Unknown error in retry logic")
 
     async def get_unread_entries(self, limit: int = 100, offset: int = 0) -> list[Entry]:
