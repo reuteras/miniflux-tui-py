@@ -1,10 +1,29 @@
 # miniflux-tui-py
 
+[![PyPI version](https://badge.fury.io/py/miniflux-tui-py.svg)](https://badge.fury.io/py/miniflux-tui-py)
+[![Python 3.11+](https://img.shields.io/badge/python-3.11%2B-blue)](https://www.python.org/downloads/)
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
+[![Test Status](https://github.com/reuteras/miniflux-tui-py/workflows/Test/badge.svg)](https://github.com/reuteras/miniflux-tui-py/actions/workflows/test.yml)
+[![codecov](https://codecov.io/gh/reuteras/miniflux-tui-py/graph/badge.svg)](https://codecov.io/gh/reuteras/miniflux-tui-py)
+[![Documentation](https://img.shields.io/badge/docs-GitHub%20Pages-blue)](https://reuteras.github.io/miniflux-tui-py/)
+
 A [Python](https://www.python.org) TUI (Terminal User Interface) client for the Miniflux self-hosted RSS reader built with [textual](https://github.com/textualize/textual/).
 
 ## Installation
 
-This project uses uv for dependency management.
+### From PyPI (Recommended)
+
+```bash
+pip install miniflux-tui-py
+
+# Create configuration
+miniflux-tui --init
+
+# Run the application
+miniflux-tui
+```
+
+### From Source
 
 ```bash
 # Install uv if you haven't already
@@ -23,6 +42,15 @@ uv run miniflux-tui --init
 # Run the application
 uv run miniflux-tui
 ```
+
+## Documentation
+
+Full documentation is available at [reuteras.github.io/miniflux-tui-py](https://reuteras.github.io/miniflux-tui-py/)
+
+- [Installation Guide](https://reuteras.github.io/miniflux-tui-py/installation/)
+- [Configuration](https://reuteras.github.io/miniflux-tui-py/configuration/)
+- [Usage Guide](https://reuteras.github.io/miniflux-tui-py/usage/)
+- [Contributing](https://reuteras.github.io/miniflux-tui-py/contributing/)
 
 ## Configuration
 
@@ -82,14 +110,27 @@ To generate an API key for your Miniflux account:
 - b - Back to list
 - ? - Show keyboard help
 
+## Contributing
+
+Contributions are welcome! See [CONTRIBUTING.md](CONTRIBUTING.md) for details on:
+- Setting up your development environment
+- Running tests and checks
+- Submitting pull requests
+
 ## Development
 
 ```bash
 # Install development dependencies
-uv sync --dev
+uv sync
 
 # Lint code
 uv run ruff check .
+
+# Type check
+uv run pyright miniflux_tui tests
+
+# Run tests
+uv run pytest tests --cov=miniflux_tui
 ```
 
 ## Why Python?

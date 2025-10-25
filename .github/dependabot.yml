@@ -1,12 +1,25 @@
----
 version: 2
 updates:
-  - package-ecosystem: "uv"
+  # Enable version updates for Python dependencies (via uv)
+  - package-ecosystem: "pip"
     directory: "/"
     schedule:
       interval: "weekly"
+      day: "monday"
+      time: "03:00"
+    open-pull-requests-limit: 5
+    reviewers:
+      - "reuteras"
+    pull-request-branch-name:
+      separator: "/"
 
+  # Enable version updates for GitHub Actions
   - package-ecosystem: "github-actions"
     directory: "/"
     schedule:
       interval: "weekly"
+      day: "monday"
+      time: "03:00"
+    open-pull-requests-limit: 5
+    reviewers:
+      - "reuteras"
