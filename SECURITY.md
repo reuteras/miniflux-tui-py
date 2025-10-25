@@ -4,7 +4,7 @@
 
 If you discover a security vulnerability in miniflux-tui-py, please **do not** create a public GitHub issue. Instead, please report it privately by emailing:
 
-**peter@reuteras.net**
+**[peter@reuteras.net](mailto:peter@reuteras.net)**
 
 Please include:
 1. A description of the vulnerability
@@ -74,7 +74,7 @@ We follow responsible disclosure practices and ask that you:
 
 ## Security Contact
 
-- **Email**: peter@reuteras.net
+- **Email**: [peter@reuteras.net](mailto:peter@reuteras.net)
 - **Response Time**: We aim to acknowledge reports within 48 hours
 
 Thank you for helping keep miniflux-tui-py and its users secure!

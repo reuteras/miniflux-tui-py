@@ -60,7 +60,7 @@ python scripts/release.py
 ```
 
 You'll see:
-```
+```text
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 miniflux-tui-py Release Script
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
@@ -72,12 +72,12 @@ Enter new version (e.g., 0.2.1):
 ### 2. Enter New Version
 
 Type the new version using semantic versioning:
-  - `0.2.1` for patch release (bug fixes)
-  - `0.3.0` for minor release (new features)
-  - `1.0.0` for major release (breaking changes)
+- `0.2.1` for patch release (bug fixes)
+- `0.3.0` for minor release (new features)
+- `1.0.0` for major release (breaking changes)
 
 Example:
-```
+```text
 New version: 0.2.1
 ✓ Version validated: 0.2.1
 ```
@@ -120,7 +120,7 @@ The script will:
 - ✓ Create a git tag
 - ✓ Push to GitHub
 
-```
+```text
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 Release Complete! 🚀
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
@@ -136,31 +136,31 @@ PyPI:         https://pypi.org/project/miniflux-tui-py/0.2.1/
 Once you push the tag, GitHub Actions automatically:
 
 1. **Build Job** (in parallel)
-  - Checks out code
-  - Runs ruff linting
-  - Runs pyright type checking
-  - Runs pytest (215 tests)
-  - Builds distribution packages (tar.gz + wheel)
+- Checks out code
+- Runs ruff linting
+- Runs pyright type checking
+- Runs pytest (215 tests)
+- Builds distribution packages (tar.gz + wheel)
 
 2. **Publish Job** (after build succeeds)
-  - Downloads artifacts
-  - Publishes to PyPI using Trusted Publisher
-  - No secrets required!
+- Downloads artifacts
+- Publishes to PyPI using Trusted Publisher
+- No secrets required!
 
 3. **Release Job** (after build succeeds)
-  - Creates GitHub Release
-  - Attaches distribution artifacts
-  - Auto-generates release notes
+- Creates GitHub Release
+- Attaches distribution artifacts
+- Auto-generates release notes
 
 ### 7. Verify Release
 
 Monitor the workflow:
-```
+```text
 https://github.com/reuteras/miniflux-tui-py/actions
 ```
 
 Check PyPI (usually within 1-2 minutes):
-```
+```text
 https://pypi.org/project/miniflux-tui-py/
 ```
 
@@ -174,14 +174,14 @@ uv add miniflux-tui-py==0.2.1
 
 For automatic PyPI publishing without storing secrets:
 
-1. Go to https://pypi.org/account/publishing/
+1. Go to [https://pypi.org/account/publishing/](https://pypi.org/account/publishing/)
 2. Click "Add a new trusted publisher"
 3. Fill in:
-  - **PyPI Project Name:** `miniflux-tui-py`
-  - **GitHub Repository Owner:** `reuteras`
-  - **GitHub Repository Name:** `miniflux-tui-py`
-  - **Workflow Filename:** `publish.yml`
-  - **Environment Name:** `pypi`
+- **PyPI Project Name:** `miniflux-tui-py`
+- **GitHub Repository Owner:** `reuteras`
+- **GitHub Repository Name:** `miniflux-tui-py`
+- **Workflow Filename:** `publish.yml`
+- **Environment Name:** `pypi`
 4. Click "Add trusted publisher"
 
 That's it! No API tokens needed.
@@ -190,7 +190,7 @@ That's it! No API tokens needed.
 
 ### Tests Failed
 
-```
+```text
 ✗ Tests failed. Fix issues before releasing.
 ```
 
@@ -202,7 +202,7 @@ uv run pytest tests --cov=miniflux_tui
 
 ### Linting Failed
 
-```
+```text
 ✗ Linting failed. Run 'uv run ruff check miniflux_tui tests' to see issues.
 ```
 
@@ -214,7 +214,7 @@ uv run ruff format miniflux_tui tests  # Auto-format
 
 ### Type Checking Failed
 
-```
+```text
 ✗ Type checking failed. Run 'uv run pyright miniflux_tui tests' to see issues.
 ```
 
@@ -226,7 +226,7 @@ uv run pyright miniflux_tui tests
 
 ### Working Directory Not Clean
 
-```
+```text
 ✗ Working directory is not clean. Please commit or stash changes first.
 ```
 
@@ -240,7 +240,7 @@ git commit -m "Your message"
 
 ### CHANGELOG Not Updated
 
-```
+```text
 ✗ CHANGELOG.md was not updated
 ```
 
@@ -250,7 +250,7 @@ The script will revert the version change. Edit `CHANGELOG.md` manually, then ru
 ### GitHub Actions Failed
 
 Check the workflow logs at:
-```
+```text
 https://github.com/reuteras/miniflux-tui-py/actions
 ```
 
@@ -264,19 +264,19 @@ Common issues:
 Use **Semantic Versioning** (MAJOR.MINOR.PATCH):
 
 - **PATCH** (0.2.1): Bug fixes, no new features
-  ```bash
-  # Example: 0.2.0 → 0.2.1
-  ```
+```bash
+# Example: 0.2.0 → 0.2.1
+```
 
 - **MINOR** (0.3.0): New features, backward compatible
-  ```bash
-  # Example: 0.2.0 → 0.3.0
-  ```
+```bash
+# Example: 0.2.0 → 0.3.0
+```
 
 - **MAJOR** (1.0.0): Breaking changes
-  ```bash
-  # Example: 0.2.0 → 1.0.0
-  ```
+```bash
+# Example: 0.2.0 → 1.0.0
+```
 
 ## Release Checklist
 
