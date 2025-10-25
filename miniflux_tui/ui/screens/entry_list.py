@@ -1,5 +1,6 @@
 """Entry list screen with feed sorting capabilities."""
 
+from contextlib import suppress
 from typing import TYPE_CHECKING
 
 from textual.app import ComposeResult
@@ -154,6 +155,9 @@ class EntryListScreen(Screen):
         """Handle ListView selection (Enter key)."""
         # Get the selected item
         if event.item and isinstance(event.item, EntryListItem):
+            # Save the feed of the current entry for position restoration
+            self.last_highlighted_feed = event.item.entry.feed.title
+
             # Find the index of this entry in the sorted entry list
             entry_index = 0
             for i, entry in enumerate(self.sorted_entries):
@@ -187,10 +191,13 @@ class EntryListScreen(Screen):
             # Find the index of this header in the list view
             try:
                 index = self.list_view.children.index(feed_header)
-                self.list_view.index = index
-            except ValueError:
-                # Feed header not found, that's okay
-                pass
+                # Ensure index is within valid bounds
+                if 0 <= index < len(self.list_view.children):
+                    self.list_view.index = index
+            except (ValueError, IndexError):
+                # Feed header not found or index out of range, reset to first item
+                if len(self.list_view.children) > 0:
+                    self.list_view.index = 0
 
     def _ensure_list_view(self) -> bool:
         """Ensure list_view is available. Returns False if unavailable."""
@@ -359,17 +366,27 @@ class EntryListScreen(Screen):
 
     def action_cursor_down(self):
         """Move cursor down to next entry item."""
-        if not self.list_view:
+        if not self.list_view or len(self.list_view.children) == 0:
             return
-        # Delegate to ListView's built-in cursor movement
-        self.list_view.action_cursor_down()
+        try:
+            # Delegate to ListView's built-in cursor movement
+            self.list_view.action_cursor_down()
+        except IndexError:
+            # If cursor movement fails, try to set to first item
+            with suppress(IndexError, ValueError):
+                self.list_view.index = 0
 
     def action_cursor_up(self):
         """Move cursor up to previous entry item."""
-        if not self.list_view:
+        if not self.list_view or len(self.list_view.children) == 0:
             return
-        # Delegate to ListView's built-in cursor movement
-        self.list_view.action_cursor_up()
+        try:
+            # Delegate to ListView's built-in cursor movement
+            self.list_view.action_cursor_up()
+        except IndexError:
+            # If cursor movement fails, try to set to first item
+            with suppress(IndexError, ValueError):
+                self.list_view.index = 0
 
     async def action_toggle_read(self):
         """Toggle read/unread status of current entry."""
@@ -479,10 +496,22 @@ class EntryListScreen(Screen):
             return
 
         highlighted = self.list_view.highlighted_child
-        if not highlighted or not isinstance(highlighted, FeedHeaderItem):
+        if not highlighted:
             return
 
-        feed_title = highlighted.feed_title
+        feed_title = None
+
+        # Get feed title from header or entry
+        if isinstance(highlighted, FeedHeaderItem):
+            feed_title = highlighted.feed_title
+        elif isinstance(highlighted, EntryListItem):
+            feed_title = highlighted.entry.feed.title
+        else:
+            return
+
+        if not feed_title:
+            return
+
         self.last_highlighted_feed = feed_title
 
         # Ensure fold state exists
@@ -502,10 +531,22 @@ class EntryListScreen(Screen):
             return
 
         highlighted = self.list_view.highlighted_child
-        if not highlighted or not isinstance(highlighted, FeedHeaderItem):
+        if not highlighted:
             return
 
-        feed_title = highlighted.feed_title
+        feed_title = None
+
+        # Get feed title from header or entry
+        if isinstance(highlighted, FeedHeaderItem):
+            feed_title = highlighted.feed_title
+        elif isinstance(highlighted, EntryListItem):
+            feed_title = highlighted.entry.feed.title
+        else:
+            return
+
+        if not feed_title:
+            return
+
         self.last_highlighted_feed = feed_title
 
         # Ensure fold state exists
