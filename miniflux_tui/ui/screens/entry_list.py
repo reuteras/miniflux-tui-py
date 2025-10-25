@@ -122,6 +122,7 @@ class EntryListScreen(Screen):
         self.feed_header_map: dict[str, FeedHeaderItem] = {}  # Map feed names to header items
         self.feed_fold_state: dict[str, bool] = {}  # Track fold state per feed (True = expanded)
         self.last_highlighted_feed: str | None = None  # Track last highlighted feed for position persistence
+        self.last_cursor_index: int = 0  # Track cursor position for non-grouped mode
 
     @property
     def app(self) -> "MinifluxTUI":
@@ -158,10 +159,8 @@ class EntryListScreen(Screen):
         if self.entries and self.list_view:
             self._populate_list()
             # Use call_later to defer focus and cursor restoration until ListView has updated
-            if self.group_by_feed:
-                self.call_later(self._restore_cursor_position_and_focus)
-            else:
-                self.call_later(self._ensure_focus)
+            # Always restore cursor position to maintain user's navigation context
+            self.call_later(self._restore_cursor_position_and_focus)
         elif self.list_view and len(self.list_view.children) > 0:
             # If no entries, just ensure focus
             self.call_later(self._ensure_focus)
@@ -172,6 +171,10 @@ class EntryListScreen(Screen):
         if event.item and isinstance(event.item, EntryListItem):
             # Save the feed of the current entry for position restoration
             self.last_highlighted_feed = event.item.entry.feed.title
+
+            # Save the cursor index in the list view
+            if self.list_view:
+                self.last_cursor_index = self.list_view.index
 
             # Find the index of this entry in the sorted entry list
             entry_index = 0
@@ -201,15 +204,17 @@ class EntryListScreen(Screen):
                 self.list_view.index = 0
 
     def _restore_cursor_position(self) -> None:
-        """Restore cursor position to the last highlighted feed header.
+        """Restore cursor position based on mode.
 
+        In grouped mode: restore position to the last highlighted feed header.
+        In non-grouped mode: restore position to the last cursor index.
         Used after rebuilding the list to restore user's position.
         """
-        if not self.list_view or not self.last_highlighted_feed:
+        if not self.list_view:
             return
 
-        # Try to find the feed header in the new list
-        if self.last_highlighted_feed in self.feed_header_map:
+        # In grouped mode, try to restore to the last highlighted feed
+        if self.group_by_feed and self.last_highlighted_feed and self.last_highlighted_feed in self.feed_header_map:
             feed_header = self.feed_header_map[self.last_highlighted_feed]
             # Find its index in the list view
             for i, child in enumerate(self.list_view.children):
@@ -218,9 +223,16 @@ class EntryListScreen(Screen):
                         self.list_view.index = i
                         return
 
-        # If not found, just go to first item
-        with suppress(Exception):
-            self.list_view.index = 0
+        # In non-grouped mode or if feed not found, use last cursor index
+        max_index = len(self.list_view.children) - 1
+        if max_index >= 0:
+            cursor_index = min(self.last_cursor_index, max_index)
+            with suppress(Exception):
+                self.list_view.index = cursor_index
+        else:
+            # If not found, just go to first item
+            with suppress(Exception):
+                self.list_view.index = 0
 
     def _restore_cursor_position_and_focus(self) -> None:
         """Restore cursor position and ensure focus (called after ListView update)."""
