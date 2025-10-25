@@ -195,8 +195,13 @@ class EntryListScreen(Screen):
         elif isinstance(highlighted, EntryListItem):
             self.last_highlighted_feed = highlighted.entry.feed.title
 
-    def _restore_cursor_position(self) -> None:
-        """Restore cursor position to the last highlighted feed if possible."""
+    def _restore_cursor_position(self, position_after_header: bool = False) -> None:
+        """Restore cursor position to the last highlighted feed if possible.
+
+        Args:
+            position_after_header: If True, position after header (at first entry),
+                False positions on the header itself.
+        """
         if not self.list_view or not self.last_highlighted_feed:
             return
 
@@ -208,7 +213,11 @@ class EntryListScreen(Screen):
                 index = self.list_view.children.index(feed_header)
                 # Ensure index is within valid bounds
                 if 0 <= index < len(self.list_view.children):
-                    self.list_view.index = index
+                    # If position_after_header, try to position at first entry after header
+                    if position_after_header and index + 1 < len(self.list_view.children):
+                        self.list_view.index = index + 1
+                    else:
+                        self.list_view.index = index
             except (ValueError, IndexError):
                 # Feed header not found or index out of range, reset to first item
                 if len(self.list_view.children) > 0:
@@ -507,9 +516,7 @@ class EntryListScreen(Screen):
             # Rebuild the list to show/hide entries, then restore position
             self._populate_list()
             self._restore_cursor_position()
-            self.notify(
-                f"Feed {'expanded' if self.feed_fold_state[feed_title] else 'collapsed'}: {feed_title}"
-            )
+            self.notify(f"Feed {'expanded' if self.feed_fold_state[feed_title] else 'collapsed'}: {feed_title}")
 
     def action_collapse_feed(self):
         """Collapse the highlighted feed (h or left arrow)."""
@@ -544,8 +551,8 @@ class EntryListScreen(Screen):
         if is_currently_expanded:
             self.feed_fold_state[feed_title] = False
             self._populate_list()
-            # Defer cursor restoration to allow ListView to update
-            self.call_later(self._restore_cursor_position)
+            # Restore cursor to the feed header (position_after_header=False)
+            self.call_later(self._restore_cursor_position, False)
             self.notify(f"Feed collapsed: {feed_title}")
 
     def action_expand_feed(self):
@@ -581,8 +588,8 @@ class EntryListScreen(Screen):
         if is_currently_collapsed:
             self.feed_fold_state[feed_title] = True
             self._populate_list()
-            # Defer cursor restoration to allow ListView to update
-            self.call_later(self._restore_cursor_position)
+            # Restore cursor to first entry after header (position_after_header=True)
+            self.call_later(self._restore_cursor_position, True)
             self.notify(f"Feed expanded: {feed_title}")
 
     async def action_refresh(self):
