@@ -544,6 +544,8 @@ class EntryListScreen(Screen):
         if is_currently_expanded:
             self.feed_fold_state[feed_title] = False
             self._populate_list()
+            # Restore cursor to the collapsed feed header
+            self._restore_cursor_position()
             self.notify(f"Feed collapsed: {feed_title}")
 
     def action_expand_feed(self):
@@ -579,6 +581,8 @@ class EntryListScreen(Screen):
         if is_currently_collapsed:
             self.feed_fold_state[feed_title] = True
             self._populate_list()
+            # Restore cursor to the expanded feed header
+            self._restore_cursor_position()
             self.notify(f"Feed expanded: {feed_title}")
 
     async def action_refresh(self):
