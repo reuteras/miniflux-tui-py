@@ -195,12 +195,11 @@ class EntryListScreen(Screen):
         elif isinstance(highlighted, EntryListItem):
             self.last_highlighted_feed = highlighted.entry.feed.title
 
-    def _restore_cursor_position(self, position_after_header: bool = False) -> None:
-        """Restore cursor position to the last highlighted feed if possible.
+    def _restore_cursor_position(self) -> None:
+        """Restore cursor position to the last highlighted feed header.
 
-        Args:
-            position_after_header: If True, position after header (at first entry),
-                False positions on the header itself.
+        Always positions on the feed header itself, not after it.
+        This keeps navigation simple and predictable after expand/collapse.
         """
         if not self.list_view or not self.last_highlighted_feed:
             return
@@ -213,21 +212,11 @@ class EntryListScreen(Screen):
                 index = self.list_view.children.index(feed_header)
                 # Ensure index is within valid bounds
                 if 0 <= index < len(self.list_view.children):
-                    # If position_after_header, try to position at first entry after header
-                    if position_after_header and index + 1 < len(self.list_view.children):
-                        self.list_view.index = index + 1
-                    else:
-                        self.list_view.index = index
-                    # Ensure ListView has focus and cursor is active
-                    self.list_view.focus()
-                    # Scroll to make sure the item is visible
-                    self.list_view.scroll_visible()
+                    self.list_view.index = index
             except (ValueError, IndexError):
                 # Feed header not found or index out of range, reset to first item
                 if len(self.list_view.children) > 0:
                     self.list_view.index = 0
-                    self.list_view.focus()
-                    self.list_view.scroll_visible()
 
     def _ensure_list_view(self) -> bool:
         """Ensure list_view is available. Returns False if unavailable."""
@@ -557,8 +546,7 @@ class EntryListScreen(Screen):
         if is_currently_expanded:
             self.feed_fold_state[feed_title] = False
             self._populate_list()
-            # Restore cursor to the feed header (position_after_header=False)
-            self.call_later(self._restore_cursor_position, False)
+            self._restore_cursor_position()
             self.notify(f"Feed collapsed: {feed_title}")
 
     def action_expand_feed(self):
@@ -594,8 +582,7 @@ class EntryListScreen(Screen):
         if is_currently_collapsed:
             self.feed_fold_state[feed_title] = True
             self._populate_list()
-            # Restore cursor to first entry after header (position_after_header=True)
-            self.call_later(self._restore_cursor_position, True)
+            self._restore_cursor_position()
             self.notify(f"Feed expanded: {feed_title}")
 
     async def action_refresh(self):
