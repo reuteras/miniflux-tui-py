@@ -291,8 +291,8 @@ Before running the release script:
 After the release:
 
 - [ ] Check GitHub Actions workflow passed
-- [ ] Verify release on GitHub: https://github.com/reuteras/miniflux-tui-py/releases
-- [ ] Verify on PyPI: https://pypi.org/project/miniflux-tui-py/
+- [ ] Verify release on GitHub: [https://github.com/reuteras/miniflux-tui-py/releases](https://github.com/reuteras/miniflux-tui-py/releases)
+- [ ] Verify on PyPI: [https://pypi.org/project/miniflux-tui-py/](https://pypi.org/project/miniflux-tui-py/)
 - [ ] Test installation: `pip install miniflux-tui-py --upgrade`
 
 ## Manual Release (Advanced)
