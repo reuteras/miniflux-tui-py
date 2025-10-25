@@ -80,6 +80,8 @@ class EntryListScreen(Screen):
         Binding("e", "save_entry", "Save Entry"),
         Binding("s", "cycle_sort", "Cycle Sort"),
         Binding("g", "toggle_group", "Group by Feed"),
+        Binding("shift+g", "expand_all", "Expand All"),
+        Binding("shift+z", "collapse_all", "Collapse All"),
         Binding("o", "toggle_fold", "Fold/Unfold Feed"),
         Binding("h", "collapse_feed", "Collapse Feed"),
         Binding("l", "expand_feed", "Expand Feed"),
@@ -635,6 +637,42 @@ class EntryListScreen(Screen):
                 self.feed_header_map[feed_title].toggle_fold()
             # Update CSS visibility for entries
             self._update_feed_visibility(feed_title)
+
+    def action_expand_all(self):
+        """Expand all feeds (Shift+G)."""
+        if not self.list_view or not self.group_by_feed:
+            return
+
+        # Expand all feeds
+        for feed_title in self.feed_fold_state:
+            if not self.feed_fold_state[feed_title]:
+                # This feed is currently collapsed, expand it
+                self.feed_fold_state[feed_title] = True
+                # Update the header's visual fold icon
+                if feed_title in self.feed_header_map:
+                    self.feed_header_map[feed_title].toggle_fold()
+                # Update CSS visibility for entries
+                self._update_feed_visibility(feed_title)
+
+        self.notify("All feeds expanded")
+
+    def action_collapse_all(self):
+        """Collapse all feeds (Shift+Z)."""
+        if not self.list_view or not self.group_by_feed:
+            return
+
+        # Collapse all feeds
+        for feed_title in self.feed_fold_state:
+            if self.feed_fold_state[feed_title]:
+                # This feed is currently expanded, collapse it
+                self.feed_fold_state[feed_title] = False
+                # Update the header's visual fold icon
+                if feed_title in self.feed_header_map:
+                    self.feed_header_map[feed_title].toggle_fold()
+                # Update CSS visibility for entries
+                self._update_feed_visibility(feed_title)
+
+        self.notify("All feeds collapsed")
 
     async def action_refresh(self):
         """Refresh the entry list from API."""
