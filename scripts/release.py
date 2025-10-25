@@ -10,7 +10,7 @@ Automates the release process:
 5. Pushes to GitHub (triggers PyPI publish)
 """
 
-import platform
+import os
 import re
 import subprocess
 import sys
@@ -177,93 +177,64 @@ def generate_changelog_entry(new_version: str) -> str:
 """
 
 
-def edit_changelog(new_version: str) -> bool:  # noqa: PLR0912, PLR0915
-    """Open CHANGELOG for editing"""
+def edit_changelog(new_version: str) -> bool:  # noqa: PLR0911
+    """Update CHANGELOG by auto-generating from commits"""
     changelog_path = Path("CHANGELOG.md")
     if not changelog_path.exists():
         print_error("CHANGELOG.md not found")
         return False
 
-    # Offer automatic changelog generation
-    print_info("Would you like to auto-generate changelog entries from commits?")
-    print("This parses conventional commits since the last tag.")
-    response = input("Auto-generate changelog? (y/n): ").strip().lower()
+    # Auto-generate changelog from commits (default behavior)
+    print_info("Generating changelog entry from commits...")
+    changelog_entry = generate_changelog_entry(new_version)
+    print("\n" + "=" * 70)
+    print(changelog_entry)
+    print("=" * 70 + "\n")
 
-    auto_generated = False
-    if response in ("y", "yes"):
-        print_info("Generating changelog entry from commits...")
-        changelog_entry = generate_changelog_entry(new_version)
-        print("\n" + "=" * 70)
-        print(changelog_entry)
-        print("=" * 70 + "\n")
+    # Read current changelog
+    current_content = changelog_path.read_text()
 
-        # Read current changelog
-        current_content = changelog_path.read_text()
+    # Find the position to insert (after the main header)
+    lines = current_content.split("\n")
+    insert_pos = 0
+    for i, line in enumerate(lines):
+        if line.startswith("# Changelog"):
+            insert_pos = i + 1
+            break
 
-        # Find the position to insert (after the main header)
-        lines = current_content.split("\n")
-        insert_pos = 0
-        for i, line in enumerate(lines):
-            if line.startswith("# Changelog"):
-                insert_pos = i + 1
-                break
+    # Insert new entry after header and blank line
+    while insert_pos < len(lines) and lines[insert_pos].startswith("#"):
+        insert_pos += 1
+    if insert_pos < len(lines) and not lines[insert_pos].strip():
+        insert_pos += 1
 
-        # Insert new entry after header and blank line
-        while insert_pos < len(lines) and lines[insert_pos].startswith("#"):
-            insert_pos += 1
-        if insert_pos < len(lines) and not lines[insert_pos].strip():
-            insert_pos += 1
+    lines.insert(insert_pos, "")
+    for entry_line in reversed(changelog_entry.split("\n")):
+        lines.insert(insert_pos, entry_line)
 
-        lines.insert(insert_pos, "")
-        for entry_line in reversed(changelog_entry.split("\n")):
-            lines.insert(insert_pos, entry_line)
+    changelog_path.write_text("\n".join(lines))
+    print_success("Changelog updated with auto-generated entry")
 
-        changelog_path.write_text("\n".join(lines))
-        print_success("Changelog updated with auto-generated entry")
-        auto_generated = True
+    # Ask if user wants to review/edit (default: no)
+    print_info("Press Enter to skip editing, or type 'e' to edit in $EDITOR:")
+    edit_response = input("Edit changelog? (e/Enter): ").strip().lower()
 
-        # Ask if user wants to edit further
-        edit_response = input("Review/edit the changelog? (y/n): ").strip().lower()
-        if edit_response not in ("y", "yes"):
-            return True
+    if edit_response != "e":
+        # Verify changelog was updated
+        content = changelog_path.read_text()
+        if f"[{new_version}]" not in content:
+            print_error("CHANGELOG.md was not updated")
+            return False
+        return True
 
-    if not auto_generated:
-        print_info("Opening CHANGELOG.md for manual editing...")
-        release_date = datetime.now(timezone.utc).strftime("%Y-%m-%d")  # noqa: UP017
-        print(
-            f"""
-Example format:
-
-## [{new_version}] - {release_date}
-
-### Added
-- Feature description
-
-### Changed
-- Improvement description
-
-### Fixed
-- Bug fix description
-"""
-        )
-
-    # Open in default editor
+    # User wants to edit - open in $EDITOR
+    editor = os.environ.get("EDITOR", "nano").strip()
     try:
-        if platform.system() == "Windows":
-            subprocess.run(["notepad", str(changelog_path)], check=True)  # noqa: S603, S607
-        elif platform.system() == "Darwin":
-            subprocess.run(  # noqa: S603
-                ["open", "-a", "TextEdit", str(changelog_path)],  # noqa: S607
-                check=True
-            )
-        else:
-            # Try common Linux editors
-            for editor in ["nano", "vim", "vi"]:
-                try:
-                    subprocess.run([editor, str(changelog_path)], check=True)  # noqa: S603
-                    break
-                except FileNotFoundError:
-                    continue
+        subprocess.run([editor, str(changelog_path)], check=True)  # noqa: S603
+    except FileNotFoundError:
+        print_error(f"Editor '{editor}' not found. Set $EDITOR environment variable.")
+        print_info("Please edit CHANGELOG.md manually and run this script again")
+        return False
     except Exception as e:
         print_error(f"Could not open editor: {e}")
         print_info("Please edit CHANGELOG.md manually and run this script again")
