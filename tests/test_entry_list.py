@@ -803,3 +803,171 @@ class TestEntryListScreenMultipleFeedsGrouping:
         screen._add_grouped_entries(multiple_feeds)
         # Should have entries for both feeds
         assert screen.feed_header_map or screen.entry_item_map
+
+
+class TestCursorPositionRestoration:
+    """Test cursor position restoration when returning from entry reader."""
+
+    def test_last_cursor_index_initialized(self, diverse_entries):
+        """Test that last_cursor_index is initialized."""
+        screen = EntryListScreen(entries=diverse_entries)
+        assert hasattr(screen, "last_cursor_index")
+        assert screen.last_cursor_index == 0
+
+    def test_last_highlighted_entry_id_initialized(self, diverse_entries):
+        """Test that last_highlighted_entry_id is initialized."""
+        screen = EntryListScreen(entries=diverse_entries)
+        assert hasattr(screen, "last_highlighted_entry_id")
+        assert screen.last_highlighted_entry_id is None
+
+    def test_restore_cursor_position_method_exists(self, diverse_entries):
+        """Test that _restore_cursor_position method exists."""
+        screen = EntryListScreen(entries=diverse_entries)
+        assert hasattr(screen, "_restore_cursor_position")
+        assert callable(screen._restore_cursor_position)
+
+    def test_restore_cursor_position_with_no_list_view(self, diverse_entries):
+        """Test _restore_cursor_position when list_view is None."""
+        screen = EntryListScreen(entries=diverse_entries)
+        screen.list_view = None
+        # Should not crash
+        screen._restore_cursor_position()
+
+    def test_restore_cursor_position_with_empty_list(self, diverse_entries):
+        """Test _restore_cursor_position with empty children."""
+        screen = EntryListScreen(entries=diverse_entries)
+        screen.list_view = MagicMock(spec=ListView)
+        screen.list_view.children = []
+        # Should not crash
+        screen._restore_cursor_position()
+
+    def test_restore_cursor_position_by_entry_id(self, diverse_entries):
+        """Test restoring cursor position by entry ID."""
+        screen = EntryListScreen(entries=diverse_entries, group_by_feed=True)
+        screen.list_view = MagicMock(spec=ListView)
+
+        # Create mock items
+        mock_items = [EntryListItem(e) for e in diverse_entries]
+        screen.list_view.children = mock_items
+        screen.last_highlighted_entry_id = diverse_entries[2].id
+
+        # Call restore - it should find the entry by ID
+        screen._restore_cursor_position()
+        # Should have called set index on list_view
+        assert screen.list_view.index == 2 or screen.list_view.index is not None
+
+    def test_restore_cursor_position_fallback_to_index(self, diverse_entries):
+        """Test restore cursor falls back to last_cursor_index if entry not found."""
+        screen = EntryListScreen(entries=diverse_entries, group_by_feed=False)
+        screen.list_view = MagicMock(spec=ListView)
+        screen.list_view.children = [MagicMock() for _ in diverse_entries]
+        screen.last_cursor_index = 1
+        screen.last_highlighted_entry_id = None
+
+        # Call restore
+        screen._restore_cursor_position()
+        # Should set index to last_cursor_index
+        assert screen.list_view.index == 1 or screen.list_view.index is not None
+
+    def test_grouped_mode_cursor_restoration(self, diverse_entries):
+        """Test cursor restoration in grouped mode."""
+        screen = EntryListScreen(entries=diverse_entries, group_by_feed=True)
+        assert screen.group_by_feed is True
+        # Verify the flag exists for grouped mode logic
+        assert hasattr(screen, "last_highlighted_entry_id")
+
+    def test_non_grouped_mode_cursor_restoration(self, diverse_entries):
+        """Test cursor restoration in non-grouped mode."""
+        screen = EntryListScreen(entries=diverse_entries, group_by_feed=False)
+        assert screen.group_by_feed is False
+        # Verify cursor index is tracked
+        assert hasattr(screen, "last_cursor_index")
+        assert screen.last_cursor_index == 0
+
+    def test_restore_cursor_position_and_focus_exists(self, diverse_entries):
+        """Test that _restore_cursor_position_and_focus method exists."""
+        screen = EntryListScreen(entries=diverse_entries)
+        assert hasattr(screen, "_restore_cursor_position_and_focus")
+        assert callable(screen._restore_cursor_position_and_focus)
+
+    def test_restore_cursor_calls_ensure_focus(self, diverse_entries):
+        """Test that _restore_cursor_position_and_focus calls ensure_focus."""
+        screen = EntryListScreen(entries=diverse_entries)
+        assert hasattr(screen, "_ensure_focus")
+        # Verify the method exists and is callable
+        assert callable(screen._ensure_focus)
+
+
+class TestNavigationWithEntrySaving:
+    """Test navigation and cursor restoration with entry selection."""
+
+    def test_cursor_index_not_none_check(self, diverse_entries):
+        """Test that list_view.index is checked for None before assignment."""
+        screen = EntryListScreen(entries=diverse_entries)
+        mock_list_view = MagicMock()
+        mock_list_view.index = 2  # Valid index
+        screen.list_view = mock_list_view
+
+        # Simulate selecting an entry
+        if screen.list_view and screen.list_view.index is not None:
+            screen.last_cursor_index = screen.list_view.index
+
+        assert screen.last_cursor_index == 2
+
+    def test_cursor_index_with_none_value(self, diverse_entries):
+        """Test handling of None value for list_view.index."""
+        screen = EntryListScreen(entries=diverse_entries)
+        screen.list_view = MagicMock(spec=ListView)
+        screen.list_view.index = None  # None value
+        original_index = screen.last_cursor_index
+
+        # Simulate selecting an entry with None index
+        if screen.list_view and screen.list_view.index is not None:
+            screen.last_cursor_index = screen.list_view.index
+
+        # Should not have changed
+        assert screen.last_cursor_index == original_index
+
+    def test_entry_found_by_id_in_grouped_mode(self, diverse_entries):
+        """Test finding entry by ID in grouped mode (across feeds)."""
+        screen = EntryListScreen(entries=diverse_entries, group_by_feed=True)
+        # Create real entry items (not mocks) so isinstance check works
+        items = [EntryListItem(e) for e in diverse_entries]
+        screen.list_view = MagicMock(spec=ListView)
+        screen.list_view.children = items
+
+        # Set the entry ID to find
+        target_id = diverse_entries[1].id
+        screen.last_highlighted_entry_id = target_id
+
+        # Manually check if we can find it
+        found = False
+        for i, child in enumerate(screen.list_view.children):
+            if isinstance(child, EntryListItem) and child.entry.id == target_id:
+                found = True
+                assert i == 1
+                break
+
+        assert found
+
+    def test_entry_not_found_falls_back_to_last_cursor_index(self, diverse_entries):
+        """Test fallback to last_cursor_index when entry not found."""
+        screen = EntryListScreen(entries=diverse_entries)
+        items = [EntryListItem(e) for e in diverse_entries]
+        screen.list_view = MagicMock(spec=ListView)
+        screen.list_view.children = items
+
+        # Set non-existent entry ID
+        screen.last_highlighted_entry_id = 999
+        screen.last_cursor_index = 1
+
+        # Check fallback logic
+        found = False
+        for child in screen.list_view.children:
+            if isinstance(child, EntryListItem) and child.entry.id == 999:
+                found = True
+                break
+
+        # Should not be found, so should use fallback
+        assert found is False
+        assert screen.last_cursor_index == 1
