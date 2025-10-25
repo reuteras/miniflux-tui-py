@@ -122,6 +122,7 @@ class EntryListScreen(Screen):
         self.feed_header_map: dict[str, FeedHeaderItem] = {}  # Map feed names to header items
         self.feed_fold_state: dict[str, bool] = {}  # Track fold state per feed (True = expanded)
         self.last_highlighted_feed: str | None = None  # Track last highlighted feed for position persistence
+        self.last_highlighted_entry_id: int | None = None  # Track last highlighted entry ID for position
         self.last_cursor_index: int = 0  # Track cursor position for non-grouped mode
 
     @property
@@ -171,6 +172,7 @@ class EntryListScreen(Screen):
         if event.item and isinstance(event.item, EntryListItem):
             # Save the feed of the current entry for position restoration
             self.last_highlighted_feed = event.item.entry.feed.title
+            self.last_highlighted_entry_id = event.item.entry.id
 
             # Save the cursor index in the list view
             if self.list_view:
@@ -206,14 +208,24 @@ class EntryListScreen(Screen):
     def _restore_cursor_position(self) -> None:
         """Restore cursor position based on mode.
 
-        In grouped mode: restore position to the last highlighted feed header.
+        In grouped mode: restore position to the last highlighted entry.
         In non-grouped mode: restore position to the last cursor index.
         Used after rebuilding the list to restore user's position.
         """
         if not self.list_view:
             return
 
-        # In grouped mode, try to restore to the last highlighted feed
+        # Try to restore to the last highlighted entry (works in both grouped and non-grouped modes)
+        if self.last_highlighted_entry_id and self.last_highlighted_entry_id in self.entry_item_map:
+            entry_item = self.entry_item_map[self.last_highlighted_entry_id]
+            # Find its index in the list view
+            for i, child in enumerate(self.list_view.children):
+                if child is entry_item:
+                    with suppress(Exception):
+                        self.list_view.index = i
+                        return
+
+        # In grouped mode, if entry not found, try to restore to the feed header
         if self.group_by_feed and self.last_highlighted_feed and self.last_highlighted_feed in self.feed_header_map:
             feed_header = self.feed_header_map[self.last_highlighted_feed]
             # Find its index in the list view
@@ -223,14 +235,14 @@ class EntryListScreen(Screen):
                         self.list_view.index = i
                         return
 
-        # In non-grouped mode or if feed not found, use last cursor index
+        # Fallback: use last cursor index
         max_index = len(self.list_view.children) - 1
         if max_index >= 0:
             cursor_index = min(self.last_cursor_index, max_index)
             with suppress(Exception):
                 self.list_view.index = cursor_index
         else:
-            # If not found, just go to first item
+            # If nothing else works, go to first item
             with suppress(Exception):
                 self.list_view.index = 0
 
