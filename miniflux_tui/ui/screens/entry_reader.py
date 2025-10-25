@@ -2,7 +2,7 @@
 
 import traceback
 import webbrowser
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, cast
 
 import html2text
 from textual.app import ComposeResult
@@ -16,7 +16,7 @@ from miniflux_tui.constants import CONTENT_SEPARATOR
 from miniflux_tui.utils import get_star_icon
 
 if TYPE_CHECKING:
-    pass
+    from miniflux_tui.ui.app import MinifluxTUI
 
 
 class EntryReaderScreen(Screen):
@@ -56,6 +56,11 @@ class EntryReaderScreen(Screen):
         self.unread_color = unread_color
         self.read_color = read_color
         self.scroll_container = None
+
+    @property
+    def app(self) -> "MinifluxTUI":
+        """Get the app instance with proper type hints."""
+        return cast("MinifluxTUI", super().app)
 
     def compose(self) -> ComposeResult:
         """Create child widgets."""

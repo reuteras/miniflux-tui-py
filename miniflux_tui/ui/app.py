@@ -71,7 +71,7 @@ class MinifluxTUI(App):
     def __init__(
         self,
         config: Config,
-        driver_class: Driver | None = None,
+        driver_class: type[Driver] | None = None,
         css_path: str | None = None,
         watch_css: bool = False,
     ):
