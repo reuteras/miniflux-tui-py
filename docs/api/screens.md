@@ -93,7 +93,7 @@ MinifluxTUI (App)
 │  ├─ navigate with J/K
 │  └─ press Escape → back to EntryListScreen
 └─ HelpScreen (help view)
-   └─ press any key → back to previous screen
+  └─ press any key → back to previous screen
 ```
 
 ## Widget Classes

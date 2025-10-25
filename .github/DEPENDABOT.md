@@ -53,11 +53,12 @@ If Dependabot updates cause issues:
 1. **Close the PR** and wait for next week's update
 2. **Check the issue** - usually reported in PR comments
 3. **Pin the version** in `pyproject.toml` if needed:
-   ```toml
-   dependencies = [
-       "textual>=0.82.0,<0.83.0",  # Pin to avoid breaking changes
-   ]
-   ```
+
+    ```toml
+    dependencies = [
+        "textual>=0.82.0,<0.83.0",  # Pin to avoid breaking changes
+    ]
+    ```
 
 ### GitHub Actions Updates
 
