@@ -3,30 +3,34 @@
 ## Prerequisites
 
 - Python 3.11 or later
-- pip or uv package manager
+- [uv](https://docs.astral.sh/uv/) package manager (recommended) or pip
 - A running Miniflux instance (see [miniflux.app](https://miniflux.app))
 
-## From PyPI
+## From PyPI (Recommended with uv)
 
-The easiest way to install miniflux-tui-py is from PyPI:
-
-```bash
-pip install miniflux-tui-py
-```
-
-Or if you use `uv`:
+The recommended way to install miniflux-tui-py is using [uv](https://docs.astral.sh/uv/), which is faster and more reliable:
 
 ```bash
-uv pip install miniflux-tui-py
-```
+# Install uv (if you haven't already)
+curl -LsSf https://astral.sh/uv/install.sh | sh
 
-Then run the application:
+# Install miniflux-tui-py
+uv tool install miniflux-tui-py
 
-```bash
+# Run the application
 miniflux-tui
 ```
 
-## From Source
+### Alternative: Using pip
+
+If you prefer using pip:
+
+```bash
+pip install miniflux-tui-py
+miniflux-tui
+```
+
+## From Source (For Development)
 
 To install from source for development:
 
@@ -35,8 +39,8 @@ To install from source for development:
 git clone https://github.com/reuteras/miniflux-tui-py.git
 cd miniflux-tui-py
 
-# Install with uv (recommended)
-uv sync
+# Install all dependencies (including dev and docs)
+uv sync --all-groups
 
 # Run the application
 uv run miniflux-tui
@@ -87,11 +91,12 @@ This will validate your configuration without launching the application.
 To update to the latest version:
 
 ```bash
-pip install --upgrade miniflux-tui-py
+# With uv (recommended)
+uv tool upgrade miniflux-tui-py
 ```
 
-Or with uv:
+Or with pip:
 
 ```bash
-uv pip install --upgrade miniflux-tui-py
+pip install --upgrade miniflux-tui-py
 ```

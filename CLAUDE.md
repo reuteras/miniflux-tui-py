@@ -167,31 +167,80 @@ uv run miniflux-tui --init
 uv run miniflux-tui
 ```
 
-### Git Workflow (IMPORTANT)
+### Git Workflow (CRITICAL)
 
-**NEVER push directly to main.** All changes must go through feature branches and pull requests.
+**⚠️ NEVER push directly to main branch.** The main branch is protected and enforces:
+1. All changes must come through pull requests
+2. All CI checks (tests, linting, type checking) must pass
+3. Code review may be required before merging
+4. Only up-to-date branches can be merged
+
+**All development must follow this workflow:**
 
 ```bash
-# Create feature branch from main
+# 1. Create feature branch from main
 git checkout main
 git pull origin main
 git checkout -b feature/your-feature-name
 
-# Make changes and commit
+# 2. Make changes locally
+# (Edit files, make improvements)
+
+# 3. Test your changes before committing
+uv run ruff check .              # Lint
+uv run ruff format .             # Format
+uv run pyright                   # Type check
+uv run pytest tests              # Run tests
+
+# 4. Commit with clear message
 git add .
 git commit -m "Description of changes"
 
-# Push to your fork/branch
+# 5. Push to origin (never directly to main)
 git push origin feature/your-feature-name
 
-# Create a Pull Request on GitHub
-# (CI will automatically run tests and checks)
+# 6. Create a Pull Request on GitHub
+# - Click "New Pull Request" on the repository
+# - CI will automatically run all checks
+# - Wait for review and approval
 
-# After PR is approved and merged, delete the branch
+# 7. After PR is merged, clean up
 git checkout main
 git pull origin main
 git branch -d feature/your-feature-name
+git push origin --delete feature/your-feature-name
 ```
+
+**Why this workflow?**
+- Ensures code quality through automated CI checks
+- Enables peer review of changes
+- Maintains clear commit history
+- Prevents accidental pushes that break the main branch
+- Allows safe rollback if needed
+
+### GitHub Branch Protection Rules (main branch)
+
+The main branch has protection rules enabled via GitHub Settings. These prevent direct pushes and enforce quality standards:
+
+**To configure branch protection on main:**
+
+1. Go to **Settings** → **Branches** → **Add rule**
+2. Apply to `main` branch
+3. Enable these settings:
+  - ✅ **Require a pull request before merging**
+    - Require approvals: 0 (adjust if peer review needed)
+    - Dismiss stale pull request approvals when new commits are pushed: ✓
+  - ✅ **Require status checks to pass before merging**
+    - Require branches to be up to date before merging: ✓
+    - Select required checks: All CI checks (test, docs-deploy)
+  - ✅ **Include administrators** (optional, for consistency)
+  - ✅ **Restrict who can push to matching branches** (optional, admin-only)
+
+These settings ensure:
+- No one can push directly to main (must use PRs)
+- All CI tests and checks must pass
+- PRs cannot be merged until branch is up-to-date
+- Stale reviews are dismissed when new commits are pushed
 
 ### Common Commands
 ```bash
