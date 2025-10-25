@@ -14,7 +14,7 @@ import platform
 import re
 import subprocess
 import sys
-from datetime import datetime
+from datetime import datetime, timezone
 from pathlib import Path
 
 
@@ -131,7 +131,7 @@ def edit_changelog(new_version: str) -> bool:
 
     print_info("Opening CHANGELOG.md for editing...")
     print("Add a new section at the top for version", new_version)
-    release_date = datetime.now(datetime.UTC).strftime("%Y-%m-%d")
+    release_date = datetime.now(timezone.utc).strftime("%Y-%m-%d")  # noqa: UP017
     print(
         f"""
 Example format:
