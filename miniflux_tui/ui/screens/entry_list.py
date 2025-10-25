@@ -175,7 +175,7 @@ class EntryListScreen(Screen):
             self.last_highlighted_entry_id = event.item.entry.id
 
             # Save the cursor index in the list view
-            if self.list_view:
+            if self.list_view and self.list_view.index is not None:
                 self.last_cursor_index = self.list_view.index
 
             # Find the index of this entry in the sorted entry list
@@ -215,11 +215,12 @@ class EntryListScreen(Screen):
             return
 
         # Try to restore to the last highlighted entry (works in both grouped and non-grouped modes)
-        if self.last_highlighted_entry_id and self.last_highlighted_entry_id in self.entry_item_map:
-            entry_item = self.entry_item_map[self.last_highlighted_entry_id]
-            # Find its index in the list view
+        # We search by entry ID, not object identity, since items are recreated when list is rebuilt
+        if self.last_highlighted_entry_id:
             for i, child in enumerate(self.list_view.children):
-                if child is entry_item:
+                # Check if this child is an EntryListItem with the matching entry ID
+                if isinstance(child, EntryListItem) and child.entry.id == self.last_highlighted_entry_id:
+                    self.log(f"Restoring cursor to entry {self.last_highlighted_entry_id} at index {i}")
                     with suppress(Exception):
                         self.list_view.index = i
                         return
@@ -239,11 +240,12 @@ class EntryListScreen(Screen):
         if max_index >= 0:
             # On initial mount, last_cursor_index will be 0, which is correct
             cursor_index = min(self.last_cursor_index, max_index)
+            self.log(f"Restoring cursor to last index {cursor_index}")
             with suppress(Exception):
                 self.list_view.index = cursor_index
         else:
             # If list is empty, don't try to set index
-            pass
+            self.log("List is empty, cannot restore cursor")
 
     def _restore_cursor_position_and_focus(self) -> None:
         """Restore cursor position and ensure focus (called after ListView update)."""
