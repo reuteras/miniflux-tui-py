@@ -1,5 +1,11 @@
 # Changelog
 
+## [0.2.5] - 2025-10-25
+
+### Bug Fixes
+- Download artifacts in release job for GitHub Release creation
+
+
 ## [0.2.4] - 2025-10-25
 
 ### Fixed
