@@ -3,7 +3,7 @@
 import time
 from collections.abc import Callable
 from functools import lru_cache
-from typing import Any, TypeVar
+from typing import Any, TypeVar, overload
 
 T = TypeVar("T")
 
@@ -11,17 +11,25 @@ T = TypeVar("T")
 class CachedProperty:
     """Decorator for cached properties that expire on data changes."""
 
-    def __init__(self, func: Callable[[Any], T]):
+    def __init__(self, func: Callable[[Any], Any]) -> None:
         """Initialize cached property.
 
         Args:
             func: The property getter function
         """
-        self.func = func
-        self.cache: dict[int, T] = {}
+        self.func: Callable[[Any], Any] = func
+        self.cache: dict[int, Any] = {}
         self.timestamps: dict[int, int] = {}
 
-    def __get__(self, obj: Any, objtype: Any = None) -> T:
+    @overload
+    def __get__(self, obj: None, objtype: Any = None) -> "CachedProperty":
+        ...
+
+    @overload
+    def __get__(self, obj: Any, objtype: Any = None) -> Any:
+        ...
+
+    def __get__(self, obj: Any, objtype: Any = None) -> Any:
         """Get cached property value, computing if needed."""
         if obj is None:
             return self

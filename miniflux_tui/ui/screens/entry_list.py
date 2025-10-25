@@ -1,7 +1,7 @@
 """Entry list screen with feed sorting capabilities."""
 
 from contextlib import suppress
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, cast
 
 from textual.app import ComposeResult
 from textual.binding import Binding
@@ -18,7 +18,7 @@ from miniflux_tui.performance import ScreenRefreshOptimizer
 from miniflux_tui.utils import get_star_icon, get_status_icon
 
 if TYPE_CHECKING:
-    pass
+    from miniflux_tui.ui.app import MinifluxTUI
 
 
 class EntryListItem(ListItem):
@@ -64,7 +64,8 @@ class FeedHeaderItem(ListItem):
         fold_icon = FOLD_EXPANDED if self.is_expanded else FOLD_COLLAPSED
         header_text = f"[bold]{fold_icon} {self.feed_title}[/bold]"
         # Update the label
-        self.children[0].update(header_text)
+        if self.children:
+            cast(Label, self.children[0]).update(header_text)
 
 
 class EntryListScreen(Screen):
@@ -119,6 +120,11 @@ class EntryListScreen(Screen):
         self.feed_header_map: dict[str, FeedHeaderItem] = {}  # Map feed names to header items
         self.feed_fold_state: dict[str, bool] = {}  # Track fold state per feed (True = expanded)
         self.last_highlighted_feed: str | None = None  # Track last highlighted feed for position persistence
+
+    @property
+    def app(self) -> "MinifluxTUI":
+        """Get the app instance with proper type hints."""
+        return cast("MinifluxTUI", super().app)
 
     def compose(self) -> ComposeResult:
         """Create child widgets."""
@@ -331,7 +337,8 @@ class EntryListScreen(Screen):
             self.entry_item_map[entry.id] = item
 
             # Apply "collapsed" class if this feed is collapsed
-            if not self.feed_fold_state[current_feed]:
+            # current_feed is guaranteed to be set here (see line 316)
+            if current_feed and not self.feed_fold_state[current_feed]:
                 item.add_class("collapsed")
 
             self.list_view.append(item)
@@ -369,9 +376,17 @@ class EntryListScreen(Screen):
 
         # Find the index of the old item in the list view
         try:
-            index = self.list_view.children.index(old_item)
-            # Replace the old item with the new one
-            self.list_view.children[index] = new_item
+            children_list = list(self.list_view.children)
+            index = children_list.index(old_item)
+            # Remove the old item
+            old_item.remove()
+            # Get the item that's now at that position (if exists)
+            current_children = list(self.list_view.children)
+            # Mount new item before the item that's now at that index
+            if index < len(current_children):
+                self.list_view.mount(new_item, before=current_children[index])
+            else:
+                self.list_view.mount(new_item)
             # Update displayed_items if it's in there
             if old_item in self.displayed_items:
                 item_index = self.displayed_items.index(old_item)
@@ -398,8 +413,8 @@ class EntryListScreen(Screen):
 
             # Move to next item and skip hidden ones
             for i in range(current_index + 1, len(self.list_view.children)):
-                item = self.list_view.children[i]
-                if self._is_item_visible(item):
+                widget = self.list_view.children[i]
+                if isinstance(widget, ListItem) and self._is_item_visible(widget):
                     self.list_view.index = i
                     return
 
@@ -420,8 +435,8 @@ class EntryListScreen(Screen):
 
             # Move to previous item and skip hidden ones
             for i in range(current_index - 1, -1, -1):
-                item = self.list_view.children[i]
-                if self._is_item_visible(item):
+                widget = self.list_view.children[i]
+                if isinstance(widget, ListItem) and self._is_item_visible(widget):
                     self.list_view.index = i
                     return
 
