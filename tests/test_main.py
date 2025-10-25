@@ -43,7 +43,7 @@ class TestMainInit:
 class TestMainCheckConfig:
     """Test --check-config flag functionality."""
 
-    def test_check_config_valid(self, capsys):
+    def test_check_config_valid(self, capsys, tmp_path):
         """Test --check-config with valid configuration."""
         mock_config = MagicMock()
         mock_config.server_url = "https://miniflux.example.com"
@@ -54,8 +54,15 @@ class TestMainCheckConfig:
         mock_config.default_sort = "date"
         mock_config.default_group_by_feed = False
 
-        with patch("miniflux_tui.main.load_config") as mock_load:
+        config_file = tmp_path / "config.toml"
+        config_file.write_text("[test]")  # Create a dummy file
+
+        with (
+            patch("miniflux_tui.main.load_config") as mock_load,
+            patch("miniflux_tui.main.get_config_file_path") as mock_path,
+        ):
             mock_load.return_value = mock_config
+            mock_path.return_value = config_file
             with patch.object(sys, "argv", ["miniflux-tui", "--check-config"]):
                 result = main()
 
@@ -214,9 +221,14 @@ class TestMainArgumentParsing:
                 assert result == 0
 
         # --check-config should also work
+        config_file.write_text("[test]")  # Create the file
         mock_config = MagicMock()
-        with patch("miniflux_tui.main.load_config") as mock_load:
+        with (
+            patch("miniflux_tui.main.load_config") as mock_load,
+            patch("miniflux_tui.main.get_config_file_path") as mock_path,
+        ):
             mock_load.return_value = mock_config
+            mock_path.return_value = config_file
             with patch.object(sys, "argv", ["miniflux-tui", "--check-config"]):
                 result = main()
                 assert result == 0

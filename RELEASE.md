@@ -6,23 +6,15 @@ This guide explains how to create and publish new releases of miniflux-tui-py.
 
 The entire release process is automated with a simple command:
 
-### Using Python (Recommended - Cross-Platform)
-
 ```bash
-python scripts/release.py
+uv run python scripts/release.py
 ```
 
-### Or using Bash
-
-```bash
-scripts/release.sh
-```
-
-Both scripts do the same thing - they automate the entire release workflow.
+This Python script automates the entire release workflow and works across Windows, macOS, and Linux.
 
 ## What Gets Automated
 
-The release scripts handle:
+The release script handles:
 
 1. ✅ **Pre-Release Checks**
   - Runs all tests (pytest with coverage)
