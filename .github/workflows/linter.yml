@@ -1,7 +1,7 @@
 ---
 # This is a basic workflow to help you get started with Actions
 
-name: Linter
+name: Code Quality Checks
 
 # Controls when the action will run. Triggers the workflow on push or pull
 # request events but only for the main branch

@@ -1,10 +1,8 @@
 ---
 # From https://google.github.io/osv-scanner/github-action/
-name: OSV-Scanner Scheduled Scan
+name: OSV-Scanner Vulnerability Scan
 
 on:
-  schedule:
-    - cron: "30 2 * * *"
   # Change "main" to your default branch if you use a different name, i.e. "master"
   push:
     branches: [main]
