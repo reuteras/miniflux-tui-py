@@ -480,16 +480,17 @@ class EntryListScreen(Screen):
             return
 
         feed_title = highlighted.feed_title
-        # Initialize fold state if not already set
+        self.last_highlighted_feed = feed_title
+
+        # Ensure fold state exists
         if feed_title not in self.feed_fold_state:
             self.feed_fold_state[feed_title] = not self.group_collapsed
 
         # Only collapse if currently expanded
-        if self.feed_fold_state[feed_title]:
-            self.last_highlighted_feed = feed_title
+        is_currently_expanded = self.feed_fold_state[feed_title]
+        if is_currently_expanded:
             self.feed_fold_state[feed_title] = False
             self._populate_list()
-            self._restore_cursor_position()
             self.notify(f"Feed collapsed: {feed_title}")
 
     def action_expand_feed(self):
@@ -502,16 +503,17 @@ class EntryListScreen(Screen):
             return
 
         feed_title = highlighted.feed_title
-        # Initialize fold state if not already set
+        self.last_highlighted_feed = feed_title
+
+        # Ensure fold state exists
         if feed_title not in self.feed_fold_state:
             self.feed_fold_state[feed_title] = not self.group_collapsed
 
         # Only expand if currently collapsed
-        if not self.feed_fold_state[feed_title]:
-            self.last_highlighted_feed = feed_title
+        is_currently_collapsed = not self.feed_fold_state[feed_title]
+        if is_currently_collapsed:
             self.feed_fold_state[feed_title] = True
             self._populate_list()
-            self._restore_cursor_position()
             self.notify(f"Feed expanded: {feed_title}")
 
     async def action_refresh(self):
