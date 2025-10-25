@@ -180,43 +180,33 @@ class EntryListScreen(Screen):
         self._display_entries(sorted_entries)
         self.refresh_optimizer.track_full_refresh()
 
-    def _save_current_position(self) -> None:
-        """Save the current cursor position based on highlighted item."""
-        if not self.list_view or not self.group_by_feed:
-            return
-
-        highlighted = self.list_view.highlighted_child
-        if not highlighted:
-            return
-
-        # Extract feed title from current highlighted item
-        if isinstance(highlighted, FeedHeaderItem):
-            self.last_highlighted_feed = highlighted.feed_title
-        elif isinstance(highlighted, EntryListItem):
-            self.last_highlighted_feed = highlighted.entry.feed.title
+        # Set initial index to 0 to highlight the first item
+        if len(self.list_view.children) > 0:
+            with suppress(IndexError, ValueError):
+                self.list_view.index = 0
 
     def _restore_cursor_position(self) -> None:
         """Restore cursor position to the last highlighted feed header.
 
-        Always positions on the feed header itself, not after it.
-        This keeps navigation simple and predictable after expand/collapse.
+        Used after rebuilding the list to restore user's position.
         """
         if not self.list_view or not self.last_highlighted_feed:
             return
 
-        # Find the feed header in the list
+        # Try to find the feed header in the new list
         if self.last_highlighted_feed in self.feed_header_map:
             feed_header = self.feed_header_map[self.last_highlighted_feed]
-            # Find the index of this header in the list view
-            try:
-                index = self.list_view.children.index(feed_header)
-                # Ensure index is within valid bounds
-                if 0 <= index < len(self.list_view.children):
-                    self.list_view.index = index
-            except (ValueError, IndexError):
-                # Feed header not found or index out of range, reset to first item
-                if len(self.list_view.children) > 0:
-                    self.list_view.index = 0
+            # Find its index in the list view
+            for i, child in enumerate(self.list_view.children):
+                if child is feed_header:
+                    with suppress(Exception):
+                        self.list_view.index = i
+                        return
+
+        # If not found, just go to first item
+        with suppress(Exception):
+            self.list_view.index = 0
+
 
     def _ensure_list_view(self) -> bool:
         """Ensure list_view is available. Returns False if unavailable."""
@@ -303,7 +293,11 @@ class EntryListScreen(Screen):
         return entries
 
     def _add_grouped_entries(self, entries: list[Entry]):
-        """Add entries grouped by feed with optional collapsible headers."""
+        """Add entries grouped by feed with optional collapsible headers.
+
+        All entries are added to the list, but entries in collapsed feeds
+        are hidden via CSS class. This preserves cursor position during expand/collapse.
+        """
         current_feed = None
         first_feed = None
         self.displayed_items = []
@@ -331,12 +325,16 @@ class EntryListScreen(Screen):
                 self.feed_header_map[current_feed] = header
                 self.list_view.append(header)
 
-            # Only add entries if the feed is expanded
-            if self.feed_fold_state[current_feed]:
-                item = EntryListItem(entry, self.unread_color, self.read_color)
-                self.displayed_items.append(item)
-                self.entry_item_map[entry.id] = item
-                self.list_view.append(item)
+            # Always add the entry, but apply "collapsed" CSS class if feed is collapsed
+            item = EntryListItem(entry, self.unread_color, self.read_color)
+            self.displayed_items.append(item)
+            self.entry_item_map[entry.id] = item
+
+            # Apply "collapsed" class if this feed is collapsed
+            if not self.feed_fold_state[current_feed]:
+                item.add_class("collapsed")
+
+            self.list_view.append(item)
 
     def _add_flat_entries(self, entries: list[Entry]):
         """Add entries as a flat list."""
@@ -383,35 +381,53 @@ class EntryListScreen(Screen):
         except (ValueError, IndexError):
             return False
 
+    def _is_item_visible(self, item: ListItem) -> bool:
+        """Check if an item is visible (not hidden by CSS class)."""
+        return "collapsed" not in item.classes
+
     def action_cursor_down(self):
-        """Move cursor down to next entry item."""
+        """Move cursor down to next visible entry item, skipping collapsed entries."""
         if not self.list_view or len(self.list_view.children) == 0:
             return
+
         try:
-            # Delegate to ListView's built-in cursor movement
-            self.list_view.action_cursor_down()
-            # Save the new position if in grouped mode
-            self._save_current_position()
-        except IndexError:
-            # If cursor movement fails, try to set to first item
-            with suppress(IndexError, ValueError):
-                self.list_view.index = 0
-                self._save_current_position()
+            current_index = self.list_view.index
+            # If index is None, start searching from -1 so range(0, ...) includes index 0
+            if current_index is None:
+                current_index = -1
+
+            # Move to next item and skip hidden ones
+            for i in range(current_index + 1, len(self.list_view.children)):
+                item = self.list_view.children[i]
+                if self._is_item_visible(item):
+                    self.list_view.index = i
+                    return
+
+            # If no visible item found below, stay at current position
+        except (IndexError, ValueError, TypeError):
+            pass
 
     def action_cursor_up(self):
-        """Move cursor up to previous entry item."""
+        """Move cursor up to previous visible entry item, skipping collapsed entries."""
         if not self.list_view or len(self.list_view.children) == 0:
             return
+
         try:
-            # Delegate to ListView's built-in cursor movement
-            self.list_view.action_cursor_up()
-            # Save the new position if in grouped mode
-            self._save_current_position()
-        except IndexError:
-            # If cursor movement fails, try to set to first item
-            with suppress(IndexError, ValueError):
-                self.list_view.index = 0
-                self._save_current_position()
+            current_index = self.list_view.index
+            # If index is None, start from len so we search backwards from end
+            if current_index is None:
+                current_index = len(self.list_view.children)
+
+            # Move to previous item and skip hidden ones
+            for i in range(current_index - 1, -1, -1):
+                item = self.list_view.children[i]
+                if self._is_item_visible(item):
+                    self.list_view.index = i
+                    return
+
+            # If no visible item found above, stay at current position
+        except (IndexError, ValueError, TypeError):
+            pass
 
     async def action_toggle_read(self):
         """Toggle read/unread status of current entry."""
@@ -508,10 +524,24 @@ class EntryListScreen(Screen):
             self.feed_fold_state[feed_title] = not self.feed_fold_state[feed_title]
             highlighted.toggle_fold()
 
-            # Rebuild the list to show/hide entries, then restore position
-            self._populate_list()
-            self._restore_cursor_position()
-            self.notify(f"Feed {'expanded' if self.feed_fold_state[feed_title] else 'collapsed'}: {feed_title}")
+            # Update CSS class for entries: toggle "collapsed" class
+            self._update_feed_visibility(feed_title)
+
+    def _update_feed_visibility(self, feed_title: str) -> None:
+        """Update CSS visibility for all entries of a feed based on fold state.
+
+        If feed is collapsed, adds 'collapsed' class to hide entries.
+        If feed is expanded, removes 'collapsed' class to show entries.
+        """
+        is_expanded = self.feed_fold_state.get(feed_title, True)
+
+        # Find all entries for this feed and update their CSS class
+        for item in self.list_view.children:
+            if isinstance(item, EntryListItem) and item.entry.feed.title == feed_title:
+                if is_expanded:
+                    item.remove_class("collapsed")
+                else:
+                    item.add_class("collapsed")
 
     def action_collapse_feed(self):
         """Collapse the highlighted feed (h or left arrow)."""
@@ -546,8 +576,11 @@ class EntryListScreen(Screen):
         is_currently_expanded = self.feed_fold_state[feed_title]
         if is_currently_expanded:
             self.feed_fold_state[feed_title] = False
-            self._populate_list()
-            self.notify(f"Feed collapsed: {feed_title}")
+            # Update the header's visual fold icon
+            if feed_title in self.feed_header_map:
+                self.feed_header_map[feed_title].toggle_fold()
+            # Update CSS visibility for entries
+            self._update_feed_visibility(feed_title)
 
     def action_expand_feed(self):
         """Expand the highlighted feed (l or right arrow)."""
@@ -582,8 +615,11 @@ class EntryListScreen(Screen):
         is_currently_collapsed = not self.feed_fold_state[feed_title]
         if is_currently_collapsed:
             self.feed_fold_state[feed_title] = True
-            self._populate_list()
-            self.notify(f"Feed expanded: {feed_title}")
+            # Update the header's visual fold icon
+            if feed_title in self.feed_header_map:
+                self.feed_header_map[feed_title].toggle_fold()
+            # Update CSS visibility for entries
+            self._update_feed_visibility(feed_title)
 
     async def action_refresh(self):
         """Refresh the entry list from API."""

@@ -61,6 +61,11 @@ class MinifluxTUI(App):
     ListItem.-active {
         background: $accent;
     }
+
+    /* Hide collapsed entries */
+    ListItem.collapsed {
+        display: none;
+    }
     """
 
     def __init__(
