@@ -10,6 +10,7 @@ permissions:
 
 jobs:
   test:
+    name: Test Python ${{ matrix.python-version }}
     runs-on: ubuntu-latest
     strategy:
       matrix:
@@ -53,3 +54,37 @@ jobs:
             exit 1
           fi
           echo "Coverage $coverage_percent% meets threshold $threshold%"
+
+  test-future:
+    name: Test Python 3.15 (Preview)
+    runs-on: ubuntu-latest
+    continue-on-error: true
+    steps:
+      - uses: actions/checkout@v5
+
+      - name: Install uv
+        uses: astral-sh/setup-uv@v7
+
+      - name: Set up Python 3.15
+        run: uv python install 3.15
+
+      - name: Install dependencies
+        run: uv sync
+
+      - name: Check formatting with ruff
+        run: uv run ruff check miniflux_tui tests
+
+      - name: Type check with pyright
+        run: uv run pyright miniflux_tui tests
+
+      - name: Run tests with coverage
+        run: uv run pytest tests --cov=miniflux_tui --cov-report=xml --cov-report=term-missing
+
+      - name: Upload coverage to Codecov
+        uses: codecov/codecov-action@v5
+        with:
+          files: ./coverage.xml
+          flags: unittests
+          name: codecov-umbrella
+          fail_ci_if_error: false
+          token: ${{ secrets.CODECOV_TOKEN }}
