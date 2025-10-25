@@ -175,7 +175,7 @@ class EntryListScreen(Screen):
             self.last_highlighted_entry_id = event.item.entry.id
 
             # Save the cursor index in the list view
-            if self.list_view:
+            if self.list_view and self.list_view.index is not None:
                 self.last_cursor_index = self.list_view.index
 
             # Find the index of this entry in the sorted entry list
