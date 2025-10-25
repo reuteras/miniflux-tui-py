@@ -1,5 +1,27 @@
 # Changelog
 
+## [0.2.7] - 2025-10-25
+
+### Features
+- Add expand/collapse all feeds in group mode
+- Add expand/collapse all feeds in group mode
+- Add Python 3.15 preview testing without blocking releases
+
+### Bug Fixes
+- Handle None value for list_view.index in type checking
+- Wrap bare URLs in markdown links in RELEASE.md checklist
+- Find entries by ID not object identity when restoring cursor
+- Don't reset cursor index to 0 in _populate_list
+- Properly restore cursor position to entry in grouped mode
+- Resolve linting errors and navigation persistence bug
+- Defer ListView focus and cursor restoration to prevent navigation hang in grouped mode
+- Resolve markdown linting errors and prevent IndexError on entry list screen
+- Restore ListView focus when returning from entry reader
+- Restore ListView focus when returning from entry reader
+- Resolve all remaining markdown linter errors
+- Fix markdown linter errors
+
+
 ## [0.2.6] - 2025-10-25
 
 ### Fixed
