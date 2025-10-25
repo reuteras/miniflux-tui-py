@@ -1,5 +1,11 @@
 # Changelog
 
+## [0.2.8] - 2025-10-25
+
+### Bug Fixes
+- Resolve linting errors and navigation persistence bug
+
+
 ## [0.2.7] - 2025-10-25
 
 ### Features
