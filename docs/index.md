@@ -17,10 +17,14 @@ A Python Terminal User Interface (TUI) client for [Miniflux](https://miniflux.ap
 
 ## Quick Start
 
-### Installation
+### Installation (Recommended with uv)
 
 ```bash
-pip install miniflux-tui-py
+# Install uv
+curl -LsSf https://astral.sh/uv/install.sh | sh
+
+# Install miniflux-tui-py
+uv tool install miniflux-tui-py
 ```
 
 ### Configuration
@@ -38,6 +42,8 @@ This will prompt you for your Miniflux server URL and API key.
 ```bash
 miniflux-tui
 ```
+
+See the [Installation Guide](installation.md) for more options including pip and source installation.
 
 ## Key Bindings
 
