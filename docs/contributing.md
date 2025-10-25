@@ -26,10 +26,10 @@ cd miniflux-tui-py
 2. **Install dependencies with uv:**
 
 ```bash
-uv sync
+uv sync --all-groups
 ```
 
-This will install all development dependencies including pytest, ruff, and pyright.
+This will install all development and documentation dependencies including pytest, ruff, pyright, and mkdocs.
 
 3. **Verify your setup:**
 

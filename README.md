@@ -23,7 +23,7 @@ miniflux-tui --init
 miniflux-tui
 ```
 
-### From Source
+### From Source (For Developers)
 
 ```bash
 # Install uv if you haven't already
@@ -33,8 +33,8 @@ curl -LsSf https://astral.sh/uv/install.sh | sh
 git clone https://github.com/reuteras/miniflux-tui-py.git
 cd miniflux-tui-py
 
-# Install dependencies
-uv sync
+# Install all dependencies (including dev and docs)
+uv sync --all-groups
 
 # Create default configuration
 uv run miniflux-tui --init
@@ -120,8 +120,8 @@ Contributions are welcome! See [CONTRIBUTING.md](CONTRIBUTING.md) for details on
 ## Development
 
 ```bash
-# Install development dependencies
-uv sync
+# Install all development dependencies
+uv sync --all-groups
 
 # Lint code
 uv run ruff check .
@@ -131,6 +131,9 @@ uv run pyright miniflux_tui tests
 
 # Run tests
 uv run pytest tests --cov=miniflux_tui
+
+# Preview documentation locally
+uv run mkdocs serve
 ```
 
 ## Why Python?

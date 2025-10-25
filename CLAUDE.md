@@ -158,7 +158,7 @@ curl -LsSf https://astral.sh/uv/install.sh | sh
 # Clone and setup
 git clone https://github.com/reuteras/miniflux-tui-py.git
 cd miniflux-tui-py
-uv sync  # Install all dependencies including dev tools
+uv sync --all-groups  # Install all dependencies including dev and docs tools
 
 # Create config (interactive)
 uv run miniflux-tui --init
@@ -195,7 +195,7 @@ git branch -d feature/your-feature-name
 
 ### Common Commands
 ```bash
-uv sync                          # Install dependencies
+uv sync --all-groups             # Install all dependencies (dev + docs)
 uv run miniflux-tui              # Run app
 uv run miniflux-tui --init       # Create config
 uv run ruff check .              # Lint code

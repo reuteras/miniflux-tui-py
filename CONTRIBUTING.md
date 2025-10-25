@@ -14,7 +14,7 @@ Thank you for your interest in contributing! This document provides guidelines f
 1. Fork the repository
 2. Clone your fork: `git clone https://github.com/YOUR_USERNAME/miniflux-tui-py.git`
 3. Create a feature branch: `git checkout -b feature/my-feature`
-4. Set up development environment: `uv sync`
+4. Set up development environment: `uv sync --all-groups`
 5. Make your changes
 6. Run tests: `uv run pytest tests`
 7. Push and create a pull request
