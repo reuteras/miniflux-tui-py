@@ -33,7 +33,7 @@ The `Feed` class represents an RSS feed.
       docstring_style: google
       show_source: true
 
-### Properties
+### Feed Properties
 
 - **id**: Unique feed identifier
 - **title**: Feed title

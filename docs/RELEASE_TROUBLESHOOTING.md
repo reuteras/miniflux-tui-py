@@ -38,10 +38,10 @@ During release, you see:
 3. **Fix the issue:**
   - Edit the relevant source code or test file
   - Common issues:
-  - Logic bugs in features
-  - Missing type hints
-  - Incorrect mocks/fixtures
-  - Test isolation problems
+    - Logic bugs in features
+    - Missing type hints
+    - Incorrect mocks/fixtures
+    - Test isolation problems
 
 4. **Verify the fix:**
   ```bash
@@ -91,15 +91,15 @@ During release, you see:
 
 ## Linting Failures
 
-### Problem
+### Linting Problem
 
 During release, you see:
 
-```
+```text
 ✗ Linting failed. Run 'uv run ruff check miniflux_tui tests' to see issues.
 ```
 
-### Solution
+### Fixing Linting Issues
 
 1. **See all linting errors:**
   ```bash
@@ -181,15 +181,15 @@ subprocess.run(["git", "push", "origin", "main"])  # noqa: S603, S607
 
 ## Type Check Failures
 
-### Problem
+### Type Check Problem
 
 During release, you see:
 
-```
+```text
 ✗ Type checking failed. Run 'uv run pyright miniflux_tui tests' to see issues.
 ```
 
-### Solution
+### Fixing Type Issues
 
 1. **See all type errors:**
   ```bash

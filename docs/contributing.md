@@ -106,11 +106,11 @@ git push origin feature/your-feature-name
 ```
 
 2. **Create a pull request on GitHub:**
-  - Go to the main repository
-  - Click "New Pull Request"
-  - Select your feature branch
-  - Fill in a descriptive title and description
-  - Reference any related issues
+- Go to the main repository
+- Click "New Pull Request"
+- Select your feature branch
+- Fill in a descriptive title and description
+- Reference any related issues
 
 ### What to Expect
 

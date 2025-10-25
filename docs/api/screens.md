@@ -41,14 +41,14 @@ The detailed view for reading a single entry.
     options:
       docstring_style: google
 
-### Key Features
+### Features
 
 - **Full entry display**: Shows title, content, metadata
 - **Navigation**: Move between entries in the current list (J/K)
 - **Content**: HTML is converted to readable Markdown
 - **Actions**: Mark read/unread, star, save, open in browser
 
-### Actions
+### Available Actions
 
 | Method | Binding | Description |
 |--------|---------|-------------|
@@ -82,7 +82,7 @@ The main application container.
 
 ## Navigation Flow
 
-```
+```text
 MinifluxTUI (App)
 ├─ EntryListScreen (main view)
 │  ├─ navigate with j/k
