@@ -144,30 +144,27 @@ class EntryListScreen(Screen):
         if self.entries:
             self.log(f"on_mount: Populating with {len(self.entries)} entries")
             self._populate_list()
-            # Restore position to last highlighted feed in grouped mode
+            # Use call_later to defer focus and cursor restoration until ListView has updated
             if self.group_by_feed:
-                self._restore_cursor_position()
+                self.call_later(self._restore_cursor_position_and_focus)
+            else:
+                self.call_later(self._ensure_focus)
         else:
             self.log("on_mount: No entries yet, skipping initial population")
-
-        # Ensure ListView has focus so keyboard input works
-        if self.list_view and len(self.list_view.children) > 0:
-            with suppress(Exception):
-                self.list_view.focus()
 
     def on_screen_resume(self) -> None:
         """Called when screen is resumed (e.g., after returning from entry reader)."""
         # Refresh the list to reflect any status changes
         if self.entries and self.list_view:
             self._populate_list()
-            # Restore cursor position to last highlighted feed in grouped mode
+            # Use call_later to defer focus and cursor restoration until ListView has updated
             if self.group_by_feed:
-                self._restore_cursor_position()
-
-        # Ensure ListView has focus so keyboard input works
-        if self.list_view and len(self.list_view.children) > 0:
-            with suppress(Exception):
-                self.list_view.focus()
+                self.call_later(self._restore_cursor_position_and_focus)
+            else:
+                self.call_later(self._ensure_focus)
+        elif self.list_view and len(self.list_view.children) > 0:
+            # If no entries, just ensure focus
+            self.call_later(self._ensure_focus)
 
     def on_list_view_selected(self, event: ListView.Selected) -> None:
         """Handle ListView selection (Enter key)."""
@@ -224,6 +221,17 @@ class EntryListScreen(Screen):
         # If not found, just go to first item
         with suppress(Exception):
             self.list_view.index = 0
+
+    def _restore_cursor_position_and_focus(self) -> None:
+        """Restore cursor position and ensure focus (called after ListView update)."""
+        self._restore_cursor_position()
+        self._ensure_focus()
+
+    def _ensure_focus(self) -> None:
+        """Ensure ListView has focus for keyboard input."""
+        if self.list_view and len(self.list_view.children) > 0:
+            with suppress(Exception):
+                self.list_view.focus()
 
 
     def _ensure_list_view(self) -> bool:
