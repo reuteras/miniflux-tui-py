@@ -1,5 +1,11 @@
 # Changelog
 
+## [0.2.6] - 2025-10-25
+
+### Fixed
+- Linter errors in Markdown files.
+
+
 ## [0.2.5] - 2025-10-25
 
 ### Bug Fixes
