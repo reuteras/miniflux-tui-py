@@ -8,9 +8,11 @@ This document provides context about the miniflux-tui-py project for Claude Code
 
 - **Language**: Python 3.11+
 - **Framework**: Textual (TUI framework)
-- **Status**: Alpha (v0.1.0)
+- **Status**: Alpha (v0.1.1)
 - **License**: MIT
 - **Author**: Peter Reuterås
+- **PyPI**: Available at https://pypi.org/project/miniflux-tui-py/
+- **Docs**: https://reuteras.github.io/miniflux-tui-py/
 
 This is a Python reimplementation of [cliflux](https://github.com/spencerwi/cliflux) (original Rust implementation).
 
@@ -22,6 +24,9 @@ miniflux-tui-py/
 │   ├── __init__.py
 │   ├── main.py                      # Entry point & CLI argument handling
 │   ├── config.py                    # Configuration management
+│   ├── constants.py                 # Application constants
+│   ├── performance.py               # Performance optimization utilities
+│   ├── utils.py                     # Helper utilities
 │   ├── api/
 │   │   ├── client.py                # Async Miniflux API wrapper
 │   │   └── models.py                # Data models (Entry, Feed)
@@ -31,9 +36,36 @@ miniflux-tui-py/
 │           ├── entry_list.py        # Entry list with sorting/grouping
 │           ├── entry_reader.py      # Entry detail view
 │           └── help.py              # Help/keyboard shortcuts
+├── tests/                           # Test suite
+│   ├── conftest.py
+│   ├── test_*.py                    # Test files
+├── docs/                            # MkDocs documentation
+│   ├── index.md
+│   ├── installation.md
+│   ├── configuration.md
+│   ├── usage.md
+│   ├── contributing.md
+│   └── api/
+│       ├── client.md
+│       ├── models.md
+│       └── screens.md
+├── .github/
+│   ├── workflows/
+│   │   ├── test.yml                 # Run tests on push (Python 3.11-3.13)
+│   │   ├── publish.yml              # Publish to PyPI on git tags
+│   │   └── docs-deploy.yml          # Deploy docs to GitHub Pages
+│   ├── dependabot.yml               # Automated dependency updates
+│   └── CODEOWNERS                   # Code review requirements
 ├── pyproject.toml                   # Project metadata & dependencies
+├── mkdocs.yml                       # MkDocs configuration
+├── CHANGELOG.md                     # Release notes (Keep a Changelog format)
+├── CONTRIBUTING.md                  # Contributing guidelines
+├── CODE_OF_CONDUCT.md               # Community guidelines
+├── SECURITY.md                      # Vulnerability reporting
+├── AUTHORS.md                       # Contributor credits
 ├── README.md                         # User documentation
-└── .editorconfig, .pre-commit-config.yaml, etc.
+├── LICENSE                          # MIT License
+└── .pre-commit-config.yaml          # Pre-commit hooks
 ```
 
 ## Key Files & Responsibilities
@@ -55,15 +87,26 @@ miniflux-tui-py/
 #### entry_list.py
 - **Sorting modes**: "date" (newest first), "feed" (alphabetical + date), "status" (unread first)
 - **Grouping**: When enabled (`g` key), groups by feed title and sorts by published date within each feed
-- **Navigation**: `j`/`k` (or arrow keys) to navigate; uses ListView's built-in cursor movement
+- **Grouped mode navigation**: Uses CSS-based hiding to preserve cursor position
+  - All entries are always in the list (structure never changes)
+  - Collapsed entries have "collapsed" CSS class (display: none)
+  - j/k navigation skips hidden entries automatically
+  - Cursor position naturally preserved during expand/collapse
+- **Navigation**: `j`/`k` (or arrow keys) to navigate; skips hidden entries
 - **Stored state**: `self.sorted_entries` tracks currently sorted order for proper J/K navigation in entry reader
+- **Filtering**: `u` (unread only), `t` (starred only)
 - **Key bindings**:
-  - `j/k` - cursor down/up
+  - `j/k` - cursor down/up (skips hidden entries)
   - `enter` - select entry
   - `m` - toggle read/unread
   - `*` - toggle starred
+  - `e` - save entry
   - `s` - cycle sort mode
   - `g` - toggle group by feed
+  - `l/h` - expand/collapse feed
+  - `r/,` - refresh entries
+  - `u` - show unread only
+  - `t` - show starred only
 
 #### entry_reader.py
 - **Display**: Shows entry title, feed name, publish date, URL, and HTML content (converted to Markdown)
@@ -95,6 +138,19 @@ config.py (load/validate)
 ## Setup & Development
 
 ### Installation
+
+#### Option 1: From PyPI (Recommended for users)
+```bash
+uv pip install miniflux-tui-py
+
+# Create config
+miniflux-tui --init
+
+# Run application
+miniflux-tui
+```
+
+#### Option 2: From Source (Recommended for development)
 ```bash
 # Install uv package manager (if needed)
 curl -LsSf https://astral.sh/uv/install.sh | sh
@@ -102,7 +158,7 @@ curl -LsSf https://astral.sh/uv/install.sh | sh
 # Clone and setup
 git clone https://github.com/reuteras/miniflux-tui-py.git
 cd miniflux-tui-py
-uv sync  # Install dependencies
+uv sync  # Install all dependencies including dev tools
 
 # Create config (interactive)
 uv run miniflux-tui --init
@@ -111,13 +167,42 @@ uv run miniflux-tui --init
 uv run miniflux-tui
 ```
 
+### Git Workflow (IMPORTANT)
+
+**NEVER push directly to main.** All changes must go through feature branches and pull requests.
+
+```bash
+# Create feature branch from main
+git checkout main
+git pull origin main
+git checkout -b feature/your-feature-name
+
+# Make changes and commit
+git add .
+git commit -m "Description of changes"
+
+# Push to your fork/branch
+git push origin feature/your-feature-name
+
+# Create a Pull Request on GitHub
+# (CI will automatically run tests and checks)
+
+# After PR is approved and merged, delete the branch
+git checkout main
+git pull origin main
+git branch -d feature/your-feature-name
+```
+
 ### Common Commands
 ```bash
-uv sync                      # Install dependencies
-uv run miniflux-tui          # Run app
-uv run miniflux-tui --init   # Create config
-uv run ruff check .          # Lint code
-uv run ruff format .         # Format code
+uv sync                          # Install dependencies
+uv run miniflux-tui              # Run app
+uv run miniflux-tui --init       # Create config
+uv run ruff check .              # Lint code
+uv run ruff format .             # Format code
+uv run pyright                   # Type check
+uv run pytest tests              # Run tests
+uv run mkdocs serve              # Preview docs locally
 ```
 
 ### Configuration (TOML Format)
@@ -147,8 +232,12 @@ default_group_by_feed = false
 - **Line length**: 140 characters
 - **Indentation**: 4 spaces
 - **Quotes**: Double quotes
-- **Tools**: ruff (linting & formatting), pylint (additional checking)
-- **Pre-commit hooks**: Enforces syntax, security checks, and formatting
+- **Linting**: ruff (fast Python linter & formatter)
+- **Type checking**: pyright (strict type checking)
+- **Testing**: pytest with coverage tracking
+- **Pre-commit hooks**: Enforces syntax, security checks, formatting, and type checking
+- **CI/CD**: GitHub Actions runs all checks on push (not PR)
+- **Documentation**: MkDocs with Material theme, auto-deployed to GitHub Pages
 
 ## Important Implementation Details
 
@@ -208,9 +297,18 @@ async def action_do_something(self):
 - `html2text>=2024.2.26` - HTML to Markdown conversion
 - `tomli>=2.0.1` - TOML parsing (Python <3.11)
 
-**Development**:
-- `pylint>=4.0.2` - Code linting
+**Development** (included with `uv sync`):
 - `ruff>=0.6.0` - Fast linter & formatter
+- `pyright>=1.1.0` - Static type checker
+- `pytest>=8.0.0` - Testing framework
+- `pytest-asyncio>=0.23.0` - Async test support
+- `pytest-cov>=4.0.0` - Coverage reporting
+- `pylint>=4.0.2` - Additional code linting
+
+**Documentation** (included with `uv sync` or `pip install .[docs]`):
+- `mkdocs>=1.5.0` - Documentation generator
+- `mkdocs-material>=9.4.0` - Material theme for MkDocs
+- `mkdocstrings[python]>=0.23.0` - Auto-generate API docs from docstrings
 
 ## Known Patterns & Conventions
 
@@ -237,19 +335,44 @@ async def action_mark_read(self):
 - Call API to persist changes
 - Call `_populate_list()` or `refresh_screen()` to update UI
 
-## Recent Changes
+## Recent Changes (v0.1.1)
 
-Recent modifications include:
-- Fixed entry ordering when using grouping (g key) - now uses `sorted_entries` consistently
-- Fixed j/k navigation - simplified to use ListView's native methods
-- Entry reader refactoring for better content display
+Major improvements in October 2025:
+- **Grouped mode navigation fixed**: CSS-based hiding instead of list rebuilding
+  - Cursor position now preserved during expand/collapse
+  - j/k navigation automatically skips hidden entries
+- **PyPI package infrastructure**: Published to PyPI with OIDC secure publishing
+- **Comprehensive documentation**: MkDocs site with installation, usage, and API reference
+- **GitHub Actions CI/CD**:
+  - Automated testing on Python 3.11, 3.12, 3.13
+  - Type checking with pyright
+  - Test coverage tracking with codecov
+  - Auto-deploy docs to GitHub Pages
+  - Auto-publish to PyPI on version tags
+- **Professional tooling**:
+  - Pre-commit hooks with pyright type checking
+  - Standard community files (CHANGELOG, CONTRIBUTING, CODE_OF_CONDUCT, SECURITY)
+  - Dependabot for automated dependency updates
+- **Code quality**:
+  - Added constants.py for centralized configuration
+  - Added performance.py for optimization tracking
+  - Added utils.py for helper functions
+  - Incremental refresh for better performance
 
 ## Testing & Quality Assurance
 
-- No automated tests currently (pytest removed per commit history)
-- Use `ruff check .` for linting before commits
-- Use `.pre-commit-config.yaml` hooks for automated checks
-- Test manually with different Miniflux instances
+- **Automated CI/CD**: GitHub Actions runs on every push
+  - Tests Python 3.11, 3.12, 3.13
+  - Minimum 60% test coverage required
+  - Type checking with pyright
+  - Linting with ruff
+- **Pre-commit hooks**: Enforces quality before commit
+  - ruff linting and formatting
+  - pyright type checking
+  - YAML validation
+  - Security checks
+- **Manual testing**: Test with different Miniflux instances and feed sizes
+- **Test suite**: Basic pytest coverage in tests/ directory
 
 ## Troubleshooting
 
