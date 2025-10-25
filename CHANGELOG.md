@@ -1,5 +1,14 @@
 # Changelog
 
+## [0.2.3] - 2025-10-25
+
+### Features
+- Update release script defaults per user preferences
+
+### Bug Fixes
+- Remove bash release script and fix test indentation
+
+
 ## [0.2.2] - 2025-10-25
 
 ### Features
