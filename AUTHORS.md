@@ -3,7 +3,7 @@
 ## Original Author
 
 **Peter Reuterås** ([@reuteras](https://github.com/reuteras))
-- peter@reuteras.net
+- <peter@reuteras.net>
 - Main developer and maintainer
 
 ## Contributors

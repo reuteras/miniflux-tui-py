@@ -70,7 +70,7 @@ default_group_by_feed = true
 
 The config file is stored in `$XDG_CONFIG_HOME` (defaults to `~/.config`):
 
-```
+```text
 ~/.config/miniflux-tui/config.toml
 ```
 
@@ -78,7 +78,7 @@ The config file is stored in `$XDG_CONFIG_HOME` (defaults to `~/.config`):
 
 The config file is stored in `~/Library/Application Support`:
 
-```
+```text
 ~/Library/Application Support/miniflux-tui/config.toml
 ```
 
@@ -86,7 +86,7 @@ The config file is stored in `~/Library/Application Support`:
 
 The config file is stored in `%APPDATA%`:
 
-```
+```text
 %APPDATA%\miniflux-tui\config.toml
 ```
 

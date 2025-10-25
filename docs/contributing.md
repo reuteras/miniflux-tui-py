@@ -81,7 +81,7 @@ All checks are also run automatically when you commit (via pre-commit hooks).
 
 Write clear, concise commit messages:
 
-```
+```text
 Add feature: brief description
 
 Longer description of what changed and why.
@@ -172,7 +172,7 @@ Documentation is built with MkDocs and located in the `docs/` folder.
   ```bash
   uv run mkdocs serve
   ```
-3. View at http://localhost:8000
+3. View at <http://localhost:8000>
 
 ### Documentation Guidelines
 
@@ -222,6 +222,6 @@ When ready to release:
 - Report bugs in GitHub Issues
 - See [SECURITY.md](../SECURITY.md) for security-related concerns
 
-## Thank You!
+## Thank You
 
 We appreciate all contributions, whether code, documentation, bug reports, or feature suggestions. You're helping make miniflux-tui-py better for everyone!

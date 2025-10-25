@@ -20,9 +20,9 @@
 
 The client connects to your Miniflux server using:
 
-- **Base URL**: The server's URL (e.g., `https://miniflux.example.com`)
-- **API Key**: Your personal API token (from Miniflux Settings)
-- **Certificate Validation**: Configurable for self-signed certificates
+- __Base URL__: The server's URL (e.g., `https://miniflux.example.com`)
+- __API Key__: Your personal API token (from Miniflux Settings)
+- __Certificate Validation__: Configurable for self-signed certificates
 
 ## Async Operations
 
