@@ -15,15 +15,27 @@ A [Python](https://www.python.org) TUI (Terminal User Interface) client for the 
 
 ## Installation
 
-### From PyPI (Recommended)
+### From PyPI (Recommended with uv)
 
 ```bash
-pip install miniflux-tui-py
+# Install uv if you haven't already
+curl -LsSf https://astral.sh/uv/install.sh | sh
+
+# Install miniflux-tui-py
+uv tool install miniflux-tui-py
 
 # Create configuration
 miniflux-tui --init
 
 # Run the application
+miniflux-tui
+```
+
+### Alternative: Using pip
+
+```bash
+pip install miniflux-tui-py
+miniflux-tui --init
 miniflux-tui
 ```
 
