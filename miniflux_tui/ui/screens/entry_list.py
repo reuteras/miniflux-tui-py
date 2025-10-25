@@ -146,6 +146,9 @@ class EntryListScreen(Screen):
         # Refresh the list to reflect any status changes
         if self.entries and self.list_view:
             self._populate_list()
+            # Restore cursor position to last highlighted feed in grouped mode
+            if self.group_by_feed:
+                self._restore_cursor_position()
 
     def on_list_view_selected(self, event: ListView.Selected) -> None:
         """Handle ListView selection (Enter key)."""
