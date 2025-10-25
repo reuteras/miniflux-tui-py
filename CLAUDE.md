@@ -11,8 +11,8 @@ This document provides context about the miniflux-tui-py project for Claude Code
 - **Status**: Alpha (v0.1.1)
 - **License**: MIT
 - **Author**: Peter Reuterås
-- **PyPI**: Available at https://pypi.org/project/miniflux-tui-py/
-- **Docs**: https://reuteras.github.io/miniflux-tui-py/
+- **PyPI**: Available at <https://pypi.org/project/miniflux-tui-py/>
+- **Docs**: <https://reuteras.github.io/miniflux-tui-py/>
 
 This is a Python reimplementation of [cliflux](https://github.com/spencerwi/cliflux) (original Rust implementation).
 

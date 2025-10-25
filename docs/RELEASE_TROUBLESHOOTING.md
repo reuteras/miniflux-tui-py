@@ -19,7 +19,7 @@ This guide explains how to handle and recover from failures during the release p
 
 During release, you see:
 
-```
+```text
 ✗ Tests failed. Fix issues before releasing.
 ```
 
