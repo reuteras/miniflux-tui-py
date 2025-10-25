@@ -106,6 +106,7 @@ class MinifluxTUI(App):
                 read_color=self.config.read_color,
                 default_sort=self.config.default_sort,
                 group_by_feed=self.config.default_group_by_feed,
+                group_collapsed=self.config.group_collapsed,
             ),
             name="entry_list",
         )

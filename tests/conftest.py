@@ -99,5 +99,6 @@ def valid_config_dict():
         "sorting": {
             "default_sort": "date",
             "default_group_by_feed": False,
+            "group_collapsed": False,
         },
     }

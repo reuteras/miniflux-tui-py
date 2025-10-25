@@ -17,6 +17,8 @@ STAR_ICON_FILLED = "★"
 STAR_ICON_EMPTY = "☆"
 UNREAD_ICON = "●"
 READ_ICON = "○"
+FOLD_EXPANDED = "▼"
+FOLD_COLLAPSED = "▶"
 
 # Colors (defaults)
 DEFAULT_UNREAD_COLOR = "cyan"

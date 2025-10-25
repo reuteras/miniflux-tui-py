@@ -9,7 +9,8 @@ from textual.widgets import Footer, Header, Label, ListItem, ListView
 
 from miniflux_tui.api.models import Entry
 from miniflux_tui.constants import (
-    FEED_HEADER_FORMAT,
+    FOLD_COLLAPSED,
+    FOLD_EXPANDED,
     SORT_MODES,
 )
 from miniflux_tui.performance import ScreenRefreshOptimizer
@@ -41,6 +42,30 @@ class EntryListItem(ListItem):
         super().__init__(Label(label_text))
 
 
+class FeedHeaderItem(ListItem):
+    """Custom list item for feed header with fold/unfold capability."""
+
+    def __init__(self, feed_title: str, is_expanded: bool = True):
+        self.feed_title = feed_title
+        self.is_expanded = is_expanded
+
+        # Format header with fold indicator
+        fold_icon = FOLD_EXPANDED if is_expanded else FOLD_COLLAPSED
+        header_text = f"[bold]{fold_icon} {feed_title}[/bold]"
+        label = Label(header_text, classes="feed-header")
+
+        # Initialize with the label
+        super().__init__(label)
+
+    def toggle_fold(self) -> None:
+        """Toggle the fold state and update display."""
+        self.is_expanded = not self.is_expanded
+        fold_icon = FOLD_EXPANDED if self.is_expanded else FOLD_COLLAPSED
+        header_text = f"[bold]{fold_icon} {self.feed_title}[/bold]"
+        # Update the label
+        self.children[0].update(header_text)
+
+
 class EntryListScreen(Screen):
     """Screen for displaying a list of feed entries with sorting."""
 
@@ -53,6 +78,7 @@ class EntryListScreen(Screen):
         Binding("e", "save_entry", "Save Entry"),
         Binding("s", "cycle_sort", "Cycle Sort"),
         Binding("g", "toggle_group", "Group by Feed"),
+        Binding("o", "toggle_fold", "Fold/Unfold Feed"),
         Binding("r", "refresh", "Refresh"),
         Binding("comma", "refresh", "Refresh", show=False),
         Binding("u", "show_unread", "Unread"),
@@ -68,6 +94,7 @@ class EntryListScreen(Screen):
         read_color: str = "gray",
         default_sort: str = "date",
         group_by_feed: bool = False,
+        group_collapsed: bool = False,
         **kwargs,
     ):
         super().__init__(**kwargs)
@@ -77,12 +104,15 @@ class EntryListScreen(Screen):
         self.read_color = read_color
         self.current_sort = default_sort
         self.group_by_feed = group_by_feed
+        self.group_collapsed = group_collapsed  # Start feeds collapsed in grouped mode
         self.filter_unread_only = False  # Filter to show only unread entries
         self.filter_starred_only = False  # Filter to show only starred entries
         self.list_view: ListView | None = None
         self.displayed_items: list[ListItem] = []  # Track items in display order
         self.refresh_optimizer = ScreenRefreshOptimizer()  # Track refresh performance
         self.entry_item_map: dict[int, EntryListItem] = {}  # Map entry IDs to list items
+        self.feed_header_map: dict[str, FeedHeaderItem] = {}  # Map feed names to header items
+        self.feed_fold_state: dict[str, bool] = {}  # Track fold state per feed (True = expanded)
 
     def compose(self) -> ComposeResult:
         """Create child widgets."""
@@ -220,26 +250,33 @@ class EntryListScreen(Screen):
         return entries
 
     def _add_grouped_entries(self, entries: list[Entry]):
-        """Add entries grouped by feed."""
+        """Add entries grouped by feed with optional collapsible headers."""
         current_feed = None
         self.displayed_items = []
         self.entry_item_map.clear()
+        self.feed_header_map.clear()
 
         for entry in entries:
             # Add feed header if this is a new feed
             if current_feed != entry.feed.title:
                 current_feed = entry.feed.title
-                # Add a header item
-                header_label = Label(FEED_HEADER_FORMAT.format(feed_title=current_feed), classes="feed-header")
-                header = ListItem(header_label)
-                self.list_view.append(header)
-                # Don't add headers to displayed_items for navigation
+                # Initialize fold state for this feed if needed
+                if current_feed not in self.feed_fold_state:
+                    # Default: expanded if not set, unless group_collapsed is True
+                    self.feed_fold_state[current_feed] = not self.group_collapsed
 
-            # Add the entry
-            item = EntryListItem(entry, self.unread_color, self.read_color)
-            self.displayed_items.append(item)
-            self.entry_item_map[entry.id] = item
-            self.list_view.append(item)
+                # Create and add a fold-aware header item
+                is_expanded = self.feed_fold_state[current_feed]
+                header = FeedHeaderItem(current_feed, is_expanded=is_expanded)
+                self.feed_header_map[current_feed] = header
+                self.list_view.append(header)
+
+            # Only add entries if the feed is expanded
+            if self.feed_fold_state[current_feed]:
+                item = EntryListItem(entry, self.unread_color, self.read_color)
+                self.displayed_items.append(item)
+                self.entry_item_map[entry.id] = item
+                self.list_view.append(item)
 
     def _add_flat_entries(self, entries: list[Entry]):
         """Add entries as a flat list."""
@@ -380,6 +417,24 @@ class EntryListScreen(Screen):
         """Toggle grouping by feed."""
         self.group_by_feed = not self.group_by_feed
         self._populate_list()
+
+    def action_toggle_fold(self):
+        """Toggle fold state of highlighted feed (only works in grouped mode)."""
+        if not self.list_view or not self.group_by_feed:
+            return
+
+        highlighted = self.list_view.highlighted_child
+        if highlighted and isinstance(highlighted, FeedHeaderItem):
+            feed_title = highlighted.feed_title
+            # Toggle the fold state
+            self.feed_fold_state[feed_title] = not self.feed_fold_state[feed_title]
+            highlighted.toggle_fold()
+
+            # Rebuild the list to show/hide entries
+            self._populate_list()
+            self.notify(
+                f"Feed {'expanded' if self.feed_fold_state[feed_title] else 'collapsed'}: {feed_title}"
+            )
 
     async def action_refresh(self):
         """Refresh the entry list from API."""

@@ -212,3 +212,28 @@ class TestEntryListScreen:
         # Should be sorted by date (newest first)
         assert sorted_entries[0].id == 4  # 2024-10-24
         assert sorted_entries[1].id == 1  # 2024-10-20
+
+    def test_grouped_mode_with_collapse(self, diverse_entries):
+        """Test grouped mode with collapsed feeds."""
+        screen = EntryListScreen(
+            entries=diverse_entries,
+            group_by_feed=True,
+            group_collapsed=True,
+        )
+        # Should start with feeds collapsed
+        assert screen.group_collapsed is True
+        assert screen.group_by_feed is True
+
+    def test_fold_state_tracking(self, diverse_entries):
+        """Test that fold state is tracked per feed."""
+        screen = EntryListScreen(entries=diverse_entries, group_by_feed=True)
+        # Feed fold state should be tracked
+        assert hasattr(screen, "feed_fold_state")
+        assert isinstance(screen.feed_fold_state, dict)
+
+    def test_feed_header_map(self, diverse_entries):
+        """Test that feed header items are tracked."""
+        screen = EntryListScreen(entries=diverse_entries, group_by_feed=True)
+        # Feed header map should be tracked
+        assert hasattr(screen, "feed_header_map")
+        assert isinstance(screen.feed_header_map, dict)

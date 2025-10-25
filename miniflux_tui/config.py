@@ -94,6 +94,7 @@ class Config:
         read_color: str = "gray",
         default_sort: str = "date",
         default_group_by_feed: bool = False,
+        group_collapsed: bool = False,
     ):
         self.server_url = server_url
         self.api_key = api_key
@@ -102,6 +103,7 @@ class Config:
         self.read_color = read_color
         self.default_sort = default_sort
         self.default_group_by_feed = default_group_by_feed
+        self.group_collapsed = group_collapsed
 
     @classmethod
     def from_file(cls, path: Path) -> "Config":
@@ -140,6 +142,7 @@ class Config:
         sorting = data.get("sorting", {})
         default_sort = sorting.get("default_sort", "date")
         default_group_by_feed = sorting.get("default_group_by_feed", False)
+        group_collapsed = sorting.get("group_collapsed", False)
 
         return cls(
             server_url=data["server_url"],
@@ -149,6 +152,7 @@ class Config:
             read_color=read_color,
             default_sort=default_sort,
             default_group_by_feed=default_group_by_feed,
+            group_collapsed=group_collapsed,
         )
 
 
