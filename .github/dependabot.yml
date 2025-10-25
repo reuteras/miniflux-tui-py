@@ -12,6 +12,24 @@ updates:
       - "reuteras"
     pull-request-branch-name:
       separator: "/"
+    # Auto-merge minor and patch updates, leave major for manual review
+    allow:
+      - dependency-type: "direct"
+      - dependency-type: "indirect"
+    # Group updates by type for easier management
+    groups:
+      development-dependencies:
+        patterns:
+          - "pytest*"
+          - "ruff*"
+          - "pyright*"
+          - "mkdocs*"
+          - "pylint*"
+      production-dependencies:
+        patterns:
+          - "textual*"
+          - "miniflux*"
+          - "html2text*"
 
   # Enable version updates for GitHub Actions
   - package-ecosystem: "github-actions"
