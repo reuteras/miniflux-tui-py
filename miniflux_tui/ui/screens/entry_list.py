@@ -180,6 +180,21 @@ class EntryListScreen(Screen):
         self._display_entries(sorted_entries)
         self.refresh_optimizer.track_full_refresh()
 
+    def _save_current_position(self) -> None:
+        """Save the current cursor position based on highlighted item."""
+        if not self.list_view or not self.group_by_feed:
+            return
+
+        highlighted = self.list_view.highlighted_child
+        if not highlighted:
+            return
+
+        # Extract feed title from current highlighted item
+        if isinstance(highlighted, FeedHeaderItem):
+            self.last_highlighted_feed = highlighted.feed_title
+        elif isinstance(highlighted, EntryListItem):
+            self.last_highlighted_feed = highlighted.entry.feed.title
+
     def _restore_cursor_position(self) -> None:
         """Restore cursor position to the last highlighted feed if possible."""
         if not self.list_view or not self.last_highlighted_feed:
@@ -371,10 +386,13 @@ class EntryListScreen(Screen):
         try:
             # Delegate to ListView's built-in cursor movement
             self.list_view.action_cursor_down()
+            # Save the new position if in grouped mode
+            self._save_current_position()
         except IndexError:
             # If cursor movement fails, try to set to first item
             with suppress(IndexError, ValueError):
                 self.list_view.index = 0
+                self._save_current_position()
 
     def action_cursor_up(self):
         """Move cursor up to previous entry item."""
@@ -383,10 +401,13 @@ class EntryListScreen(Screen):
         try:
             # Delegate to ListView's built-in cursor movement
             self.list_view.action_cursor_up()
+            # Save the new position if in grouped mode
+            self._save_current_position()
         except IndexError:
             # If cursor movement fails, try to set to first item
             with suppress(IndexError, ValueError):
                 self.list_view.index = 0
+                self._save_current_position()
 
     async def action_toggle_read(self):
         """Toggle read/unread status of current entry."""
