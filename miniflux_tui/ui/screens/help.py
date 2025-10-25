@@ -10,7 +10,7 @@ from textual.widgets import Footer, Header, Static
 class HelpScreen(Screen):
     """Screen displaying keyboard shortcuts and help information."""
 
-    BINDINGS = [  # noqa: RUF012
+    BINDINGS: list[Binding] = [  # noqa: RUF012
         Binding("escape", "close", "Close"),
         Binding("q", "close", "Close"),
     ]
