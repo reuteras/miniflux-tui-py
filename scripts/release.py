@@ -89,6 +89,19 @@ def validate_version(version: str) -> bool:
     return bool(re.match(r"^\d+\.\d+\.\d+$", version))
 
 
+def suggest_next_version(current_version: str) -> str:
+    """Suggest the next patch version based on current version."""
+    parts = current_version.split(".")
+    if len(parts) != 3:
+        return current_version
+
+    try:
+        major, minor, patch = int(parts[0]), int(parts[1]), int(parts[2])
+        return f"{major}.{minor}.{patch + 1}"
+    except ValueError:
+        return current_version
+
+
 def check_git_status() -> bool:
     """Check if git working directory is clean"""
     try:
@@ -122,18 +135,103 @@ def update_version(new_version: str) -> bool:
     return True
 
 
-def edit_changelog(new_version: str) -> bool:
+def get_previous_tag() -> str | None:
+    """Get the most recent git tag."""
+    try:
+        result = subprocess.run(
+            ["git", "describe", "--tags", "--abbrev=0"],  # noqa: S607
+            capture_output=True,
+            text=True,
+            check=True,
+        )
+        return result.stdout.strip()
+    except subprocess.CalledProcessError:
+        return None
+
+
+def generate_changelog_entry(new_version: str) -> str:
+    """Generate changelog entry from commits since last tag."""
+    previous_tag = get_previous_tag()
+    release_date = datetime.now(timezone.utc).strftime("%Y-%m-%d")  # noqa: UP017
+
+    # Try to import the changelog generator
+    try:
+        script_dir = Path(__file__).parent
+        sys.path.insert(0, str(script_dir))
+        from changelog_generator import format_changelog_entry  # type: ignore  # noqa: PLC0415
+
+        sys.path.pop(0)
+        return format_changelog_entry(new_version, from_tag=previous_tag)
+    except ImportError:
+        # Fallback to manual template
+        return f"""## [{new_version}] - {release_date}
+
+### Added
+- Feature description
+
+### Changed
+- Improvement description
+
+### Fixed
+- Bug fix description
+"""
+
+
+def edit_changelog(new_version: str) -> bool:  # noqa: PLR0912, PLR0915
     """Open CHANGELOG for editing"""
     changelog_path = Path("CHANGELOG.md")
     if not changelog_path.exists():
         print_error("CHANGELOG.md not found")
         return False
 
-    print_info("Opening CHANGELOG.md for editing...")
-    print("Add a new section at the top for version", new_version)
-    release_date = datetime.now(timezone.utc).strftime("%Y-%m-%d")  # noqa: UP017
-    print(
-        f"""
+    # Offer automatic changelog generation
+    print_info("Would you like to auto-generate changelog entries from commits?")
+    print("This parses conventional commits since the last tag.")
+    response = input("Auto-generate changelog? (y/n): ").strip().lower()
+
+    auto_generated = False
+    if response in ("y", "yes"):
+        print_info("Generating changelog entry from commits...")
+        changelog_entry = generate_changelog_entry(new_version)
+        print("\n" + "=" * 70)
+        print(changelog_entry)
+        print("=" * 70 + "\n")
+
+        # Read current changelog
+        current_content = changelog_path.read_text()
+
+        # Find the position to insert (after the main header)
+        lines = current_content.split("\n")
+        insert_pos = 0
+        for i, line in enumerate(lines):
+            if line.startswith("# Changelog"):
+                insert_pos = i + 1
+                break
+
+        # Insert new entry after header and blank line
+        while insert_pos < len(lines) and lines[insert_pos].startswith("#"):
+            insert_pos += 1
+        if insert_pos < len(lines) and not lines[insert_pos].strip():
+            insert_pos += 1
+
+        lines.insert(insert_pos, "")
+        for entry_line in reversed(changelog_entry.split("\n")):
+            lines.insert(insert_pos, entry_line)
+
+        changelog_path.write_text("\n".join(lines))
+        print_success("Changelog updated with auto-generated entry")
+        auto_generated = True
+
+        # Ask if user wants to edit further
+        edit_response = input("Review/edit the changelog? (y/n): ").strip().lower()
+        if edit_response not in ("y", "yes"):
+            return True
+
+    if not auto_generated:
+        print_info("Opening CHANGELOG.md for manual editing...")
+        release_date = datetime.now(timezone.utc).strftime("%Y-%m-%d")  # noqa: UP017
+        print(
+            f"""
 Example format:
 
 ## [{new_version}] - {release_date}
@@ -147,7 +245,7 @@ Example format:
 ### Fixed
 - Bug fix description
 """
-    )
+        )
 
     # Open in default editor
     try:
@@ -191,11 +289,16 @@ def main() -> None:  # noqa: PLR0915
 
     # Get current version
     current_version = get_current_version()
+    suggested_version = suggest_next_version(current_version)
     print_info(f"Current version: {current_version}")
 
     # Prompt for new version
-    print(f"\n{Colors.YELLOW}Enter new version (e.g., 0.2.1):{Colors.NC}")
+    print(f"\n{Colors.YELLOW}Enter new version (default: {suggested_version}):{Colors.NC}")
     new_version = input("New version: ").strip()
+
+    # Use suggested version if user just pressed Enter
+    if not new_version:
+        new_version = suggested_version
 
     if not validate_version(new_version):
         print_error("Invalid version format. Use semantic versioning (e.g., 0.2.1)")
