@@ -133,6 +133,10 @@ Contributions are welcome! See [CONTRIBUTING.md](CONTRIBUTING.md) for details on
 - Running tests and checks
 - Submitting pull requests
 
+For release information and troubleshooting, see:
+- [RELEASE.md](RELEASE.md) - How to create releases
+- [docs/RELEASE_TROUBLESHOOTING.md](docs/RELEASE_TROUBLESHOOTING.md) - Handling release failures
+
 ## Development
 
 ```bash
