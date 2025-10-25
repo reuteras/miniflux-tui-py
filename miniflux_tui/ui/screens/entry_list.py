@@ -535,6 +535,9 @@ class EntryListScreen(Screen):
         if not feed_title:
             return
 
+        # Save position for return from entry reader
+        self.last_highlighted_feed = feed_title
+
         # Ensure fold state exists
         if feed_title not in self.feed_fold_state:
             self.feed_fold_state[feed_title] = not self.group_collapsed
@@ -567,6 +570,9 @@ class EntryListScreen(Screen):
 
         if not feed_title:
             return
+
+        # Save position for return from entry reader
+        self.last_highlighted_feed = feed_title
 
         # Ensure fold state exists
         if feed_title not in self.feed_fold_state:
