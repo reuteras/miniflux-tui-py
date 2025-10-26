@@ -110,10 +110,10 @@ If you discover a security vulnerability, please report it responsibly:
 1. **Do not** open a public GitHub issue
 2. Email security details to: [peter@reuteras.net](mailto:peter@reuteras.net)
 3. Include the following details:
-  - Description of the vulnerability
-  - Steps to reproduce
-  - Potential impact
-  - Suggested fix (if available)
+- Description of the vulnerability
+- Steps to reproduce
+- Potential impact
+- Suggested fix (if available)
 
 See [SECURITY.md](../SECURITY.md) for more details.
 
