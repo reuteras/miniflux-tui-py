@@ -158,7 +158,7 @@ def generate_changelog_entry(new_version: str) -> str:
     try:
         script_dir = Path(__file__).parent
         sys.path.insert(0, str(script_dir))
-        from changelog_generator import format_changelog_entry  # , type: ignore
+        from changelog_generator import format_changelog_entry
 
         sys.path.pop(0)
         return format_changelog_entry(new_version, from_tag=previous_tag)

@@ -48,8 +48,8 @@ def get_git_log(from_tag: str | None = None, to_tag: str = "HEAD") -> str:
     log_range = f"{from_tag}..{to_tag}" if from_tag else to_tag
 
     try:
-        result = subprocess.run(  # noqa: S603
-            ["git", "log", log_range, "--pretty=format:%H|%s"],  # noqa: S607
+        result = subprocess.run(
+            ["git", "log", log_range, "--pretty=format:%H|%s"],
             capture_output=True,
             text=True,
             check=True,
@@ -162,7 +162,7 @@ def get_previous_tag() -> str | None:
     """Get the most recent git tag."""
     try:
         result = subprocess.run(
-            ["git", "describe", "--tags", "--abbrev=0"],  # noqa: S607
+            ["git", "describe", "--tags", "--abbrev=0"],
             capture_output=True,
             text=True,
             check=True,
