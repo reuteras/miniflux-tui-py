@@ -1,5 +1,40 @@
 # Changelog
 
+## [0.4.3] - 2025-10-26
+
+### Security & Infrastructure
+- **SLSA Provenance**: Added automatic SLSA provenance generation for released artifacts (supply chain security)
+- **Signed Releases**: All release artifacts now include cryptographic proof of provenance
+- **Code Review**: Enforced code review on main branch (1 approval required)
+- **Scorecard**: Improved OpenSSF Scorecard compliance
+
+### Features
+- **Application Version Display**: Shows app version from pyproject.toml in help screen
+- **Server Information**: Displays Miniflux server version and API version in help
+- **System Information**: Shows Python version, platform, and Textual framework version
+- **User Display**: Shows current username from Miniflux server
+
+### Improvements
+- Branch protection rules enhanced with signed commit requirements
+- GitHub Actions pinned to commit SHAs via Renovate Bot
+- Pre-commit hooks configured for code quality
+- Better error handling in async operations
+
+### Dependency Updates
+- Updated SLSA framework to v2.1.0 via Renovate
+
+### Testing & Quality
+- All 465 tests passing
+- Code passes ruff linting and pyright type checking
+- No security vulnerabilities detected
+
+## [0.4.2] - 2025-10-26
+
+### Security Documentation
+- Added comprehensive security documentation (docs/security.md)
+- OpenSSF Scorecard improvements and best practices
+- CII Best Practices badge integration
+
 ## [0.4.0] - 2025-10-26
 
 ### Major Features
