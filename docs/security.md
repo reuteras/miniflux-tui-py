@@ -5,7 +5,8 @@ This document outlines the security practices and features of the miniflux-tui-p
 ## OpenSSF Scorecard
 
 The miniflux-tui-py project maintains a strong security posture as measured by the [OpenSSF Scorecard](https://securityscorecards.dev/). View the current scorecard at:
-https://securityscorecards.dev/viewer/?uri=github.com/reuteras/miniflux-tui-py
+
+[https://securityscorecards.dev/viewer/?uri=github.com/reuteras/miniflux-tui-py](https://securityscorecards.dev/viewer/?uri=github.com/reuteras/miniflux-tui-py)
 
 ### Security Scorecard Features
 
@@ -47,7 +48,8 @@ This multi-layered protection follows the **principle of least privilege**.
 
 #### ℹ️ CII Best Practices Badge
 The project meets the criteria for the OpenSSF (formerly CII) Best Practices badge. To view or apply for the badge, visit:
-https://www.bestpractices.dev/
+
+[https://www.bestpractices.dev/](https://www.bestpractices.dev/)
 
 **Project meets these criteria**:
 - ✅ Open source license (MIT)
@@ -59,7 +61,7 @@ https://www.bestpractices.dev/
 
 ## Automated Security Scanning
 
-### CodeQL Analysis
+### CodeQL Static Analysis
 - **Trigger**: Every push to main and pull request
 - **Purpose**: Detects potential security vulnerabilities in Python code
 - **Configuration**: See `.github/workflows/codeql.yml`
@@ -106,7 +108,7 @@ This prevents supply chain attacks from compromised action versions.
 If you discover a security vulnerability, please report it responsibly:
 
 1. **Do not** open a public GitHub issue
-2. Email security details to: peter@reuteras.net
+2. Email security details to: [peter@reuteras.net](mailto:peter@reuteras.net)
 3. Include:
   - Description of the vulnerability
   - Steps to reproduce
@@ -155,7 +157,7 @@ See `.github/workflows/publish.yml` for implementation.
 ## Contact
 
 For security questions or concerns, contact the project maintainer:
-- **Email**: peter@reuteras.net
+- **Email**: [peter@reuteras.net](mailto:peter@reuteras.net)
 - **GitHub**: [@reuteras](https://github.com/reuteras)
 
 ## References
