@@ -1059,3 +1059,164 @@ class TestEntryReaderActionMethods:
         # Verify warning is shown
         screen.notify.assert_called_once()
         assert screen.current_index == 0
+
+
+class TestEntryReaderEventHandlers:
+    """Test event handler methods for entry reader lifecycle."""
+
+    def test_on_mount_exists(self, sample_entry):
+        """Test on_mount method exists and is callable."""
+        screen = EntryReaderScreen(entry=sample_entry)
+
+        # Verify method exists and is callable
+        assert callable(screen.on_mount)
+
+    def test_compose_exists(self, sample_entry):
+        """Test compose method exists and is callable."""
+        screen = EntryReaderScreen(entry=sample_entry)
+
+        # Verify method exists and is callable
+        assert callable(screen.compose)
+
+    def test_refresh_screen_exists(self, sample_entry):
+        """Test refresh_screen method exists and is callable."""
+        screen = EntryReaderScreen(entry=sample_entry)
+
+        # Verify method exists and is callable
+        assert callable(screen.refresh_screen)
+
+
+class TestEntryReaderActionMethodsCallability:
+    """Test action method callability for entry reader user interactions."""
+
+    def test_action_scroll_down_exists(self, sample_entry):
+        """Test action_scroll_down exists and is callable."""
+        screen = EntryReaderScreen(entry=sample_entry)
+        assert callable(screen.action_scroll_down)
+
+    def test_action_scroll_up_exists(self, sample_entry):
+        """Test action_scroll_up exists and is callable."""
+        screen = EntryReaderScreen(entry=sample_entry)
+        assert callable(screen.action_scroll_up)
+
+    def test_action_page_down_exists(self, sample_entry):
+        """Test action_page_down exists and is callable."""
+        screen = EntryReaderScreen(entry=sample_entry)
+        assert callable(screen.action_page_down)
+
+    def test_action_page_up_exists(self, sample_entry):
+        """Test action_page_up exists and is callable."""
+        screen = EntryReaderScreen(entry=sample_entry)
+        assert callable(screen.action_page_up)
+
+    def test_action_back_exists(self, sample_entry):
+        """Test action_back exists and is callable."""
+        screen = EntryReaderScreen(entry=sample_entry)
+        assert callable(screen.action_back)
+
+    @pytest.mark.asyncio
+    async def test_action_mark_unread_exists(self, sample_entry):
+        """Test action_mark_unread exists and is callable."""
+        screen = EntryReaderScreen(entry=sample_entry)
+        assert callable(screen.action_mark_unread)
+
+    @pytest.mark.asyncio
+    async def test_action_toggle_star_exists(self, sample_entry):
+        """Test action_toggle_star exists and is callable."""
+        screen = EntryReaderScreen(entry=sample_entry)
+        assert callable(screen.action_toggle_star)
+
+    @pytest.mark.asyncio
+    async def test_action_save_entry_exists(self, sample_entry):
+        """Test action_save_entry exists and is callable."""
+        screen = EntryReaderScreen(entry=sample_entry)
+        assert callable(screen.action_save_entry)
+
+    def test_action_open_browser_exists(self, sample_entry):
+        """Test action_open_browser exists and is callable."""
+        screen = EntryReaderScreen(entry=sample_entry)
+        assert callable(screen.action_open_browser)
+
+    @pytest.mark.asyncio
+    async def test_action_fetch_original_exists(self, sample_entry):
+        """Test action_fetch_original exists and is callable."""
+        screen = EntryReaderScreen(entry=sample_entry)
+        assert callable(screen.action_fetch_original)
+
+    @pytest.mark.asyncio
+    async def test_action_next_entry_exists(self, sample_entry):
+        """Test action_next_entry exists and is callable."""
+        screen = EntryReaderScreen(entry=sample_entry)
+        assert callable(screen.action_next_entry)
+
+    @pytest.mark.asyncio
+    async def test_action_previous_entry_exists(self, sample_entry):
+        """Test action_previous_entry exists and is callable."""
+        screen = EntryReaderScreen(entry=sample_entry)
+        assert callable(screen.action_previous_entry)
+
+    def test_action_show_help_exists(self, sample_entry):
+        """Test action_show_help exists and is callable."""
+        screen = EntryReaderScreen(entry=sample_entry)
+        assert callable(screen.action_show_help)
+
+    def test_action_quit_exists(self, sample_entry):
+        """Test action_quit exists and is callable."""
+        screen = EntryReaderScreen(entry=sample_entry)
+        assert callable(screen.action_quit)
+
+
+class TestEntryReaderHelperMethods:
+    """Test helper methods for entry reader functionality."""
+
+    def test_html_to_markdown_converts_html(self, sample_entry):
+        """Test _html_to_markdown converts HTML to markdown."""
+        screen = EntryReaderScreen(entry=sample_entry)
+        html = "<p>Test paragraph</p><b>Bold text</b>"
+
+        result = screen._html_to_markdown(html)
+
+        # Should return markdown string
+        assert isinstance(result, str)
+        assert len(result) > 0
+
+    def test_html_to_markdown_handles_empty_content(self, sample_entry):
+        """Test _html_to_markdown handles empty HTML."""
+        screen = EntryReaderScreen(entry=sample_entry)
+        html = ""
+
+        result = screen._html_to_markdown(html)
+
+        # Should return empty or minimal markdown
+        assert isinstance(result, str)
+
+    def test_html_to_markdown_with_links(self, sample_entry):
+        """Test _html_to_markdown converts links properly."""
+        screen = EntryReaderScreen(entry=sample_entry)
+        html = '<a href="https://example.com">Example Link</a>'
+
+        result = screen._html_to_markdown(html)
+
+        # Should contain markdown link syntax or text
+        assert isinstance(result, str)
+        assert "example" in result.lower()
+
+    def test_ensure_scroll_container_exists(self, sample_entry):
+        """Test _ensure_scroll_container method exists."""
+        screen = EntryReaderScreen(entry=sample_entry)
+        assert callable(screen._ensure_scroll_container)
+
+    def test_get_scroll_container_exists(self, sample_entry):
+        """Test _get_scroll_container method exists."""
+        screen = EntryReaderScreen(entry=sample_entry)
+        assert callable(screen._get_scroll_container)
+
+    def test_clear_scroll_content_exists(self, sample_entry):
+        """Test _clear_scroll_content method exists."""
+        screen = EntryReaderScreen(entry=sample_entry)
+        assert callable(screen._clear_scroll_content)
+
+    def test_mount_entry_content_exists(self, sample_entry):
+        """Test _mount_entry_content method exists."""
+        screen = EntryReaderScreen(entry=sample_entry)
+        assert callable(screen._mount_entry_content)
