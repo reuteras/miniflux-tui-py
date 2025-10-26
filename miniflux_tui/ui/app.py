@@ -6,7 +6,7 @@ from textual.app import App
 from textual.driver import Driver
 
 from miniflux_tui.api.client import MinifluxClient
-from miniflux_tui.api.models import Entry
+from miniflux_tui.api.models import Category, Entry
 from miniflux_tui.config import Config
 from miniflux_tui.constants import DEFAULT_ENTRY_LIMIT
 
@@ -92,6 +92,7 @@ class MinifluxTUI(App):
         self.config = config
         self.client: MinifluxClient | None = None
         self.entries: list[Entry] = []
+        self.categories: list[Category] = []
         self.current_view = "unread"  # or "starred"
 
     async def on_mount(self) -> None:
@@ -107,6 +108,7 @@ class MinifluxTUI(App):
         self.install_screen(
             EntryListScreen(
                 entries=self.entries,
+                categories=self.categories,
                 unread_color=self.config.unread_color,
                 read_color=self.config.read_color,
                 default_sort=self.config.default_sort,
@@ -121,9 +123,30 @@ class MinifluxTUI(App):
         # Push initial screen
         self.push_screen("entry_list")
 
-        # Load initial entries after screen is shown
-        self.notify("Loading entries...")
+        # Load categories and entries after screen is shown
+        self.notify("Loading data...")
+        await self.load_categories()
         await self.load_entries()
+
+    async def load_categories(self) -> None:
+        """Load categories from Miniflux API."""
+        if not self.client:
+            self.notify("API client not initialized", severity="error")
+            return
+
+        try:
+            self.categories = await self.client.get_categories()
+            self.log(f"Loaded {len(self.categories)} categories")
+
+            # Update the entry list screen if it exists
+            if self.is_screen_installed("entry_list"):
+                screen = self.get_screen("entry_list")
+                if isinstance(screen, EntryListScreen):
+                    screen.categories = self.categories
+        except Exception as e:
+            error_details = traceback.format_exc()
+            self.notify(f"Error loading categories: {e}", severity="error")
+            self.log(f"Full error:\n{error_details}")
 
     async def load_entries(self, view: str = "unread") -> None:
         """

@@ -8,7 +8,7 @@ from textual.binding import Binding
 from textual.screen import Screen
 from textual.widgets import Footer, Header, Label, ListItem, ListView
 
-from miniflux_tui.api.models import Entry
+from miniflux_tui.api.models import Category, Entry
 from miniflux_tui.constants import (
     FOLD_COLLAPSED,
     FOLD_EXPANDED,
@@ -68,6 +68,31 @@ class FeedHeaderItem(ListItem):
             cast(Label, self.children[0]).update(header_text)
 
 
+class CategoryHeaderItem(ListItem):
+    """Custom list item for category header with fold/unfold capability."""
+
+    def __init__(self, category_title: str, is_expanded: bool = True):
+        self.category_title = category_title
+        self.is_expanded = is_expanded
+
+        # Format header with fold indicator
+        fold_icon = FOLD_EXPANDED if is_expanded else FOLD_COLLAPSED
+        header_text = f"[bold cyan]{fold_icon} [CATEGORY] {category_title}[/bold cyan]"
+        label = Label(header_text, classes="category-header")
+
+        # Initialize with the label
+        super().__init__(label)
+
+    def toggle_fold(self) -> None:
+        """Toggle the fold state and update display."""
+        self.is_expanded = not self.is_expanded
+        fold_icon = FOLD_EXPANDED if self.is_expanded else FOLD_COLLAPSED
+        header_text = f"[bold cyan]{fold_icon} [CATEGORY] {self.category_title}[/bold cyan]"
+        # Update the label
+        if self.children:
+            cast(Label, self.children[0]).update(header_text)
+
+
 class EntryListScreen(Screen):
     """Screen for displaying a list of feed entries with sorting."""
 
@@ -80,6 +105,7 @@ class EntryListScreen(Screen):
         Binding("e", "save_entry", "Save Entry"),
         Binding("s", "cycle_sort", "Cycle Sort"),
         Binding("g", "toggle_group", "Group by Feed"),
+        Binding("shift+c", "toggle_category_group", "Group by Category"),
         Binding("shift+g", "expand_all", "Expand All"),
         Binding("shift+z", "collapse_all", "Collapse All"),
         Binding("o", "toggle_fold", "Fold/Unfold Feed"),
@@ -99,6 +125,7 @@ class EntryListScreen(Screen):
     def __init__(
         self,
         entries: list[Entry],
+        categories: list[Category] | None = None,
         unread_color: str = "cyan",
         read_color: str = "gray",
         default_sort: str = "date",
@@ -108,11 +135,13 @@ class EntryListScreen(Screen):
     ):
         super().__init__(**kwargs)
         self.entries = entries
+        self.categories = categories or []
         self.sorted_entries = entries.copy()  # Store sorted entries for navigation
         self.unread_color = unread_color
         self.read_color = read_color
         self.current_sort = default_sort
         self.group_by_feed = group_by_feed
+        self.group_by_category = False  # Option to group by category instead of feed
         self.group_collapsed = group_collapsed  # Start feeds collapsed in grouped mode
         self.filter_unread_only = False  # Filter to show only unread entries
         self.filter_starred_only = False  # Filter to show only starred entries
@@ -123,8 +152,11 @@ class EntryListScreen(Screen):
         self.refresh_optimizer = ScreenRefreshOptimizer()  # Track refresh performance
         self.entry_item_map: dict[int, EntryListItem] = {}  # Map entry IDs to list items
         self.feed_header_map: dict[str, FeedHeaderItem] = {}  # Map feed names to header items
+        self.category_header_map: dict[str, CategoryHeaderItem] = {}  # Map category names to header items
         self.feed_fold_state: dict[str, bool] = {}  # Track fold state per feed (True = expanded)
+        self.category_fold_state: dict[str, bool] = {}  # Track fold state per category (True = expanded)
         self.last_highlighted_feed: str | None = None  # Track last highlighted feed for position persistence
+        self.last_highlighted_category: str | None = None  # Track last highlighted category for position persistence
         self.last_highlighted_entry_id: int | None = None  # Track last highlighted entry ID for position
         self.last_cursor_index: int = 0  # Track cursor position for non-grouped mode
 
@@ -729,6 +761,25 @@ class EntryListScreen(Screen):
     def action_toggle_group(self):
         """Toggle grouping by feed."""
         self.group_by_feed = not self.group_by_feed
+        self._populate_list()
+
+    def action_toggle_category_group(self):
+        """Toggle grouping by category (v0.5.0 feature in development)."""
+        # For v0.5.0, this is a placeholder for category grouping
+        # Full implementation will be in next iteration
+        if not self.categories:
+            self.notify("No categories available", severity="warning")
+            return
+
+        # Disable feed grouping when enabling category grouping
+        if self.group_by_category:
+            self.group_by_category = False
+            self.notify("Disabled grouping by category")
+        else:
+            self.group_by_feed = False  # Disable feed grouping
+            self.group_by_category = True
+            self.notify("Enabled grouping by category (beta)")
+
         self._populate_list()
 
     def action_toggle_fold(self):
