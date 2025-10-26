@@ -269,6 +269,76 @@ class EntryListScreen(Screen):
                 return False
         return True
 
+    def _get_highlighted_feed_title(self) -> str | None:
+        """Extract feed title from currently highlighted list item.
+
+        Returns the feed title from either a FeedHeaderItem or EntryListItem.
+        This eliminates the repeated pattern of checking item type and
+        extracting feed title across multiple methods.
+
+        Returns:
+            Feed title if found, None otherwise
+        """
+        if not self.list_view:
+            return None
+
+        highlighted = self.list_view.highlighted_child
+        if not highlighted:
+            return None
+
+        if isinstance(highlighted, FeedHeaderItem):
+            return highlighted.feed_title
+        if isinstance(highlighted, EntryListItem):
+            return highlighted.entry.feed.title
+        return None
+
+    def _set_feed_fold_state(self, feed_title: str, is_expanded: bool) -> None:
+        """Set fold state for a feed and update UI.
+
+        Updates the feed's fold state, toggles the header visual indicator,
+        and updates the CSS visibility of feed entries. This eliminates the
+        repeated pattern of state management across collapse/expand methods.
+
+        Args:
+            feed_title: Title of the feed to update
+            is_expanded: True to expand feed, False to collapse
+        """
+        # Ensure fold state entry exists
+        if feed_title not in self.feed_fold_state:
+            self.feed_fold_state[feed_title] = not self.group_collapsed
+
+        # Update fold state
+        self.feed_fold_state[feed_title] = is_expanded
+
+        # Update header visual indicator
+        if feed_title in self.feed_header_map:
+            self.feed_header_map[feed_title].toggle_fold()
+
+        # Update CSS visibility
+        self._update_feed_visibility(feed_title)
+
+    def _ensure_list_view_and_grouped(self) -> bool:
+        """Ensure list view is available and we're in grouped mode.
+
+        Consolidates the common check: list_view exists and group_by_feed is True.
+        This eliminates repeated `if not self.list_view or not self.group_by_feed` checks.
+
+        Returns:
+            True if list_view is available and grouped mode is enabled, False otherwise
+        """
+        return self._ensure_list_view() and self.group_by_feed
+
+    def _list_view_has_items(self) -> bool:
+        """Check if list view exists and has children.
+
+        Consolidates the common check for both list view availability and
+        checking if it has items. Used to determine if there are entries to work with.
+
+        Returns:
+            True if list_view exists and has children, False otherwise
+        """
+        return self.list_view is not None and len(self.list_view.children) > 0
+
     def _get_sorted_entries(self) -> list[Entry]:
         """Get entries sorted/grouped according to current settings."""
         entries = self._filter_entries(self.entries)
@@ -605,94 +675,44 @@ class EntryListScreen(Screen):
         if not self.list_view or not self.group_by_feed:
             return
 
-        highlighted = self.list_view.highlighted_child
-        if not highlighted:
-            return
-
-        feed_title = None
-
-        # Get feed title from header or entry
-        if isinstance(highlighted, FeedHeaderItem):
-            feed_title = highlighted.feed_title
-        elif isinstance(highlighted, EntryListItem):
-            feed_title = highlighted.entry.feed.title
-        else:
-            return
-
+        feed_title = self._get_highlighted_feed_title()
         if not feed_title:
             return
 
         # Save position for return from entry reader
         self.last_highlighted_feed = feed_title
 
-        # Ensure fold state exists
-        if feed_title not in self.feed_fold_state:
-            self.feed_fold_state[feed_title] = not self.group_collapsed
-
         # Only collapse if currently expanded
-        is_currently_expanded = self.feed_fold_state[feed_title]
+        is_currently_expanded = self.feed_fold_state.get(feed_title, not self.group_collapsed)
         if is_currently_expanded:
-            self.feed_fold_state[feed_title] = False
-            # Update the header's visual fold icon
-            if feed_title in self.feed_header_map:
-                self.feed_header_map[feed_title].toggle_fold()
-            # Update CSS visibility for entries
-            self._update_feed_visibility(feed_title)
+            self._set_feed_fold_state(feed_title, False)
 
     def action_expand_feed(self):
         """Expand the highlighted feed (l or right arrow)."""
         if not self.list_view or not self.group_by_feed:
             return
 
-        highlighted = self.list_view.highlighted_child
-        if not highlighted:
-            return
-
-        feed_title = None
-
-        # Get feed title from header or entry
-        if isinstance(highlighted, FeedHeaderItem):
-            feed_title = highlighted.feed_title
-        elif isinstance(highlighted, EntryListItem):
-            feed_title = highlighted.entry.feed.title
-        else:
-            return
-
+        feed_title = self._get_highlighted_feed_title()
         if not feed_title:
             return
 
         # Save position for return from entry reader
         self.last_highlighted_feed = feed_title
 
-        # Ensure fold state exists
-        if feed_title not in self.feed_fold_state:
-            self.feed_fold_state[feed_title] = not self.group_collapsed
-
         # Only expand if currently collapsed
-        is_currently_collapsed = not self.feed_fold_state[feed_title]
+        is_currently_collapsed = not self.feed_fold_state.get(feed_title, not self.group_collapsed)
         if is_currently_collapsed:
-            self.feed_fold_state[feed_title] = True
-            # Update the header's visual fold icon
-            if feed_title in self.feed_header_map:
-                self.feed_header_map[feed_title].toggle_fold()
-            # Update CSS visibility for entries
-            self._update_feed_visibility(feed_title)
+            self._set_feed_fold_state(feed_title, True)
 
     def action_expand_all(self):
         """Expand all feeds (Shift+G)."""
         if not self.list_view or not self.group_by_feed:
             return
 
-        # Expand all feeds
+        # Expand all feeds that are currently collapsed
         for feed_title in self.feed_fold_state:
             if not self.feed_fold_state[feed_title]:
-                # This feed is currently collapsed, expand it
-                self.feed_fold_state[feed_title] = True
-                # Update the header's visual fold icon
-                if feed_title in self.feed_header_map:
-                    self.feed_header_map[feed_title].toggle_fold()
-                # Update CSS visibility for entries
-                self._update_feed_visibility(feed_title)
+                self._set_feed_fold_state(feed_title, True)
 
         self.notify("All feeds expanded")
 
@@ -701,16 +721,10 @@ class EntryListScreen(Screen):
         if not self.list_view or not self.group_by_feed:
             return
 
-        # Collapse all feeds
+        # Collapse all feeds that are currently expanded
         for feed_title in self.feed_fold_state:
             if self.feed_fold_state[feed_title]:
-                # This feed is currently expanded, collapse it
-                self.feed_fold_state[feed_title] = False
-                # Update the header's visual fold icon
-                if feed_title in self.feed_header_map:
-                    self.feed_header_map[feed_title].toggle_fold()
-                # Update CSS visibility for entries
-                self._update_feed_visibility(feed_title)
+                self._set_feed_fold_state(feed_title, False)
 
         self.notify("All feeds collapsed")
 

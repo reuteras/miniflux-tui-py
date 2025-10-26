@@ -130,29 +130,35 @@ class EntryReaderScreen(Screen):
         h.body_width = 0
         return h.handle(html_content)
 
-    def action_scroll_down(self):
-        """Scroll down one line."""
+    def _ensure_scroll_container(self) -> VerticalScroll:
+        """Ensure scroll container is initialized and return it.
+
+        Lazily initializes the scroll container reference if not already set.
+        This eliminates the repeated pattern of checking and initializing
+        the scroll container across multiple scroll action methods.
+
+        Returns:
+            The VerticalScroll container widget
+        """
         if not self.scroll_container:
             self.scroll_container = self.query_one(VerticalScroll)
-        self.scroll_container.scroll_down()
+        return self.scroll_container
+
+    def action_scroll_down(self):
+        """Scroll down one line."""
+        self._ensure_scroll_container().scroll_down()
 
     def action_scroll_up(self):
         """Scroll up one line."""
-        if not self.scroll_container:
-            self.scroll_container = self.query_one(VerticalScroll)
-        self.scroll_container.scroll_up()
+        self._ensure_scroll_container().scroll_up()
 
     def action_page_down(self):
         """Scroll down one page."""
-        if not self.scroll_container:
-            self.scroll_container = self.query_one(VerticalScroll)
-        self.scroll_container.scroll_page_down()
+        self._ensure_scroll_container().scroll_page_down()
 
     def action_page_up(self):
         """Scroll up one page."""
-        if not self.scroll_container:
-            self.scroll_container = self.query_one(VerticalScroll)
-        self.scroll_container.scroll_page_up()
+        self._ensure_scroll_container().scroll_page_up()
 
     def action_back(self):
         """Return to entry list."""
@@ -261,10 +267,12 @@ class EntryReaderScreen(Screen):
             await self._mark_entry_as_read()
 
     def _get_scroll_container(self) -> VerticalScroll:
-        """Get scroll container widget."""
-        if not self.scroll_container:
-            self.scroll_container = self.query_one(VerticalScroll)
-        return self.scroll_container
+        """Get scroll container widget.
+
+        Deprecated: Use _ensure_scroll_container() instead. This method
+        is kept for backward compatibility and delegates to the new helper.
+        """
+        return self._ensure_scroll_container()
 
     def _clear_scroll_content(self, scroll: VerticalScroll):
         """Remove all children from scroll container."""
