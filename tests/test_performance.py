@@ -1,6 +1,8 @@
 """Tests for performance optimization utilities."""
 
-from miniflux_tui.performance import ScreenRefreshOptimizer, get_sort_key_for_entry
+import time
+
+from miniflux_tui.performance import CachedProperty, ScreenRefreshOptimizer, get_sort_key_for_entry, memoize_with_ttl
 from miniflux_tui.ui.screens.entry_list import EntryListScreen
 
 
@@ -215,3 +217,266 @@ class TestEntryListScreenRefreshOptimization:
         for entry in sample_entries:
             # Verify entries are valid for mapping
             assert isinstance(entry.id, int)
+
+
+class TestCachedProperty:
+    """Test CachedProperty descriptor."""
+
+    def test_cached_property_init(self):
+        """Test CachedProperty initialization."""
+        def getter(obj):
+            return "value"
+
+        prop = CachedProperty(getter)
+        assert prop.func == getter
+        assert isinstance(prop.cache, dict)
+        assert isinstance(prop.timestamps, dict)
+
+    def test_cached_property_get_on_class(self):
+        """Test CachedProperty descriptor get when accessed on class."""
+        def getter(obj):
+            return "value"
+
+        prop = CachedProperty(getter)
+        # Accessing on None (class access) returns the descriptor itself
+        result = prop.__get__(None, dict)
+        assert result is prop
+
+    def test_cached_property_get_caches_value(self):
+        """Test CachedProperty caches computed value."""
+        call_count = 0
+
+        def getter(obj):
+            nonlocal call_count
+            call_count += 1
+            return f"value_{call_count}"
+
+        prop = CachedProperty(getter)
+        obj = object()
+
+        # First access computes value
+        result1 = prop.__get__(obj, object)
+        assert result1 == "value_1"
+        assert call_count == 1
+
+        # Second access returns cached value
+        result2 = prop.__get__(obj, object)
+        assert result2 == "value_1"
+        assert call_count == 1  # No additional call
+
+    def test_cached_property_different_objects(self):
+        """Test CachedProperty caches per object."""
+        def getter(obj):
+            return f"value_{id(obj)}"
+
+        prop = CachedProperty(getter)
+        obj1 = object()
+        obj2 = object()
+
+        result1 = prop.__get__(obj1, object)
+        result2 = prop.__get__(obj2, object)
+
+        # Different objects get different cached values
+        assert result1 != result2
+        assert str(id(obj1)) in result1
+        assert str(id(obj2)) in result2
+
+    def test_cached_property_invalidate(self):
+        """Test CachedProperty invalidate method."""
+        call_count = 0
+
+        def getter(obj):
+            nonlocal call_count
+            call_count += 1
+            return f"value_{call_count}"
+
+        prop = CachedProperty(getter)
+        obj = object()
+
+        # Get cached value
+        result1 = prop.__get__(obj, object)
+        assert result1 == "value_1"
+        assert call_count == 1
+
+        # Invalidate cache
+        prop.invalidate(obj)
+
+        # Next access recomputes value
+        result2 = prop.__get__(obj, object)
+        assert result2 == "value_2"
+        assert call_count == 2
+
+    def test_cached_property_invalidate_nonexistent(self):
+        """Test invalidating cache for non-cached object."""
+        def getter(obj):
+            return "value"
+
+        prop = CachedProperty(getter)
+        obj = object()
+
+        # Should not raise error
+        prop.invalidate(obj)
+        assert True  # No exception
+
+
+class TestMemoizeWithTTL:
+    """Test memoize_with_ttl decorator."""
+
+    def test_memoize_with_ttl_decorator_creates_wrapper(self):
+        """Test memoize_with_ttl creates a wrapper function."""
+        @memoize_with_ttl(ttl=1.0)
+        def func(x):
+            return x * 2
+
+        assert callable(func)
+        assert hasattr(func, "cache")
+
+    def test_memoize_with_ttl_caches_result(self):
+        """Test memoize_with_ttl caches function results."""
+        call_count = 0
+
+        @memoize_with_ttl(ttl=1.0)
+        def func(x):
+            nonlocal call_count
+            call_count += 1
+            return x * 2
+
+        # First call
+        result1 = func(5)
+        assert result1 == 10
+        assert call_count == 1
+
+        # Second call with same args
+        result2 = func(5)
+        assert result2 == 10
+        assert call_count == 1  # No additional call
+
+    def test_memoize_with_ttl_different_args(self):
+        """Test memoize_with_ttl handles different arguments."""
+        @memoize_with_ttl(ttl=1.0)
+        def func(x):
+            return x * 2
+
+        result1 = func(5)
+        result2 = func(10)
+
+        assert result1 == 10
+        assert result2 == 20
+
+    def test_memoize_with_ttl_with_kwargs(self):
+        """Test memoize_with_ttl handles keyword arguments."""
+        call_count = 0
+
+        @memoize_with_ttl(ttl=1.0)
+        def func(x, y=1):
+            nonlocal call_count
+            call_count += 1
+            return x * y
+
+        result1 = func(5, y=2)
+        assert result1 == 10
+        assert call_count == 1
+
+        # Same args and kwargs returns cached
+        result2 = func(5, y=2)
+        assert result2 == 10
+        assert call_count == 1
+
+        # Different kwargs triggers recompute
+        result3 = func(5, y=3)
+        assert result3 == 15
+        assert call_count == 2
+
+    def test_memoize_with_ttl_ttl_expiration(self):
+        """Test memoize_with_ttl cache expires after TTL."""
+        call_count = 0
+
+        @memoize_with_ttl(ttl=0.1)  # 100ms TTL
+        def func(x):
+            nonlocal call_count
+            call_count += 1
+            return x * 2
+
+        result1 = func(5)
+        assert result1 == 10
+        assert call_count == 1
+
+        # Wait for cache to expire
+        time.sleep(0.15)
+
+        # Next call should recompute
+        result2 = func(5)
+        assert result2 == 10
+        assert call_count == 2
+
+    def test_memoize_with_ttl_cache_attribute(self):
+        """Test memoize_with_ttl function has cache attribute."""
+        @memoize_with_ttl(ttl=1.0)
+        def func(x):
+            return x * 2
+
+        assert hasattr(func, "cache")
+        assert isinstance(func.cache, dict)
+
+    def test_memoize_with_ttl_default_ttl(self):
+        """Test memoize_with_ttl with default TTL."""
+        @memoize_with_ttl()  # Default 1.0
+        def func(x):
+            return x * 2
+
+        result = func(5)
+        assert result == 10
+
+
+class TestPerformanceIntegration:
+    """Integration tests for performance utilities."""
+
+    def test_cached_property_with_object(self):
+        """Test CachedProperty with a real object."""
+        class TestClass:
+            def __init__(self):
+                self.compute_count = 0
+
+            @CachedProperty
+            def expensive_value(self):
+                self.compute_count += 1
+                return "computed"
+
+        obj = TestClass()
+        # Access property through descriptor
+        prop = TestClass.expensive_value
+        result1 = prop.__get__(obj, TestClass)
+        assert result1 == "computed"
+        assert obj.compute_count == 1
+
+    def test_memoize_with_multiple_functions(self):
+        """Test multiple functions can be memoized independently."""
+        @memoize_with_ttl(ttl=1.0)
+        def func1(x):
+            return x * 2
+
+        @memoize_with_ttl(ttl=1.0)
+        def func2(x):
+            return x * 3
+
+        result1 = func1(5)
+        result2 = func2(5)
+
+        assert result1 == 10
+        assert result2 == 15
+        assert func1.cache != func2.cache  # Independent caches
+
+    def test_screen_refresh_optimizer_stats_structure(self):
+        """Test ScreenRefreshOptimizer stats have correct structure."""
+        optimizer = ScreenRefreshOptimizer()
+        optimizer.track_full_refresh()
+        optimizer.track_partial_refresh()
+
+        stats = optimizer.get_stats()
+
+        assert isinstance(stats, dict)
+        assert "total_refreshes" in stats
+        assert "full_refreshes" in stats
+        assert "partial_refreshes" in stats
+        assert "efficiency_ratio" in stats
+        assert all(isinstance(v, (int, float)) for v in stats.values())
