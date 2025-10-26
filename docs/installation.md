@@ -11,8 +11,9 @@
 The recommended way to install miniflux-tui-py is using [uv](https://docs.astral.sh/uv/), which is faster and more reliable:
 
 ```bash
-# Install uv (if you haven't already)
-curl -LsSf https://astral.sh/uv/install.sh | sh
+# Install uv - see https://docs.astral.sh/uv/getting-started/installation/
+# On macOS/Linux: brew install uv
+# On Windows: choco install uv
 
 # Install miniflux-tui-py
 uv tool install miniflux-tui-py

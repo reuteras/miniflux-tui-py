@@ -20,8 +20,9 @@ A Python Terminal User Interface (TUI) client for [Miniflux](https://miniflux.ap
 ### Installation (Recommended with uv)
 
 ```bash
-# Install uv
-curl -LsSf https://astral.sh/uv/install.sh | sh
+# Install uv - see https://docs.astral.sh/uv/getting-started/installation/
+# On macOS/Linux: brew install uv
+# On Windows: choco install uv
 
 # Install miniflux-tui-py
 uv tool install miniflux-tui-py
