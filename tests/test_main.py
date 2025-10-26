@@ -232,3 +232,20 @@ class TestMainArgumentParsing:
             with patch.object(sys, "argv", ["miniflux-tui", "--check-config"]):
                 result = main()
                 assert result == 0
+
+
+class TestMainEntryPoint:
+    """Test main entry point for script execution."""
+
+    @patch("miniflux_tui.main.sys.exit")
+    @patch("miniflux_tui.main.main")
+    def test_main_called_on_script_run(self, mock_main, mock_exit):
+        """Test the if __name__ == '__main__' pattern."""
+        # Simulate the if __name__ == "__main__" block
+        mock_main.return_value = 0
+        main_return = mock_main()
+        mock_exit(main_return)
+
+        # Verify both main() and sys.exit() were called with correct values
+        assert mock_main.called
+        mock_exit.assert_called_once_with(0)

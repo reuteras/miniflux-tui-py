@@ -5,6 +5,7 @@ from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
 
+from miniflux_tui.api.client import MinifluxClient
 from miniflux_tui.api.models import Entry, Feed
 from miniflux_tui.config import Config
 from miniflux_tui.ui.app import MinifluxTUI, run_tui
@@ -21,7 +22,7 @@ def sample_config():
         read_color="gray",
         default_sort="date",
         default_group_by_feed=False,
-        group_collapsed={},
+        group_collapsed={},  # type: ignore[arg-type]
     )
 
 
@@ -68,7 +69,7 @@ class TestMinifluxTUIInitialization:
         """Test app initializes with custom driver."""
         mock_driver = MagicMock()
 
-        app = MinifluxTUI(sample_config, driver_class=mock_driver)
+        app = MinifluxTUI(sample_config, driver_class=mock_driver)  # type: ignore[arg-type]
 
         assert app.config == sample_config
 
@@ -356,6 +357,124 @@ class TestRunTUI:
 
             # Verify run_async was called (implicitly by patching)
             # The patch ensures the method exists and can be called
+
+
+class TestMinifluxTUIOnMount:
+    """Test on_mount lifecycle method."""
+
+    @pytest.mark.asyncio
+    async def test_on_mount_initializes_client(self, sample_config):
+        """Test on_mount initializes the API client."""
+        app = MinifluxTUI(sample_config)
+
+        # Mock required methods to prevent actual screen installation
+        with (
+            patch.object(app, "install_screen"),
+            patch.object(app, "push_screen"),
+            patch.object(app, "notify"),
+            patch.object(app, "load_entries", new_callable=AsyncMock),
+        ):
+            await app.on_mount()
+
+        # Verify client was initialized
+        assert app.client is not None
+        assert isinstance(app.client, MinifluxClient)
+
+    @pytest.mark.asyncio
+    async def test_on_mount_installs_screens(self, sample_config):
+        """Test on_mount installs entry list and help screens."""
+        app = MinifluxTUI(sample_config)
+
+        # Mock required methods
+        with (
+            patch.object(app, "install_screen") as mock_install,
+            patch.object(app, "push_screen"),
+            patch.object(app, "notify"),
+            patch.object(app, "load_entries", new_callable=AsyncMock),
+        ):
+            await app.on_mount()
+
+            # Verify install_screen was called twice (for entry_list and help)
+            assert mock_install.call_count == 2
+
+    @pytest.mark.asyncio
+    async def test_on_mount_pushes_initial_screen(self, sample_config):
+        """Test on_mount pushes entry_list as initial screen."""
+        app = MinifluxTUI(sample_config)
+
+        # Mock required methods
+        with (
+            patch.object(app, "install_screen"),
+            patch.object(app, "push_screen") as mock_push,
+            patch.object(app, "notify"),
+            patch.object(app, "load_entries", new_callable=AsyncMock),
+        ):
+            await app.on_mount()
+
+            # Verify push_screen was called with "entry_list"
+            mock_push.assert_called_once_with("entry_list")
+
+    @pytest.mark.asyncio
+    async def test_on_mount_notifies_loading(self, sample_config):
+        """Test on_mount notifies user of loading."""
+        app = MinifluxTUI(sample_config)
+
+        # Mock required methods
+        with (
+            patch.object(app, "install_screen"),
+            patch.object(app, "push_screen"),
+            patch.object(app, "notify") as mock_notify,
+            patch.object(app, "load_entries", new_callable=AsyncMock),
+        ):
+            await app.on_mount()
+
+            # Verify notify was called with loading message
+            mock_notify.assert_called_once()
+            assert "Loading entries" in mock_notify.call_args[0][0]
+
+    @pytest.mark.asyncio
+    async def test_on_mount_loads_entries(self, sample_config):
+        """Test on_mount calls load_entries."""
+        app = MinifluxTUI(sample_config)
+
+        # Mock required methods
+        with (
+            patch.object(app, "install_screen"),
+            patch.object(app, "push_screen"),
+            patch.object(app, "notify"),
+            patch.object(app, "load_entries", new_callable=AsyncMock) as mock_load,
+        ):
+            await app.on_mount()
+
+            # Verify load_entries was called
+            mock_load.assert_called_once()
+
+
+class TestLoadEntriesScreenUpdate:
+    """Test load_entries screen update paths."""
+
+    @pytest.mark.asyncio
+    async def test_load_entries_screen_not_entry_list(self, sample_config, sample_entry):
+        """Test load_entries handles non-EntryListScreen case."""
+        app = MinifluxTUI(sample_config)
+
+        # Mock the client
+        app.client = AsyncMock()
+        app.client.get_unread_entries = AsyncMock(return_value=[sample_entry])
+
+        # Mock screen access with non-EntryListScreen object
+        mock_screen = MagicMock()
+        app.is_screen_installed = MagicMock(return_value=True)
+        app.get_screen = MagicMock(return_value=mock_screen)
+        app.notify = MagicMock()
+
+        # Load entries - this should handle the case where screen is not EntryListScreen
+        await app.load_entries()
+
+        # Verify the screen was fetched
+        app.get_screen.assert_called_once_with("entry_list")
+        # Verify entries were loaded
+        assert len(app.entries) == 1
 
 
 class TestMinifluxTUIIntegration:
