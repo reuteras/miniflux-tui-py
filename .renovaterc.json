@@ -29,7 +29,7 @@
         {
             "matchDatasources": ["github-tags"],
             "matchPackagePatterns": ["slsa-framework/slsa-github-generator"],
-            "allowedVersions": "!=2.1.0"
+            "allowedVersions": "<=2.0.0"
         }
     ]
 }
