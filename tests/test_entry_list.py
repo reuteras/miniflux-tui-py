@@ -1256,7 +1256,9 @@ class TestActionMethods:
         assert entry.id in screen.entry_item_map
         # Verify item is in displayed items
         assert len(screen.displayed_items) == 1
-        assert screen.displayed_items[0].entry.id == entry.id
+        item = screen.displayed_items[0]
+        assert isinstance(item, EntryListItem)
+        assert item.entry.id == entry.id
 
     def test_add_entry_with_visibility_expanded(self, diverse_entries):
         """Test _add_entry_with_visibility() doesn't add class when expanded."""
@@ -1275,3 +1277,6 @@ class TestActionMethods:
         # Verify item was added to displayed items
         assert entry.id in screen.entry_item_map
         assert len(screen.displayed_items) == 1
+        item = screen.displayed_items[0]
+        assert isinstance(item, EntryListItem)
+        assert item.entry.id == entry.id
