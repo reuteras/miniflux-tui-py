@@ -1,5 +1,34 @@
 # Changelog
 
+## [0.3.0] - 2025-10-26
+
+### Major Achievements
+- **Comprehensive Test Suite**: Reached 74% overall test coverage (403 tests)
+- **Perfect Coverage**: 8 core modules at 100% coverage (api/client, config, utils, performance, etc.)
+- **Production Ready**: All quality checks passing (ruff, pyright, pytest)
+
+### Testing & Quality
+- Achieved 100% coverage for ui/app.py (was 90%)
+- Achieved 100% coverage for help.py (was 18%)
+- Achieved 100% coverage for performance.py (was 59%)
+- Improved overall coverage from ~55% to 74%
+- Added comprehensive on_mount and load_entries lifecycle tests
+- All 403 tests passing with 0 regressions
+
+### Infrastructure
+- Automated CI/CD with GitHub Actions
+- Type checking with pyright (0 errors)
+- Linting with ruff (all checks passing)
+- Test coverage tracking with pytest-cov
+- PyPI publishing with OIDC
+
+### Documentation
+- Complete MkDocs site with Material theme
+- API reference documentation
+- Installation and usage guides
+- Contributing guidelines
+- Security policies
+
 ## [0.2.9] - 2025-10-26
 
 ### Features
