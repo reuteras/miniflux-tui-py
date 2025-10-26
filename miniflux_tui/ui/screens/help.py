@@ -72,7 +72,8 @@ class HelpScreen(Screen):
             yield Static()
 
             yield Static("[bold yellow]System Information[/bold yellow]")
-            yield Static(self._get_system_info_text())
+            # Use id for easier reference and initial placeholder
+            yield Static(id="system-info-widget")
             yield Static()
 
             yield Static("[dim]Press Esc or q to close this help screen[/dim]")
@@ -145,21 +146,13 @@ class HelpScreen(Screen):
 
     def _update_system_info(self) -> None:
         """Update the system information display."""
-        # Find and update the system info widget
-        for widget in self.query("Static"):
-            if (
-                hasattr(widget, "renderable")
-                and widget.renderable  # type: ignore[attr-defined]
-                and isinstance(widget.renderable, str)  # type: ignore[attr-defined]
-                and "System Information" in str(widget.renderable)  # type: ignore[attr-defined]
-            ):
-                # Update the next static widget with system info
-                widgets = list(self.query("Static"))
-                for i, w in enumerate(widgets):
-                    if w is widget and i + 1 < len(widgets):
-                        next_widget = widgets[i + 1]
-                        next_widget.update(self._get_system_info_text())  # type: ignore[union-attr]
-                        break
+        # Update the system info widget by ID
+        try:
+            widget = self.query_one("#system-info-widget", Static)
+            widget.update(self._get_system_info_text())
+        except Exception as e:
+            # If widget not found, silently fail (widget might not be mounted yet)
+            self.app.log(f"Could not update system info widget: {e}")
 
     def action_close(self):
         """Close the help screen."""
