@@ -5,6 +5,22 @@ from datetime import datetime
 
 
 @dataclass
+class Category:
+    """Represents a Miniflux category."""
+
+    id: int
+    title: str
+
+    @classmethod
+    def from_dict(cls, data: dict) -> "Category":
+        """Create a Category from API response data."""
+        return cls(
+            id=data["id"],
+            title=data["title"],
+        )
+
+
+@dataclass
 class Feed:
     """Represents a Miniflux feed."""
 
@@ -12,6 +28,7 @@ class Feed:
     title: str
     site_url: str
     feed_url: str
+    category_id: int | None = None
 
     @classmethod
     def from_dict(cls, data: dict) -> "Feed":
@@ -21,6 +38,7 @@ class Feed:
             title=data["title"],
             site_url=data["site_url"],
             feed_url=data["feed_url"],
+            category_id=data.get("category_id"),
         )
 
 

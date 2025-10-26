@@ -8,11 +8,12 @@ This document provides context about the miniflux-tui-py project for Claude Code
 
 - **Language**: Python 3.11+
 - **Framework**: Textual (TUI framework)
-- **Status**: Alpha (v0.1.1)
+- **Status**: Beta (v0.4.0) | v0.5.0 in development
 - **License**: MIT
 - **Author**: Peter Reuterås
 - **PyPI**: Available at <https://pypi.org/project/miniflux-tui-py/>
 - **Docs**: <https://reuteras.github.io/miniflux-tui-py/>
+- **Roadmap**: See [ROADMAP.md](ROADMAP.md) for v0.5.0-v0.7.0 features
 
 This is a Python reimplementation of [cliflux](https://github.com/spencerwi/cliflux) (original Rust implementation).
 
@@ -76,8 +77,8 @@ miniflux-tui-py/
 |------|---------|
 | `main.py` | CLI entry point; handles `--init`, `--check-config`; runs async app |
 | `config.py` | Config loading/saving with platform-specific paths (XDG, macOS, Windows) |
-| `api/client.py` | Async wrapper around official miniflux Python library |
-| `api/models.py` | Dataclasses: `Entry`, `Feed` with helper properties |
+| `api/client.py` | Async wrapper around official miniflux Python library with retry logic |
+| `api/models.py` | Dataclasses: `Category`, `Entry`, `Feed` with helper properties |
 | `ui/app.py` | Main `MinifluxTUI` Textual App; screen management; entry loading |
 | `ui/screens/entry_list.py` | Entry list screen with sorting, grouping, navigation |
 | `ui/screens/entry_reader.py` | Entry detail view with HTML→Markdown conversion |
@@ -170,54 +171,94 @@ uv run miniflux-tui
 
 ### Git Workflow (CRITICAL)
 
-**⚠️ NEVER push directly to main branch.** The main branch is protected and enforces:
-1. All changes must come through pull requests
-2. All CI checks (tests, linting, type checking) must pass
-3. Code review may be required before merging
-4. Only up-to-date branches can be merged
+**⚠️ ALL CHANGES MUST BE IN FEATURE BRANCHES - NEVER COMMIT DIRECTLY TO MAIN**
+
+The main branch is protected and enforces:
+1. **All changes must come through pull requests** - No direct pushes allowed
+2. **All CI checks must pass** - Tests, linting, type checking, security scans
+3. **Code review required** - Before any merge to main
+4. **Branches must be up-to-date** - Rebase before merging
+
+**Branch Naming Conventions:**
+- `feat/feature-name` - New features (e.g., `feat/v0.5.0-categories`)
+- `fix/bug-name` - Bug fixes (e.g., `fix/navigation-bug`)
+- `docs/document-name` - Documentation updates (e.g., `docs/installation-guide`)
+- `refactor/component-name` - Code refactoring (e.g., `refactor/entry-list`)
+- `test/feature-name` - Test additions (e.g., `test/search-functionality`)
+- `chore/task-name` - Maintenance tasks (e.g., `chore/dependency-update`)
 
 **All development must follow this workflow:**
 
 ```bash
-# 1. Create feature branch from main
+# 1. Create feature branch from main (ALWAYS start from main)
 git checkout main
 git pull origin main
-git checkout -b feature/your-feature-name
+git checkout -b feat/your-feature-name
 
 # 2. Make changes locally
 # (Edit files, make improvements)
 
-# 3. Test your changes before committing
+# 3. Test your changes before committing (RUN ALL CHECKS!)
 uv run ruff check .              # Lint
 uv run ruff format .             # Format
 uv run pyright                   # Type check
 uv run pytest tests              # Run tests
+pre-commit run --all-files       # Pre-commit hooks
 
-# 4. Commit with clear message
+# 4. Commit with clear, descriptive message
 git add .
-git commit -m "Description of changes"
+git commit -m "feat: Clear description of what was implemented
 
-# 5. Push to origin (never directly to main)
-git push origin feature/your-feature-name
+## Changes
+- Bullet point 1
+- Bullet point 2
+
+## Related Issues
+- #123 - Issue title
+
+## Testing
+- ✅ Tests added
+- ✅ CI checks passing"
+
+# 5. Push to origin (NEVER directly to main)
+git push origin feat/your-feature-name
 
 # 6. Create a Pull Request on GitHub
-# - Click "New Pull Request" on the repository
-# - CI will automatically run all checks
-# - Wait for review and approval
+# - Go to https://github.com/reuteras/miniflux-tui-py/pulls
+# - Click "New Pull Request"
+# - Select your branch against main
+# - Fill in detailed description
+# - Link related issues with "Fixes #123" or "Related to #456"
 
-# 7. After PR is merged, clean up
+# 7. Wait for CI to pass
+# - GitHub Actions will run all checks automatically
+# - Fix any failures before merging
+
+# 8. After PR is merged, clean up your local branch
 git checkout main
 git pull origin main
-git branch -d feature/your-feature-name
-git push origin --delete feature/your-feature-name
+git branch -d feat/your-feature-name
+git push origin --delete feat/your-feature-name
 ```
 
+**Critical Rules:**
+- ✅ Create branch FROM main (git checkout main; git pull origin main; git checkout -b ...)
+- ✅ Make changes ONLY in the branch (NOT on main)
+- ✅ Test BEFORE committing (run ruff, pyright, pytest)
+- ✅ Commit messages MUST be clear and describe the WHY
+- ✅ Push ONLY to your branch (git push origin branch-name)
+- ✅ Create PR on GitHub (never merge directly)
+- ✅ Wait for CI/CD to pass
+- ✅ Delete branch after merge
+
 **Why this workflow?**
-- Ensures code quality through automated CI checks
-- Enables peer review of changes
-- Maintains clear commit history
+- Ensures code quality through automated CI checks (no breaking commits)
+- Enables peer review and knowledge sharing
+- Maintains clear, linear commit history
 - Prevents accidental pushes that break the main branch
-- Allows safe rollback if needed
+- Allows safe rollback of any feature
+- Makes it easy to track what changes and when
+- Enables multiple developers to work in parallel
 
 ### GitHub Branch Protection Rules (main branch)
 
