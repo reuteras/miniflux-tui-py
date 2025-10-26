@@ -35,7 +35,7 @@ jobs:
 
       # Runs a single command using the runners shell
       - name: Lint Code Base
-        uses: github/super-linter/slim@5a0b5c7b6e0e8e5f7e8e5a8e5a8e5a8e5a8e5a8  # v7
+        uses: github/super-linter/slim@v7
         env:
           FILTER_REGEX_EXCLUDE: CHANGELOG.md
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
