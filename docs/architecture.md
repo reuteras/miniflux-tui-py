@@ -4,7 +4,7 @@ This guide explains the overall structure and design patterns used in miniflux-t
 
 ## High-Level Overview
 
-```
+```text
 ┌─────────────────────────────────────────────────────────┐
 │                    User (Terminal)                       │
 └────────────────────┬────────────────────────────────────┘
@@ -42,7 +42,7 @@ This guide explains the overall structure and design patterns used in miniflux-t
 
 ## Directory Structure
 
-```
+```bash
 miniflux_tui/
 ├── __init__.py               # Package initialization
 ├── main.py                   # CLI entry point & argument parsing
@@ -96,7 +96,7 @@ Responsibilities:
 - Provide sensible defaults
 - Validate configuration
 
-```
+```bash
 ~/.config/miniflux-tui/config.toml  (Linux, XDG)
 ~/Library/Application Support/miniflux-tui/config.toml  (macOS)
 %APPDATA%\miniflux-tui\config.toml  (Windows)
@@ -290,7 +290,7 @@ def expensive_operation():
 
 ### Entry Loading Flow
 
-```
+```bash
 User presses Enter on entry
   ↓
 EntryListScreen.on_list_view_selected()
@@ -308,7 +308,7 @@ Screen is popped, cursor restored to entry_list
 
 ### Sorting/Grouping Flow
 
-```
+```bash
 User presses 's' (cycle sort)
   ↓
 action_cycle_sort()
@@ -326,7 +326,7 @@ Display updates with new order
 
 ### API Update Flow
 
-```
+```bash
 User presses 'm' to mark as read
   ↓
 async action_toggle_read()

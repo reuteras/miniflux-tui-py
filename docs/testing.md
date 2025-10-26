@@ -40,7 +40,7 @@ uv run pytest tests/ -v
 ## Test Organization
 
 ### Directory Structure
-```
+```bash
 tests/
 ├── test_api_client.py          # API client tests (100% coverage)
 ├── test_api_models.py          # Data models tests (100% coverage)
@@ -208,7 +208,7 @@ def diverse_entries(sample_feed):
 | ui/app.py | 100% | ✅ Perfect |
 | ui/screens/help.py | 100% | ✅ Perfect |
 | utils.py | 100% | ✅ Perfect |
-| main.py | 98% | ⚠️ Module-level if __name__ |
+| main.py | 98% | ⚠️ Module-level if `__name__` |
 | ui/screens/entry_list.py | 64% | 📈 Integration tests |
 | ui/screens/entry_reader.py | 56% | 📝 Needs integration tests |
 | **Overall** | **78%** | 🎯 Production-ready |

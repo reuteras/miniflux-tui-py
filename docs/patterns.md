@@ -6,7 +6,7 @@ This guide covers common patterns used throughout miniflux-tui-py and how to app
 
 All API interactions should use the `api_call` context manager for consistent error handling.
 
-### Bad Pattern (Avoid)
+### Bad Pattern (Pattern 1) - Avoid
 ```python
 async def action_toggle_read(self):
   """Mark entry as read."""
@@ -17,7 +17,7 @@ async def action_toggle_read(self):
   self.app.notify(f"Error: {e}")
 ```
 
-### Good Pattern (Use This)
+### Good Pattern (Pattern 1) - Use This
 ```python
 from miniflux_tui.utils import api_call
 
@@ -43,7 +43,7 @@ async def action_toggle_read(self):
 
 Always pass data to screens via constructor parameters, never rely on global state.
 
-### Bad Pattern (Avoid)
+### Bad Pattern (Pattern 2) - Avoid
 ```python
 # Global entry storage
 current_entry = None
@@ -56,7 +56,7 @@ class EntryReaderScreen(Screen):
   self.index = current_index
 ```
 
-### Good Pattern (Use This)
+### Good Pattern (Pattern 2) - Use This
 ```python
 class EntryReaderScreen(Screen):
   def __init__(
@@ -89,7 +89,7 @@ self.app.push_screen(EntryReaderScreen(
 
 Don't test Textual internals; mock them and test your logic.
 
-### Bad Pattern (Avoid)
+### Bad Pattern (Pattern 3) - Avoid
 ```python
 def test_action():
   screen = EntryListScreen(entries=entries)
@@ -134,7 +134,7 @@ async def test_action_with_app():
 
 Track state explicitly, update UI consistently.
 
-### Bad Pattern (Avoid)
+### Bad Pattern (Pattern 4) - Avoid
 ```python
 def action_toggle_read(self):
   """Mark entry as read."""
@@ -144,7 +144,7 @@ def action_toggle_read(self):
   # UI might not update
 ```
 
-### Good Pattern (Use This)
+### Good Pattern (Pattern 4) - Use This
 ```python
 async def action_toggle_read(self):
   """Toggle entry read/unread status."""
@@ -178,7 +178,7 @@ async def action_toggle_read(self):
 
 Separate data transformation from UI updates.
 
-### Good Pattern
+### Good Pattern (Pattern 5)
 ```python
 def _filter_entries(self, entries: list[Entry]) -> list[Entry]:
   """Filter entries based on current filters."""
@@ -305,7 +305,7 @@ class Entry:
 
 Always use type hints for better code quality.
 
-### Good Pattern
+### Good Pattern (Pattern 8)
 ```python
 from typing import Optional
 from miniflux_tui.api.models import Entry, Feed
@@ -346,7 +346,7 @@ async def process_entries(
 
 Follow Google-style docstrings for consistency.
 
-### Good Pattern
+### Good Pattern (Pattern 9)
 ```python
 async def mark_as_read(self, entry_id: int) -> None:
   """Mark an entry as read.
@@ -383,7 +383,7 @@ class EntryListScreen(Screen):
 
 Use specific exceptions, not bare except.
 
-### Bad Pattern (Avoid)
+### Bad Pattern (Pattern 10) - Avoid
 ```python
 try:
   result = await something()
@@ -391,7 +391,7 @@ except:  # Catches everything, including KeyboardInterrupt!
   print("Error")
 ```
 
-### Good Pattern (Use This)
+### Good Pattern (Pattern 10) - Use This
 ```python
 try:
   result = await something()
@@ -418,13 +418,13 @@ async with api_call(
 
 Use constants defined in constants.py.
 
-### Bad Pattern (Avoid)
+### Bad Pattern (Pattern 11) - Avoid
 ```python
 if len(entries) > 100:  # What does 100 mean?
   show_warning()
 ```
 
-### Good Pattern (Use This)
+### Good Pattern (Pattern 11) - Use This
 ```python
 # constants.py
 DEFAULT_ENTRY_LIMIT = 100
