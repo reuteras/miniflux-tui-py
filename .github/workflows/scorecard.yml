@@ -5,12 +5,13 @@ on:
   branch_protection_rule:
   push:
     branches: [main]
+  pull_request:
+    branches: [main]
   schedule:
     - cron: '0 0 * * 0'  # Weekly on Sunday
 
 permissions:
   contents: read
-  security-events: write
 
 jobs:
   analysis:

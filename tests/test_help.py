@@ -5,6 +5,7 @@ from unittest.mock import patch
 
 from textual.app import App, ComposeResult
 from textual.screen import Screen
+from textual.widgets import Static
 
 from miniflux_tui.ui.screens.help import HelpScreen
 
@@ -22,8 +23,6 @@ class MultiScreenApp(App):
 
     def compose(self) -> ComposeResult:
         """Create child widgets."""
-        from textual.widgets import Static
-
         # Start with a simple screen, then push help screen
         yield Static("Test Content")
 
