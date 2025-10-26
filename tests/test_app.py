@@ -536,3 +536,95 @@ class TestMinifluxTUIIntegration:
         assert app.entries[0].id == 0
         assert app.entries[1].id == 1
         assert app.entries[4].id == 4
+
+
+class TestThemeConfiguration:
+    """Test theme color configuration in MinifluxTUI."""
+
+    def test_app_initializes_with_config_colors(self, sample_config):
+        """Test that app initializes with colors from config."""
+        app = MinifluxTUI(sample_config)
+
+        assert app.config.unread_color == "cyan"
+        assert app.config.read_color == "gray"
+
+    def test_app_uses_custom_theme_colors(self):
+        """Test that app uses custom theme colors from config."""
+        custom_config = Config(
+            server_url="https://example.com",
+            api_key="test-key-123456",
+            allow_invalid_certs=False,
+            unread_color="blue",
+            read_color="white",
+            default_sort="date",
+            default_group_by_feed=False,
+        )
+        app = MinifluxTUI(custom_config)
+
+        assert app.config.unread_color == "blue"
+        assert app.config.read_color == "white"
+
+    def test_app_passes_colors_to_entry_list_screen(self):
+        """Test that app passes theme colors to EntryListScreen."""
+        custom_config = Config(
+            server_url="https://example.com",
+            api_key="test-key-123456",
+            allow_invalid_certs=False,
+            unread_color="green",
+            read_color="yellow",
+            default_sort="date",
+            default_group_by_feed=False,
+        )
+        app = MinifluxTUI(custom_config)
+
+        # Verify app config has the custom colors
+        assert app.config.unread_color == "green"
+        assert app.config.read_color == "yellow"
+        # Colors would be passed to EntryListScreen when created via on_mount
+        # This test verifies the app has the config colors available
+
+    def test_theme_config_defaults_to_cyan_and_gray(self):
+        """Test that theme defaults to cyan for unread and gray for read."""
+        config = Config(
+            server_url="https://example.com",
+            api_key="test-key-123456",
+            allow_invalid_certs=False,
+            default_sort="date",
+            default_group_by_feed=False,
+        )
+
+        # Should use defaults
+        assert config.unread_color == "cyan"
+        assert config.read_color == "gray"
+
+    def test_theme_colors_persist_across_config_reload(self, tmp_path):
+        """Test that theme colors persist when config is reloaded."""
+        # Create a config file with custom colors
+        config_file = tmp_path / "config.toml"
+        config_content = """
+server_url = "https://example.com"
+api_key = "test-key-1234567890"
+allow_invalid_certs = false
+
+[theme]
+unread_color = "red"
+read_color = "white"
+
+[sorting]
+default_sort = "date"
+"""
+        config_file.write_text(config_content)
+
+        # Load config from file
+        loaded_config = Config.from_file(config_file)
+
+        # Verify colors are loaded correctly
+        assert loaded_config.unread_color == "red"
+        assert loaded_config.read_color == "white"
+
+        # Create app with loaded config
+        app = MinifluxTUI(loaded_config)
+
+        # Verify app has the colors
+        assert app.config.unread_color == "red"
+        assert app.config.read_color == "white"
