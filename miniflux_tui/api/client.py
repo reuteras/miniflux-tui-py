@@ -216,7 +216,12 @@ class MinifluxClient:
             List of Category objects
         """
         response = await self._call_with_retry(self.client.get_categories)
-        return [Category.from_dict(cat) for cat in response.get("categories", [])]
+        # The official client returns a list directly, not wrapped in a dict
+        if isinstance(response, list):
+            return [Category.from_dict(cat) for cat in response]
+        # Fallback for dict response with 'categories' key
+        categories_data = response.get("categories", []) if isinstance(response, dict) else []
+        return [Category.from_dict(cat) for cat in categories_data]
 
     async def create_category(self, title: str) -> Category:
         """Create a new category with retry logic.
