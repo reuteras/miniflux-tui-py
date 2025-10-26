@@ -32,8 +32,8 @@
         {
             "matchDatasources": ["github-tags"],
             "matchPackagePatterns": ["slsa-framework/slsa-github-generator"],
-            "allowedVersions": "<=2.0.0",
-            "description": "Keep SLSA at v2.0.0 - v2.1.0 has incompatible directory structure"
+            "allowedVersions": "!=2.1.0",
+            "description": "Exclude SLSA v2.1.0 - it has incompatible directory structure (allow patch versions after)"
         }
     ]
 }
