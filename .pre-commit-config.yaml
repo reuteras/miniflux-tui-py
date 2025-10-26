@@ -31,3 +31,11 @@ repos:
     rev: 0.13.0
     hooks:
       - id: uv-secure
+  - repo: https://github.com/gitleaks/gitleaks
+    rev: v8.16.3
+    hooks:
+      - id: gitleaks
+  - repo: https://github.com/pylint-dev/pylint
+    rev: v2.17.2
+    hooks:
+      - id: pylint
