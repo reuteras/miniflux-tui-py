@@ -66,7 +66,7 @@ The project meets the criteria for the OpenSSF (formerly CII) Best Practices bad
 - **Purpose**: Detects potential security vulnerabilities in Python code
 - **Configuration**: See `.github/workflows/codeql.yml`
 
-### OpenSSF Scorecard
+### OpenSSF Scorecard Analysis
 - **Trigger**: Weekly on Sundays at midnight
 - **Purpose**: Evaluates repository for security best practices
 - **Configuration**: See `.github/workflows/scorecard.yml`
@@ -109,7 +109,7 @@ If you discover a security vulnerability, please report it responsibly:
 
 1. **Do not** open a public GitHub issue
 2. Email security details to: [peter@reuteras.net](mailto:peter@reuteras.net)
-3. Include:
+3. Include the following details:
   - Description of the vulnerability
   - Steps to reproduce
   - Potential impact
