@@ -224,6 +224,7 @@ class TestCachedProperty:
 
     def test_cached_property_init(self):
         """Test CachedProperty initialization."""
+
         def getter(obj):
             return "value"
 
@@ -234,6 +235,7 @@ class TestCachedProperty:
 
     def test_cached_property_get_on_class(self):
         """Test CachedProperty descriptor get when accessed on class."""
+
         def getter(obj):
             return "value"
 
@@ -266,6 +268,7 @@ class TestCachedProperty:
 
     def test_cached_property_different_objects(self):
         """Test CachedProperty caches per object."""
+
         def getter(obj):
             return f"value_{id(obj)}"
 
@@ -308,6 +311,7 @@ class TestCachedProperty:
 
     def test_cached_property_invalidate_nonexistent(self):
         """Test invalidating cache for non-cached object."""
+
         def getter(obj):
             return "value"
 
@@ -324,6 +328,7 @@ class TestMemoizeWithTTL:
 
     def test_memoize_with_ttl_decorator_creates_wrapper(self):
         """Test memoize_with_ttl creates a wrapper function."""
+
         @memoize_with_ttl(ttl=1.0)
         def func(x):
             return x * 2
@@ -353,6 +358,7 @@ class TestMemoizeWithTTL:
 
     def test_memoize_with_ttl_different_args(self):
         """Test memoize_with_ttl handles different arguments."""
+
         @memoize_with_ttl(ttl=1.0)
         def func(x):
             return x * 2
@@ -411,6 +417,7 @@ class TestMemoizeWithTTL:
 
     def test_memoize_with_ttl_cache_attribute(self):
         """Test memoize_with_ttl function has cache attribute."""
+
         @memoize_with_ttl(ttl=1.0)
         def func(x):
             return x * 2
@@ -420,6 +427,7 @@ class TestMemoizeWithTTL:
 
     def test_memoize_with_ttl_default_ttl(self):
         """Test memoize_with_ttl with default TTL."""
+
         @memoize_with_ttl()  # Default 1.0
         def func(x):
             return x * 2
@@ -433,6 +441,7 @@ class TestPerformanceIntegration:
 
     def test_cached_property_with_object(self):
         """Test CachedProperty with a real object."""
+
         class TestClass:
             def __init__(self):
                 self.compute_count = 0
@@ -451,6 +460,7 @@ class TestPerformanceIntegration:
 
     def test_memoize_with_multiple_functions(self):
         """Test multiple functions can be memoized independently."""
+
         @memoize_with_ttl(ttl=1.0)
         def func1(x):
             return x * 2
@@ -479,4 +489,4 @@ class TestPerformanceIntegration:
         assert "full_refreshes" in stats
         assert "partial_refreshes" in stats
         assert "efficiency_ratio" in stats
-        assert all(isinstance(v, (int, float)) for v in stats.values())
+        assert all(isinstance(v, int | float) for v in stats.values())

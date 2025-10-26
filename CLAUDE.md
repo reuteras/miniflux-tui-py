@@ -152,8 +152,9 @@ miniflux-tui
 
 #### Option 2: From Source (Recommended for development)
 ```bash
-# Install uv package manager (if needed)
-curl -LsSf https://astral.sh/uv/install.sh | sh
+# Install uv package manager - see https://docs.astral.sh/uv/getting-started/installation/
+# On macOS/Linux: brew install uv
+# On Windows: choco install uv
 
 # Clone and setup
 git clone https://github.com/reuteras/miniflux-tui-py.git
@@ -439,3 +440,4 @@ Major improvements in October 2025:
 - [Miniflux Project](https://miniflux.app)
 - [Original cliflux (Rust)](https://github.com/spencerwi/cliflux)
 - Commits to GitHub should be signed with ssh key
+- No bare urls in Markdown files.

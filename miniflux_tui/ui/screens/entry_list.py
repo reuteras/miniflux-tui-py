@@ -313,7 +313,6 @@ class EntryListScreen(Screen):
             with suppress(Exception):
                 self.list_view.focus()
 
-
     def _ensure_list_view(self) -> bool:
         """Ensure list_view is available. Returns False if unavailable."""
         if not self.list_view:
@@ -484,10 +483,7 @@ class EntryListScreen(Screen):
             Filtered list of matching entries
         """
         search_lower = self.search_term.lower()
-        return [
-            e for e in entries
-            if search_lower in e.title.lower() or search_lower in e.content.lower()
-        ]
+        return [e for e in entries if search_lower in e.title.lower() or search_lower in e.content.lower()]
 
     def _add_feed_header_if_needed(self, current_feed: str, first_feed_ref: list) -> None:
         """Add a feed header if transitioning to a new feed.

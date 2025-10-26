@@ -22,7 +22,7 @@ class MultiScreenApp(App):
 
     def compose(self) -> ComposeResult:
         """Create child widgets."""
-        from textual.widgets import Static  # noqa: PLC0415
+        from textual.widgets import Static
 
         # Start with a simple screen, then push help screen
         yield Static("Test Content")

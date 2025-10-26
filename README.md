@@ -10,6 +10,8 @@
 [![Test Status](https://github.com/reuteras/miniflux-tui-py/workflows/Test/badge.svg)](https://github.com/reuteras/miniflux-tui-py/actions/workflows/test.yml)
 [![codecov](https://codecov.io/gh/reuteras/miniflux-tui-py/graph/badge.svg)](https://codecov.io/gh/reuteras/miniflux-tui-py)
 [![Documentation](https://img.shields.io/badge/docs-GitHub%20Pages-blue)](https://reuteras.github.io/miniflux-tui-py/)
+[![pre-commit](https://img.shields.io/badge/pre--commit-enabled-brightgreen?logo=pre-commit)](https://github.com/pre-commit/pre-commit)
+[![OpenSSF Scorecard](https://api.securityscorecards.dev/projects/github.com/reuteras/miniflux-tui-py/badge)](https://securityscorecards.dev/viewer/?uri=github.com/reuteras/miniflux-tui-py)
 
 A [Python](https://www.python.org) TUI (Terminal User Interface) client for the Miniflux self-hosted RSS reader built with [textual](https://github.com/textualize/textual/).
 
@@ -18,8 +20,10 @@ A [Python](https://www.python.org) TUI (Terminal User Interface) client for the 
 ### From PyPI (Recommended with uv)
 
 ```bash
-# Install uv if you haven't already
-curl -LsSf https://astral.sh/uv/install.sh | sh
+# Install uv (see: https://docs.astral.sh/uv/getting-started/installation/)
+# On macOS/Linux: brew install uv
+# On Windows: winget install astral-sh.uv
+# Or visit https://docs.astral.sh/uv/getting-started/installation/
 
 # Install miniflux-tui-py
 uv tool install miniflux-tui-py
@@ -42,8 +46,10 @@ miniflux-tui
 ### From Source (For Developers)
 
 ```bash
-# Install uv if you haven't already
-curl -LsSf https://astral.sh/uv/install.sh | sh
+# Install uv (see: https://docs.astral.sh/uv/getting-started/installation/)
+# On macOS/Linux: brew install uv
+# On Windows: winget install astral-sh.uv
+# Or visit https://docs.astral.sh/uv/getting-started/installation/
 
 # Clone the repository
 git clone https://github.com/reuteras/miniflux-tui-py.git

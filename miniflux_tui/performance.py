@@ -22,12 +22,10 @@ class CachedProperty:
         self.timestamps: dict[int, int] = {}
 
     @overload
-    def __get__(self, obj: None, objtype: Any = None) -> "CachedProperty":
-        ...
+    def __get__(self, obj: None, objtype: Any = None) -> "CachedProperty": ...
 
     @overload
-    def __get__(self, obj: Any, objtype: Any = None) -> Any:
-        ...
+    def __get__(self, obj: Any, objtype: Any = None) -> Any: ...
 
     def __get__(self, obj: Any, objtype: Any = None) -> Any:
         """Get cached property value, computing if needed."""
