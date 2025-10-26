@@ -1,10 +1,10 @@
 {
     "$schema": "https://docs.renovatebot.com/renovate-schema.json",
     "extends": [
-        "config:base"
+        "config:recommended"
     ],
     "description": "Renovate configuration for automated dependency and action updates",
-    "semanticCommits": true,
+    "semanticCommits": "enabled",
     "commitMessagePrefix": "chore(deps):",
     "prCreation": "auto",
     "prConcurrentLimit": 2,
