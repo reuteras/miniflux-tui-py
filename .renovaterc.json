@@ -1,12 +1,13 @@
 {
+    "$schema": "https://docs.renovatebot.com/renovate-schema.json",
     "extends": [
         "config:recommended"
     ],
-    "semanticCommits": true,
-    "commitMessagePrefix": "chore(deps): ",
+    "semanticCommits": "enabled",
+    "commitMessagePrefix": "chore(deps):",
     "prCreation": "auto",
     "prConcurrentLimit": 2,
-    "github_actions": {
+    "github-actions": {
         "enabled": true,
         "automerge": false,
         "pinDigests": true,
