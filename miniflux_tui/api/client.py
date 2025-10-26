@@ -9,7 +9,7 @@ from miniflux import Client as MinifluxClientBase
 
 from miniflux_tui.constants import BACKOFF_FACTOR, MAX_RETRIES
 
-from .models import Entry
+from .models import Category, Entry
 
 T = TypeVar("T")
 
@@ -200,6 +200,56 @@ class MinifluxClient:
     async def refresh_all_feeds(self) -> None:
         """Trigger a refresh of all feeds with retry logic."""
         await self._call_with_retry(self.client.refresh_all_feeds)
+
+    async def refresh_feed(self, feed_id: int) -> None:
+        """Refresh a specific feed with retry logic.
+
+        Args:
+            feed_id: ID of the feed to refresh
+        """
+        await self._call_with_retry(self.client.refresh_feed, feed_id)
+
+    async def get_categories(self) -> list[Category]:
+        """Get all categories with retry logic.
+
+        Returns:
+            List of Category objects
+        """
+        response = await self._call_with_retry(self.client.get_categories)
+        return [Category.from_dict(cat) for cat in response.get("categories", [])]
+
+    async def create_category(self, title: str) -> Category:
+        """Create a new category with retry logic.
+
+        Args:
+            title: Title of the new category
+
+        Returns:
+            The created Category object
+        """
+        response = await self._call_with_retry(self.client.create_category, title)
+        return Category.from_dict(response)
+
+    async def update_category(self, category_id: int, title: str) -> Category:
+        """Update a category with retry logic.
+
+        Args:
+            category_id: ID of the category to update
+            title: New title for the category
+
+        Returns:
+            The updated Category object
+        """
+        response = await self._call_with_retry(self.client.update_category, category_id, title)
+        return Category.from_dict(response)
+
+    async def delete_category(self, category_id: int) -> None:
+        """Delete a category with retry logic.
+
+        Args:
+            category_id: ID of the category to delete
+        """
+        await self._call_with_retry(self.client.delete_category, category_id)
 
     async def fetch_original_content(self, entry_id: int) -> str:
         """
