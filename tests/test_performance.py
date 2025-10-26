@@ -416,7 +416,7 @@ class TestMemoizeWithTTL:
             return x * 2
 
         assert hasattr(func, "cache")
-        assert isinstance(func.cache, dict)
+        assert isinstance(func.cache, dict)  # type: ignore[attr-defined]
 
     def test_memoize_with_ttl_default_ttl(self):
         """Test memoize_with_ttl with default TTL."""
@@ -464,7 +464,7 @@ class TestPerformanceIntegration:
 
         assert result1 == 10
         assert result2 == 15
-        assert func1.cache != func2.cache  # Independent caches
+        assert func1.cache != func2.cache  # type: ignore[attr-defined]  # Independent caches
 
     def test_screen_refresh_optimizer_stats_structure(self):
         """Test ScreenRefreshOptimizer stats have correct structure."""
