@@ -12,6 +12,7 @@
 [![Documentation](https://img.shields.io/badge/docs-GitHub%20Pages-blue)](https://reuteras.github.io/miniflux-tui-py/)
 [![pre-commit](https://img.shields.io/badge/pre--commit-enabled-brightgreen?logo=pre-commit)](https://github.com/pre-commit/pre-commit)
 [![OpenSSF Scorecard](https://api.securityscorecards.dev/projects/github.com/reuteras/miniflux-tui-py/badge)](https://securityscorecards.dev/viewer/?uri=github.com/reuteras/miniflux-tui-py)
+[![OpenSSF Best Practices](https://www.bestpractices.dev/projects/11362/badge)](https://www.bestpractices.dev/projects/11362)
 
 A [Python](https://www.python.org) TUI (Terminal User Interface) client for the Miniflux self-hosted RSS reader built with [textual](https://github.com/textualize/textual/).
 
