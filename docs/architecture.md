@@ -38,7 +38,7 @@ This guide explains the overall structure and design patterns used in miniflux-t
   │ Miniflux Server    │
   │ (Remote RSS Reader)│
   └────────────────────┘
-```
+```text
 
 ## Directory Structure
 
@@ -64,7 +64,7 @@ miniflux_tui/
   ├── entry_list.py    # Entry list with sorting/grouping (64% coverage)
   ├── entry_reader.py  # Entry detail view (56% coverage)
   └── help.py          # Help/shortcuts screen (100% coverage)
-```
+```text
 
 ## Core Components
 
@@ -86,7 +86,7 @@ def main() -> int:
   else:
   asyncio.run(run_tui(config))
   return 0
-```
+```text
 
 ### 2. Configuration (config.py)
 
@@ -100,7 +100,7 @@ Responsibilities:
 ~/.config/miniflux-tui/config.toml  (Linux, XDG)
 ~/Library/Application Support/miniflux-tui/config.toml  (macOS)
 %APPDATA%\miniflux-tui\config.toml  (Windows)
-```
+```text
 
 ### 3. API Client (api/client.py)
 
@@ -117,7 +117,7 @@ class MinifluxClient:
   async def mark_as_read(entry_id: int) -> None
   async def toggle_star(entry_id: int) -> None
   async def save_entry(entry_id: int) -> None
-```
+```text
 
 ### 4. Main App (ui/app.py)
 
@@ -138,7 +138,7 @@ class MinifluxTUI(App):
 
   def push_entry_reader(entry, entry_list, index) -> None:
   # Open entry detail view
-```
+```text
 
 ### 5. Entry List Screen (ui/screens/entry_list.py)
 
@@ -176,7 +176,7 @@ class EntryListScreen(Screen):
   # Navigation
   action_cursor_down()
   action_cursor_up()
-```
+```text
 
 ### 6. Entry Reader Screen (ui/screens/entry_reader.py)
 
@@ -202,7 +202,7 @@ class EntryReaderScreen(Screen):
 
   async def action_toggle_read() -> None:
   # Mark entry read/unread
-```
+```text
 
 ### 7. Help Screen (ui/screens/help.py)
 
@@ -224,7 +224,7 @@ async def action_toggle_read(self):
   await self.app.client.mark_as_read(self.entry.id)
   self.entry.status = "read"
   self._refresh_display()
-```
+```text
 
 ### 2. Mocking External Dependencies
 
@@ -241,7 +241,7 @@ app.client.get_unread_entries = AsyncMock(return_value=[entry])
 
 # Mock UI operations
 app.notify = MagicMock()
-```
+```text
 
 ### 3. Screen Parameters Instead of Global State
 
@@ -257,7 +257,7 @@ screen = EntryReaderScreen(
 
 # ✗ Bad - relying on global state
 screen = EntryReaderScreen()  # Where does data come from?
-```
+```text
 
 ### 4. CSS for UI Updates (Grouped Mode)
 
@@ -270,7 +270,7 @@ if feed_is_collapsed:
 
 # j/k navigation naturally skips hidden items
 # Cursor position is preserved
-```
+```text
 
 ### 5. Performance Optimization
 
@@ -284,7 +284,7 @@ optimizer.track_partial_refresh()  # Updates single item
 @memoize_with_ttl(ttl=1.0)
 def expensive_operation():
   return compute_something()
-```
+```text
 
 ## Data Flow
 
@@ -304,7 +304,7 @@ EntryReaderScreen opens with entry displayed
 User presses 'q' or navigates back
   ↓
 Screen is popped, cursor restored to entry_list
-```
+```text
 
 ### Sorting/Grouping Flow
 
@@ -322,7 +322,7 @@ Reads self.entries, applies sort
 Creates new list items (or updates with CSS if grouped)
   ↓
 Display updates with new order
-```
+```text
 
 ### API Update Flow
 
@@ -338,7 +338,7 @@ Awaits app.client.mark_as_read(entry_id)
 Server updates entry
   ↓
 Refreshes display to show new status
-```
+```text
 
 ## Error Handling
 
@@ -355,7 +355,7 @@ async def action_toggle_read(self):
   ):
   await self.app.client.mark_as_read(self.entry.id)
   self.entry.status = "read"
-```
+```text
 
 This handles:
 - Network errors

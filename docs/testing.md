@@ -15,27 +15,27 @@ The miniflux-tui-py project has **78% test coverage** with **426 tests**. Tests 
 ### Run All Tests
 ```bash
 uv run pytest tests/
-```
+```text
 
 ### Run Specific Test File
 ```bash
 uv run pytest tests/test_entry_list.py
-```
+```text
 
 ### Run with Coverage Report
 ```bash
 uv run pytest tests/ --cov=miniflux_tui --cov-report=term-missing
-```
+```text
 
 ### Run Specific Test Class
 ```bash
 uv run pytest tests/test_entry_list.py::TestSorting
-```
+```text
 
 ### Run with Verbose Output
 ```bash
 uv run pytest tests/ -v
-```
+```text
 
 ## Test Organization
 
@@ -54,7 +54,7 @@ tests/
 ├── test_performance.py         # Performance utilities tests (100% coverage)
 ├── test_utils.py               # Utility functions tests (100% coverage)
 └── conftest.py                 # Shared fixtures
-```
+```text
 
 ## Test Patterns
 
@@ -77,7 +77,7 @@ def test_cycle_sort_changes_mode(diverse_entries):
   # Assert
   assert screen.current_sort == "feed"
   screen._populate_list.assert_called_once()
-```
+```text
 
 ### 2. Integration Testing with Textual App
 
@@ -109,7 +109,7 @@ async def test_screen_initialization():
   screen = app.entry_list_screen
   assert screen.current_sort == "date"
   assert len(screen.entries) == 3
-```
+```text
 
 ### 3. Async Test Pattern
 
@@ -134,7 +134,7 @@ async def test_load_entries_unread():
   # Assert
   app.client.get_unread_entries.assert_called_once()
   assert len(app.entries) == 1
-```
+```text
 
 ### 4. Filtering & Sorting Tests
 
@@ -152,7 +152,7 @@ def test_filter_unread_only(diverse_entries):
   # Assert
   assert len(filtered) < len(screen.entries)
   assert all(e.is_unread for e in filtered)
-```
+```text
 
 ## Test Fixtures
 
@@ -192,7 +192,7 @@ def diverse_entries(sample_feed):
   Entry(..., status="read", starred=True),
   Entry(..., status="unread", starred=True),
   ]
-```
+```text
 
 ## Coverage Goals
 
@@ -245,7 +245,7 @@ def test_something():
 
   # Assert - verify the result
   assert screen.current_sort == "feed"
-```
+```text
 
 ### 3. Mock External Dependencies
 ```python
@@ -258,7 +258,7 @@ app.client.get_unread_entries = AsyncMock(return_value=[entry])
 
 # Mock user interactions
 app.notify = MagicMock()
-```
+```text
 
 ### 4. Test Edge Cases
 ```python
@@ -273,7 +273,7 @@ def test_cursor_navigation_single_item():
   screen = EntryListScreen(entries=[entry])
   screen.list_view = MagicMock()
   screen.action_cursor_down()  # Should handle gracefully
-```
+```text
 
 ### 5. Integration Test Guidelines
 
@@ -286,7 +286,7 @@ async def test_screen_with_app():
   screen = app.entry_list_screen
   # Screen is fully initialized with list_view, etc.
   assert screen.list_view is not None
-```
+```text
 
 ## Quality Checks
 
@@ -303,7 +303,7 @@ uv run pyright
 
 # All tests with coverage
 uv run pytest tests/ --cov=miniflux_tui
-```
+```text
 
 ### Pre-commit Hooks
 Hooks run automatically before commit:
@@ -320,13 +320,13 @@ Hooks run automatically before commit:
   ```python
   class TestMyNewFeature:
   """Test my new feature."""
-  ```
+```text
 
 2. **Write unit tests** for isolated logic:
   ```python
   def test_feature_does_something(fixtures):
   # Test the feature
-  ```
+```text
 
 3. **Write integration tests** for Textual interactions:
   ```python
@@ -334,19 +334,19 @@ Hooks run automatically before commit:
   app = TestApp(...)
   async with app.run_test():
   # Test with full app context
-  ```
+```text
 
 4. **Add fixtures** if needed:
   ```python
   @pytest.fixture
   def feature_data():
   return {"key": "value"}
-  ```
+```text
 
 5. **Run tests** and check coverage:
   ```bash
   uv run pytest tests/test_myfeature.py --cov
-  ```
+```text
 
 ## Common Testing Scenarios
 
@@ -363,7 +363,7 @@ async def test_api_call(sample_entry):
   await app.client.mark_as_read(sample_entry.id)
 
   app.client.mark_as_read.assert_called_once_with(sample_entry.id)
-```
+```text
 
 ### Testing State Changes
 
@@ -375,7 +375,7 @@ def test_state_change():
   assert screen.group_by_feed is False
   screen.action_toggle_group()
   assert screen.group_by_feed is True
-```
+```text
 
 ### Testing Filtering Logic
 
@@ -392,7 +392,7 @@ def test_complex_filter():
   screen.filter_starred_only = True
   result = screen._filter_entries(screen.entries)
   assert all(e.is_unread for e in result)  # unread takes precedence
-```
+```text
 
 ## Troubleshooting Tests
 
@@ -410,7 +410,7 @@ screen.action_cursor_down()
 async with app.run_test():
   screen = app.entry_list_screen
   screen.action_cursor_down()  # Works with real list_view
-```
+```text
 
 ### Issue: Async tests failing
 **Solution**: Add `@pytest.mark.asyncio` and use AsyncMock:
@@ -419,14 +419,14 @@ async with app.run_test():
 async def test_async_method():
   app.client = AsyncMock()
   app.client.some_method = AsyncMock(return_value=result)
-```
+```text
 
 ### Issue: Coverage not improving
 **Solution**: Check what code paths aren't covered:
 ```bash
 uv run pytest tests/ --cov=miniflux_tui --cov-report=term-missing
 # Look at the "Missing" column
-```
+```text
 
 ## Resources
 

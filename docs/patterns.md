@@ -15,7 +15,7 @@ async def action_toggle_read(self):
   self.entry.status = "read"
   except Exception as e:
   self.app.notify(f"Error: {e}")
-```
+```text
 
 ### Good Pattern (Pattern 1) - Use This
 ```python
@@ -31,7 +31,7 @@ async def action_toggle_read(self):
   await self.app.client.mark_as_read(self.entry.id)
   self.entry.status = "read"
   self._refresh_display()
-```
+```text
 
 **Benefits:**
 - Consistent error handling across the app
@@ -54,7 +54,7 @@ class EntryReaderScreen(Screen):
   # Access from globals
   self.entry = current_entry
   self.index = current_index
-```
+```text
 
 ### Good Pattern (Pattern 2) - Use This
 ```python
@@ -77,7 +77,7 @@ self.app.push_screen(EntryReaderScreen(
   entry_list=sorted_entries,
   current_index=cursor_position,
 ))
-```
+```text
 
 **Benefits:**
 - Explicit dependencies
@@ -95,7 +95,7 @@ def test_action():
   screen = EntryListScreen(entries=entries)
   # Try to use real list_view - fails without app context
   screen.list_view.scroll_visible(item)  # Error!
-```
+```text
 
 ### Good Pattern (Unit Test)
 ```python
@@ -108,7 +108,7 @@ def test_action():
 
   screen._populate_list.assert_called_once()
   assert screen.current_sort == "feed"
-```
+```text
 
 ### Good Pattern (Integration Test)
 ```python
@@ -122,7 +122,7 @@ async def test_action_with_app():
   # list_view is real, populated, and works
   assert isinstance(screen.list_view, ListView)
   assert len(screen.list_view.children) > 0
-```
+```text
 
 **Benefits:**
 - Tests focus on your code, not Textual
@@ -142,7 +142,7 @@ def action_toggle_read(self):
   if something:
   self.entry.status = "read"
   # UI might not update
-```
+```text
 
 ### Good Pattern (Pattern 4) - Use This
 ```python
@@ -166,7 +166,7 @@ async def action_toggle_read(self):
 
   # 4. Update UI
   self._update_entry_display()
-```
+```text
 
 **Pattern:**
 1. Update state first
@@ -221,7 +221,7 @@ async def action_refresh(self):
 
   # Update UI
   self._populate_list()
-```
+```text
 
 **Benefits:**
 - Pure functions (testable)
@@ -255,7 +255,7 @@ def action_collapse_feed(self):
   item.add_class("collapsed")  # CSS: display: none
 
   # Cursor naturally skips hidden items
-```
+```text
 
 **Benefits:**
 - Preserves cursor position
@@ -281,7 +281,7 @@ def get_sort_key(entry: Entry, sort_mode: str) -> tuple:
   elif sort_mode == "status":
   return (entry.is_unread, entry.published_at)
   return (entry.id,)
-```
+```text
 
 ### Using Cached Properties
 ```python
@@ -293,7 +293,7 @@ class Entry:
   """Display title (with HTML stripping, caching)."""
   # Expensive operation - result cached per instance
   return strip_html(self.title)
-```
+```text
 
 **When to Use:**
 - Repeated calculations in loops
@@ -334,7 +334,7 @@ async def process_entries(
   stats["read"] += 1
 
   return stats
-```
+```text
 
 **Benefits:**
 - IDE autocomplete
@@ -362,7 +362,7 @@ async def mark_as_read(self, entry_id: int) -> None:
   """
   await self._client.mark_as_read(entry_id)
   self._update_local_state(entry_id, "read")
-```
+```text
 
 ### For Classes
 ```python
@@ -377,7 +377,7 @@ class EntryListScreen(Screen):
   current_sort: Current sort mode ("date", "feed", or "status")
   group_by_feed: Whether to group entries by feed title
   """
-```
+```text
 
 ## Pattern 10: Exception Handling
 
@@ -389,7 +389,7 @@ try:
   result = await something()
 except:  # Catches everything, including KeyboardInterrupt!
   print("Error")
-```
+```text
 
 ### Good Pattern (Pattern 10) - Use This
 ```python
@@ -402,7 +402,7 @@ except asyncio.TimeoutError:
 except Exception as e:
   self.app.notify(f"Unexpected error: {e}")
   self.logger.exception("Unexpected error")
-```
+```text
 
 **Or Use the api_call Context Manager:**
 ```python
@@ -412,7 +412,7 @@ async with api_call(
   error_title="Failed",
 ):
   await something()
-```
+```text
 
 ## Pattern 11: Constants Instead of Magic Numbers
 
@@ -422,7 +422,7 @@ Use constants defined in constants.py.
 ```python
 if len(entries) > 100:  # What does 100 mean?
   show_warning()
-```
+```text
 
 ### Good Pattern (Pattern 11) - Use This
 ```python
@@ -433,7 +433,7 @@ SORT_MODES = ["date", "feed", "status"]
 # In code
 if len(entries) > DEFAULT_ENTRY_LIMIT:
   show_warning()
-```
+```text
 
 ## Pattern 12: Testing Patterns
 
@@ -442,7 +442,7 @@ if len(entries) > DEFAULT_ENTRY_LIMIT:
 # Good: test_[feature]_[behavior]_[expectation]
 def test_filter_unread_only_shows_unread_entries():
   """Test that unread filter excludes read entries."""
-```
+```text
 
 ### AAA Pattern (Arrange, Act, Assert)
 ```python
@@ -457,7 +457,7 @@ def test_cycle_sort():
   # Assert
   assert screen.current_sort == "feed"
   screen._populate_list.assert_called_once()
-```
+```text
 
 ## Summary
 
