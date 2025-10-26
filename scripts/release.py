@@ -53,7 +53,7 @@ def print_info(text: str) -> None:
 def run_command(cmd: list[str], description: str = "", show_output: bool = False) -> bool:
     """Run a command and return success status"""
     try:
-        subprocess.run(  # noqa: S603
+        subprocess.run(
             cmd,
             check=True,
             capture_output=not show_output,
@@ -106,7 +106,7 @@ def check_git_status() -> bool:
     """Check if git working directory is clean"""
     try:
         result = subprocess.run(
-            ["git", "status", "--porcelain"],  # noqa: S607
+            ["git", "status", "--porcelain"],
             check=True,
             capture_output=True,
             text=True,
@@ -139,7 +139,7 @@ def get_previous_tag() -> str | None:
     """Get the most recent git tag."""
     try:
         result = subprocess.run(
-            ["git", "describe", "--tags", "--abbrev=0"],  # noqa: S607
+            ["git", "describe", "--tags", "--abbrev=0"],
             capture_output=True,
             text=True,
             check=True,
@@ -158,7 +158,7 @@ def generate_changelog_entry(new_version: str) -> str:
     try:
         script_dir = Path(__file__).parent
         sys.path.insert(0, str(script_dir))
-        from changelog_generator import format_changelog_entry  # type: ignore  # noqa: PLC0415
+        from changelog_generator import format_changelog_entry  # , type: ignore
 
         sys.path.pop(0)
         return format_changelog_entry(new_version, from_tag=previous_tag)
@@ -230,7 +230,7 @@ def edit_changelog(new_version: str) -> bool:  # noqa: PLR0911
     # User wants to edit - open in $EDITOR
     editor = os.environ.get("EDITOR", "nano").strip()
     try:
-        subprocess.run([editor, str(changelog_path)], check=True)  # noqa: S603
+        subprocess.run([editor, str(changelog_path)], check=True)
     except FileNotFoundError:
         print_error(f"Editor '{editor}' not found. Set $EDITOR environment variable.")
         print_info("Please edit CHANGELOG.md manually and run this script again")
@@ -364,12 +364,8 @@ Co-Authored-By: Claude <noreply@anthropic.com>"""
     print(f"{Colors.GREEN}{'━' * 70}{Colors.NC}")
     print(f"Version:      {Colors.GREEN}v{new_version}{Colors.NC}")
     print(f"Release Tag:  {Colors.GREEN}v{new_version}{Colors.NC}")
-    print(
-        f"GitHub:       {Colors.GREEN}https://github.com/reuteras/miniflux-tui-py/releases/tag/v{new_version}{Colors.NC}"
-    )
-    print(
-        f"PyPI:         {Colors.GREEN}https://pypi.org/project/miniflux-tui-py/{new_version}/{Colors.NC}"
-    )
+    print(f"GitHub:       {Colors.GREEN}https://github.com/reuteras/miniflux-tui-py/releases/tag/v{new_version}{Colors.NC}")
+    print(f"PyPI:         {Colors.GREEN}https://pypi.org/project/miniflux-tui-py/{new_version}/{Colors.NC}")
     print(f"{Colors.GREEN}{'━' * 70}{Colors.NC}")
 
     print(f"\n{Colors.YELLOW}What happens next:{Colors.NC}")

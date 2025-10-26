@@ -37,11 +37,7 @@ def validate_config(config_dict: dict) -> tuple[bool, str]:
         )
         validations.append(
             (
-                (
-                    server_url.startswith(("http://", "https://"))
-                    if isinstance(server_url, str)
-                    else False
-                ),
+                (server_url.startswith(("http://", "https://")) if isinstance(server_url, str) else False),
                 "server_url must start with http:// or https://",
             )
         )
@@ -55,9 +51,7 @@ def validate_config(config_dict: dict) -> tuple[bool, str]:
         )
         validations.append(
             (
-                (
-                    len(api_key.strip()) >= 10 if isinstance(api_key, str) else False
-                ),
+                (len(api_key.strip()) >= 10 if isinstance(api_key, str) else False),
                 "api_key appears to be invalid (too short)",
             )
         )

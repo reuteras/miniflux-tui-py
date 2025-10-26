@@ -10,7 +10,7 @@ authors = [
 license = {text = "MIT"}
 keywords = ["tui", "terminal", "miniflux", "rss", "feed-reader"]
 classifiers = [
-    "Development Status :: 3 - Alpha",
+    "Development Status :: 4 - Beta",
     "Environment :: Console",
     "Intended Audience :: End Users/Desktop",
     "License :: OSI Approved :: MIT License",
@@ -41,7 +41,6 @@ dev = [
     "pytest>=8.0.0",
     "pytest-asyncio>=0.23.0",
     "pytest-cov>=4.0.0",
-    "black>=24.0.0",
     "ruff>=0.6.0",
     "pyright>=1.1.0",
 ]
@@ -76,6 +75,7 @@ dev = [
     "pytest-asyncio>=0.23.0",
     "pytest-cov>=4.0.0",
     "pyright>=1.1.0",
+    "bandit[toml]>=1.7.5",
 ]
 docs = [
     "mkdocs>=1.5.0",
@@ -127,6 +127,8 @@ ignore = [
 [tool.ruff.lint.per-file-ignores]
 # Allow assert statements and other test-specific patterns in tests
 "tests/**/*.py" = ["S101", "PLR2004", "ARG001"]
+# Allow subprocess calls in scripts (they use hardcoded commands)
+"scripts/**/*.py" = ["S603", "S607"]
 
 [tool.ruff.format]
 # Use black-compatible formatting

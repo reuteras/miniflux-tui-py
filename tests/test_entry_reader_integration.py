@@ -23,11 +23,11 @@ class EntryReaderTestApp(App):
         """Compose the app with entry reader screen."""
         if self.entry is not None:
             self.entry_reader_screen = EntryReaderScreen(
-                    entry=self.entry,
-                    entry_list=self.entry_list,
-                    current_index=0,
-                    unread_color="cyan",
-                    read_color="gray",
+                entry=self.entry,
+                entry_list=self.entry_list,
+                current_index=0,
+                unread_color="cyan",
+                read_color="gray",
             )
             yield self.entry_reader_screen
 
@@ -36,10 +36,10 @@ class EntryReaderTestApp(App):
 def test_feed():
     """Create a test feed."""
     return Feed(
-            id=1,
-            title="Test Feed",
-            site_url="https://example.com",
-            feed_url="https://example.com/feed.xml",
+        id=1,
+        title="Test Feed",
+        site_url="https://example.com",
+        feed_url="https://example.com/feed.xml",
     )
 
 
@@ -47,15 +47,15 @@ def test_feed():
 def integration_entry(test_feed):
     """Create test entry for integration testing."""
     return Entry(
-            id=1,
-            feed_id=1,
-            title="Integration Test Entry",
-            url="https://example.com/1",
-            content="<p>Test HTML content</p><p>Second paragraph</p>",
-            feed=test_feed,
-            status="unread",
-            starred=False,
-            published_at=datetime(2024, 10, 25, 10, 0, 0, tzinfo=UTC),
+        id=1,
+        feed_id=1,
+        title="Integration Test Entry",
+        url="https://example.com/1",
+        content="<p>Test HTML content</p><p>Second paragraph</p>",
+        feed=test_feed,
+        status="unread",
+        starred=False,
+        published_at=datetime(2024, 10, 25, 10, 0, 0, tzinfo=UTC),
     )
 
 
@@ -63,39 +63,39 @@ def integration_entry(test_feed):
 def entry_list(test_feed):
     """Create a list of entries for navigation testing."""
     return [
-            Entry(
-                    id=1,
-                    feed_id=1,
-                    title="First Entry",
-                    url="https://example.com/1",
-                    content="<p>Entry 1</p>",
-                    feed=test_feed,
-                    status="unread",
-                    starred=False,
-                    published_at=datetime(2024, 10, 20, 10, 0, 0, tzinfo=UTC),
-            ),
-            Entry(
-                    id=2,
-                    feed_id=1,
-                    title="Second Entry",
-                    url="https://example.com/2",
-                    content="<p>Entry 2</p>",
-                    feed=test_feed,
-                    status="read",
-                    starred=True,
-                    published_at=datetime(2024, 10, 25, 15, 30, 0, tzinfo=UTC),
-            ),
-            Entry(
-                    id=3,
-                    feed_id=1,
-                    title="Third Entry",
-                    url="https://example.com/3",
-                    content="<p>Entry 3</p>",
-                    feed=test_feed,
-                    status="unread",
-                    starred=True,
-                    published_at=datetime(2024, 10, 22, 12, 0, 0, tzinfo=UTC),
-            ),
+        Entry(
+            id=1,
+            feed_id=1,
+            title="First Entry",
+            url="https://example.com/1",
+            content="<p>Entry 1</p>",
+            feed=test_feed,
+            status="unread",
+            starred=False,
+            published_at=datetime(2024, 10, 20, 10, 0, 0, tzinfo=UTC),
+        ),
+        Entry(
+            id=2,
+            feed_id=1,
+            title="Second Entry",
+            url="https://example.com/2",
+            content="<p>Entry 2</p>",
+            feed=test_feed,
+            status="read",
+            starred=True,
+            published_at=datetime(2024, 10, 25, 15, 30, 0, tzinfo=UTC),
+        ),
+        Entry(
+            id=3,
+            feed_id=1,
+            title="Third Entry",
+            url="https://example.com/3",
+            content="<p>Entry 3</p>",
+            feed=test_feed,
+            status="unread",
+            starred=True,
+            published_at=datetime(2024, 10, 22, 12, 0, 0, tzinfo=UTC),
+        ),
     ]
 
 
@@ -277,15 +277,15 @@ class TestEntryReaderScreenContentDisplay:
     async def test_empty_content_handling(self, test_feed):
         """Test handling of empty content."""
         entry = Entry(
-                id=1,
-                feed_id=1,
-                title="Empty Entry",
-                url="https://example.com/1",
-                content="",
-                feed=test_feed,
-                status="unread",
-                starred=False,
-                published_at=datetime(2024, 10, 25, 10, 0, 0, tzinfo=UTC),
+            id=1,
+            feed_id=1,
+            title="Empty Entry",
+            url="https://example.com/1",
+            content="",
+            feed=test_feed,
+            status="unread",
+            starred=False,
+            published_at=datetime(2024, 10, 25, 10, 0, 0, tzinfo=UTC),
         )
         app = EntryReaderTestApp(entry=entry)
 
@@ -307,15 +307,15 @@ class TestEntryReaderScreenContentDisplay:
         </div>
         """
         entry = Entry(
-                id=1,
-                feed_id=1,
-                title="Complex Entry",
-                url="https://example.com/1",
-                content=html_content,
-                feed=test_feed,
-                status="unread",
-                starred=False,
-                published_at=datetime(2024, 10, 25, 10, 0, 0, tzinfo=UTC),
+            id=1,
+            feed_id=1,
+            title="Complex Entry",
+            url="https://example.com/1",
+            content=html_content,
+            feed=test_feed,
+            status="unread",
+            starred=False,
+            published_at=datetime(2024, 10, 25, 10, 0, 0, tzinfo=UTC),
         )
         app = EntryReaderTestApp(entry=entry)
 
@@ -359,15 +359,15 @@ class TestEntryReaderScreenStarredEntry:
     async def test_starred_entry_display(self, test_feed):
         """Test that starred entries are displayed properly."""
         entry = Entry(
-                id=1,
-                feed_id=1,
-                title="Starred Entry",
-                url="https://example.com/1",
-                content="<p>Important entry</p>",
-                feed=test_feed,
-                status="read",
-                starred=True,
-                published_at=datetime(2024, 10, 25, 10, 0, 0, tzinfo=UTC),
+            id=1,
+            feed_id=1,
+            title="Starred Entry",
+            url="https://example.com/1",
+            content="<p>Important entry</p>",
+            feed=test_feed,
+            status="read",
+            starred=True,
+            published_at=datetime(2024, 10, 25, 10, 0, 0, tzinfo=UTC),
         )
         app = EntryReaderTestApp(entry=entry)
 

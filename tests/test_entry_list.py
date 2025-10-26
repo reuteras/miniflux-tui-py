@@ -251,9 +251,7 @@ class TestEntryListScreen:
         screen = EntryListScreen(entries=diverse_entries, group_by_feed=True)
         assert hasattr(screen, "last_highlighted_feed")
         # Initially None or will be set to first feed
-        assert screen.last_highlighted_feed is None or isinstance(
-            screen.last_highlighted_feed, str
-        )
+        assert screen.last_highlighted_feed is None or isinstance(screen.last_highlighted_feed, str)
 
     def test_vim_navigation_attributes(self, diverse_entries):
         """Test that vim navigation actions exist."""
@@ -495,9 +493,7 @@ class TestEntryListScreenActions:
 
     def test_get_sorted_entries_grouped(self, diverse_entries):
         """Test _get_sorted_entries with grouping enabled."""
-        screen = EntryListScreen(
-            entries=diverse_entries, group_by_feed=True, default_sort="date"
-        )
+        screen = EntryListScreen(entries=diverse_entries, group_by_feed=True, default_sort="date")
         sorted_entries = screen._get_sorted_entries()
         # Should be sorted by feed name, then by date
         assert len(sorted_entries) == len(diverse_entries)
