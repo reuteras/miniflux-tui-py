@@ -20,10 +20,10 @@ jobs:
       matrix:
         python-version: ["3.11", "3.12", "3.13", "3.14"]
     steps:
-      - uses: actions/checkout@v5
+      - uses: actions/checkout@eac61b7dd658bcc54afd3a4e8f4d7d4d9c17fd34  # v5
 
       - name: Install uv
-        uses: astral-sh/setup-uv@v7
+        uses: astral-sh/setup-uv@3db3e63e9a01d3aa34f5ae21d1b60c959d2e4970  # v7
 
       - name: Set up Python ${{ matrix.python-version }}
         run: uv python install ${{ matrix.python-version }}
@@ -43,7 +43,7 @@ jobs:
             --cov-report=term-missing
 
       - name: Upload coverage to Codecov
-        uses: codecov/codecov-action@v5
+        uses: codecov/codecov-action@ab904c979fc7b3186281444f981cc19a696d6bcd  # v5
         with:
           files: ./coverage.xml
           flags: unittests
@@ -69,10 +69,10 @@ jobs:
     runs-on: ubuntu-latest
     continue-on-error: true
     steps:
-      - uses: actions/checkout@v5
+      - uses: actions/checkout@eac61b7dd658bcc54afd3a4e8f4d7d4d9c17fd34  # v5
 
       - name: Install uv
-        uses: astral-sh/setup-uv@v7
+        uses: astral-sh/setup-uv@3db3e63e9a01d3aa34f5ae21d1b60c959d2e4970  # v7
 
       - name: Set up Python 3.15
         run: uv python install 3.15
@@ -92,7 +92,7 @@ jobs:
             --cov-report=term-missing
 
       - name: Upload coverage to Codecov
-        uses: codecov/codecov-action@v5
+        uses: codecov/codecov-action@ab904c979fc7b3186281444f981cc19a696d6bcd  # v5
         with:
           files: ./coverage.xml
           flags: unittests

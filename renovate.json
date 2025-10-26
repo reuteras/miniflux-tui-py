@@ -1,0 +1,35 @@
+{
+    "$schema": "https://docs.renovatebot.com/renovate-schema.json",
+    "extends": [
+        "config:base"
+    ],
+    "description": "Renovate configuration for automated dependency and action updates",
+    "semanticCommits": true,
+    "commitMessagePrefix": "chore(deps):",
+    "prCreation": "auto",
+    "prConcurrentLimit": 2,
+    "prConcurrentLimitPerCodeowner": 1,
+    "github-actions": {
+        "enabled": true,
+        "automerge": false,
+        "digestVersion": "docker",
+        "pinDigests": true,
+        "major": {
+            "enabled": false
+        }
+    },
+    "docker": {
+        "enabled": false
+    },
+    "npm": {
+        "enabled": false
+    },
+    "python": {
+        "enabled": false
+    },
+    "groupName": "GitHub Actions",
+    "groupSlug": "github-actions",
+    "schedule": [
+        "after 10pm on monday"
+    ]
+}

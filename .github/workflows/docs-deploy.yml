@@ -24,12 +24,12 @@ jobs:
   build:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v5
+      - uses: actions/checkout@eac61b7dd658bcc54afd3a4e8f4d7d4d9c17fd34  # v5
         with:
           fetch-depth: 0
 
       - name: Install uv
-        uses: astral-sh/setup-uv@v7
+        uses: astral-sh/setup-uv@3db3e63e9a01d3aa34f5ae21d1b60c959d2e4970  # v7
 
       - name: Set up Python
         run: uv python install 3.11
@@ -41,7 +41,7 @@ jobs:
         run: uv run mkdocs build
 
       - name: Upload artifact
-        uses: actions/upload-pages-artifact@v4
+        uses: actions/upload-pages-artifact@b4b15b8c7c6c4c70e8c66542b10fb5b81b0f8397  # v4
         with:
           path: site/
 
@@ -54,4 +54,4 @@ jobs:
     steps:
       - name: Deploy to GitHub Pages
         id: deployment
-        uses: actions/deploy-pages@v4
+        uses: actions/deploy-pages@d6db90164dcc165e23c9f3652ca63dc574474af8  # v4
