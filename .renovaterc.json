@@ -3,7 +3,7 @@
     "extends": [
         "config:recommended"
     ],
-    "description": "Renovate configuration for automated dependency and action updates",
+    "description": "Renovate configuration for automated GitHub Actions updates",
     "semanticCommits": "enabled",
     "commitMessagePrefix": "chore(deps):",
     "prCreation": "auto",
@@ -27,10 +27,6 @@
     "packageRules": [
         {
             "matchCategories": ["python"],
-            "enabled": false
-        },
-        {
-            "matchCategories": ["docker"],
             "enabled": false
         }
     ]
