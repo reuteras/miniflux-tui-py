@@ -113,8 +113,9 @@ class EntryListScreen(Screen):
         Binding("l", "expand_feed", "Expand Feed"),
         Binding("left", "collapse_feed", "Collapse Feed", show=False),
         Binding("right", "expand_feed", "Expand Feed", show=False),
-        Binding("r", "refresh", "Refresh"),
-        Binding("comma", "refresh", "Refresh", show=False),
+        Binding("r", "refresh", "Refresh Feed"),
+        Binding("comma", "refresh", "Refresh Feed", show=False),
+        Binding("shift+r", "refresh_all_feeds", "Refresh All"),
         Binding("u", "show_unread", "Unread"),
         Binding("t", "show_starred", "Starred"),
         Binding("slash", "search", "Search"),
@@ -874,12 +875,33 @@ class EntryListScreen(Screen):
         self.notify("All feeds collapsed")
 
     async def action_refresh(self):
-        """Refresh the entry list from API."""
+        """Refresh the entry list from API (current view)."""
         if hasattr(self.app, "load_entries"):
             self.notify("Refreshing entries...")
             # Reload entries from API (this will fetch only unread entries)
             await self.app.load_entries(self.app.current_view)
             self.notify("Entries refreshed")
+
+    async def action_refresh_all_feeds(self):
+        """Refresh all feeds on the server (Issue #55 - Feed operations)."""
+        if not hasattr(self.app, "client") or not self.app.client:
+            self.notify("API client not initialized", severity="error")
+            return
+
+        try:
+            self.notify("Refreshing all feeds...")
+            await self.app.client.refresh_all_feeds()
+            self.notify("All feeds refreshed on server")
+
+            # Reload entries after refreshing all feeds
+            if hasattr(self.app, "load_entries"):
+                self.notify("Reloading entries...")
+                await self.app.load_entries(self.app.current_view)
+                self.notify("Entries reloaded")
+        except (ConnectionError, TimeoutError) as e:
+            self.notify(f"Network error refreshing feeds: {e}", severity="error")
+        except Exception as e:
+            self.notify(f"Error refreshing all feeds: {e}", severity="error")
 
     async def action_show_unread(self):
         """Load and show only unread entries."""
