@@ -3,7 +3,7 @@
 ## [0.4.4] - 2025-10-26
 
 ### Bug Fixes
-- Use SLSA action v2.1.0 version tag instead of invalid commit SHA
+- Downgrade SLSA action to v2.0.0 (v2.1.0 has incompatible directory structure)
 - Improve system information widget update in help screen
 
 
