@@ -28,7 +28,7 @@ jobs:
       # Checks-out your repository under $GITHUB_WORKSPACE, so your job can
       # access it
       - name: Checkout code
-        uses: actions/checkout@11bd719bcc41092186ec7271e2924ecd7d5c6e7e  # main
+        uses: actions/checkout@v5
         with:
           persist-credentials: false
           fetch-depth: 0
