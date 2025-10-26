@@ -338,3 +338,19 @@ class MinifluxClient:
         """
         response = await self._call_with_retry(self.client.fetch_entry_content, entry_id)
         return response.get("content", "")
+
+    async def get_version(self) -> dict:
+        """Get Miniflux server version information.
+
+        Returns:
+            Dictionary with version information from the server
+        """
+        return await self._call_with_retry(self.client.get_version)
+
+    async def get_user_info(self) -> dict:
+        """Get current user information.
+
+        Returns:
+            Dictionary with current user details (username, timezone, language, etc.)
+        """
+        return await self._call_with_retry(self.client.me)
