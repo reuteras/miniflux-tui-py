@@ -91,6 +91,7 @@ class EntryListScreen(Screen):
         Binding("comma", "refresh", "Refresh", show=False),
         Binding("u", "show_unread", "Unread"),
         Binding("t", "show_starred", "Starred"),
+        Binding("slash", "search", "Search"),
         Binding("question_mark", "show_help", "Help"),
         Binding("q", "quit", "Quit"),
     ]
@@ -115,6 +116,8 @@ class EntryListScreen(Screen):
         self.group_collapsed = group_collapsed  # Start feeds collapsed in grouped mode
         self.filter_unread_only = False  # Filter to show only unread entries
         self.filter_starred_only = False  # Filter to show only starred entries
+        self.search_active = False  # Flag to indicate search is active
+        self.search_term = ""  # Current search term
         self.list_view: ListView | None = None
         self.displayed_items: list[ListItem] = []  # Track items in display order
         self.refresh_optimizer = ScreenRefreshOptimizer()  # Track refresh performance
@@ -445,10 +448,9 @@ class EntryListScreen(Screen):
     def _filter_entries(self, entries: list[Entry]) -> list[Entry]:
         """Apply active filters to entries.
 
-        Filters are mutually exclusive - only one can be active at a time.
-        - filter_unread_only: Show only entries with status="unread"
-        - filter_starred_only: Show only entries with starred=True
-        - Neither active: Show all entries passed in
+        Filters are applied in order:
+        1. Search filter (if active)
+        2. Status filters (unread/starred - mutually exclusive)
 
         Args:
             entries: List of entries to filter
@@ -456,14 +458,36 @@ class EntryListScreen(Screen):
         Returns:
             Filtered list of entries
         """
+        # Apply search filter first if active
+        if self.search_active and self.search_term:
+            entries = self._filter_search(entries)
+
+        # Apply status filters (mutually exclusive - only one can be active at a time)
         if self.filter_unread_only:
             # Show only unread entries
             return [e for e in entries if e.is_unread]
         if self.filter_starred_only:
             # Show only starred entries
             return [e for e in entries if e.starred]
-        # No filters active, return all entries
+        # No status filters active, return all entries (after search filter if applied)
         return entries
+
+    def _filter_search(self, entries: list[Entry]) -> list[Entry]:
+        """Filter entries by search term in title and content.
+
+        Searches across both entry titles and HTML content. Search is case-insensitive.
+
+        Args:
+            entries: List of entries to search
+
+        Returns:
+            Filtered list of matching entries
+        """
+        search_lower = self.search_term.lower()
+        return [
+            e for e in entries
+            if search_lower in e.title.lower() or search_lower in e.content.lower()
+        ]
 
     def _add_feed_header_if_needed(self, current_feed: str, first_feed_ref: list) -> None:
         """Add a feed header if transitioning to a new feed.
@@ -825,6 +849,36 @@ class EntryListScreen(Screen):
             self.filter_unread_only = False
             self.filter_starred_only = False
             self._populate_list()
+
+    def action_search(self):
+        """Clear current search filter.
+
+        Toggles search mode off and refreshes the display to show all entries.
+        """
+        # Clear any active search
+        if self.search_active or self.search_term:
+            self.search_active = False
+            self.search_term = ""
+            self._populate_list()
+            self.notify("Search cleared")
+        else:
+            # Notify that search feature is available
+            self.notify("Search: Use set_search_term() method to filter entries")
+
+    def set_search_term(self, search_term: str) -> None:
+        """Set search term and filter entries.
+
+        Args:
+            search_term: The search term to filter entries by (title or content)
+        """
+        self.search_term = search_term.strip()
+        self.search_active = bool(self.search_term)
+        self._populate_list()
+
+        # Notify user of search results
+        if self.search_active:
+            result_count = len(self._filter_entries(self.entries))
+            self.notify(f"Search: {result_count} entries match '{self.search_term}'")
 
     def action_show_help(self):
         """Show keyboard help."""

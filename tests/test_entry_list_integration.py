@@ -368,4 +368,142 @@ class TestEntryListScreenStateManagement:
             screen = app.entry_list_screen
 
             assert hasattr(screen, "feed_fold_state")
+
+
+class TestEntryListScreenSearch:
+    """Test search functionality in EntryListScreen."""
+
+    async def test_search_state_initializes_inactive(self, integration_entries):
+        """Test that search state initializes as inactive."""
+        app = EntryListTestApp(entries=integration_entries)
+
+        async with app.run_test():
+            screen = app.entry_list_screen
+            assert screen.search_active is False
+            assert screen.search_term == ""
+
+    async def test_search_action_exists(self, integration_entries):
+        """Test that search action exists and is callable."""
+        app = EntryListTestApp(entries=integration_entries)
+
+        async with app.run_test():
+            screen = app.entry_list_screen
+            assert callable(screen.action_search)
+
+    async def test_set_search_term_filters_by_title(self, integration_entries):
+        """Test that search filters entries by title."""
+        app = EntryListTestApp(entries=integration_entries)
+
+        async with app.run_test():
+            screen = app.entry_list_screen
+            # Search for "First" - should match "First Entry"
+            screen.set_search_term("First")
+
+            assert screen.search_active is True
+            assert screen.search_term == "First"
+            # Check that filtered results only contain matching entry
+            filtered = screen._filter_entries(screen.entries)
+            assert len(filtered) == 1
+            assert "First" in filtered[0].title
+
+    async def test_set_search_term_case_insensitive(self, integration_entries):
+        """Test that search is case-insensitive."""
+        app = EntryListTestApp(entries=integration_entries)
+
+        async with app.run_test():
+            screen = app.entry_list_screen
+            # Search for lowercase "first" - should match "First Entry"
+            screen.set_search_term("first")
+
+            assert screen.search_active is True
+            filtered = screen._filter_entries(screen.entries)
+            assert len(filtered) == 1
+            assert "First" in filtered[0].title
+
+    async def test_set_search_term_filters_by_content(self, integration_entries):
+        """Test that search filters entries by content."""
+        app = EntryListTestApp(entries=integration_entries)
+
+        async with app.run_test():
+            screen = app.entry_list_screen
+            # Search for content text - "content" appears in entry content
+            screen.set_search_term("content")
+
+            assert screen.search_active is True
+            filtered = screen._filter_entries(screen.entries)
+            assert len(filtered) >= 1
+            # At least one entry should have "content" in its content
+            assert any("content" in e.content.lower() for e in filtered)
+
+    async def test_set_search_term_empty_clears_search(self, integration_entries):
+        """Test that empty search term clears search."""
+        app = EntryListTestApp(entries=integration_entries)
+
+        async with app.run_test():
+            screen = app.entry_list_screen
+            # Set a search term
+            screen.set_search_term("First")
+            assert screen.search_active is True
+
+            # Clear with empty string
+            screen.set_search_term("")
+            assert screen.search_active is False
+            assert screen.search_term == ""
+
+    async def test_search_with_whitespace_is_trimmed(self, integration_entries):
+        """Test that search terms with leading/trailing whitespace are trimmed."""
+        app = EntryListTestApp(entries=integration_entries)
+
+        async with app.run_test():
+            screen = app.entry_list_screen
+            screen.set_search_term("  First  ")
+
+            assert screen.search_term == "First"
+
+    async def test_search_filter_handles_no_matches(self, integration_entries):
+        """Test that search returns empty list when no entries match."""
+        app = EntryListTestApp(entries=integration_entries)
+
+        async with app.run_test():
+            screen = app.entry_list_screen
+            screen.set_search_term("nonexistent")
+
+            filtered = screen._filter_entries(screen.entries)
+            assert len(filtered) == 0
+
+    async def test_search_combined_with_status_filters(self, integration_entries):
+        """Test that search works with status filters."""
+        app = EntryListTestApp(entries=integration_entries)
+
+        async with app.run_test():
+            screen = app.entry_list_screen
+            # Set both search and filter_unread_only
+            # Entries 1 and 3 are unread
+            # Entry 2 is read with content "Content 2"
+            # So when we search for "2" and filter_unread_only, we should get nothing
+            # (entry 2 has "2" but is not unread)
+            screen.set_search_term("1")  # Matches Entry 1 (unread) and Entry 3 (unread)
+            screen.filter_unread_only = True
+
+            filtered = screen._filter_entries(screen.entries)
+            # Both entries 1 and 3 contain "1" in their content
+            # And both are unread
+            assert len(filtered) >= 1
+            # All results must be unread
+            assert all(e.is_unread for e in filtered)
+
+    async def test_action_search_clears_active_search(self, integration_entries):
+        """Test that action_search clears active search."""
+        app = EntryListTestApp(entries=integration_entries)
+
+        async with app.run_test():
+            screen = app.entry_list_screen
+            # Activate search
+            screen.set_search_term("First")
+            assert screen.search_active is True
+
+            # Run action_search to clear
+            screen.action_search()
+            assert screen.search_active is False
+            assert screen.search_term == ""
             assert isinstance(screen.feed_fold_state, dict)

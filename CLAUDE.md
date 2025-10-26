@@ -438,3 +438,4 @@ Major improvements in October 2025:
 - [Textual Documentation](https://textual.textualize.io/)
 - [Miniflux Project](https://miniflux.app)
 - [Original cliflux (Rust)](https://github.com/spencerwi/cliflux)
+- Commits to GitHub should be signed with ssh key
