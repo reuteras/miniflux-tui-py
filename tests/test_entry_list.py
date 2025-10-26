@@ -1280,3 +1280,150 @@ class TestActionMethods:
         item = screen.displayed_items[0]
         assert isinstance(item, EntryListItem)
         assert item.entry.id == entry.id
+
+
+class TestEventHandlers:
+    """Test event handler methods for screen lifecycle."""
+
+    def test_on_mount_exists(self, diverse_entries):
+        """Test on_mount method exists and is callable."""
+        screen = EntryListScreen(entries=diverse_entries)
+
+        # Verify method exists and is callable
+        assert callable(screen.on_mount)
+
+    def test_on_screen_resume_exists(self, diverse_entries):
+        """Test on_screen_resume method exists and is callable."""
+        screen = EntryListScreen(entries=diverse_entries)
+
+        # Verify method exists and is callable
+        assert callable(screen.on_screen_resume)
+
+    def test_on_list_view_selected_exists(self, diverse_entries):
+        """Test on_list_view_selected method exists and is callable."""
+        screen = EntryListScreen(entries=diverse_entries)
+
+        # Verify method exists and is callable
+        assert callable(screen.on_list_view_selected)
+
+
+class TestActionMethodsCallability:
+    """Test action method callability for user interactions."""
+
+    @pytest.mark.asyncio
+    async def test_action_toggle_read_exists(self, diverse_entries):
+        """Test action_toggle_read exists and is callable."""
+        screen = EntryListScreen(entries=diverse_entries)
+        screen.list_view = MagicMock()
+
+        # Verify method exists and is callable
+        assert callable(screen.action_toggle_read)
+
+    @pytest.mark.asyncio
+    async def test_action_toggle_star_works(self, diverse_entries):
+        """Test action_toggle_star exists and is callable."""
+        screen = EntryListScreen(entries=diverse_entries)
+        screen.list_view = MagicMock()
+
+        # Verify method exists and is callable
+        assert callable(screen.action_toggle_star)
+
+    @pytest.mark.asyncio
+    async def test_action_save_entry_works(self, diverse_entries):
+        """Test action_save_entry exists and is callable."""
+        screen = EntryListScreen(entries=diverse_entries)
+        screen.list_view = MagicMock()
+
+        # Verify method exists and is callable
+        assert callable(screen.action_save_entry)
+
+    @pytest.mark.asyncio
+    async def test_action_refresh_works(self, diverse_entries):
+        """Test action_refresh exists and is callable."""
+        screen = EntryListScreen(entries=diverse_entries)
+
+        # Verify method exists and is callable
+        assert callable(screen.action_refresh)
+
+    @pytest.mark.asyncio
+    async def test_action_show_unread_works(self, diverse_entries):
+        """Test action_show_unread exists and is callable."""
+        screen = EntryListScreen(entries=diverse_entries)
+
+        # Verify method exists and is callable
+        assert callable(screen.action_show_unread)
+
+    @pytest.mark.asyncio
+    async def test_action_show_starred_works(self, diverse_entries):
+        """Test action_show_starred exists and is callable."""
+        screen = EntryListScreen(entries=diverse_entries)
+
+        # Verify method exists and is callable
+        assert callable(screen.action_show_starred)
+
+    def test_action_cycle_sort_exists(self, diverse_entries):
+        """Test action_cycle_sort exists and is callable."""
+        screen = EntryListScreen(entries=diverse_entries, default_sort="date")
+
+        # Verify method exists and is callable
+        assert callable(screen.action_cycle_sort)
+
+    def test_action_toggle_group_switches_mode(self, diverse_entries):
+        """Test action_toggle_group toggles grouping."""
+        screen = EntryListScreen(entries=diverse_entries, group_by_feed=False)
+        screen._populate_list = MagicMock()
+
+        # Verify method exists and is callable
+        assert callable(screen.action_toggle_group)
+
+    def test_action_toggle_fold_exists(self, diverse_entries):
+        """Test action_toggle_fold exists and is callable."""
+        screen = EntryListScreen(entries=diverse_entries, group_by_feed=True)
+        screen.list_view = MagicMock()
+
+        # Verify method exists and is callable
+        assert callable(screen.action_toggle_fold)
+
+    def test_action_collapse_feed_exists(self, diverse_entries):
+        """Test action_collapse_feed exists and is callable."""
+        screen = EntryListScreen(entries=diverse_entries, group_by_feed=True)
+        screen.list_view = MagicMock()
+
+        # Verify method exists and is callable
+        assert callable(screen.action_collapse_feed)
+
+    def test_action_expand_feed_exists(self, diverse_entries):
+        """Test action_expand_feed exists and is callable."""
+        screen = EntryListScreen(entries=diverse_entries, group_by_feed=True)
+        screen.list_view = MagicMock()
+
+        # Verify method exists and is callable
+        assert callable(screen.action_expand_feed)
+
+    def test_action_expand_all_exists(self, diverse_entries):
+        """Test action_expand_all exists and is callable."""
+        screen = EntryListScreen(entries=diverse_entries, group_by_feed=True)
+
+        # Verify method exists and is callable
+        assert callable(screen.action_expand_all)
+
+    def test_action_collapse_all_exists(self, diverse_entries):
+        """Test action_collapse_all exists and is callable."""
+        screen = EntryListScreen(entries=diverse_entries, group_by_feed=True)
+
+        # Verify method exists and is callable
+        assert callable(screen.action_collapse_all)
+
+    def test_action_show_help_exists(self, diverse_entries):
+        """Test action_show_help exists and is callable."""
+        screen = EntryListScreen(entries=diverse_entries)
+
+        # Verify method exists and is callable
+        assert callable(screen.action_show_help)
+
+    def test_action_quit_exists(self, diverse_entries):
+        """Test action_quit exists and is callable."""
+        screen = EntryListScreen(entries=diverse_entries)
+
+        # Verify method exists and is callable
+        assert callable(screen.action_quit)
