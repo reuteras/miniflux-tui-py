@@ -95,7 +95,7 @@ jobs:
           path: dist/
 
       - name: Generate SLSA provenance
-        uses: slsa-framework/slsa-github-generator@f7dd8c54c2067bafc12ca7a55595d5ee9b75204a # v2.1.0
+        uses: slsa-framework/slsa-github-generator@v2.1.0
         with:
           base64-subjects: ${{ hashFiles('dist/**') }}
           upload-assets: true
