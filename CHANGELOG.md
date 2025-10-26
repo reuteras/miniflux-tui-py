@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.4.4] - 2025-10-26
+
+### Bug Fixes
+- Use SLSA action v2.1.0 version tag instead of invalid commit SHA
+- Improve system information widget update in help screen
+
+
 ## [0.4.3] - 2025-10-26
 
 ### Security & Infrastructure
