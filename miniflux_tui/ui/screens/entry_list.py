@@ -203,49 +203,101 @@ class EntryListScreen(Screen):
         # Don't set initial index here - let _restore_cursor_position handle it
         # This prevents overwriting the cursor position when returning from entry reader
 
+    def _find_entry_index_by_id(self, entry_id: int | None) -> int | None:
+        """Find the index of an entry by its ID.
+
+        Searches the list view for an EntryListItem with matching entry ID.
+        Returns None if not found or if entry_id is not set.
+
+        Args:
+            entry_id: ID of the entry to find
+
+        Returns:
+            Index of the entry in list view, or None if not found
+        """
+        if not entry_id:
+            return None
+
+        for i, child in enumerate(self.list_view.children):
+            if isinstance(child, EntryListItem) and child.entry.id == entry_id:
+                return i
+
+        return None
+
+    def _find_feed_header_index(self, feed_title: str | None) -> int | None:
+        """Find the index of a feed header by title.
+
+        Searches the list view for a FeedHeaderItem with matching feed title.
+        Returns None if not found or feed not in map.
+
+        Args:
+            feed_title: Title of the feed to find
+
+        Returns:
+            Index of the feed header in list view, or None if not found
+        """
+        if not feed_title or not self.group_by_feed or feed_title not in self.feed_header_map:
+            return None
+
+        feed_header = self.feed_header_map[feed_title]
+        for i, child in enumerate(self.list_view.children):
+            if child is feed_header:
+                return i
+
+        return None
+
+    def _set_cursor_to_index(self, index: int) -> bool:
+        """Safely set cursor to a specific index.
+
+        Handles boundary checking and suppresses exceptions.
+
+        Args:
+            index: Target index
+
+        Returns:
+            True if successful, False otherwise
+        """
+        max_index = len(self.list_view.children) - 1
+        if index > max_index:
+            return False
+
+        with suppress(Exception):
+            self.list_view.index = index
+            return True
+
+        return False
+
     def _restore_cursor_position(self) -> None:
         """Restore cursor position based on mode.
 
-        In grouped mode: restore position to the last highlighted entry.
-        In non-grouped mode: restore position to the last cursor index.
+        Attempts restoration in this order:
+        1. Restore to the last highlighted entry by ID (all modes)
+        2. Restore to the last highlighted feed header (grouped mode only)
+        3. Restore to the last cursor index (fallback)
+
         Used after rebuilding the list to restore user's position.
         On initial mount, defaults to first item.
         """
         if not self.list_view or len(self.list_view.children) == 0:
             return
 
-        # Try to restore to the last highlighted entry (works in both grouped and non-grouped modes)
-        # We search by entry ID, not object identity, since items are recreated when list is rebuilt
-        if self.last_highlighted_entry_id:
-            for i, child in enumerate(self.list_view.children):
-                # Check if this child is an EntryListItem with the matching entry ID
-                if isinstance(child, EntryListItem) and child.entry.id == self.last_highlighted_entry_id:
-                    self.log(f"Restoring cursor to entry {self.last_highlighted_entry_id} at index {i}")
-                    with suppress(Exception):
-                        self.list_view.index = i
-                        return
+        # Try to restore to last highlighted entry by ID
+        entry_index = self._find_entry_index_by_id(self.last_highlighted_entry_id)
+        if entry_index is not None and self._set_cursor_to_index(entry_index):
+            self.log(f"Restoring cursor to entry {self.last_highlighted_entry_id} at index {entry_index}")
+            return
 
-        # In grouped mode, if entry not found, try to restore to the feed header
-        if self.group_by_feed and self.last_highlighted_feed and self.last_highlighted_feed in self.feed_header_map:
-            feed_header = self.feed_header_map[self.last_highlighted_feed]
-            # Find its index in the list view
-            for i, child in enumerate(self.list_view.children):
-                if child is feed_header:
-                    with suppress(Exception):
-                        self.list_view.index = i
-                        return
+        # In grouped mode, try to restore to feed header
+        feed_index = self._find_feed_header_index(self.last_highlighted_feed)
+        if feed_index is not None and self._set_cursor_to_index(feed_index):
+            self.log(f"Restoring cursor to feed header '{self.last_highlighted_feed}' at index {feed_index}")
+            return
 
-        # Fallback: use last cursor index if valid, otherwise go to first item
+        # Fallback: restore to last cursor index
         max_index = len(self.list_view.children) - 1
-        if max_index >= 0:
-            # On initial mount, last_cursor_index will be 0, which is correct
-            cursor_index = min(self.last_cursor_index, max_index)
+        cursor_index = min(self.last_cursor_index, max_index)
+        if self._set_cursor_to_index(cursor_index):
             self.log(f"Restoring cursor to last index {cursor_index}")
-            with suppress(Exception):
-                self.list_view.index = cursor_index
-        else:
-            # If list is empty, don't try to set index
-            self.log("List is empty, cannot restore cursor")
 
     def _restore_cursor_position_and_focus(self) -> None:
         """Restore cursor position and ensure focus (called after ListView update)."""
@@ -413,6 +465,52 @@ class EntryListScreen(Screen):
         # No filters active, return all entries
         return entries
 
+    def _add_feed_header_if_needed(self, current_feed: str, first_feed_ref: list) -> None:
+        """Add a feed header if transitioning to a new feed.
+
+        Initializes fold state and creates a FeedHeaderItem for the new feed.
+
+        Args:
+            current_feed: Title of the current feed
+            first_feed_ref: List with one element to track first feed (mutable ref pattern)
+        """
+        # Track first feed for default positioning
+        if first_feed_ref[0] is None:
+            first_feed_ref[0] = current_feed
+            # Set default position to first feed if not already set
+            if not self.last_highlighted_feed:
+                self.last_highlighted_feed = first_feed_ref[0]
+
+        # Initialize fold state for this feed if needed
+        if current_feed not in self.feed_fold_state:
+            # Default: expanded if not set, unless group_collapsed is True
+            self.feed_fold_state[current_feed] = not self.group_collapsed
+
+        # Create and add a fold-aware header item
+        is_expanded = self.feed_fold_state[current_feed]
+        header = FeedHeaderItem(current_feed, is_expanded=is_expanded)
+        self.feed_header_map[current_feed] = header
+        self.list_view.append(header)
+
+    def _add_entry_with_visibility(self, entry: Entry) -> None:
+        """Add an entry item with appropriate visibility based on feed state.
+
+        Applies "collapsed" CSS class if the entry's feed is collapsed.
+
+        Args:
+            entry: The entry to add
+        """
+        item = EntryListItem(entry, self.unread_color, self.read_color)
+        self.displayed_items.append(item)
+        self.entry_item_map[entry.id] = item
+
+        # Apply "collapsed" class if this feed is collapsed
+        # We can safely access feed_fold_state since headers are created first
+        if not self.feed_fold_state.get(entry.feed.title, not self.group_collapsed):
+            item.add_class("collapsed")
+
+        self.list_view.append(item)
+
     def _add_grouped_entries(self, entries: list[Entry]):
         """Add entries grouped by feed with optional collapsible headers.
 
@@ -420,7 +518,7 @@ class EntryListScreen(Screen):
         are hidden via CSS class. This preserves cursor position during expand/collapse.
         """
         current_feed = None
-        first_feed = None
+        first_feed = [None]  # Use list as mutable reference for tracking first feed
         self.displayed_items = []
         self.entry_item_map.clear()
         self.feed_header_map.clear()
@@ -429,34 +527,10 @@ class EntryListScreen(Screen):
             # Add feed header if this is a new feed
             if current_feed != entry.feed.title:
                 current_feed = entry.feed.title
-                if first_feed is None:
-                    first_feed = current_feed
-                    # Set default position to first feed if not already set
-                    if not self.last_highlighted_feed:
-                        self.last_highlighted_feed = first_feed
+                self._add_feed_header_if_needed(current_feed, first_feed)
 
-                # Initialize fold state for this feed if needed
-                if current_feed not in self.feed_fold_state:
-                    # Default: expanded if not set, unless group_collapsed is True
-                    self.feed_fold_state[current_feed] = not self.group_collapsed
-
-                # Create and add a fold-aware header item
-                is_expanded = self.feed_fold_state[current_feed]
-                header = FeedHeaderItem(current_feed, is_expanded=is_expanded)
-                self.feed_header_map[current_feed] = header
-                self.list_view.append(header)
-
-            # Always add the entry, but apply "collapsed" CSS class if feed is collapsed
-            item = EntryListItem(entry, self.unread_color, self.read_color)
-            self.displayed_items.append(item)
-            self.entry_item_map[entry.id] = item
-
-            # Apply "collapsed" class if this feed is collapsed
-            # current_feed is guaranteed to be set here (see line 316)
-            if current_feed and not self.feed_fold_state[current_feed]:
-                item.add_class("collapsed")
-
-            self.list_view.append(item)
+            # Add the entry with appropriate visibility
+            self._add_entry_with_visibility(entry)
 
     def _add_flat_entries(self, entries: list[Entry]):
         """Add entries as a flat list."""
