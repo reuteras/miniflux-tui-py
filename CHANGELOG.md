@@ -1,5 +1,38 @@
 # Changelog
 
+## [0.4.0] - 2025-10-26
+
+### Major Features
+- **Search Functionality**: Full-text search across entry titles and content (Phase 2)
+- **Enhanced Theme Support**: Comprehensive test coverage for color customization (Phase 3)
+- **Improved Test Coverage**: Increased from 78% to 79% with 465 total tests (Phase 1)
+
+### Features & Improvements
+- Added `/` keybinding for search mode toggle
+- Implemented `set_search_term()` method for programmatic search
+- Search integrates with existing status filters (unread/starred)
+- Added 10 search integration tests (Phase 2)
+- Added 5 theme configuration tests (Phase 3)
+- Added 24 entry_reader integration tests (Phase 1)
+
+### Testing & Quality
+- Phase 1: Improved test coverage to 80% for entry_reader.py
+- Phase 2: Added comprehensive search functionality tests
+- Phase 3: Added theme configuration integration tests
+- Total tests: 465 (up from 426)
+- Coverage: 79% (maintained from Phase 1)
+- All quality checks passing (ruff, pyright, pytest)
+
+### Bug Fixes & Refactoring
+- Search filter properly integrates with existing filters
+- Theme colors persist across config reloads
+- All pre-commit hooks passing
+
+### Documentation
+- Documented search functionality
+- Updated configuration examples with search and theme options
+- All tests documented with clear descriptions
+
 ## [0.3.0] - 2025-10-26
 
 ### Major Achievements
