@@ -1,5 +1,21 @@
 # Changelog
 
+## [0.2.9] - 2025-10-26
+
+### Features
+- Refactor long functions for improved readability
+- Extract repeated code patterns from screens
+- Apply consistent error handling to entry_list screen
+- Apply retry logic to all API client methods
+
+### Bug Fixes
+- Add type hints to test assertions for mypy compliance
+
+### Testing
+- Add 22 comprehensive tests for entry_list helpers
+- Add comprehensive tests for cursor position restoration
+
+
 ## [0.2.8] - 2025-10-25
 
 ### Bug Fixes
