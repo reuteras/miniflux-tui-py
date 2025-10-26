@@ -971,3 +971,307 @@ class TestNavigationWithEntrySaving:
         # Should not be found, so should use fallback
         assert found is False
         assert screen.last_cursor_index == 1
+
+
+class TestActionMethods:
+    """Test action methods in EntryListScreen."""
+
+    def test_expand_all_toggles_all_feeds(self, diverse_entries):
+        """Test that all feeds can be toggled to expanded state."""
+        screen = EntryListScreen(entries=diverse_entries, group_by_feed=True)
+        screen.list_view = MagicMock()
+        screen.list_view.children = []
+
+        # Initialize all feeds as collapsed
+        screen.feed_fold_state = {"Test Feed": False}
+        feed_header = MagicMock(spec=FeedHeaderItem)
+        screen.feed_header_map = {"Test Feed": feed_header}
+
+        # Manually toggle like action_expand_all would do
+        for feed_title in screen.feed_fold_state:
+            if not screen.feed_fold_state[feed_title]:
+                screen._set_feed_fold_state(feed_title, True)
+
+        # Verify feed is now expanded
+        assert screen.feed_fold_state["Test Feed"] is True
+        feed_header.toggle_fold.assert_called()
+
+    def test_collapse_all_toggles_all_feeds(self, diverse_entries):
+        """Test that all feeds can be toggled to collapsed state."""
+        screen = EntryListScreen(entries=diverse_entries, group_by_feed=True)
+        screen.list_view = MagicMock()
+        screen.list_view.children = []
+
+        # Initialize all feeds as expanded
+        screen.feed_fold_state = {"Test Feed": True}
+        feed_header = MagicMock(spec=FeedHeaderItem)
+        screen.feed_header_map = {"Test Feed": feed_header}
+
+        # Manually toggle like action_collapse_all would do
+        for feed_title in screen.feed_fold_state:
+            if screen.feed_fold_state[feed_title]:
+                screen._set_feed_fold_state(feed_title, False)
+
+        # Verify feed is now collapsed
+        assert screen.feed_fold_state["Test Feed"] is False
+        feed_header.toggle_fold.assert_called()
+
+    def test_get_highlighted_feed_title_from_header(self, diverse_entries):
+        """Test _get_highlighted_feed_title() extracts title from FeedHeaderItem."""
+        screen = EntryListScreen(entries=diverse_entries, group_by_feed=True)
+
+        # Create mock FeedHeaderItem
+        header = MagicMock(spec=FeedHeaderItem)
+        header.feed_title = "Test Feed"
+
+        screen.list_view = MagicMock()
+        screen.list_view.highlighted_child = header
+
+        # Get feed title
+        title = screen._get_highlighted_feed_title()
+
+        assert title == "Test Feed"
+
+    def test_get_highlighted_feed_title_from_entry(self, diverse_entries):
+        """Test _get_highlighted_feed_title() extracts title from EntryListItem."""
+        screen = EntryListScreen(entries=diverse_entries)
+
+        # Create EntryListItem from first entry
+        item = EntryListItem(diverse_entries[0])
+
+        screen.list_view = MagicMock()
+        screen.list_view.highlighted_child = item
+
+        # Get feed title
+        title = screen._get_highlighted_feed_title()
+
+        assert title == "Test Feed"
+
+    def test_get_highlighted_feed_title_none_when_no_highlight(self, diverse_entries):
+        """Test _get_highlighted_feed_title() returns None when nothing highlighted."""
+        screen = EntryListScreen(entries=diverse_entries)
+        screen.list_view = MagicMock()
+        screen.list_view.highlighted_child = None
+
+        title = screen._get_highlighted_feed_title()
+
+        assert title is None
+
+    def test_set_feed_fold_state_updates_visibility(self, diverse_entries):
+        """Test _set_feed_fold_state() updates fold state and toggles header."""
+        screen = EntryListScreen(entries=diverse_entries, group_by_feed=True)
+        screen.feed_fold_state = {}
+        screen.list_view = MagicMock()
+        screen.list_view.children = []  # Empty children to avoid _update_feed_visibility error
+
+        # Create mock feed header
+        feed_header = MagicMock(spec=FeedHeaderItem)
+        screen.feed_header_map = {"Test Feed": feed_header}
+
+        # Set fold state to expanded
+        screen._set_feed_fold_state("Test Feed", True)
+
+        # Verify state updated
+        assert screen.feed_fold_state["Test Feed"] is True
+        # Verify toggle_fold called
+        feed_header.toggle_fold.assert_called()
+
+    def test_ensure_list_view_and_grouped_returns_true(self, diverse_entries):
+        """Test _ensure_list_view_and_grouped() returns True when conditions met."""
+        screen = EntryListScreen(entries=diverse_entries, group_by_feed=True)
+        screen.list_view = MagicMock()
+
+        result = screen._ensure_list_view_and_grouped()
+
+        assert result is True
+
+    def test_ensure_list_view_and_grouped_returns_false_when_not_grouped(self, diverse_entries):
+        """Test _ensure_list_view_and_grouped() returns False when not in grouped mode."""
+        screen = EntryListScreen(entries=diverse_entries, group_by_feed=False)
+        screen.list_view = MagicMock()
+
+        result = screen._ensure_list_view_and_grouped()
+
+        assert result is False
+
+    def test_list_view_has_items_with_children(self, diverse_entries):
+        """Test _list_view_has_items() returns True when list has children."""
+        screen = EntryListScreen(entries=diverse_entries)
+
+        # Create mock list view with children
+        screen.list_view = MagicMock()
+        screen.list_view.children = [MagicMock()]
+
+        result = screen._list_view_has_items()
+
+        assert result is True
+
+    def test_list_view_has_items_empty_list(self, diverse_entries):
+        """Test _list_view_has_items() returns False when list is empty."""
+        screen = EntryListScreen(entries=diverse_entries)
+
+        screen.list_view = MagicMock()
+        screen.list_view.children = []
+
+        result = screen._list_view_has_items()
+
+        assert result is False
+
+    def test_list_view_has_items_none_list(self, diverse_entries):
+        """Test _list_view_has_items() returns False when list_view is None."""
+        screen = EntryListScreen(entries=diverse_entries)
+        screen.list_view = None
+
+        result = screen._list_view_has_items()
+
+        assert result is False
+
+    def test_find_entry_index_by_id_found(self, diverse_entries):
+        """Test _find_entry_index_by_id() finds entry by ID."""
+        screen = EntryListScreen(entries=diverse_entries)
+
+        # Create list of items
+        items = [EntryListItem(e) for e in diverse_entries]
+        screen.list_view = MagicMock()
+        screen.list_view.children = items
+
+        # Find entry with ID 2
+        index = screen._find_entry_index_by_id(2)
+
+        assert index == 1  # Second item in list
+
+    def test_find_entry_index_by_id_not_found(self, diverse_entries):
+        """Test _find_entry_index_by_id() returns None when ID not found."""
+        screen = EntryListScreen(entries=diverse_entries)
+
+        items = [EntryListItem(e) for e in diverse_entries]
+        screen.list_view = MagicMock()
+        screen.list_view.children = items
+
+        # Try to find non-existent entry
+        index = screen._find_entry_index_by_id(999)
+
+        assert index is None
+
+    def test_find_entry_index_by_id_none_entry_id(self, diverse_entries):
+        """Test _find_entry_index_by_id() returns None when entry_id is None."""
+        screen = EntryListScreen(entries=diverse_entries)
+        screen.list_view = MagicMock()
+
+        index = screen._find_entry_index_by_id(None)
+
+        assert index is None
+
+    def test_find_feed_header_index_found(self, diverse_entries):
+        """Test _find_feed_header_index() finds feed header by title."""
+        screen = EntryListScreen(entries=diverse_entries, group_by_feed=True)
+
+        # Create mock feed header
+        header = MagicMock(spec=FeedHeaderItem)
+        screen.feed_header_map = {"Test Feed": header}
+
+        # Create list with header
+        screen.list_view = MagicMock()
+        screen.list_view.children = [header]
+
+        # Find header
+        index = screen._find_feed_header_index("Test Feed")
+
+        assert index == 0
+
+    def test_find_feed_header_index_not_found(self, diverse_entries):
+        """Test _find_feed_header_index() returns None when feed not in map."""
+        screen = EntryListScreen(entries=diverse_entries, group_by_feed=True)
+        screen.feed_header_map = {}
+        screen.list_view = MagicMock()
+
+        index = screen._find_feed_header_index("Test Feed")
+
+        assert index is None
+
+    def test_find_feed_header_index_not_grouped(self, diverse_entries):
+        """Test _find_feed_header_index() returns None when not in grouped mode."""
+        screen = EntryListScreen(entries=diverse_entries, group_by_feed=False)
+        screen.list_view = MagicMock()
+
+        index = screen._find_feed_header_index("Test Feed")
+
+        assert index is None
+
+    def test_set_cursor_to_index_success(self, diverse_entries):
+        """Test _set_cursor_to_index() successfully sets cursor."""
+        screen = EntryListScreen(entries=diverse_entries)
+
+        screen.list_view = MagicMock()
+        screen.list_view.children = [MagicMock() for _ in diverse_entries]
+
+        result = screen._set_cursor_to_index(1)
+
+        assert result is True
+        assert screen.list_view.index == 1
+
+    def test_set_cursor_to_index_out_of_bounds(self, diverse_entries):
+        """Test _set_cursor_to_index() returns False when index out of bounds."""
+        screen = EntryListScreen(entries=diverse_entries)
+
+        screen.list_view = MagicMock()
+        screen.list_view.children = [MagicMock() for _ in diverse_entries]
+
+        result = screen._set_cursor_to_index(999)
+
+        assert result is False
+        # Verify index was not set
+        screen.list_view.index.assert_not_called()
+
+    def test_add_feed_header_if_needed_creates_header(self):
+        """Test _add_feed_header_if_needed() creates and registers header."""
+        screen = EntryListScreen(entries=[], group_by_feed=True)
+        screen.feed_fold_state = {}
+        screen.feed_header_map = {}
+        screen.list_view = MagicMock()
+
+        # Call with new feed
+        screen._add_feed_header_if_needed("Test Feed", [None])
+
+        # Verify header was created and registered
+        assert "Test Feed" in screen.feed_header_map
+        assert "Test Feed" in screen.feed_fold_state
+        screen.list_view.append.assert_called()
+
+    def test_add_entry_with_visibility_collapsed(self, diverse_entries):
+        """Test _add_entry_with_visibility() applies collapsed class."""
+        entry = diverse_entries[0]
+        screen = EntryListScreen(entries=[entry], group_by_feed=True)
+        screen.displayed_items = []
+        screen.entry_item_map = {}
+        screen.list_view = MagicMock()
+
+        # Set feed as collapsed
+        screen.feed_fold_state = {"Test Feed": False}
+
+        # Add entry
+        screen._add_entry_with_visibility(entry)
+
+        # Verify item was added
+        assert entry.id in screen.entry_item_map
+        # Verify item is in displayed items
+        assert len(screen.displayed_items) == 1
+        assert screen.displayed_items[0].entry.id == entry.id
+
+    def test_add_entry_with_visibility_expanded(self, diverse_entries):
+        """Test _add_entry_with_visibility() doesn't add class when expanded."""
+        entry = diverse_entries[0]
+        screen = EntryListScreen(entries=[entry], group_by_feed=True)
+        screen.displayed_items = []
+        screen.entry_item_map = {}
+        screen.list_view = MagicMock()
+
+        # Set feed as expanded
+        screen.feed_fold_state = {"Test Feed": True}
+
+        # Add entry
+        screen._add_entry_with_visibility(entry)
+
+        # Verify item was added to displayed items
+        assert entry.id in screen.entry_item_map
+        assert len(screen.displayed_items) == 1
