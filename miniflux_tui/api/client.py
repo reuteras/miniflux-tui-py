@@ -9,7 +9,7 @@ from miniflux import Client as MinifluxClientBase
 
 from miniflux_tui.constants import BACKOFF_FACTOR, MAX_RETRIES
 
-from .models import Category, Entry
+from .models import Category, Entry, Feed
 
 T = TypeVar("T")
 
@@ -255,6 +255,76 @@ class MinifluxClient:
             category_id: ID of the category to delete
         """
         await self._call_with_retry(self.client.delete_category, category_id)
+
+    async def create_feed(
+        self,
+        feed_url: str,
+        category_id: int | None = None,
+    ) -> Feed:
+        """Create a new feed with retry logic (Issue #58 - Feed Management).
+
+        Args:
+            feed_url: URL of the feed to add
+            category_id: Optional category ID to assign feed to
+
+        Returns:
+            The created Feed object
+        """
+        # Build kwargs for create_feed
+        kwargs: dict = {}
+        if category_id is not None:
+            kwargs["category_id"] = category_id
+
+        response = await self._call_with_retry(
+            self.client.create_feed,
+            feed_url,
+            **kwargs,
+        )
+        return Feed.from_dict(response)  # type: ignore[arg-type]
+
+    async def update_feed(
+        self,
+        feed_id: int,
+        **kwargs,
+    ) -> Feed:
+        """Update feed settings with retry logic (Issue #58 - Feed Management).
+
+        Args:
+            feed_id: ID of the feed to update
+            **kwargs: Feed attributes to update (title, category_id, etc.)
+
+        Returns:
+            The updated Feed object
+        """
+        response = await self._call_with_retry(
+            self.client.update_feed,
+            feed_id,
+            **kwargs,
+        )
+        return Feed.from_dict(response)  # type: ignore[arg-type]
+
+    async def get_feed(self, feed_id: int) -> Feed:
+        """Get feed details with retry logic (Issue #58 - Feed Management).
+
+        Args:
+            feed_id: ID of the feed to retrieve
+
+        Returns:
+            The Feed object
+        """
+        response = await self._call_with_retry(
+            self.client.get_feed,
+            feed_id,
+        )
+        return Feed.from_dict(response)  # type: ignore[arg-type]
+
+    async def delete_feed(self, feed_id: int) -> None:
+        """Delete a feed with retry logic (Issue #58 - Feed Management).
+
+        Args:
+            feed_id: ID of the feed to delete
+        """
+        await self._call_with_retry(self.client.delete_feed, feed_id)
 
     async def fetch_original_content(self, entry_id: int) -> str:
         """

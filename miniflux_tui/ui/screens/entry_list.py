@@ -662,6 +662,7 @@ class EntryListScreen(Screen):
 
             # If no visible item found below, stay at current position
         except (IndexError, ValueError, TypeError):
+            # Silently ignore index errors when navigating beyond list bounds
             pass
 
     def action_cursor_up(self):
@@ -684,6 +685,7 @@ class EntryListScreen(Screen):
 
             # If no visible item found above, stay at current position
         except (IndexError, ValueError, TypeError):
+            # Silently ignore index errors when navigating beyond list bounds
             pass
 
     async def action_toggle_read(self):
