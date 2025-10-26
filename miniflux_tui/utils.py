@@ -1,6 +1,30 @@
 """Utility functions and helpers for miniflux-tui."""
 
+import tomllib
 from contextlib import asynccontextmanager
+from pathlib import Path
+
+
+def get_app_version() -> str:
+    """Get application version from pyproject.toml.
+
+    Returns:
+        Version string from pyproject.toml, or "unknown" if not found
+    """
+    try:
+        # Find pyproject.toml in the package directory
+        package_dir = Path(__file__).parent.parent
+        pyproject_path = package_dir / "pyproject.toml"
+
+        if pyproject_path.exists():
+            data = tomllib.loads(pyproject_path.read_text())
+            version = data.get("project", {}).get("version", "unknown")
+            return str(version)
+    except Exception:  # noqa: S110
+        # Fail silently and return "unknown" if version cannot be determined
+        pass
+
+    return "unknown"
 
 
 def get_star_icon(is_starred: bool) -> str:
