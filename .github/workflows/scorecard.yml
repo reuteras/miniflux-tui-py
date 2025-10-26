@@ -34,8 +34,8 @@ jobs:
         with:
           results_file: results.sarif
           results_format: sarif
-          # (Optional) "write" permissions are required to publish results.
-          # Uncomment below to publish results for branch protections to take action.
+          # (Optional) "write" permissions required to publish results.
+          # Uncomment to enable branch protection enforcement.
           publish_results: true
 
       - name: Upload results to code-scanning

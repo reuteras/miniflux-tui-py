@@ -63,7 +63,7 @@ template: |
   # $RELEASE_TITLE
 
   ## Overview
-  This release brings exciting new features, improved test coverage, and better code quality.
+  Exciting new features, improved test coverage, and better code quality.
 
   $CHANGES
 
