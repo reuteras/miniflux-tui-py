@@ -56,7 +56,7 @@ Release Drafter automatically creates a draft release as PRs are labeled and mer
 gh release list --draft
 ```
 
-Or visit: https://github.com/reuteras/miniflux-tui-py/releases
+Or visit: [Releases](https://github.com/reuteras/miniflux-tui-py/releases)
 
 The draft release shows:
 - Organized changes by category
