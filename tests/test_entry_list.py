@@ -1930,6 +1930,7 @@ class TestViewFilteringActions:
         assert screen.filter_starred_only is False
         screen._populate_list.assert_called_once()
 
+
 class TestCategoryGrouping:
     """Test category grouping functionality for Issue #54."""
 

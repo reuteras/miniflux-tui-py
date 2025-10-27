@@ -237,17 +237,19 @@ class TestStatusScreenLoadStatus:
                 mock_client = MagicMock()
                 mock_client.get_version = AsyncMock(return_value={"version": "2.0.50"})
                 mock_client.get_user_info = AsyncMock(return_value={"username": "testuser"})
-                mock_client.get_feeds = AsyncMock(return_value=[
-                    Feed(
-                        id=1,
-                        title="Healthy Feed",
-                        site_url="http://localhost:8080",
-                        feed_url="http://localhost:8080/feed.xml",
-                        parsing_error_message="",
-                        parsing_error_count=0,
-                        disabled=False,
-                    ),
-                ])
+                mock_client.get_feeds = AsyncMock(
+                    return_value=[
+                        Feed(
+                            id=1,
+                            title="Healthy Feed",
+                            site_url="http://localhost:8080",
+                            feed_url="http://localhost:8080/feed.xml",
+                            parsing_error_message="",
+                            parsing_error_count=0,
+                            disabled=False,
+                        ),
+                    ]
+                )
                 mock_client.base_url = "http://localhost:8080"
                 app.client = mock_client  # type: ignore[attr-defined]
 
@@ -275,35 +277,37 @@ class TestStatusScreenLoadStatus:
                 mock_client = MagicMock()
                 mock_client.get_version = AsyncMock(return_value={"version": "2.0.50"})
                 mock_client.get_user_info = AsyncMock(return_value={"username": "testuser"})
-                mock_client.get_feeds = AsyncMock(return_value=[
-                    Feed(
-                        id=1,
-                        title="Healthy Feed",
-                        site_url="http://localhost:8080",
-                        feed_url="http://localhost:8080/feed.xml",
-                        parsing_error_message="",
-                        parsing_error_count=0,
-                        disabled=False,
-                    ),
-                    Feed(
-                        id=2,
-                        title="Error Feed",
-                        site_url="http://localhost:8081",
-                        feed_url="http://localhost:8081/feed.xml",
-                        parsing_error_message="SSL error",
-                        parsing_error_count=3,
-                        disabled=False,
-                    ),
-                    Feed(
-                        id=3,
-                        title="Disabled Feed",
-                        site_url="http://localhost:8082",
-                        feed_url="http://localhost:8082/feed.xml",
-                        parsing_error_message="",
-                        parsing_error_count=0,
-                        disabled=True,
-                    ),
-                ])
+                mock_client.get_feeds = AsyncMock(
+                    return_value=[
+                        Feed(
+                            id=1,
+                            title="Healthy Feed",
+                            site_url="http://localhost:8080",
+                            feed_url="http://localhost:8080/feed.xml",
+                            parsing_error_message="",
+                            parsing_error_count=0,
+                            disabled=False,
+                        ),
+                        Feed(
+                            id=2,
+                            title="Error Feed",
+                            site_url="http://localhost:8081",
+                            feed_url="http://localhost:8081/feed.xml",
+                            parsing_error_message="SSL error",
+                            parsing_error_count=3,
+                            disabled=False,
+                        ),
+                        Feed(
+                            id=3,
+                            title="Disabled Feed",
+                            site_url="http://localhost:8082",
+                            feed_url="http://localhost:8082/feed.xml",
+                            parsing_error_message="",
+                            parsing_error_count=0,
+                            disabled=True,
+                        ),
+                    ]
+                )
                 mock_client.base_url = "http://localhost:8080"
                 app.client = mock_client  # type: ignore[attr-defined]
 

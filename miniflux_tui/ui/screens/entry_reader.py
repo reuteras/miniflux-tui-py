@@ -2,7 +2,7 @@
 
 import traceback
 import webbrowser
-from typing import TYPE_CHECKING, cast
+from typing import TYPE_CHECKING
 
 import html2text
 from textual.app import ComposeResult
@@ -41,6 +41,8 @@ class EntryReaderScreen(Screen):
         Binding("escape", "back", "Back", show=False),
     ]
 
+    app: "MinifluxTUI"
+
     def __init__(
         self,
         entry: Entry,
@@ -57,11 +59,6 @@ class EntryReaderScreen(Screen):
         self.unread_color = unread_color
         self.read_color = read_color
         self.scroll_container = None
-
-    @property
-    def app(self) -> "MinifluxTUI":
-        """Get the app instance with proper type hints."""
-        return cast("MinifluxTUI", super().app)
 
     def compose(self) -> ComposeResult:
         """Create child widgets."""

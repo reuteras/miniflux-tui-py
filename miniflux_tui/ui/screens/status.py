@@ -1,5 +1,7 @@
 """Status screen showing server information and problematic feeds."""
 
+from typing import TYPE_CHECKING
+
 from textual.app import ComposeResult
 from textual.binding import Binding
 from textual.containers import VerticalScroll
@@ -7,6 +9,9 @@ from textual.screen import Screen
 from textual.widgets import Footer, Header, Static
 
 from miniflux_tui.api.models import Feed
+
+if TYPE_CHECKING:
+    from miniflux_tui.ui.app import MinifluxTUI
 
 
 class StatusScreen(Screen):
@@ -26,6 +31,8 @@ class StatusScreen(Screen):
         self.username: str = "Loading..."
         self.feeds: list[Feed] = []
         self.error_feeds: list[Feed] = []
+
+    app: "MinifluxTUI"
 
     def compose(self) -> ComposeResult:
         """Create child widgets."""
@@ -111,12 +118,12 @@ class StatusScreen(Screen):
         """Update the server information display."""
         try:
             widget = self.query_one("#server-info", Static)
-            text = (
-                f"  Server URL:      {self.server_url}\n"
-                f"  Server Version:  {self.server_version}\n"
-                f"  Username:        {self.username}"
-            )
-            widget.update(text)
+            lines = [
+                f"  Server URL:      {self.server_url}",
+                f"  Server Version:  {self.server_version}",
+                f"  Username:        {self.username}",
+            ]
+            widget.update("\n".join(lines))
         except Exception as e:
             self.app.log(f"Could not update server info: {e}")
 
