@@ -165,19 +165,19 @@ Record approximate times for these operations (for performance regression tracki
 List any new features introduced in this release and verify they work:
 
 1. Feature: ______________________________
-    - [ ] Works as designed
-    - [ ] Documented
-    - [ ] Tested
+  - [ ] Works as designed
+  - [ ] Documented
+  - [ ] Tested
 
 2. Feature: ______________________________
-    - [ ] Works as designed
-    - [ ] Documented
-    - [ ] Tested
+  - [ ] Works as designed
+  - [ ] Documented
+  - [ ] Tested
 
 3. Feature: ______________________________
-    - [ ] Works as designed
-    - [ ] Documented
-    - [ ] Tested
+  - [ ] Works as designed
+  - [ ] Documented
+  - [ ] Tested
 
 ---
 
@@ -186,12 +186,12 @@ List any new features introduced in this release and verify they work:
 If fixing critical bugs, verify the original issue is resolved:
 
 1. Issue #____: ______________________________
-    - [ ] Original bug no longer occurs
-    - [ ] Fix doesn't introduce new issues
+   - [ ] Original bug no longer occurs
+   - [ ] Fix doesn't introduce new issues
 
 2. Issue #____: ______________________________
-    - [ ] Original bug no longer occurs
-    - [ ] Fix doesn't introduce new issues
+   - [ ] Original bug no longer occurs
+   - [ ] Fix doesn't introduce new issues
 
 ---
 
@@ -226,9 +226,9 @@ If fixing critical bugs, verify the original issue is resolved:
 3.
 
 ### Notes
-_______________________________________________________________________________
-_______________________________________________________________________________
-_______________________________________________________________________________
+---
+---
+---
 
 ---
 
@@ -254,3 +254,4 @@ Maintainer: ______________________ Date: __________
 - ✅ **Critical**: Must pass for release
 - ⚠️ **Major**: Should pass for release
 - ℹ️ **Optional**: Good to verify but not blocking
+
