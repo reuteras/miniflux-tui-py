@@ -16,7 +16,7 @@ from .screens.entry_list import EntryListScreen
 from .screens.help import HelpScreen
 
 if TYPE_CHECKING:
-    from .screens.entry_reader import EntryReaderScreen  # noqa: F401
+    from .screens.entry_reader import EntryReaderScreen
 
 
 class MinifluxTUI(App):
@@ -207,9 +207,9 @@ class MinifluxTUI(App):
             current_index: Current position in the entry list
         """
         entry_reader_module = import_module("miniflux_tui.ui.screens.entry_reader")
-        EntryReaderScreen = entry_reader_module.EntryReaderScreen
+        entry_reader_cls = entry_reader_module.EntryReaderScreen
 
-        reader_screen: "EntryReaderScreen" = EntryReaderScreen(
+        reader_screen: EntryReaderScreen = entry_reader_cls(
             entry=entry,
             entry_list=entry_list or self.entries,
             current_index=current_index,
