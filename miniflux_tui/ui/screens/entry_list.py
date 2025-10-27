@@ -124,6 +124,8 @@ class EntryListScreen(Screen):
         Binding("q", "quit", "Quit"),
     ]
 
+    app: "MinifluxTUI"
+
     def __init__(
         self,
         entries: list[Entry],
@@ -161,11 +163,6 @@ class EntryListScreen(Screen):
         self.last_highlighted_category: str | None = None  # Track last highlighted category for position persistence
         self.last_highlighted_entry_id: int | None = None  # Track last highlighted entry ID for position
         self.last_cursor_index: int = 0  # Track cursor position for non-grouped mode
-
-    @property
-    def app(self) -> "MinifluxTUI":
-        """Get the app instance with proper type hints."""
-        return cast("MinifluxTUI", super().app)
 
     def compose(self) -> ComposeResult:
         """Create child widgets."""

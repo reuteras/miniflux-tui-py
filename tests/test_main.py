@@ -110,9 +110,7 @@ class TestMainNormalStartup:
         """Test normal startup with valid configuration."""
         mock_config = MagicMock()
 
-        with patch("miniflux_tui.main.load_config") as mock_load, patch(
-            "miniflux_tui.main.run_tui", new=AsyncMock()
-        ) as mock_run:
+        with patch("miniflux_tui.main.load_config") as mock_load, patch("miniflux_tui.main.run_tui", new=AsyncMock()) as mock_run:
             mock_load.return_value = mock_config
             with patch.object(sys, "argv", ["miniflux-tui"]):
                 result = main()
@@ -140,9 +138,10 @@ class TestMainNormalStartup:
         """Test graceful exit on KeyboardInterrupt."""
         mock_config = MagicMock()
 
-        with patch("miniflux_tui.main.load_config") as mock_load, patch(
-            "miniflux_tui.main.run_tui", new=AsyncMock(side_effect=KeyboardInterrupt)
-        ) as mock_run:
+        with (
+            patch("miniflux_tui.main.load_config") as mock_load,
+            patch("miniflux_tui.main.run_tui", new=AsyncMock(side_effect=KeyboardInterrupt)) as mock_run,
+        ):
             mock_load.return_value = mock_config
             with patch.object(sys, "argv", ["miniflux-tui"]):
                 result = main()
@@ -156,9 +155,10 @@ class TestMainNormalStartup:
         """Test error handling for runtime exceptions."""
         mock_config = MagicMock()
 
-        with patch("miniflux_tui.main.load_config") as mock_load, patch(
-            "miniflux_tui.main.run_tui", new=AsyncMock(side_effect=RuntimeError("Connection failed"))
-        ) as mock_run:
+        with (
+            patch("miniflux_tui.main.load_config") as mock_load,
+            patch("miniflux_tui.main.run_tui", new=AsyncMock(side_effect=RuntimeError("Connection failed"))) as mock_run,
+        ):
             mock_load.return_value = mock_config
             with patch.object(sys, "argv", ["miniflux-tui"]):
                 result = main()
@@ -209,9 +209,7 @@ class TestMainArgumentParsing:
 
         with patch("miniflux_tui.main.load_config") as mock_load:
             mock_load.return_value = mock_config
-            with patch("miniflux_tui.main.run_tui", new=AsyncMock()) as mock_run, patch.object(
-                sys, "argv", ["miniflux-tui"]
-            ):
+            with patch("miniflux_tui.main.run_tui", new=AsyncMock()) as mock_run, patch.object(sys, "argv", ["miniflux-tui"]):
                 result = main()
         assert result == 0
         mock_run.assert_awaited_once_with(mock_config)
