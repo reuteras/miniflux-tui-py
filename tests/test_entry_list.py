@@ -2174,3 +2174,273 @@ class TestNavigationActions:
             screen.action_quit()
 
         mock_app.exit.assert_called_once()
+
+
+class TestFeedHeaderSelection:
+    """Test selecting feed headers in grouped mode."""
+
+    @pytest.fixture
+    def grouped_entries(self):
+        """Create entries from multiple feeds for grouping tests."""
+        feed1 = Feed(
+            id=1,
+            title="Feed A",
+            site_url="http://localhost:8082",
+            feed_url="http://localhost:8082/feed.xml",
+        )
+        feed2 = Feed(
+            id=2,
+            title="Feed B",
+            site_url="http://localhost:8083",
+            feed_url="http://localhost:8083/feed.xml",
+        )
+        return [
+            Entry(
+                id=1,
+                feed_id=1,
+                title="Entry 1",
+                url="http://localhost:8082/1",
+                content="Content 1",
+                feed=feed1,
+                status="unread",
+                starred=False,
+                published_at=datetime(2025, 1, 1, 12, 0, 0, tzinfo=UTC),
+            ),
+            Entry(
+                id=2,
+                feed_id=1,
+                title="Entry 2",
+                url="http://localhost:8082/2",
+                content="Content 2",
+                feed=feed1,
+                status="read",
+                starred=False,
+                published_at=datetime(2025, 1, 1, 11, 0, 0, tzinfo=UTC),
+            ),
+            Entry(
+                id=3,
+                feed_id=2,
+                title="Entry 3",
+                url="http://localhost:8083/1",
+                content="Content 3",
+                feed=feed2,
+                status="unread",
+                starred=False,
+                published_at=datetime(2025, 1, 1, 10, 0, 0, tzinfo=UTC),
+            ),
+        ]
+
+    def test_on_list_view_selected_with_feed_header_opens_first_entry(self, grouped_entries):
+        """Test that selecting a feed header opens the first entry in that feed."""
+        from miniflux_tui.ui.screens.entry_list import FeedHeaderItem  # noqa: PLC0415
+
+        screen = EntryListScreen(entries=grouped_entries, group_by_feed=True)
+        screen.sorted_entries = grouped_entries
+        mock_app = MagicMock()
+        mock_event = MagicMock()
+
+        # Create a mock FeedHeaderItem for Feed A
+        feed_header = FeedHeaderItem("Feed A")
+        mock_event.item = feed_header
+
+        with patch.object(type(screen), "app", new_callable=lambda: property(lambda _: mock_app)):
+            screen.on_list_view_selected(mock_event)
+
+        # Should call push_entry_reader with the first entry of Feed A
+        mock_app.push_entry_reader.assert_called_once()
+        call_args = mock_app.push_entry_reader.call_args
+        assert call_args.kwargs["entry"].id == 1  # First entry in Feed A
+        assert call_args.kwargs["current_index"] == 0
+
+    def test_on_list_view_selected_with_feed_header_second_feed(self, grouped_entries):
+        """Test selecting a feed header for second feed."""
+        from miniflux_tui.ui.screens.entry_list import FeedHeaderItem  # noqa: PLC0415
+
+        screen = EntryListScreen(entries=grouped_entries, group_by_feed=True)
+        screen.sorted_entries = grouped_entries
+        mock_app = MagicMock()
+        mock_event = MagicMock()
+
+        # Create a mock FeedHeaderItem for Feed B
+        feed_header = FeedHeaderItem("Feed B")
+        mock_event.item = feed_header
+
+        with patch.object(type(screen), "app", new_callable=lambda: property(lambda _: mock_app)):
+            screen.on_list_view_selected(mock_event)
+
+        # Should call push_entry_reader with the first (only) entry of Feed B
+        mock_app.push_entry_reader.assert_called_once()
+        call_args = mock_app.push_entry_reader.call_args
+        assert call_args.kwargs["entry"].id == 3  # Only entry in Feed B
+        assert call_args.kwargs["current_index"] == 2  # Index in sorted_entries
+
+
+class TestFeedSortOrder:
+    """Test feed sort mode now sorts A-Z instead of Z-A."""
+
+    @pytest.fixture
+    def unsorted_entries(self):
+        """Create entries from feeds with different names to test sorting."""
+        feed_z = Feed(
+            id=1,
+            title="Zebra News",
+            site_url="http://localhost:8082",
+            feed_url="http://localhost:8082/feed.xml",
+        )
+        feed_a = Feed(
+            id=2,
+            title="Apple Daily",
+            site_url="http://localhost:8083",
+            feed_url="http://localhost:8083/feed.xml",
+        )
+        feed_m = Feed(
+            id=3,
+            title="Monkey Biz",
+            site_url="http://localhost:8084",
+            feed_url="http://localhost:8084/feed.xml",
+        )
+        return [
+            Entry(
+                id=1,
+                feed_id=1,
+                title="Old Zebra Article",
+                url="http://localhost:8082/1",
+                content="Content",
+                feed=feed_z,
+                status="unread",
+                starred=False,
+                published_at=datetime(2025, 1, 1, 8, 0, 0, tzinfo=UTC),
+            ),
+            Entry(
+                id=2,
+                feed_id=1,
+                title="New Zebra Article",
+                url="http://localhost:8082/2",
+                content="Content",
+                feed=feed_z,
+                status="unread",
+                starred=False,
+                published_at=datetime(2025, 1, 1, 10, 0, 0, tzinfo=UTC),
+            ),
+            Entry(
+                id=3,
+                feed_id=2,
+                title="Apple Article",
+                url="http://localhost:8083/1",
+                content="Content",
+                feed=feed_a,
+                status="unread",
+                starred=False,
+                published_at=datetime(2025, 1, 1, 9, 0, 0, tzinfo=UTC),
+            ),
+            Entry(
+                id=4,
+                feed_id=3,
+                title="Monkey Article",
+                url="http://localhost:8084/1",
+                content="Content",
+                feed=feed_m,
+                status="unread",
+                starred=False,
+                published_at=datetime(2025, 1, 1, 7, 0, 0, tzinfo=UTC),
+            ),
+        ]
+
+    def test_sort_entries_feed_mode_sorts_a_to_z(self, unsorted_entries):
+        """Test that feed sort mode sorts feeds alphabetically A-Z."""
+        screen = EntryListScreen(entries=unsorted_entries, default_sort="feed")
+        screen.current_sort = "feed"
+
+        sorted_entries = screen._sort_entries(unsorted_entries)
+
+        # Should be sorted by feed name (A-Z): Apple, Monkey, Zebra
+        feed_names = [entry.feed.title for entry in sorted_entries]
+        assert feed_names == ["Apple Daily", "Monkey Biz", "Zebra News", "Zebra News"]
+
+    def test_sort_entries_feed_mode_newest_first_within_each_feed(self, unsorted_entries):
+        """Test that within each feed, entries are sorted newest first."""
+        screen = EntryListScreen(entries=unsorted_entries, default_sort="feed")
+        screen.current_sort = "feed"
+
+        sorted_entries = screen._sort_entries(unsorted_entries)
+
+        # Within Zebra feed, newer article (id=2) should come before older (id=1)
+        zebra_entries = [e for e in sorted_entries if e.feed.title == "Zebra News"]
+        assert zebra_entries[0].id == 2  # New Zebra Article
+        assert zebra_entries[1].id == 1  # Old Zebra Article
+
+    def test_sort_entries_feed_mode_case_insensitive(self, unsorted_entries):
+        """Test that feed sort is case-insensitive."""
+        feed_lower = Feed(
+            id=4,
+            title="apple core",
+            site_url="http://localhost:8085",
+            feed_url="http://localhost:8085/feed.xml",
+        )
+        entry_lower = Entry(
+            id=5,
+            feed_id=4,
+            title="Apple Entry",
+            url="http://localhost:8085/1",
+            content="Content",
+            feed=feed_lower,
+            status="unread",
+            starred=False,
+            published_at=datetime(2025, 1, 1, 6, 0, 0, tzinfo=UTC),
+        )
+        entries = [*unsorted_entries, entry_lower]
+
+        screen = EntryListScreen(entries=entries, default_sort="feed")
+        screen.current_sort = "feed"
+
+        sorted_entries = screen._sort_entries(entries)
+
+        # Both Apple feeds should be grouped together (case-insensitive sorting)
+        feed_names = [entry.feed.title for entry in sorted_entries]
+        # All Apple entries should come before Monkey
+        apple_indices = [i for i, name in enumerate(feed_names) if "apple" in name.lower()]
+        monkey_index = feed_names.index("Monkey Biz")
+        assert all(i < monkey_index for i in apple_indices)
+
+
+class TestExpandAllWithToggle:
+    """Test Shift+G now enables grouping if needed."""
+
+    def test_action_expand_all_without_grouping_toggles_group_first(self, diverse_entries):
+        """Test that Shift+G enables grouping if not already enabled."""
+        screen = EntryListScreen(entries=diverse_entries)
+        screen.group_by_feed = False  # Not grouped
+        screen.list_view = MagicMock()
+        screen.action_toggle_group = MagicMock()
+
+        screen.action_expand_all()
+
+        # Should call action_toggle_group to enable grouping
+        screen.action_toggle_group.assert_called_once()
+
+    def test_action_expand_all_with_grouping_skips_toggle(self, diverse_entries):
+        """Test that when already grouped, expand_all doesn't toggle."""
+        screen = EntryListScreen(entries=diverse_entries, group_by_feed=True)
+        screen.list_view = MagicMock()
+        screen.feed_fold_state = {"Feed A": False}
+        screen._set_feed_fold_state = MagicMock()
+        screen.notify = MagicMock()
+        screen.action_toggle_group = MagicMock()
+
+        screen.action_expand_all()
+
+        # Should NOT call toggle_group since already grouped
+        screen.action_toggle_group.assert_not_called()
+        # Should expand the feeds
+        screen._set_feed_fold_state.assert_called_once()
+
+    def test_action_expand_all_without_list_view_returns_early(self, diverse_entries):
+        """Test that expand_all returns early if no list_view."""
+        screen = EntryListScreen(entries=diverse_entries)
+        screen.list_view = None
+        screen.action_toggle_group = MagicMock()
+
+        screen.action_expand_all()
+
+        # Should return early without calling toggle
+        screen.action_toggle_group.assert_not_called()

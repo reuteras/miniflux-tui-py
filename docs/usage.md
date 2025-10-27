@@ -31,7 +31,7 @@ The main screen is divided into three sections:
 
 | Key | Action |
 |-----|--------|
-| `Enter` | Open the selected entry for reading |
+| `Enter` | Open the selected entry for reading (or first entry in feed if on feed header) |
 | `J` | Next entry (when reading) |
 | `K` | Previous entry (when reading) |
 
@@ -64,8 +64,8 @@ When you read an entry, it's automatically marked as read when you navigate away
 Press `s` to cycle through sort modes:
 
 - **Date** - Newest entries first (default)
-- **Feed** - Alphabetically by feed name, then by date
-- **Status** - Unread entries first, then by date
+- **Feed** - Alphabetically by feed name (A-Z), then by date within each feed (newest first)
+- **Status** - Unread entries first, then by date (oldest first)
 
 ### Group by Feed
 
@@ -98,6 +98,8 @@ When in grouped mode (`g` to toggle):
 | `o` | Toggle expansion of the highlighted feed |
 | `→` | Expand the highlighted feed (alternative) |
 | `←` | Collapse the highlighted feed (alternative) |
+| `Shift+G` | Enable grouping by feed and expand all feeds |
+| `Shift+Z` | Collapse all feeds |
 
 ## Refreshing
 

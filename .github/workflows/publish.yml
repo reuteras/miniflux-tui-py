@@ -77,7 +77,7 @@ jobs:
           path: dist/
 
       - name: Publish to PyPI
-        uses: pypa/gh-action-pypi-publish@release/v1
+        uses: pypa/gh-action-pypi-publish@ed0c53931b1dc9bd32cbe73a98c7f6766f8a527e # release/v1
         with:
           packages-dir: dist/
 
@@ -105,7 +105,7 @@ jobs:
           path: dist/
 
       - name: Generate SLSA provenance
-        uses: slsa-framework/slsa-github-generator@v2.0.0
+        uses: slsa-framework/slsa-github-generator@5a775b367a56d5bd118a224a811bba288150a563 # v2.0.0
         with:
           base64-subjects: ${{ hashFiles('dist/**') }}
           upload-assets: true
