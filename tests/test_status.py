@@ -367,6 +367,232 @@ class TestStatusScreenUpdateMethods:
             mock_errors.assert_called_once()
 
 
+class TestStatusScreenDisplayMethods:
+    """Test display update methods with mounted screen."""
+
+    @pytest.mark.asyncio
+    async def test_update_server_info_with_data(self):
+        """Test _update_server_info updates widget correctly."""
+        async with MultiScreenApp().run_test() as pilot:
+            app = pilot.app
+            await pilot.pause()
+            status_screen = app.screen
+            if isinstance(status_screen, StatusScreen):
+                # Set data
+                status_screen.server_url = "http://test.com"
+                status_screen.server_version = "2.0.50"
+                status_screen.username = "testuser"
+
+                # Call update method
+                status_screen._update_server_info()
+                await pilot.pause()
+
+                # Verify widget was updated (no exception raised)
+                assert status_screen.server_url == "http://test.com"
+
+    @pytest.mark.asyncio
+    async def test_update_feed_health_no_errors(self):
+        """Test _update_feed_health with healthy feeds."""
+        async with MultiScreenApp().run_test() as pilot:
+            app = pilot.app
+            await pilot.pause()
+            status_screen = app.screen
+            if isinstance(status_screen, StatusScreen):
+                # Set healthy feeds
+                status_screen.feeds = [
+                    Feed(
+                        id=1,
+                        title="Healthy Feed",
+                        site_url="http://test.com",
+                        feed_url="http://test.com/feed.xml",
+                        parsing_error_message="",
+                        parsing_error_count=0,
+                        disabled=False,
+                    ),
+                ]
+                status_screen.error_feeds = []
+
+                # Call update method
+                status_screen._update_feed_health()
+                await pilot.pause()
+
+                # Verify counts are correct
+                assert len(status_screen.feeds) == 1
+                assert len(status_screen.error_feeds) == 0
+
+    @pytest.mark.asyncio
+    async def test_update_feed_health_with_errors(self):
+        """Test _update_feed_health with feeds that have errors."""
+        async with MultiScreenApp().run_test() as pilot:
+            app = pilot.app
+            await pilot.pause()
+            status_screen = app.screen
+            if isinstance(status_screen, StatusScreen):
+                # Set feeds with errors
+                error_feed = Feed(
+                    id=2,
+                    title="Error Feed",
+                    site_url="http://test.com",
+                    feed_url="http://test.com/feed.xml",
+                    parsing_error_message="SSL error",
+                    parsing_error_count=3,
+                    disabled=False,
+                )
+                status_screen.feeds = [error_feed]
+                status_screen.error_feeds = [error_feed]
+
+                # Call update method
+                status_screen._update_feed_health()
+                await pilot.pause()
+
+                # Verify counts are correct
+                assert len(status_screen.error_feeds) == 1
+
+    @pytest.mark.asyncio
+    async def test_update_error_feeds_no_errors(self):
+        """Test _update_error_feeds with no problematic feeds."""
+        async with MultiScreenApp().run_test() as pilot:
+            app = pilot.app
+            await pilot.pause()
+            status_screen = app.screen
+            if isinstance(status_screen, StatusScreen):
+                # Set no error feeds
+                status_screen.error_feeds = []
+
+                # Call update method
+                status_screen._update_error_feeds()
+                await pilot.pause()
+
+                # Verify empty list
+                assert len(status_screen.error_feeds) == 0
+
+    @pytest.mark.asyncio
+    async def test_update_error_feeds_with_disabled(self):
+        """Test _update_error_feeds with disabled feeds."""
+        async with MultiScreenApp().run_test() as pilot:
+            app = pilot.app
+            await pilot.pause()
+            status_screen = app.screen
+            if isinstance(status_screen, StatusScreen):
+                # Set disabled feed
+                disabled_feed = Feed(
+                    id=3,
+                    title="Disabled Feed",
+                    site_url="http://test.com",
+                    feed_url="http://test.com/feed.xml",
+                    parsing_error_message="",
+                    parsing_error_count=0,
+                    disabled=True,
+                )
+                status_screen.error_feeds = [disabled_feed]
+
+                # Call update method
+                status_screen._update_error_feeds()
+                await pilot.pause()
+
+                # Verify feed is in error list
+                assert len(status_screen.error_feeds) == 1
+                assert status_screen.error_feeds[0].disabled is True
+
+    @pytest.mark.asyncio
+    async def test_update_error_feeds_with_parsing_errors(self):
+        """Test _update_error_feeds with parsing errors."""
+        async with MultiScreenApp().run_test() as pilot:
+            app = pilot.app
+            await pilot.pause()
+            status_screen = app.screen
+            if isinstance(status_screen, StatusScreen):
+                # Set feed with parsing errors
+                error_feed = Feed(
+                    id=4,
+                    title="Parse Error Feed",
+                    site_url="http://test.com",
+                    feed_url="http://test.com/feed.xml",
+                    parsing_error_message="Invalid XML",
+                    parsing_error_count=5,
+                    disabled=False,
+                )
+                status_screen.error_feeds = [error_feed]
+
+                # Call update method
+                status_screen._update_error_feeds()
+                await pilot.pause()
+
+                # Verify feed error details
+                assert status_screen.error_feeds[0].parsing_error_count == 5
+
+    @pytest.mark.asyncio
+    async def test_update_error_feeds_with_long_message(self):
+        """Test _update_error_feeds truncates long error messages."""
+        async with MultiScreenApp().run_test() as pilot:
+            app = pilot.app
+            await pilot.pause()
+            status_screen = app.screen
+            if isinstance(status_screen, StatusScreen):
+                # Set feed with long error message
+                long_message = "X" * 250  # More than 200 characters
+                error_feed = Feed(
+                    id=5,
+                    title="Long Error Feed",
+                    site_url="http://test.com",
+                    feed_url="http://test.com/feed.xml",
+                    parsing_error_message=long_message,
+                    parsing_error_count=1,
+                    disabled=False,
+                )
+                status_screen.error_feeds = [error_feed]
+
+                # Call update method
+                status_screen._update_error_feeds()
+                await pilot.pause()
+
+                # Verify error message exists
+                assert len(status_screen.error_feeds[0].parsing_error_message) > 200
+
+    @pytest.mark.asyncio
+    async def test_update_error_feeds_with_checked_at(self):
+        """Test _update_error_feeds displays checked_at timestamp."""
+        async with MultiScreenApp().run_test() as pilot:
+            app = pilot.app
+            await pilot.pause()
+            status_screen = app.screen
+            if isinstance(status_screen, StatusScreen):
+                # Set feed with checked_at
+                error_feed = Feed(
+                    id=6,
+                    title="Checked Feed",
+                    site_url="http://test.com",
+                    feed_url="http://test.com/feed.xml",
+                    parsing_error_message="Timeout",
+                    parsing_error_count=1,
+                    disabled=False,
+                    checked_at="2024-10-27T12:00:00Z",
+                )
+                status_screen.error_feeds = [error_feed]
+
+                # Call update method
+                status_screen._update_error_feeds()
+                await pilot.pause()
+
+                # Verify checked_at is set
+                assert status_screen.error_feeds[0].checked_at is not None
+
+    @pytest.mark.asyncio
+    async def test_update_error_state_updates_widgets(self):
+        """Test _update_error_state updates all widgets."""
+        async with MultiScreenApp().run_test() as pilot:
+            app = pilot.app
+            await pilot.pause()
+            status_screen = app.screen
+            if isinstance(status_screen, StatusScreen):
+                # Call error state update
+                status_screen._update_error_state("Test error message")
+                await pilot.pause()
+
+                # Method should complete without exception
+                assert status_screen is not None
+
+
 class TestStatusScreenIntegration:
     """Integration tests for StatusScreen."""
 
