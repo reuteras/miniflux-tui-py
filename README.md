@@ -1,7 +1,7 @@
 # miniflux-tui-py
 
 <div align="center">
-  <img src="assets/logo-256.png" alt="miniflux-tui-py logo" width="128" height="128">
+  <img src="https://raw.githubusercontent.com/reuteras/miniflux-tui-py/main/assets/logo-256.png" alt="miniflux-tui-py logo" width="128" height="128">
 </div>
 
 [![PyPI version](https://badge.fury.io/py/miniflux-tui-py.svg)](https://badge.fury.io/py/miniflux-tui-py)
