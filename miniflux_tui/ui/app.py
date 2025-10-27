@@ -1,6 +1,7 @@
 """Main TUI application."""
 
 import traceback
+from importlib import import_module
 from typing import TYPE_CHECKING
 
 from textual.app import App
@@ -205,9 +206,10 @@ class MinifluxTUI(App):
             entry_list: Full list of entries for navigation
             current_index: Current position in the entry list
         """
-        from .screens.entry_reader import EntryReaderScreen
+        entry_reader_module = import_module("miniflux_tui.ui.screens.entry_reader")
+        EntryReaderScreen = entry_reader_module.EntryReaderScreen
 
-        reader_screen = EntryReaderScreen(
+        reader_screen: "EntryReaderScreen" = EntryReaderScreen(
             entry=entry,
             entry_list=entry_list or self.entries,
             current_index=current_index,
