@@ -85,7 +85,7 @@ During release, you see:
 **Coverage Issues:**
 - If coverage is below threshold, add more tests
 - Focus on uncovered lines in the failing module
-- See [Test Coverage Expansion](../CLAUDE.md) for details
+- See [Agent guide: Testing & quality](https://github.com/reuteras/miniflux-tui-py/blob/main/AGENT.md#testing--quality) for additional tips
 
 ---
 
@@ -414,9 +414,9 @@ git push origin main
 
 ## Getting Help
 
-- **Release documentation**: See [RELEASE.md](../RELEASE.md)
+- **Release documentation**: See [RELEASE.md](https://github.com/reuteras/miniflux-tui-py/blob/main/RELEASE.md)
 - **Contributing guide**: See [CONTRIBUTING.md](./contributing.md)
-- **Project README**: See [README.md](../README.md)
+- **Project README**: See [README.md](https://github.com/reuteras/miniflux-tui-py/blob/main/README.md)
 - **GitHub Issues**: <https://github.com/reuteras/miniflux-tui-py/issues>
 
 If you encounter an issue not covered here, please open a GitHub issue with:

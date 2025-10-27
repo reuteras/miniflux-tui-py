@@ -115,7 +115,7 @@ If you discover a security vulnerability, please report it responsibly:
 - Potential impact
 - Suggested fix (if available)
 
-See [SECURITY.md](../SECURITY.md) for more details.
+See the [full security policy](https://github.com/reuteras/miniflux-tui-py/blob/main/SECURITY.md) for more details.
 
 ## Development Security Practices
 
