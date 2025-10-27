@@ -2203,7 +2203,7 @@ class TestFeedHeaderSelection:
                 feed=feed1,
                 status="unread",
                 starred=False,
-                published_at=datetime(2025, 1, 1, 12, 0, 0),
+                published_at=datetime(2025, 1, 1, 12, 0, 0, tzinfo=UTC),
             ),
             Entry(
                 id=2,
@@ -2214,7 +2214,7 @@ class TestFeedHeaderSelection:
                 feed=feed1,
                 status="read",
                 starred=False,
-                published_at=datetime(2025, 1, 1, 11, 0, 0),
+                published_at=datetime(2025, 1, 1, 11, 0, 0, tzinfo=UTC),
             ),
             Entry(
                 id=3,
@@ -2225,13 +2225,13 @@ class TestFeedHeaderSelection:
                 feed=feed2,
                 status="unread",
                 starred=False,
-                published_at=datetime(2025, 1, 1, 10, 0, 0),
+                published_at=datetime(2025, 1, 1, 10, 0, 0, tzinfo=UTC),
             ),
         ]
 
     def test_on_list_view_selected_with_feed_header_opens_first_entry(self, grouped_entries):
         """Test that selecting a feed header opens the first entry in that feed."""
-        from miniflux_tui.ui.screens.entry_list import FeedHeaderItem
+        from miniflux_tui.ui.screens.entry_list import FeedHeaderItem  # noqa: PLC0415
 
         screen = EntryListScreen(entries=grouped_entries, group_by_feed=True)
         screen.sorted_entries = grouped_entries
@@ -2253,7 +2253,7 @@ class TestFeedHeaderSelection:
 
     def test_on_list_view_selected_with_feed_header_second_feed(self, grouped_entries):
         """Test selecting a feed header for second feed."""
-        from miniflux_tui.ui.screens.entry_list import FeedHeaderItem
+        from miniflux_tui.ui.screens.entry_list import FeedHeaderItem  # noqa: PLC0415
 
         screen = EntryListScreen(entries=grouped_entries, group_by_feed=True)
         screen.sorted_entries = grouped_entries
@@ -2308,7 +2308,7 @@ class TestFeedSortOrder:
                 feed=feed_z,
                 status="unread",
                 starred=False,
-                published_at=datetime(2025, 1, 1, 8, 0, 0),  # Oldest
+                published_at=datetime(2025, 1, 1, 8, 0, 0, tzinfo=UTC),
             ),
             Entry(
                 id=2,
@@ -2319,7 +2319,7 @@ class TestFeedSortOrder:
                 feed=feed_z,
                 status="unread",
                 starred=False,
-                published_at=datetime(2025, 1, 1, 10, 0, 0),  # Newest in Zebra
+                published_at=datetime(2025, 1, 1, 10, 0, 0, tzinfo=UTC),
             ),
             Entry(
                 id=3,
@@ -2330,7 +2330,7 @@ class TestFeedSortOrder:
                 feed=feed_a,
                 status="unread",
                 starred=False,
-                published_at=datetime(2025, 1, 1, 9, 0, 0),
+                published_at=datetime(2025, 1, 1, 9, 0, 0, tzinfo=UTC),
             ),
             Entry(
                 id=4,
@@ -2341,7 +2341,7 @@ class TestFeedSortOrder:
                 feed=feed_m,
                 status="unread",
                 starred=False,
-                published_at=datetime(2025, 1, 1, 7, 0, 0),
+                published_at=datetime(2025, 1, 1, 7, 0, 0, tzinfo=UTC),
             ),
         ]
 
@@ -2385,9 +2385,9 @@ class TestFeedSortOrder:
             feed=feed_lower,
             status="unread",
             starred=False,
-            published_at=datetime(2025, 1, 1, 6, 0, 0),
+            published_at=datetime(2025, 1, 1, 6, 0, 0, tzinfo=UTC),
         )
-        entries = unsorted_entries + [entry_lower]
+        entries = [*unsorted_entries, entry_lower]
 
         screen = EntryListScreen(entries=entries, default_sort="feed")
         screen.current_sort = "feed"
