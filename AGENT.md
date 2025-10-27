@@ -465,6 +465,166 @@ Major improvements in October 2025:
 - **Manual testing**: Test with different Miniflux instances and feed sizes
 - **Test suite**: Basic pytest coverage in tests/ directory
 
+## Release Process for AI Agents
+
+**⚠️ CRITICAL: AI agents should NEVER manually run releases. Releases are maintainer-only operations.**
+
+### When Releases Happen
+
+Releases are created by project maintainers using the automated release script:
+```bash
+uv run python scripts/release.py
+```
+
+The script automates the entire release workflow:
+1. Runs pre-release checks (tests, linting, type checking)
+2. Updates version in `pyproject.toml`
+3. Auto-generates CHANGELOG.md entries from conventional commits
+4. Creates git commit and tag
+5. Pushes to GitHub, triggering CI/CD
+6. GitHub Actions automatically publishes to PyPI
+
+See [RELEASE.md](RELEASE.md) for complete documentation.
+
+### How AI Agents Can Help
+
+While agents should never release, they can assist with pre-release preparation:
+
+**1. Feature Implementation**
+- Follow conventional commit format: `feat:`, `fix:`, `docs:`, `refactor:`, etc.
+- Include PR numbers in commit messages: `feat: Add feature (#123)`
+- This enables automatic changelog generation
+
+**2. Pre-Release Quality Checks**
+- Ensure all tests pass: `uv run pytest tests --cov=miniflux_tui`
+- Verify linting: `uv run ruff check miniflux_tui tests`
+- Check types: `uv run pyright miniflux_tui tests`
+- Review test coverage (minimum 60% required)
+
+**3. Documentation Updates**
+- Update docstrings for new features
+- Update `docs/` when adding user-facing features
+- Ensure README.md reflects current capabilities
+- Keep code examples up to date
+
+**4. Version Planning**
+When asked about releases, help determine semantic version:
+- **Patch (0.2.1)**: Bug fixes only, no new features
+- **Minor (0.3.0)**: New features, backward compatible
+- **Major (1.0.0)**: Breaking changes
+
+**5. Changelog Preparation**
+- Group commits by type (feat, fix, docs, etc.)
+- Reference relevant issue/PR numbers
+- Highlight breaking changes
+- Note deprecations
+
+### What NOT to Do
+
+**NEVER:**
+- ❌ Run `scripts/release.py` directly
+- ❌ Manually edit version in `pyproject.toml` for release
+- ❌ Create or push git tags
+- ❌ Manually publish to PyPI
+- ❌ Create GitHub releases
+- ❌ Modify release workflows without maintainer approval
+
+### Release Workflow Overview
+
+For reference, here's how the automated release process works:
+
+```mermaid
+graph TD
+    A[Maintainer runs release.py] --> B[Pre-release checks]
+    B --> C[Update version in pyproject.toml]
+    C --> D[Auto-generate CHANGELOG from commits]
+    D --> E[Create commit and tag]
+    E --> F[Push to GitHub]
+    F --> G[GitHub Actions triggers]
+    G --> H[Run tests + build]
+    H --> I[Publish to PyPI via Trusted Publisher]
+    H --> J[Create GitHub Release]
+    H --> K[Generate SLSA provenance]
+```
+
+### CI/CD Pipeline
+
+The publish workflow (`.github/workflows/publish.yml`) is triggered by version tags:
+- Triggers on: `v[0-9]+.[0-9]+.[0-9]+` (e.g., v0.3.0)
+- Runs: Full test suite, linting, type checking
+- Builds: Distribution packages (tar.gz + wheel)
+- Publishes: To PyPI using OpenID Connect (no secrets!)
+- Creates: GitHub Release with artifacts
+- Generates: SLSA provenance for supply chain security
+
+### PyPI Trusted Publisher
+
+The project uses PyPI's Trusted Publisher (OIDC) for secure publishing:
+- No API tokens stored in GitHub secrets
+- Direct authentication from GitHub Actions to PyPI
+- Configured at: <https://pypi.org/account/publishing/>
+- Environment: `pypi`
+- Workflow: `publish.yml`
+
+### Release Checklist Reference
+
+If a maintainer asks for help preparing a release:
+
+**Pre-Release:**
+- [ ] All PRs merged to main
+- [ ] All tests passing: `uv run pytest tests`
+- [ ] Code formatted: `uv run ruff format .`
+- [ ] Linting clean: `uv run ruff check .`
+- [ ] Types valid: `uv run pyright`
+- [ ] Documentation updated
+- [ ] ROADMAP.md reflects current status
+
+**Post-Release (Verification):**
+- [ ] GitHub Actions workflow passed
+- [ ] Release visible on GitHub: <https://github.com/reuteras/miniflux-tui-py/releases>
+- [ ] Package on PyPI: <https://pypi.org/project/miniflux-tui-py/>
+- [ ] Installation works: `pip install miniflux-tui-py --upgrade`
+
+### Conventional Commit Format
+
+The changelog generator relies on conventional commits. Always use this format:
+
+```
+<type>: <description>
+
+<optional detailed description>
+
+<optional footer>
+```
+
+**Types:**
+- `feat`: New features
+- `fix`: Bug fixes
+- `docs`: Documentation changes
+- `style`: Code style (formatting, no logic change)
+- `refactor`: Code refactoring
+- `perf`: Performance improvements
+- `test`: Test additions or fixes
+- `ci`: CI/CD changes
+- `chore`: Maintenance tasks
+
+**Examples:**
+```bash
+feat: Add category filtering to entry list (#42)
+fix: Correct cursor position after feed collapse (#55)
+docs: Update installation instructions for Windows
+refactor: Extract API retry logic into separate function
+test: Add integration tests for feed refresh
+```
+
+### References
+
+- [RELEASE.md](RELEASE.md) - Complete release documentation
+- [CHANGELOG.md](CHANGELOG.md) - Release history
+- [ROADMAP.md](ROADMAP.md) - Planned features by version
+- [scripts/release.py](scripts/release.py) - Automated release script
+- [scripts/changelog_generator.py](scripts/changelog_generator.py) - Changelog automation
+
 ## Troubleshooting
 
 **Keys don't work**: Check bindings list in screen class - must have matching `action_*` method.
