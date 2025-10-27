@@ -243,7 +243,7 @@ This comprehensive checklist covers all features and functions of the miniflux-t
 - [ ] Verify entries reload automatically
 - [ ] Verify notification: "Entries reloaded"
 
-### Error Handling
+### Refresh Error Handling
 - [ ] Disconnect network temporarily
 - [ ] Try to refresh feed
 - [ ] Verify error notification appears
@@ -303,7 +303,7 @@ This comprehensive checklist covers all features and functions of the miniflux-t
 - [ ] Return to entry list
 - [ ] Verify entry shows as unread
 
-### Toggle Star
+### Toggle Star (Reader)
 - [ ] In entry reader, press `*` to star
 - [ ] Verify notification: "Entry starred"
 - [ ] Verify star icon updates in title
@@ -311,7 +311,7 @@ This comprehensive checklist covers all features and functions of the miniflux-t
 - [ ] Verify notification: "Entry unstarred"
 - [ ] Verify star icon updates
 
-### Save Entry
+### Save Entry (Reader)
 - [ ] Press `e` to save entry
 - [ ] Verify notification: "Entry saved: [entry title]"
 - [ ] Note: Requires third-party service configured
