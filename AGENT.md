@@ -589,7 +589,7 @@ If a maintainer asks for help preparing a release:
 
 The changelog generator relies on conventional commits. Always use this format:
 
-```
+```text
 <type>: <description>
 
 <optional detailed description>
@@ -617,7 +617,7 @@ refactor: Extract API retry logic into separate function
 test: Add integration tests for feed refresh
 ```
 
-### References
+### Release Documentation References
 
 - [RELEASE.md](RELEASE.md) - Complete release documentation
 - [CHANGELOG.md](CHANGELOG.md) - Release history
