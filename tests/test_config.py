@@ -88,7 +88,7 @@ class TestValidateConfig:
     def test_config_without_optional_fields(self):
         """Test validation of minimal valid config."""
         config = {
-            "server_url": "https://miniflux.example.com",
+            "server_url": "http://localhost:8080",
             "api_key": "1234567890",
         }
         is_valid, _ = validate_config(config)
@@ -101,7 +101,7 @@ class TestConfigClass:
     def test_config_initialization(self):
         """Test Config class initialization with all parameters."""
         config = Config(
-            server_url="https://miniflux.example.com",
+            server_url="http://localhost:8080",
             api_key="test-api-key-123456",
             allow_invalid_certs=True,
             unread_color="blue",
@@ -111,7 +111,7 @@ class TestConfigClass:
             group_collapsed=True,
         )
 
-        assert config.server_url == "https://miniflux.example.com"
+        assert config.server_url == "http://localhost:8080"
         assert config.api_key == "test-api-key-123456"
         assert config.allow_invalid_certs is True
         assert config.unread_color == "blue"
@@ -123,11 +123,11 @@ class TestConfigClass:
     def test_config_initialization_defaults(self):
         """Test Config class initialization with default parameters."""
         config = Config(
-            server_url="https://miniflux.example.com",
+            server_url="http://localhost:8080",
             api_key="test-api-key-123456",
         )
 
-        assert config.server_url == "https://miniflux.example.com"
+        assert config.server_url == "http://localhost:8080"
         assert config.api_key == "test-api-key-123456"
         assert config.allow_invalid_certs is False
         assert config.unread_color == "cyan"
@@ -140,7 +140,7 @@ class TestConfigClass:
         """Test Config.from_file() with valid config file."""
         config_file = tmp_path / "config.toml"
         config_content = """
-server_url = "https://miniflux.example.com"
+server_url = "http://localhost:8080"
 api_key = "test-api-key-1234567890"
 allow_invalid_certs = true
 
@@ -157,7 +157,7 @@ group_collapsed = false
 
         config = Config.from_file(config_file)
 
-        assert config.server_url == "https://miniflux.example.com"
+        assert config.server_url == "http://localhost:8080"
         assert config.api_key == "test-api-key-1234567890"
         assert config.allow_invalid_certs is True
         assert config.unread_color == "green"
@@ -170,14 +170,14 @@ group_collapsed = false
         """Test Config.from_file() with minimal config file."""
         config_file = tmp_path / "config.toml"
         config_content = """
-server_url = "https://miniflux.example.com"
+server_url = "http://localhost:8080"
 api_key = "test-api-key-1234567890"
 """
         config_file.write_text(config_content)
 
         config = Config.from_file(config_file)
 
-        assert config.server_url == "https://miniflux.example.com"
+        assert config.server_url == "http://localhost:8080"
         assert config.api_key == "test-api-key-1234567890"
         assert config.allow_invalid_certs is False
         assert config.unread_color == "cyan"
@@ -194,7 +194,7 @@ api_key = "test-api-key-1234567890"
         """Test Config.from_file() raises ValueError for invalid config."""
         config_file = tmp_path / "config.toml"
         config_content = """
-server_url = "https://miniflux.example.com"
+server_url = "http://localhost:8080"
 api_key = "short"
 """
         config_file.write_text(config_content)
@@ -206,7 +206,7 @@ api_key = "short"
         """Test Config.from_file() raises ValueError when required field missing."""
         config_file = tmp_path / "config.toml"
         config_content = """
-server_url = "https://miniflux.example.com"
+server_url = "http://localhost:8080"
 """
         config_file.write_text(config_content)
 
@@ -310,7 +310,7 @@ class TestLoadConfig:
         config_dir.mkdir()
         config_file = config_dir / "config.toml"
         config_file.write_text("""
-server_url = "https://miniflux.example.com"
+server_url = "http://localhost:8080"
 api_key = "test-api-key-1234567890"
 """)
 
@@ -319,7 +319,7 @@ api_key = "test-api-key-1234567890"
             config = load_config()
 
             assert config is not None
-            assert config.server_url == "https://miniflux.example.com"
+            assert config.server_url == "http://localhost:8080"
             assert config.api_key == "test-api-key-1234567890"
 
     def test_load_config_not_found(self, tmp_path):
@@ -338,7 +338,7 @@ api_key = "test-api-key-1234567890"
         config_dir.mkdir()
         config_file = config_dir / "config.toml"
         config_file.write_text("""
-server_url = "https://miniflux.example.com"
+server_url = "http://localhost:8080"
 api_key = "test-api-key-1234567890"
 allow_invalid_certs = true
 
@@ -357,7 +357,7 @@ group_collapsed = true
             config = load_config()
 
             assert config is not None
-            assert config.server_url == "https://miniflux.example.com"
+            assert config.server_url == "http://localhost:8080"
             assert config.allow_invalid_certs is True
             assert config.unread_color == "blue"
             assert config.read_color == "red"

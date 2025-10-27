@@ -13,21 +13,21 @@ class TestFeed:
         feed = Feed(
             id=1,
             title="Test Feed",
-            site_url="https://example.com",
-            feed_url="https://example.com/feed.xml",
+            site_url="http://localhost:8080",
+            feed_url="http://localhost:8080/feed.xml",
         )
         assert feed.id == 1
         assert feed.title == "Test Feed"
-        assert feed.site_url == "https://example.com"
-        assert feed.feed_url == "https://example.com/feed.xml"
+        assert feed.site_url == "http://localhost:8080"
+        assert feed.feed_url == "http://localhost:8080/feed.xml"
 
     def test_feed_from_dict(self):
         """Test creating a Feed from dictionary."""
         data = {
             "id": 2,
             "title": "Another Feed",
-            "site_url": "https://blog.example.com",
-            "feed_url": "https://blog.example.com/rss",
+            "site_url": "http://localhost:8081",
+            "feed_url": "http://localhost:8081/rss",
         }
         feed = Feed.from_dict(data)
         assert feed.id == 2
@@ -43,7 +43,7 @@ class TestEntry:
             id=1,
             feed_id=1,
             title="Test Entry",
-            url="https://example.com/article",
+            url="http://localhost:8080/article",
             content="<p>Content</p>",
             feed=sample_feed,
             status="unread",
@@ -77,13 +77,13 @@ class TestEntry:
             "id": 5,
             "feed_id": 1,
             "title": "From Dict Entry",
-            "url": "https://example.com/test",
+            "url": "http://localhost:8080/test",
             "content": "<p>Test</p>",
             "feed": {
                 "id": 1,
                 "title": "Test Feed",
-                "site_url": "https://example.com",
-                "feed_url": "https://example.com/feed.xml",
+                "site_url": "http://localhost:8080",
+                "feed_url": "http://localhost:8080/feed.xml",
             },
             "status": "read",
             "starred": True,
@@ -112,7 +112,7 @@ class TestEntry:
             id=10,
             feed_id=1,
             title="Entry with Original",
-            url="https://example.com/original",
+            url="http://localhost:8080/original",
             content="<p>Excerpt</p>",
             feed=sample_feed,
             status="unread",

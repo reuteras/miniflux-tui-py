@@ -17,8 +17,8 @@ def sample_feed():
     return Feed(
         id=1,
         title="Test Feed",
-        site_url="https://example.com",
-        feed_url="https://example.com/feed",
+        site_url="http://localhost:8080",
+        feed_url="http://localhost:8080/feed",
     )
 
 
@@ -30,7 +30,7 @@ def sample_entry(sample_feed):
         feed_id=1,
         title="Test Entry",
         content="<p>Test HTML content</p>",
-        url="https://example.com/entry",
+        url="http://localhost:8080/entry",
         published_at=datetime(2023, 1, 1, 12, 0, 0, tzinfo=UTC),
         starred=False,
         status="unread",
@@ -104,7 +104,7 @@ class TestEntryReaderScreenHtmlToMarkdown:
     def test_html_to_markdown_with_links(self, sample_entry):
         """Test conversion preserves links."""
         screen = EntryReaderScreen(entry=sample_entry)
-        html = '<p><a href="https://example.com">Link</a></p>'
+        html = '<p><a href="http://localhost:8080">Link</a></p>'
         markdown = screen._html_to_markdown(html)
         assert isinstance(markdown, str)
         # Should preserve link info
@@ -706,14 +706,14 @@ class TestEntryReaderScreenHelpers:
     def test_html_to_markdown_preserves_links(self, sample_entry):
         """Test HTML to markdown converts links."""
         screen = EntryReaderScreen(entry=sample_entry)
-        html = '<a href="https://example.com">Example</a>'
+        html = '<a href="http://localhost:8080">Example</a>'
         result = screen._html_to_markdown(html)
         assert isinstance(result, str)
 
     def test_html_to_markdown_preserves_images(self, sample_entry):
         """Test HTML to markdown preserves image references."""
         screen = EntryReaderScreen(entry=sample_entry)
-        html = '<img src="https://example.com/image.png" alt="Test">'
+        html = '<img src="http://localhost:8080/image.png" alt="Test">'
         result = screen._html_to_markdown(html)
         assert isinstance(result, str)
 
@@ -737,7 +737,7 @@ class TestEntryReaderScreenIntegration:
                 feed_id=1,
                 title=f"Entry {i}",
                 content=f"Content {i}",
-                url=f"https://example.com/{i}",
+                url=f"http://localhost:8080/{i}",
                 published_at=datetime(2023, 1, i + 1, 12, 0, 0, tzinfo=UTC),
                 starred=False,
                 status="read",
@@ -934,7 +934,7 @@ class TestEntryReaderActionMethods:
             feed_id=1,
             title="Entry 1",
             content="Content 1",
-            url="https://example.com/1",
+            url="http://localhost:8080/1",
             published_at=datetime(2023, 1, 1, 12, 0, 0, tzinfo=UTC),
             starred=False,
             status="read",
@@ -945,7 +945,7 @@ class TestEntryReaderActionMethods:
             feed_id=1,
             title="Entry 2",
             content="Content 2",
-            url="https://example.com/2",
+            url="http://localhost:8080/2",
             published_at=datetime(2023, 1, 2, 12, 0, 0, tzinfo=UTC),
             starred=False,
             status="read",
@@ -975,7 +975,7 @@ class TestEntryReaderActionMethods:
             feed_id=1,
             title="Entry 1",
             content="Content 1",
-            url="https://example.com/1",
+            url="http://localhost:8080/1",
             published_at=datetime(2023, 1, 1, 12, 0, 0, tzinfo=UTC),
             starred=False,
             status="read",
@@ -986,7 +986,7 @@ class TestEntryReaderActionMethods:
             feed_id=1,
             title="Entry 2",
             content="Content 2",
-            url="https://example.com/2",
+            url="http://localhost:8080/2",
             published_at=datetime(2023, 1, 2, 12, 0, 0, tzinfo=UTC),
             starred=False,
             status="read",
@@ -1193,7 +1193,7 @@ class TestEntryReaderHelperMethods:
     def test_html_to_markdown_with_links(self, sample_entry):
         """Test _html_to_markdown converts links properly."""
         screen = EntryReaderScreen(entry=sample_entry)
-        html = '<a href="https://example.com">Example Link</a>'
+        html = '<a href="http://localhost:8080">Example Link</a>'
 
         result = screen._html_to_markdown(html)
 

@@ -38,8 +38,8 @@ def test_feed():
     return Feed(
         id=1,
         title="Test Feed",
-        site_url="https://example.com",
-        feed_url="https://example.com/feed.xml",
+        site_url="http://localhost:8080",
+        feed_url="http://localhost:8080/feed.xml",
     )
 
 
@@ -50,7 +50,7 @@ def integration_entry(test_feed):
         id=1,
         feed_id=1,
         title="Integration Test Entry",
-        url="https://example.com/1",
+        url="http://localhost:8080/1",
         content="<p>Test HTML content</p><p>Second paragraph</p>",
         feed=test_feed,
         status="unread",
@@ -67,7 +67,7 @@ def entry_list(test_feed):
             id=1,
             feed_id=1,
             title="First Entry",
-            url="https://example.com/1",
+            url="http://localhost:8080/1",
             content="<p>Entry 1</p>",
             feed=test_feed,
             status="unread",
@@ -78,7 +78,7 @@ def entry_list(test_feed):
             id=2,
             feed_id=1,
             title="Second Entry",
-            url="https://example.com/2",
+            url="http://localhost:8080/2",
             content="<p>Entry 2</p>",
             feed=test_feed,
             status="read",
@@ -89,7 +89,7 @@ def entry_list(test_feed):
             id=3,
             feed_id=1,
             title="Third Entry",
-            url="https://example.com/3",
+            url="http://localhost:8080/3",
             content="<p>Entry 3</p>",
             feed=test_feed,
             status="unread",
@@ -280,7 +280,7 @@ class TestEntryReaderScreenContentDisplay:
             id=1,
             feed_id=1,
             title="Empty Entry",
-            url="https://example.com/1",
+            url="http://localhost:8080/1",
             content="",
             feed=test_feed,
             status="unread",
@@ -303,14 +303,14 @@ class TestEntryReaderScreenContentDisplay:
                 <li>List item 1</li>
                 <li>List item 2</li>
             </ul>
-            <a href="https://example.com">Link</a>
+            <a href="http://localhost:8080">Link</a>
         </div>
         """
         entry = Entry(
             id=1,
             feed_id=1,
             title="Complex Entry",
-            url="https://example.com/1",
+            url="http://localhost:8080/1",
             content=html_content,
             feed=test_feed,
             status="unread",
@@ -362,7 +362,7 @@ class TestEntryReaderScreenStarredEntry:
             id=1,
             feed_id=1,
             title="Starred Entry",
-            url="https://example.com/1",
+            url="http://localhost:8080/1",
             content="<p>Important entry</p>",
             feed=test_feed,
             status="read",
