@@ -15,7 +15,7 @@ from miniflux_tui.ui.app import MinifluxTUI, run_tui
 def sample_config():
     """Create a sample Config for testing."""
     return Config(
-        server_url="https://example.com",
+        server_url="http://localhost:8080",
         api_key="test-key",
         allow_invalid_certs=False,
         unread_color="cyan",
@@ -32,8 +32,8 @@ def sample_feed():
     return Feed(
         id=1,
         title="Test Feed",
-        site_url="https://example.com",
-        feed_url="https://example.com/feed",
+        site_url="http://localhost:8080",
+        feed_url="http://localhost:8080/feed",
     )
 
 
@@ -45,7 +45,7 @@ def sample_entry(sample_feed):
         feed_id=1,
         title="Test Entry",
         content="<p>Test content</p>",
-        url="https://example.com/entry",
+        url="http://localhost:8080/entry",
         published_at=datetime(2023, 1, 1, 12, 0, 0, tzinfo=UTC),
         starred=False,
         status="unread",
@@ -114,7 +114,7 @@ class TestMinifluxTUIPushEntryReader:
                 feed_id=1,
                 title=f"Entry {i}",
                 content=f"Content {i}",
-                url=f"https://example.com/{i}",
+                url=f"http://localhost:8080/{i}",
                 published_at=datetime(2023, 1, i + 1, 12, 0, 0, tzinfo=UTC),
                 starred=False,
                 status="unread",
@@ -493,7 +493,7 @@ class TestMinifluxTUIIntegration:
         """Test app correctly uses config server URL."""
         app = MinifluxTUI(sample_config)
 
-        assert app.config.server_url == "https://example.com"
+        assert app.config.server_url == "http://localhost:8080"
 
     def test_app_current_view_defaults_to_unread(self, sample_config):
         """Test app defaults to unread view."""
@@ -518,7 +518,7 @@ class TestMinifluxTUIIntegration:
                 feed_id=1,
                 title=f"Entry {i}",
                 content=f"Content {i}",
-                url=f"https://example.com/{i}",
+                url=f"http://localhost:8080/{i}",
                 published_at=datetime(2023, 1, i + 1, 12, 0, 0, tzinfo=UTC),
                 starred=False,
                 status="unread",
@@ -553,7 +553,7 @@ class TestThemeConfiguration:
     def test_app_uses_custom_theme_colors(self):
         """Test that app uses custom theme colors from config."""
         custom_config = Config(
-            server_url="https://example.com",
+            server_url="http://localhost:8080",
             api_key="test-key-123456",
             allow_invalid_certs=False,
             unread_color="blue",
@@ -569,7 +569,7 @@ class TestThemeConfiguration:
     def test_app_passes_colors_to_entry_list_screen(self):
         """Test that app passes theme colors to EntryListScreen."""
         custom_config = Config(
-            server_url="https://example.com",
+            server_url="http://localhost:8080",
             api_key="test-key-123456",
             allow_invalid_certs=False,
             unread_color="green",
@@ -588,7 +588,7 @@ class TestThemeConfiguration:
     def test_theme_config_defaults_to_cyan_and_gray(self):
         """Test that theme defaults to cyan for unread and gray for read."""
         config = Config(
-            server_url="https://example.com",
+            server_url="http://localhost:8080",
             api_key="test-key-123456",
             allow_invalid_certs=False,
             default_sort="date",
@@ -604,7 +604,7 @@ class TestThemeConfiguration:
         # Create a config file with custom colors
         config_file = tmp_path / "config.toml"
         config_content = """
-server_url = "https://example.com"
+server_url = "http://localhost:8080"
 api_key = "test-key-1234567890"
 allow_invalid_certs = false
 

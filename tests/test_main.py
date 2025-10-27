@@ -46,7 +46,7 @@ class TestMainCheckConfig:
     def test_check_config_valid(self, capsys, tmp_path):
         """Test --check-config with valid configuration."""
         mock_config = MagicMock()
-        mock_config.server_url = "https://miniflux.example.com"
+        mock_config.server_url = "http://localhost:8080"
         mock_config.api_key = "test-api-key-1234567890"
         mock_config.allow_invalid_certs = False
         mock_config.unread_color = "cyan"
@@ -68,7 +68,7 @@ class TestMainCheckConfig:
 
             captured = capsys.readouterr()
             assert "Configuration loaded successfully" in captured.out
-            assert "https://miniflux.example.com" in captured.out
+            assert "http://localhost:8080" in captured.out
             assert "*" * 20 in captured.out  # Hidden API key
             assert result == 0
 

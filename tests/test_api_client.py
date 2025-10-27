@@ -13,28 +13,28 @@ class TestMinifluxClientInit:
     def test_init_basic(self):
         """Test basic client initialization."""
         with patch("miniflux_tui.api.client.MinifluxClientBase") as mock_base:
-            client = MinifluxClient("http://example.com", "test-key")
-            assert client.base_url == "http://example.com"
+            client = MinifluxClient("http://localhost:8080", "test-key")
+            assert client.base_url == "http://localhost:8080"
             assert client.allow_invalid_certs is False
             assert client.timeout == 30.0
-            mock_base.assert_called_once_with("http://example.com", api_key="test-key")
+            mock_base.assert_called_once_with("http://localhost:8080", api_key="test-key")
 
     def test_init_with_trailing_slash(self):
         """Test that trailing slash is removed from base_url."""
         with patch("miniflux_tui.api.client.MinifluxClientBase"):
-            client = MinifluxClient("http://example.com/", "test-key")
-            assert client.base_url == "http://example.com"
+            client = MinifluxClient("http://localhost:8080/", "test-key")
+            assert client.base_url == "http://localhost:8080"
 
     def test_init_with_invalid_certs(self):
         """Test initialization with allow_invalid_certs."""
         with patch("miniflux_tui.api.client.MinifluxClientBase"):
-            client = MinifluxClient("http://example.com", "test-key", allow_invalid_certs=True)
+            client = MinifluxClient("http://localhost:8080", "test-key", allow_invalid_certs=True)
             assert client.allow_invalid_certs is True
 
     def test_init_with_custom_timeout(self):
         """Test initialization with custom timeout."""
         with patch("miniflux_tui.api.client.MinifluxClientBase"):
-            client = MinifluxClient("http://example.com", "test-key", timeout=60.0)
+            client = MinifluxClient("http://localhost:8080", "test-key", timeout=60.0)
             assert client.timeout == 60.0
 
 
@@ -45,14 +45,14 @@ class TestMinifluxClientContextManager:
     async def test_async_context_manager(self):
         """Test async context manager entry and exit."""
         with patch("miniflux_tui.api.client.MinifluxClientBase"):
-            async with MinifluxClient("http://example.com", "test-key") as client:
+            async with MinifluxClient("http://localhost:8080", "test-key") as client:
                 assert isinstance(client, MinifluxClient)
 
     @pytest.mark.asyncio
     async def test_close_method(self):
         """Test close method."""
         with patch("miniflux_tui.api.client.MinifluxClientBase"):
-            client = MinifluxClient("http://example.com", "test-key")
+            client = MinifluxClient("http://localhost:8080", "test-key")
             # Should not raise any exception
             await client.close()
 
@@ -64,7 +64,7 @@ class TestMinifluxClientRunSync:
     async def test_run_sync_with_args(self):
         """Test _run_sync with positional arguments."""
         with patch("miniflux_tui.api.client.MinifluxClientBase"):
-            client = MinifluxClient("http://example.com", "test-key")
+            client = MinifluxClient("http://localhost:8080", "test-key")
 
             def sample_func(a, b):
                 return a + b
@@ -76,7 +76,7 @@ class TestMinifluxClientRunSync:
     async def test_run_sync_with_kwargs(self):
         """Test _run_sync with keyword arguments."""
         with patch("miniflux_tui.api.client.MinifluxClientBase"):
-            client = MinifluxClient("http://example.com", "test-key")
+            client = MinifluxClient("http://localhost:8080", "test-key")
 
             def sample_func(a=0, b=0):
                 return a * b
@@ -92,7 +92,7 @@ class TestMinifluxClientRetryLogic:
     async def test_successful_call_on_first_try(self):
         """Test successful call without needing retries."""
         with patch("miniflux_tui.api.client.MinifluxClientBase"):
-            client = MinifluxClient("http://example.com", "test-key")
+            client = MinifluxClient("http://localhost:8080", "test-key")
 
             def success_func():
                 return "success"
@@ -104,7 +104,7 @@ class TestMinifluxClientRetryLogic:
     async def test_retry_on_connection_error(self):
         """Test retry logic on connection error."""
         with patch("miniflux_tui.api.client.MinifluxClientBase"):
-            client = MinifluxClient("http://example.com", "test-key")
+            client = MinifluxClient("http://localhost:8080", "test-key")
 
             call_count = 0
 
@@ -124,7 +124,7 @@ class TestMinifluxClientRetryLogic:
     async def test_retry_exhaustion(self):
         """Test that exception is raised after max retries."""
         with patch("miniflux_tui.api.client.MinifluxClientBase"):
-            client = MinifluxClient("http://example.com", "test-key")
+            client = MinifluxClient("http://localhost:8080", "test-key")
 
             def always_failing():
                 error_msg = "Network error"
@@ -137,7 +137,7 @@ class TestMinifluxClientRetryLogic:
     async def test_non_network_error_no_retry(self):
         """Test that non-network errors are not retried."""
         with patch("miniflux_tui.api.client.MinifluxClientBase"):
-            client = MinifluxClient("http://example.com", "test-key")
+            client = MinifluxClient("http://localhost:8080", "test-key")
 
             call_count = 0
 
@@ -167,7 +167,7 @@ class TestMinifluxClientGetEntries:
             # Mock the response
             mock_client.get_entries.return_value = {"entries": []}
 
-            client = MinifluxClient("http://example.com", "test-key")
+            client = MinifluxClient("http://localhost:8080", "test-key")
             result = await client.get_unread_entries(limit=50, offset=0)
 
             assert result == []
@@ -181,7 +181,7 @@ class TestMinifluxClientGetEntries:
             mock_base_class.return_value = mock_client
             mock_client.get_entries.return_value = {"entries": []}
 
-            client = MinifluxClient("http://example.com", "test-key")
+            client = MinifluxClient("http://localhost:8080", "test-key")
             result = await client.get_starred_entries(limit=30, offset=0)
 
             assert result == []
@@ -202,7 +202,7 @@ class TestMinifluxClientGetEntries:
                         "feed_id": 1,
                         "title": "Test Entry",
                         "content": "Test content",
-                        "url": "http://example.com/entry",
+                        "url": "http://localhost:8080/entry",
                         "author": "Test Author",
                         "published_at": "2023-01-01T00:00:00Z",
                         "starred": False,
@@ -210,14 +210,14 @@ class TestMinifluxClientGetEntries:
                         "feed": {
                             "id": 1,
                             "title": "Test Feed",
-                            "site_url": "http://example.com",
-                            "feed_url": "http://example.com/feed",
+                            "site_url": "http://localhost:8080",
+                            "feed_url": "http://localhost:8080/feed",
                         },
                     }
                 ]
             }
 
-            client = MinifluxClient("http://example.com", "test-key")
+            client = MinifluxClient("http://localhost:8080", "test-key")
             # Just verify the entry parsing logic works
             result = await client.get_unread_entries()
 
@@ -238,7 +238,7 @@ class TestMinifluxClientActions:
             mock_base_class.return_value = mock_client
             mock_client.update_entries.return_value = None
 
-            client = MinifluxClient("http://example.com", "test-key")
+            client = MinifluxClient("http://localhost:8080", "test-key")
             # This should not raise
             await client.mark_as_read(123)
 
@@ -250,7 +250,7 @@ class TestMinifluxClientActions:
             mock_base_class.return_value = mock_client
             mock_client.update_entries.return_value = None
 
-            client = MinifluxClient("http://example.com", "test-key")
+            client = MinifluxClient("http://localhost:8080", "test-key")
             # This should not raise
             await client.mark_as_unread(123)
 
@@ -262,7 +262,7 @@ class TestMinifluxClientActions:
             mock_base_class.return_value = mock_client
             mock_client.toggle_bookmark.return_value = None
 
-            client = MinifluxClient("http://example.com", "test-key")
+            client = MinifluxClient("http://localhost:8080", "test-key")
             # Should not raise
             await client.toggle_starred(123)
 
@@ -274,7 +274,7 @@ class TestMinifluxClientActions:
             mock_base_class.return_value = mock_client
             mock_client.save_entry.return_value = None
 
-            client = MinifluxClient("http://example.com", "test-key")
+            client = MinifluxClient("http://localhost:8080", "test-key")
             # Should not raise
             await client.save_entry(123)
 
@@ -286,7 +286,7 @@ class TestMinifluxClientActions:
             mock_base_class.return_value = mock_client
             mock_client.update_entries.return_value = None
 
-            client = MinifluxClient("http://example.com", "test-key")
+            client = MinifluxClient("http://localhost:8080", "test-key")
             # Should not raise
             await client.mark_all_as_read([1, 2, 3])
 
@@ -298,7 +298,7 @@ class TestMinifluxClientActions:
             mock_base_class.return_value = mock_client
             mock_client.refresh_all_feeds.return_value = None
 
-            client = MinifluxClient("http://example.com", "test-key")
+            client = MinifluxClient("http://localhost:8080", "test-key")
             # Should not raise
             await client.refresh_all_feeds()
 
@@ -312,7 +312,7 @@ class TestMinifluxClientActions:
             # Mock the response
             mock_client.fetch_entry_content.return_value = {"content": "<html>Original content</html>"}
 
-            client = MinifluxClient("http://example.com", "test-key")
+            client = MinifluxClient("http://localhost:8080", "test-key")
             result = await client.fetch_original_content(123)
 
             # Result should be a string (possibly empty or content)

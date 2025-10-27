@@ -13,8 +13,8 @@ def sample_feed():
     return Feed(
         id=1,
         title="Example Feed",
-        site_url="https://example.com",
-        feed_url="https://example.com/feed.xml",
+        site_url="http://localhost:8080",
+        feed_url="http://localhost:8080/feed.xml",
     )
 
 
@@ -25,7 +25,7 @@ def sample_entry(sample_feed):
         id=1,
         feed_id=1,
         title="Sample Entry Title",
-        url="https://example.com/article",
+        url="http://localhost:8080/article",
         content="<p>This is HTML content</p>",
         feed=sample_feed,
         status="unread",
@@ -42,7 +42,7 @@ def sample_entries(sample_feed):
             id=1,
             feed_id=1,
             title="Unread Entry 1",
-            url="https://example.com/article1",
+            url="http://localhost:8080/article1",
             content="<p>Content 1</p>",
             feed=sample_feed,
             status="unread",
@@ -53,7 +53,7 @@ def sample_entries(sample_feed):
             id=2,
             feed_id=1,
             title="Read Entry 2",
-            url="https://example.com/article2",
+            url="http://localhost:8080/article2",
             content="<p>Content 2</p>",
             feed=sample_feed,
             status="read",
@@ -64,7 +64,7 @@ def sample_entries(sample_feed):
             id=3,
             feed_id=1,
             title="Starred Unread Entry 3",
-            url="https://example.com/article3",
+            url="http://localhost:8080/article3",
             content="<p>Content 3</p>",
             feed=sample_feed,
             status="unread",
@@ -75,7 +75,7 @@ def sample_entries(sample_feed):
             id=4,
             feed_id=1,
             title="Starred Read Entry 4",
-            url="https://example.com/article4",
+            url="http://localhost:8080/article4",
             content="<p>Content 4</p>",
             feed=sample_feed,
             status="read",
@@ -89,7 +89,7 @@ def sample_entries(sample_feed):
 def valid_config_dict():
     """Create a valid configuration dictionary."""
     return {
-        "server_url": "https://miniflux.example.com",
+        "server_url": "http://localhost:8080",
         "api_key": "1234567890abcdef",
         "allow_invalid_certs": False,
         "theme": {
