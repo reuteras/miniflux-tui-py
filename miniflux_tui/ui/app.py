@@ -1,6 +1,8 @@
 """Main TUI application."""
 
 import traceback
+from importlib import import_module
+from typing import TYPE_CHECKING
 
 from textual.app import App
 from textual.driver import Driver
@@ -11,9 +13,11 @@ from miniflux_tui.config import Config
 from miniflux_tui.constants import DEFAULT_ENTRY_LIMIT
 
 from .screens.entry_list import EntryListScreen
-from .screens.entry_reader import EntryReaderScreen
 from .screens.help import HelpScreen
 from .screens.status import StatusScreen
+
+if TYPE_CHECKING:
+    from miniflux_tui.ui.screens import entry_reader as entry_reader_types
 
 
 class MinifluxTUI(App):
@@ -204,7 +208,11 @@ class MinifluxTUI(App):
             entry_list: Full list of entries for navigation
             current_index: Current position in the entry list
         """
-        reader_screen = EntryReaderScreen(
+        entry_reader_module = import_module("miniflux_tui.ui.screens.entry_reader")
+        entry_reader_cls: type[entry_reader_types.EntryReaderScreen]
+        entry_reader_cls = entry_reader_module.EntryReaderScreen
+
+        reader_screen: entry_reader_types.EntryReaderScreen = entry_reader_cls(
             entry=entry,
             entry_list=entry_list or self.entries,
             current_index=current_index,
