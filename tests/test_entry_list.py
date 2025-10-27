@@ -7,7 +7,7 @@ import pytest
 from textual.binding import Binding
 from textual.widgets import ListItem, ListView
 
-from miniflux_tui.api.models import Entry, Feed
+from miniflux_tui.api.models import Category, Entry, Feed
 from miniflux_tui.constants import SORT_MODES
 from miniflux_tui.ui.screens.entry_list import (
     EntryListItem,
@@ -1417,6 +1417,13 @@ class TestActionMethodsCallability:
         # Verify method exists and is callable
         assert callable(screen.action_show_help)
 
+    def test_action_quit_exists(self, diverse_entries):
+        """Test action_quit exists and is callable."""
+        screen = EntryListScreen(entries=diverse_entries)
+
+        # Verify method exists and is callable
+        assert callable(screen.action_quit)
+
 
 class TestRefreshActions:
     """Test refresh actions for Issue #55 - Feed operations."""
@@ -1614,3 +1621,178 @@ class TestRefreshActions:
 
         # Verify error notification
         assert any("network error" in str(call[0][0]).lower() for call in screen.notify.call_args_list)
+
+class TestCategoryGrouping:
+    """Test category grouping functionality for Issue #54."""
+
+    def test_get_category_title_with_valid_id(self):
+        """Test getting category title with valid category ID."""
+
+        categories = [
+            Category(id=1, title="News"),
+            Category(id=2, title="Tech"),
+        ]
+        screen = EntryListScreen(entries=[], categories=categories)
+
+        assert screen._get_category_title(1) == "News"
+        assert screen._get_category_title(2) == "Tech"
+
+    def test_get_category_title_with_none(self):
+        """Test getting category title when category_id is None."""
+        screen = EntryListScreen(entries=[], categories=[])
+
+        assert screen._get_category_title(None) == "Uncategorized"
+
+    def test_get_category_title_with_nonexistent_id(self):
+        """Test getting category title with non-existent category ID."""
+
+        categories = [Category(id=1, title="News")]
+        screen = EntryListScreen(entries=[], categories=categories)
+
+        assert screen._get_category_title(999) == "Category 999"
+
+    def test_get_category_title_with_no_categories(self):
+        """Test getting category title when categories list is empty."""
+        screen = EntryListScreen(entries=[], categories=[])
+
+        assert screen._get_category_title(5) == "Category 5"
+
+    def test_action_toggle_category_group_no_categories(self):
+        """Test toggle category group when no categories available."""
+        screen = EntryListScreen(entries=[], categories=[])
+        screen.notify = MagicMock()
+
+        screen.action_toggle_category_group()
+
+        screen.notify.assert_called_once()
+        assert "no categories" in screen.notify.call_args[0][0].lower()
+
+    def test_action_toggle_category_group_enable(self, diverse_entries):
+        """Test enabling category grouping."""
+
+        categories = [Category(id=1, title="News")]
+        screen = EntryListScreen(entries=diverse_entries, categories=categories)
+        screen.notify = MagicMock()
+        screen._populate_list = MagicMock()
+
+        # Initially both grouping modes off
+        assert not screen.group_by_category
+        assert not screen.group_by_feed
+
+        # Enable category grouping
+        screen.action_toggle_category_group()
+
+        assert screen.group_by_category is True
+        assert screen.group_by_feed is False
+        screen.notify.assert_called_with("Grouping by category")
+        screen._populate_list.assert_called_once()
+
+    def test_action_toggle_category_group_disable(self, diverse_entries):
+        """Test disabling category grouping."""
+
+        categories = [Category(id=1, title="News")]
+        screen = EntryListScreen(entries=diverse_entries, categories=categories)
+        screen.notify = MagicMock()
+        screen._populate_list = MagicMock()
+        screen.group_by_category = True
+
+        # Disable category grouping
+        screen.action_toggle_category_group()
+
+        assert screen.group_by_category is False
+        screen.notify.assert_called_with("Category grouping disabled")
+        screen._populate_list.assert_called_once()
+
+    def test_action_toggle_category_group_disables_feed_grouping(self, diverse_entries):
+        """Test that enabling category grouping disables feed grouping."""
+
+        categories = [Category(id=1, title="News")]
+        screen = EntryListScreen(entries=diverse_entries, categories=categories)
+        screen.notify = MagicMock()
+        screen._populate_list = MagicMock()
+        screen.group_by_feed = True
+
+        # Enable category grouping
+        screen.action_toggle_category_group()
+
+        assert screen.group_by_category is True
+        assert screen.group_by_feed is False
+
+    def test_get_sorted_entries_with_category_grouping(self, diverse_entries):
+        """Test entry sorting when category grouping is enabled."""
+
+        categories = [
+            Category(id=1, title="News"),
+            Category(id=2, title="Tech"),
+        ]
+        screen = EntryListScreen(entries=diverse_entries, categories=categories)
+        screen.group_by_category = True
+
+        # Mock feed category_id
+        for i, entry in enumerate(diverse_entries):
+            entry.feed.category_id = 1 if i % 2 == 0 else 2
+
+        sorted_entries = screen._get_sorted_entries()
+
+        # Should be sorted by category title first
+        assert len(sorted_entries) > 0
+        # Verify grouping: all entries with same category_id should be together
+        prev_category = None
+        for entry in sorted_entries:
+            current_category = screen._get_category_title(entry.feed.category_id)
+            if prev_category and prev_category != current_category:
+                # Category changed, shouldn't go back to previous category
+                remaining_entries = sorted_entries[sorted_entries.index(entry) :]
+                remaining_categories = [screen._get_category_title(e.feed.category_id) for e in remaining_entries]
+                assert prev_category not in remaining_categories
+            prev_category = current_category
+
+    def test_category_fold_state_initialization(self):
+        """Test that category fold state is initialized."""
+        screen = EntryListScreen(entries=[])
+
+        assert isinstance(screen.category_fold_state, dict)
+        assert isinstance(screen.category_header_map, dict)
+        assert screen.last_highlighted_category is None
+
+    def test_display_entries_with_category_grouping(self, diverse_entries):
+        """Test _display_entries delegates to category grouping."""
+
+        categories = [Category(id=1, title="News")]
+        screen = EntryListScreen(entries=diverse_entries, categories=categories)
+        screen.group_by_category = True
+        screen._add_grouped_entries_by_category = MagicMock()
+
+        screen._display_entries(diverse_entries)
+
+        screen._add_grouped_entries_by_category.assert_called_once_with(diverse_entries)
+
+    def test_display_entries_without_category_grouping(self, diverse_entries):
+        """Test _display_entries doesn't use category grouping when disabled."""
+        screen = EntryListScreen(entries=diverse_entries)
+        screen.group_by_category = False
+        screen._add_grouped_entries_by_category = MagicMock()
+        screen._add_flat_entries = MagicMock()
+        screen._add_grouped_entries = MagicMock()
+
+        screen._display_entries(diverse_entries)
+
+        screen._add_grouped_entries_by_category.assert_not_called()
+
+    def test_category_grouping_sorts_before_feed_grouping(self, diverse_entries):
+        """Test that category grouping takes precedence over feed grouping."""
+
+        categories = [Category(id=1, title="News")]
+        screen = EntryListScreen(entries=diverse_entries, categories=categories)
+        screen.group_by_category = True
+        screen.group_by_feed = True  # Both set, but category should win
+
+        # Mock feed category_id
+        for entry in diverse_entries:
+            entry.feed.category_id = 1
+
+        sorted_entries = screen._get_sorted_entries()
+
+        # Should use category sorting (by category title + date)
+        # Not feed sorting (by feed title + date)
+        assert len(sorted_entries) > 0
