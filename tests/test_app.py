@@ -155,7 +155,8 @@ class TestMinifluxTUILoadEntries:
         app = MinifluxTUI(sample_config)
 
         # Mock the client
-        app.client = async_client_factory(entries=[sample_entry])
+        mock_client = async_client_factory(entries=[sample_entry])
+        app.client = mock_client
 
         # Mock notify and is_screen_installed
         app.notify = MagicMock()
@@ -165,7 +166,7 @@ class TestMinifluxTUILoadEntries:
         await app.load_entries("unread")
 
         # Verify client was called
-        app.client.get_unread_entries.assert_called_once()
+        mock_client.get_unread_entries.assert_called_once()
         # Verify entries were set
         assert len(app.entries) == 1
         assert app.entries[0] == sample_entry
@@ -178,7 +179,8 @@ class TestMinifluxTUILoadEntries:
         app = MinifluxTUI(sample_config)
 
         # Mock the client
-        app.client = async_client_factory(starred=[sample_entry])
+        mock_client = async_client_factory(starred=[sample_entry])
+        app.client = mock_client
 
         # Mock notify and is_screen_installed
         app.notify = MagicMock()
@@ -188,7 +190,7 @@ class TestMinifluxTUILoadEntries:
         await app.load_entries("starred")
 
         # Verify client was called
-        app.client.get_starred_entries.assert_called_once()
+        mock_client.get_starred_entries.assert_called_once()
         # Verify entries were set
         assert len(app.entries) == 1
         assert app.entries[0] == sample_entry

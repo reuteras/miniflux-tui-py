@@ -1,11 +1,13 @@
 """Headless smoke tests for the Textual application."""
 
+from typing import cast
 from unittest.mock import AsyncMock, patch
 
 import pytest
 
 from miniflux_tui.config import Config
 from miniflux_tui.ui.app import MinifluxTUI
+from miniflux_tui.ui.screens.entry_list import EntryListScreen
 
 
 class _FakeClient:
@@ -52,7 +54,7 @@ async def test_app_initializes_in_headless_mode(sample_entries, sample_categorie
         async with app.run_test(headless=True) as pilot:
             await pilot.pause()
             assert app.is_screen_installed("entry_list")
-            entry_screen = app.get_screen("entry_list")
+            entry_screen = cast(EntryListScreen, app.get_screen("entry_list"))
             assert entry_screen.entries
 
             await pilot.exit(result=None)
