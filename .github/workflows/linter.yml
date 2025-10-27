@@ -42,7 +42,7 @@ jobs:
       - name: Lint Code Base
         uses: github/super-linter/slim@b807e99ddd37e444d189cfd2c2ca1274d8ae8ef1 # v7
         env:
-          FILTER_REGEX_EXCLUDE: "(CHANGELOG\.md|CLAUDE\.md)"
+          FILTER_REGEX_EXCLUDE: '(CHANGELOG\.md|CLAUDE\.md)'
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           VALIDATE_GITLEAKS: false
           VALIDATE_HTML: false
