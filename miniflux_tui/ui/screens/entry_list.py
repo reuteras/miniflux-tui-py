@@ -206,7 +206,29 @@ class EntryListScreen(Screen):
     def on_list_view_selected(self, event: ListView.Selected) -> None:
         """Handle ListView selection (Enter key)."""
         # Get the selected item
-        if event.item and isinstance(event.item, EntryListItem):
+        if event.item and isinstance(event.item, FeedHeaderItem):
+            # When Enter is pressed on a feed header in grouped mode, open the first entry
+            feed_title = event.item.feed_title
+            # Find the first visible (or any) entry in this feed
+            for entry in self.sorted_entries:
+                if entry.feed.title == feed_title:
+                    # Save the feed of the current entry for position restoration
+                    self.last_highlighted_feed = feed_title
+                    self.last_highlighted_entry_id = entry.id
+
+                    # Find the index of this entry in the sorted entry list
+                    entry_index = 0
+                    for i, e in enumerate(self.sorted_entries):
+                        if e.id == entry.id:
+                            entry_index = i
+                            break
+
+                    # Open entry reader screen with navigation context
+                    if isinstance(self.app, self.app.__class__) and hasattr(self.app, "push_entry_reader"):
+                        self.app.push_entry_reader(entry=entry, entry_list=self.sorted_entries, current_index=entry_index)
+                    return
+
+        elif event.item and isinstance(event.item, EntryListItem):
             # Save the feed of the current entry for position restoration
             self.last_highlighted_feed = event.item.entry.feed.title
             self.last_highlighted_entry_id = event.item.entry.id
@@ -461,17 +483,17 @@ class EntryListScreen(Screen):
         """Sort entries based on current sort mode.
 
         Sort modes:
-        - "feed": Alphabetically by feed name, then newest entries first
+        - "feed": Alphabetically by feed name (A-Z), then newest entries first within each feed
         - "date": Newest entries first (most recent publication date)
         - "status": Unread entries first, then by date (oldest first)
         """
         if self.current_sort == "feed":
             # Sort by feed name (A-Z), then by date (newest first within each feed)
-            # reverse=True moves newest to top when combined with negative key
+            # Use a tuple key with negative date for newest-first within each feed
             return sorted(
                 entries,
-                key=lambda e: (e.feed.title.lower(), e.published_at),
-                reverse=True,
+                key=lambda e: (e.feed.title.lower(), -e.published_at.timestamp()),
+                reverse=False,
             )
         if self.current_sort == "date":
             # Sort by published date (newest entries first)
@@ -954,8 +976,17 @@ class EntryListScreen(Screen):
             self._set_feed_fold_state(feed_title, True)
 
     def action_expand_all(self):
-        """Expand all feeds (Shift+G)."""
-        if not self.list_view or not self.group_by_feed:
+        """Expand all feeds (Shift+G).
+
+        If not in grouped mode, enable grouped mode first.
+        Then expand all collapsed feeds.
+        """
+        if not self.list_view:
+            return
+
+        # If not in grouped mode, enable it first
+        if not self.group_by_feed:
+            self.action_toggle_group()
             return
 
         # Expand all feeds that are currently collapsed
