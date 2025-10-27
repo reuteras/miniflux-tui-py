@@ -1,5 +1,35 @@
 # Changelog
 
+## [0.4.5] - 2025-10-27
+
+### Features
+- Add feed status screen showing server info and problematic feeds ([#104](https://github.com/reuteras/miniflux-tui-py/pull/104))
+- Implement feed-specific refresh for v0.5.0 (Issue #55) ([#93](https://github.com/reuteras/miniflux-tui-py/pull/93))
+
+### Bug Fixes
+- break cyclic import for CodeQL ([#106](https://github.com/reuteras/miniflux-tui-py/pull/106))
+- Replace example.com with localhost in tests to prevent DNS lookups ([#94](https://github.com/reuteras/miniflux-tui-py/pull/94))
+- Update Renovate SLSA constraint to only allow versions <=2.0.0 ([#88](https://github.com/reuteras/miniflux-tui-py/pull/88))
+
+### Documentation
+- Add comprehensive release process section to AGENT.md ([#100](https://github.com/reuteras/miniflux-tui-py/pull/100))
+
+### CI/CD
+- allow manual zizmor runs ([#105](https://github.com/reuteras/miniflux-tui-py/pull/105))
+- harden workflows per zizmor findings ([#102](https://github.com/reuteras/miniflux-tui-py/pull/102))
+
+### Maintenance
+- repo housekeeping and headless smoke test ([#101](https://github.com/reuteras/miniflux-tui-py/pull/101))
+- repo housekeeping and headless smoke test ([#97](https://github.com/reuteras/miniflux-tui-py/pull/97))
+- align agent guide and entry list tests ([#96](https://github.com/reuteras/miniflux-tui-py/pull/96))
+- Bump astral-sh/setup-uv from 7.1.1 to 7.1.2 ([#92](https://github.com/reuteras/miniflux-tui-py/pull/92))
+- Bump github/codeql-action from 3.31.0 to 4.31.0 ([#90](https://github.com/reuteras/miniflux-tui-py/pull/90))
+- Bump actions/checkout from 4.3.0 to 5.0.0 ([#89](https://github.com/reuteras/miniflux-tui-py/pull/89))
+- Configure Renovate to exclude SLSA v2.1.0 ([#87](https://github.com/reuteras/miniflux-tui-py/pull/87))
+- Update Renovate to exclude only SLSA v2.1.0
+- Configure Renovate to exclude SLSA v2.1.0
+
+
 ## [0.4.4] - 2025-10-26
 
 ### Bug Fixes
