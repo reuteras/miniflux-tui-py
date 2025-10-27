@@ -1,5 +1,10 @@
 # Changelog
 
+## [Unreleased]
+
+### Security
+- Raise minimum supported versions for runtime and documentation dependencies (textual, miniflux, html2text, mkdocs suite) to address upstream advisories highlighted by Dependabot.
+
 ## [0.4.5] - 2025-10-27
 
 ### Features

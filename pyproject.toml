@@ -30,9 +30,9 @@ classifiers = [
 ]
 
 dependencies = [
-    "textual>=0.82.0",
-    "miniflux>=0.0.11",
-    "html2text>=2024.2.26",
+    "textual>=6.4.0",
+    "miniflux>=1.1.4",
+    "html2text>=2025.4.15",
     "tomli>=2.0.1; python_version < '3.11'",
 ]
 
@@ -45,9 +45,9 @@ dev = [
     "pyright>=1.1.0",
 ]
 docs = [
-    "mkdocs>=1.5.0",
-    "mkdocs-material>=9.4.0",
-    "mkdocstrings[python]>=0.23.0",
+    "mkdocs>=1.6.1",
+    "mkdocs-material>=9.6.22",
+    "mkdocstrings[python]>=0.30.1",
 ]
 
 [project.scripts]
@@ -78,9 +78,9 @@ dev = [
     "bandit[toml]>=1.7.5",
 ]
 docs = [
-    "mkdocs>=1.5.0",
-    "mkdocs-material>=9.4.0",
-    "mkdocstrings[python]>=0.23.0",
+    "mkdocs>=1.6.1",
+    "mkdocs-material>=9.6.22",
+    "mkdocstrings[python]>=0.30.1",
 ]
 
 [tool.ruff]
