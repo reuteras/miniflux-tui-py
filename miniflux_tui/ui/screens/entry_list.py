@@ -430,6 +430,14 @@ class EntryListScreen(Screen):
         """Get entries sorted/grouped according to current settings."""
         entries = self._filter_entries(self.entries)
 
+        if self.group_by_category:
+            # When grouping by category, sort by category title then by date
+            # Get category title from entry's feed's category_id
+            return sorted(
+                entries,
+                key=lambda e: (self._get_category_title(e.feed.category_id).lower(), e.published_at),
+                reverse=False,
+            )
         if self.group_by_feed:
             # When grouping by feed, sort by feed name then by date
             return sorted(
@@ -441,7 +449,9 @@ class EntryListScreen(Screen):
 
     def _display_entries(self, entries: list[Entry]):
         """Display entries in list view based on grouping setting."""
-        if self.group_by_feed:
+        if self.group_by_category:
+            self._add_grouped_entries_by_category(entries)
+        elif self.group_by_feed:
             self._add_grouped_entries(entries)
         else:
             self._add_flat_entries(entries)
@@ -594,6 +604,97 @@ class EntryListScreen(Screen):
             self.displayed_items.append(item)
             self.entry_item_map[entry.id] = item
             self.list_view.append(item)
+
+    def _get_category_title(self, category_id: int | None) -> str:
+        """Get category title from category ID.
+
+        Args:
+            category_id: The category ID to lookup
+
+        Returns:
+            Category title, or "Uncategorized" if not found
+        """
+        if category_id is None:
+            return "Uncategorized"
+
+        if not self.categories:
+            return f"Category {category_id}"
+
+        for category in self.categories:
+            if category.id == category_id:
+                return category.title
+
+        return f"Category {category_id}"
+
+    def _add_category_header_if_needed(self, category_title: str, first_category_ref: list) -> None:
+        """Add a category header if transitioning to a new category.
+
+        Initializes fold state and creates a CategoryHeaderItem for the new category.
+
+        Args:
+            category_title: Title of the current category
+            first_category_ref: List with one element to track first category (mutable ref pattern)
+        """
+        # Track first category for default positioning
+        if first_category_ref[0] is None:
+            first_category_ref[0] = category_title
+            # Set default position to first category if not already set
+            if not self.last_highlighted_category:
+                self.last_highlighted_category = first_category_ref[0]
+
+        # Initialize fold state for this category if needed
+        if category_title not in self.category_fold_state:
+            # Default: expanded if not set, unless group_collapsed is True
+            self.category_fold_state[category_title] = not self.group_collapsed
+
+        # Create and add a fold-aware header item
+        is_expanded = self.category_fold_state[category_title]
+        header = CategoryHeaderItem(category_title, is_expanded=is_expanded)
+        self.category_header_map[category_title] = header
+        self.list_view.append(header)
+
+    def _add_entry_with_category_visibility(self, entry: Entry, category_title: str) -> None:
+        """Add an entry item with appropriate visibility based on category state.
+
+        Applies "collapsed" CSS class if the entry's category is collapsed.
+
+        Args:
+            entry: The entry to add
+            category_title: Title of the category this entry belongs to
+        """
+        item = EntryListItem(entry, self.unread_color, self.read_color)
+        self.displayed_items.append(item)
+        self.entry_item_map[entry.id] = item
+
+        # Apply "collapsed" class if this category is collapsed
+        if not self.category_fold_state.get(category_title, not self.group_collapsed):
+            item.add_class("collapsed")
+
+        self.list_view.append(item)
+
+    def _add_grouped_entries_by_category(self, entries: list[Entry]):
+        """Add entries grouped by category with optional collapsible headers.
+
+        All entries are added to the list, but entries in collapsed categories
+        are hidden via CSS class. This preserves cursor position during expand/collapse.
+        """
+        current_category = None
+        first_category = [None]  # Use list as mutable reference for tracking first category
+        self.displayed_items = []
+        self.entry_item_map.clear()
+        self.category_header_map.clear()
+
+        for entry in entries:
+            # Get category title for this entry
+            category_title = self._get_category_title(entry.feed.category_id)
+
+            # Add category header if this is a new category
+            if current_category != category_title:
+                current_category = category_title
+                self._add_category_header_if_needed(current_category, first_category)
+
+            # Add the entry with appropriate visibility
+            self._add_entry_with_category_visibility(entry, category_title)
 
     def _update_single_item(self, entry: Entry) -> bool:
         """Update a single entry item in the list (incremental refresh).
@@ -767,21 +868,20 @@ class EntryListScreen(Screen):
         self._populate_list()
 
     def action_toggle_category_group(self):
-        """Toggle grouping by category (v0.5.0 feature in development)."""
-        # For v0.5.0, this is a placeholder for category grouping
-        # Full implementation will be in next iteration
+        """Toggle grouping by category (Issue #54 - Category support)."""
         if not self.categories:
             self.notify("No categories available", severity="warning")
             return
 
-        # Disable feed grouping when enabling category grouping
+        # Toggle category grouping
+        self.group_by_category = not self.group_by_category
+
+        # Disable feed grouping when category grouping is enabled
         if self.group_by_category:
-            self.group_by_category = False
-            self.notify("Disabled grouping by category")
+            self.group_by_feed = False
+            self.notify("Grouping by category")
         else:
-            self.group_by_feed = False  # Disable feed grouping
-            self.group_by_category = True
-            self.notify("Enabled grouping by category (beta)")
+            self.notify("Category grouping disabled")
 
         self._populate_list()
 
