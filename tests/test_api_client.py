@@ -317,3 +317,96 @@ class TestMinifluxClientActions:
 
             # Result should be a string (possibly empty or content)
             assert isinstance(result, str)
+
+    @pytest.mark.asyncio
+    async def test_get_feeds_list_response(self):
+        """Test getting feeds when API returns a list."""
+        with patch("miniflux_tui.api.client.MinifluxClientBase") as mock_base_class:
+            mock_client = MagicMock()
+            mock_base_class.return_value = mock_client
+
+            # Mock the response as a list
+            mock_client.get_feeds.return_value = [
+                {
+                    "id": 1,
+                    "title": "Test Feed 1",
+                    "site_url": "http://localhost:8080",
+                    "feed_url": "http://localhost:8080/feed.xml",
+                    "parsing_error_message": "",
+                    "parsing_error_count": 0,
+                    "disabled": False,
+                },
+                {
+                    "id": 2,
+                    "title": "Test Feed 2",
+                    "site_url": "http://localhost:8081",
+                    "feed_url": "http://localhost:8081/feed.xml",
+                    "parsing_error_message": "SSL error",
+                    "parsing_error_count": 3,
+                    "disabled": True,
+                },
+            ]
+
+            client = MinifluxClient("http://localhost:8080", "test-key")
+            feeds = await client.get_feeds()
+
+            # Verify we got Feed objects
+            assert len(feeds) == 2
+            assert feeds[0].id == 1
+            assert feeds[0].title == "Test Feed 1"
+            assert feeds[0].has_errors is False
+            assert feeds[1].id == 2
+            assert feeds[1].parsing_error_message == "SSL error"
+            assert feeds[1].parsing_error_count == 3
+            assert feeds[1].disabled is True
+            assert feeds[1].has_errors is True
+
+    @pytest.mark.asyncio
+    async def test_get_feeds_dict_response(self):
+        """Test getting feeds when API returns a dict with 'feeds' key."""
+        with patch("miniflux_tui.api.client.MinifluxClientBase") as mock_base_class:
+            mock_client = MagicMock()
+            mock_base_class.return_value = mock_client
+
+            # Mock the response as a dict with 'feeds' key
+            mock_client.get_feeds.return_value = {
+                "feeds": [
+                    {
+                        "id": 10,
+                        "title": "Feed from Dict",
+                        "site_url": "http://localhost:8082",
+                        "feed_url": "http://localhost:8082/feed.xml",
+                        "parsing_error_message": "Timeout",
+                        "parsing_error_count": 1,
+                        "checked_at": "2024-10-24T12:00:00Z",
+                        "disabled": False,
+                    },
+                ]
+            }
+
+            client = MinifluxClient("http://localhost:8080", "test-key")
+            feeds = await client.get_feeds()
+
+            # Verify we got Feed objects
+            assert len(feeds) == 1
+            assert feeds[0].id == 10
+            assert feeds[0].title == "Feed from Dict"
+            assert feeds[0].parsing_error_message == "Timeout"
+            assert feeds[0].has_errors is True
+
+    @pytest.mark.asyncio
+    async def test_get_feeds_empty_list(self):
+        """Test getting feeds when no feeds exist."""
+        with patch("miniflux_tui.api.client.MinifluxClientBase") as mock_base_class:
+            mock_client = MagicMock()
+            mock_base_class.return_value = mock_client
+
+            # Mock the response as empty list
+            mock_client.get_feeds.return_value = []
+
+            client = MinifluxClient("http://localhost:8080", "test-key")
+            feeds = await client.get_feeds()
+
+            # Verify we got empty list
+            assert len(feeds) == 0
+            assert isinstance(feeds, list)

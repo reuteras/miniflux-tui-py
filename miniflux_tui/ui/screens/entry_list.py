@@ -120,6 +120,7 @@ class EntryListScreen(Screen):
         Binding("t", "show_starred", "Starred"),
         Binding("slash", "search", "Search"),
         Binding("question_mark", "show_help", "Help"),
+        Binding("i", "show_status", "Status"),
         Binding("q", "quit", "Quit"),
     ]
 
@@ -1080,6 +1081,10 @@ class EntryListScreen(Screen):
     def action_show_help(self):
         """Show keyboard help."""
         self.app.push_screen("help")
+
+    def action_show_status(self):
+        """Show system status and feed health."""
+        self.app.push_screen("status")
 
     def action_quit(self):
         """Quit the application."""
