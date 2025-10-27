@@ -211,7 +211,7 @@ class TestStatusScreenLoadStatus:
             status_screen = app.screen
             if isinstance(status_screen, StatusScreen):
                 # Remove client to test error handling
-                original_client = app.client if hasattr(app, "client") else None
+                original_client = app.client if hasattr(app, "client") else None  # type: ignore[attr-defined]
                 if hasattr(app, "client"):
                     delattr(app, "client")
 
@@ -223,7 +223,7 @@ class TestStatusScreenLoadStatus:
 
                 # Restore client
                 if original_client:
-                    app.client = original_client
+                    app.client = original_client  # type: ignore[attr-defined]
 
     @pytest.mark.asyncio
     async def test_load_status_with_healthy_feeds(self):
@@ -249,7 +249,7 @@ class TestStatusScreenLoadStatus:
                     ),
                 ])
                 mock_client.base_url = "http://localhost:8080"
-                app.client = mock_client
+                app.client = mock_client  # type: ignore[attr-defined]
 
                 # Mock the _update_display method
                 with patch.object(status_screen, "_update_display") as mock_update:
@@ -305,7 +305,7 @@ class TestStatusScreenLoadStatus:
                     ),
                 ])
                 mock_client.base_url = "http://localhost:8080"
-                app.client = mock_client
+                app.client = mock_client  # type: ignore[attr-defined]
 
                 # Mock the _update_display method
                 with patch.object(status_screen, "_update_display") as mock_update:
@@ -327,7 +327,7 @@ class TestStatusScreenLoadStatus:
                 # Mock app client that raises exception
                 mock_client = MagicMock()
                 mock_client.get_version = AsyncMock(side_effect=Exception("Connection failed"))
-                app.client = mock_client
+                app.client = mock_client  # type: ignore[attr-defined]
 
                 # Mock the _update_error_state method
                 with patch.object(status_screen, "_update_error_state") as mock_error:
