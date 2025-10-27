@@ -23,14 +23,14 @@ This document outlines the planned features and improvements for the miniflux-tu
 - **Status**: 📋 Planned
 
 ### Feed Operations (🚀 High Priority)
-- [ ] Implement `refresh_all_feeds()` with 'R' keybinding
-- [ ] Change refresh behavior:
+- [x] Implement `refresh_all_feeds()` with 'R' keybinding
+- [x] Change refresh behavior:
   - 'r' or ',' → `refresh_feed()` for current feed
   - 'R' → `refresh_all_feeds()` for all feeds
-- [ ] Display feed sync status/progress
+- [x] Display feed sync status/progress (via notifications)
 - [ ] Show feed error indicators (bad certs, bot protection, etc.)
-- **Issue**: [#TBD](https://github.com/reuteras/miniflux-tui-py/issues)
-- **Status**: 📋 Planned
+- **Issue**: [#55](https://github.com/reuteras/miniflux-tui-py/issues/55)
+- **Status**: 🔄 In Progress (refresh functionality completed)
 
 ### Feed Management (⭐ Medium Priority)
 - [ ] Create/discover new feeds

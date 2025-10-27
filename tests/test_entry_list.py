@@ -1,7 +1,7 @@
 """Tests for entry list screen functionality."""
 
 from datetime import UTC, datetime
-from unittest.mock import MagicMock
+from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
 from textual.binding import Binding
@@ -1417,9 +1417,200 @@ class TestActionMethodsCallability:
         # Verify method exists and is callable
         assert callable(screen.action_show_help)
 
-    def test_action_quit_exists(self, diverse_entries):
-        """Test action_quit exists and is callable."""
+
+class TestRefreshActions:
+    """Test refresh actions for Issue #55 - Feed operations."""
+
+    @pytest.mark.asyncio
+    async def test_action_refresh_current_feed_success(self, diverse_entries):
+        """Test refreshing the current feed successfully."""
+
         screen = EntryListScreen(entries=diverse_entries)
 
-        # Verify method exists and is callable
-        assert callable(screen.action_quit)
+        # Create mocks
+        mock_client = AsyncMock()
+        mock_client.refresh_feed = AsyncMock()
+        mock_app = MagicMock()
+        mock_app.client = mock_client
+        mock_app.load_entries = AsyncMock()
+        mock_app.current_view = "unread"
+
+        # Mock list view with highlighted entry
+        mock_list_view = MagicMock()
+        mock_list_view.index = 0
+        mock_entry_item = EntryListItem(diverse_entries[0], unread_color="cyan", read_color="gray")
+        mock_list_view.highlighted_child = mock_entry_item
+        screen.list_view = mock_list_view
+
+        # Mock notify
+        screen.notify = MagicMock()
+
+        # Patch the app property getter
+        with patch.object(type(screen), "app", new_callable=lambda: property(lambda _: mock_app)):
+            # Call action_refresh
+            await screen.action_refresh()
+
+        # Verify refresh_feed was called with correct feed_id
+        mock_client.refresh_feed.assert_called_once_with(diverse_entries[0].feed_id)
+
+        # Verify load_entries was called to reload
+        mock_app.load_entries.assert_called_once_with("unread")
+
+        # Verify notifications
+        assert screen.notify.call_count >= 2  # At least start and end notifications
+
+    @pytest.mark.asyncio
+    async def test_action_refresh_no_client(self, diverse_entries):
+        """Test refresh action when client is not initialized."""
+
+        screen = EntryListScreen(entries=diverse_entries)
+
+        # Mock app without client
+        mock_app = MagicMock()
+        mock_app.client = None
+
+        # Mock notify
+        screen.notify = MagicMock()
+
+        # Patch the app property getter
+        with patch.object(type(screen), "app", new_callable=lambda: property(lambda _: mock_app)):
+            # Call action_refresh
+            await screen.action_refresh()
+
+        # Verify error notification
+        screen.notify.assert_called_once()
+        assert "not initialized" in screen.notify.call_args[0][0].lower()
+
+    @pytest.mark.asyncio
+    async def test_action_refresh_no_entry_selected(self, diverse_entries):
+        """Test refresh action when no entry is selected."""
+
+        screen = EntryListScreen(entries=diverse_entries)
+
+        # Create mocks
+        mock_client = AsyncMock()
+        mock_app = MagicMock()
+        mock_app.client = mock_client
+
+        # Mock list view with no selection
+        mock_list_view = MagicMock()
+        mock_list_view.index = None
+        screen.list_view = mock_list_view
+
+        # Mock notify
+        screen.notify = MagicMock()
+
+        # Patch the app property getter
+        with patch.object(type(screen), "app", new_callable=lambda: property(lambda _: mock_app)):
+            # Call action_refresh
+            await screen.action_refresh()
+
+        # Verify warning notification
+        screen.notify.assert_called_once()
+        assert "no entry selected" in screen.notify.call_args[0][0].lower()
+
+    @pytest.mark.asyncio
+    async def test_action_refresh_network_error(self, diverse_entries):
+        """Test refresh action with network error."""
+
+        screen = EntryListScreen(entries=diverse_entries)
+
+        # Mock app with client that raises ConnectionError
+        mock_client = AsyncMock()
+        mock_client.refresh_feed = AsyncMock(side_effect=ConnectionError("Network error"))
+        mock_app = MagicMock()
+        mock_app.client = mock_client
+
+        # Mock list view with highlighted entry
+        mock_list_view = MagicMock()
+        mock_list_view.index = 0
+        mock_entry_item = EntryListItem(diverse_entries[0], unread_color="cyan", read_color="gray")
+        mock_list_view.highlighted_child = mock_entry_item
+        screen.list_view = mock_list_view
+
+        # Mock notify
+        screen.notify = MagicMock()
+
+        # Patch the app property getter
+        with patch.object(type(screen), "app", new_callable=lambda: property(lambda _: mock_app)):
+            # Call action_refresh
+            await screen.action_refresh()
+
+        # Verify error notification
+        assert any("network error" in str(call[0][0]).lower() for call in screen.notify.call_args_list)
+
+    @pytest.mark.asyncio
+    async def test_action_refresh_all_feeds_success(self, diverse_entries):
+        """Test refreshing all feeds successfully."""
+
+        screen = EntryListScreen(entries=diverse_entries)
+
+        # Create mocks
+        mock_client = AsyncMock()
+        mock_client.refresh_all_feeds = AsyncMock()
+        mock_app = MagicMock()
+        mock_app.client = mock_client
+        mock_app.load_entries = AsyncMock()
+        mock_app.current_view = "unread"
+
+        # Mock notify
+        screen.notify = MagicMock()
+
+        # Patch the app property getter
+        with patch.object(type(screen), "app", new_callable=lambda: property(lambda _: mock_app)):
+            # Call action_refresh_all_feeds
+            await screen.action_refresh_all_feeds()
+
+        # Verify refresh_all_feeds was called
+        mock_client.refresh_all_feeds.assert_called_once()
+
+        # Verify load_entries was called to reload
+        mock_app.load_entries.assert_called_once_with("unread")
+
+        # Verify notifications
+        assert screen.notify.call_count >= 2  # At least start and end notifications
+
+    @pytest.mark.asyncio
+    async def test_action_refresh_all_feeds_no_client(self, diverse_entries):
+        """Test refresh all feeds when client is not initialized."""
+
+        screen = EntryListScreen(entries=diverse_entries)
+
+        # Mock app without client
+        mock_app = MagicMock()
+        mock_app.client = None
+
+        # Mock notify
+        screen.notify = MagicMock()
+
+        # Patch the app property getter
+        with patch.object(type(screen), "app", new_callable=lambda: property(lambda _: mock_app)):
+            # Call action_refresh_all_feeds
+            await screen.action_refresh_all_feeds()
+
+        # Verify error notification
+        screen.notify.assert_called_once()
+        assert "not initialized" in screen.notify.call_args[0][0].lower()
+
+    @pytest.mark.asyncio
+    async def test_action_refresh_all_feeds_network_error(self, diverse_entries):
+        """Test refresh all feeds with network error."""
+
+        screen = EntryListScreen(entries=diverse_entries)
+
+        # Mock app with client that raises TimeoutError
+        mock_client = AsyncMock()
+        mock_client.refresh_all_feeds = AsyncMock(side_effect=TimeoutError("Connection timeout"))
+        mock_app = MagicMock()
+        mock_app.client = mock_client
+
+        # Mock notify
+        screen.notify = MagicMock()
+
+        # Patch the app property getter
+        with patch.object(type(screen), "app", new_callable=lambda: property(lambda _: mock_app)):
+            # Call action_refresh_all_feeds
+            await screen.action_refresh_all_feeds()
+
+        # Verify error notification
+        assert any("network error" in str(call[0][0]).lower() for call in screen.notify.call_args_list)
