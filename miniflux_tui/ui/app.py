@@ -16,7 +16,7 @@ from .screens.entry_list import EntryListScreen
 from .screens.help import HelpScreen
 
 if TYPE_CHECKING:
-    from .screens.entry_reader import EntryReaderScreen
+    from .screens.entry_reader import EntryReaderScreen  # noqa: F401
 
 
 class MinifluxTUI(App):
