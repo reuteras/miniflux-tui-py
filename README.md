@@ -4,7 +4,7 @@
   <img src="https://raw.githubusercontent.com/reuteras/miniflux-tui-py/main/assets/logo-256.png" alt="miniflux-tui-py logo" width="128" height="128">
 </div>
 
-[![PyPI version](https://badge.fury.io/py/miniflux-tui-py.svg)](https://badge.fury.io/py/miniflux-tui-py)
+[![PyPI version](https://img.shields.io/pypi/v/miniflux-tui-py.svg)](https://pypi.org/project/miniflux-tui-py/)
 [![Python 3.11+](https://img.shields.io/badge/python-3.11%2B-blue)](https://www.python.org/downloads/)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 [![Test Status](https://github.com/reuteras/miniflux-tui-py/workflows/Test/badge.svg)](https://github.com/reuteras/miniflux-tui-py/actions/workflows/test.yml)
