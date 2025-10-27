@@ -2,7 +2,7 @@
 
 import sys
 from pathlib import Path
-from unittest.mock import MagicMock, patch
+from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
 
@@ -110,13 +110,15 @@ class TestMainNormalStartup:
         """Test normal startup with valid configuration."""
         mock_config = MagicMock()
 
-        with patch("miniflux_tui.main.load_config") as mock_load:
+        with patch("miniflux_tui.main.load_config") as mock_load, patch(
+            "miniflux_tui.main.run_tui", new=AsyncMock()
+        ) as mock_run:
             mock_load.return_value = mock_config
-            with patch("miniflux_tui.main.run_tui"), patch("asyncio.run"), patch.object(sys, "argv", ["miniflux-tui"]):
+            with patch.object(sys, "argv", ["miniflux-tui"]):
                 result = main()
 
-                # asyncio.run is mocked, so we check it was called
-                assert result == 0
+        assert result == 0
+        mock_run.assert_awaited_once_with(mock_config)
 
     def test_startup_missing_config(self, capsys):
         """Test startup when config file doesn't exist."""
@@ -138,32 +140,34 @@ class TestMainNormalStartup:
         """Test graceful exit on KeyboardInterrupt."""
         mock_config = MagicMock()
 
-        with patch("miniflux_tui.main.load_config") as mock_load:
+        with patch("miniflux_tui.main.load_config") as mock_load, patch(
+            "miniflux_tui.main.run_tui", new=AsyncMock(side_effect=KeyboardInterrupt)
+        ) as mock_run:
             mock_load.return_value = mock_config
-            with patch("miniflux_tui.main.run_tui"), patch("asyncio.run") as mock_asyncio:
-                mock_asyncio.side_effect = KeyboardInterrupt()
-                with patch.object(sys, "argv", ["miniflux-tui"]):
-                    result = main()
+            with patch.object(sys, "argv", ["miniflux-tui"]):
+                result = main()
 
-            captured = capsys.readouterr()
-            assert "Goodbye!" in captured.out
-            assert result == 0
+        captured = capsys.readouterr()
+        assert "Goodbye!" in captured.out
+        assert result == 0
+        mock_run.assert_awaited_once_with(mock_config)
 
     def test_startup_runtime_error(self, capsys):
         """Test error handling for runtime exceptions."""
         mock_config = MagicMock()
 
-        with patch("miniflux_tui.main.load_config") as mock_load:
+        with patch("miniflux_tui.main.load_config") as mock_load, patch(
+            "miniflux_tui.main.run_tui", new=AsyncMock(side_effect=RuntimeError("Connection failed"))
+        ) as mock_run:
             mock_load.return_value = mock_config
-            with patch("miniflux_tui.main.run_tui"), patch("asyncio.run") as mock_asyncio:
-                mock_asyncio.side_effect = RuntimeError("Connection failed")
-                with patch.object(sys, "argv", ["miniflux-tui"]):
-                    result = main()
+            with patch.object(sys, "argv", ["miniflux-tui"]):
+                result = main()
 
-            captured = capsys.readouterr()
-            assert "Error running application" in captured.out
-            assert "Connection failed" in captured.out
-            assert result == 1
+        captured = capsys.readouterr()
+        assert "Error running application" in captured.out
+        assert "Connection failed" in captured.out
+        assert result == 1
+        mock_run.assert_awaited_once_with(mock_config)
 
 
 class TestMainVersion:
@@ -205,9 +209,12 @@ class TestMainArgumentParsing:
 
         with patch("miniflux_tui.main.load_config") as mock_load:
             mock_load.return_value = mock_config
-            with patch("miniflux_tui.main.run_tui"), patch("asyncio.run"), patch.object(sys, "argv", ["miniflux-tui"]):
+            with patch("miniflux_tui.main.run_tui", new=AsyncMock()) as mock_run, patch.object(
+                sys, "argv", ["miniflux-tui"]
+            ):
                 result = main()
-                assert result == 0
+        assert result == 0
+        mock_run.assert_awaited_once_with(mock_config)
 
     def test_mutually_exclusive_init_and_check(self, tmp_path):
         """Test that --init and --check-config work independently."""

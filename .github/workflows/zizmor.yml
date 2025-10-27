@@ -1,0 +1,46 @@
+---
+name: GitHub Actions Security Analysis with zizmor
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+  schedule:
+    - cron: '0 0 * * 0'  # Weekly on Sunday
+
+permissions:
+  contents: read
+
+jobs:
+  zizmor:
+    name: Analyze GitHub Actions Workflows
+    runs-on: ubuntu-latest
+
+    permissions:
+      # Required to upload SARIF results to Advanced Security
+      security-events: write
+      # Required for private repositories
+      contents: read
+      actions: read
+
+    steps:
+      - name: Harden the runner (Audit all outbound calls)
+        uses: step-security/harden-runner@f4a75cfd619ee5ce8d5b864b0d183aff3c69b55a # v2.13.1
+        with:
+          egress-policy: audit
+
+      - name: Checkout repository
+        uses: actions/checkout@08c6903cd8c0fde910a37f88322edcfb5dd907a8 # v5
+        with:
+          persist-credentials: false
+
+      - name: Run zizmor security analysis
+        uses: zizmorcore/zizmor-action@e673c3917a1aef3c65c972347ed84ccd013ecda4 # v0.2.0
+        with:
+          # Enable online audits for comprehensive checks
+          online-audits: true
+          # Use regular persona (not pedantic)
+          persona: regular
+          # Colorize output for better readability
+          color: true
