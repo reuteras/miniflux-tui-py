@@ -31,7 +31,7 @@ jobs:
         uses: astral-sh/setup-uv@85856786d1ce8acfbcc2f13a5f3fbd6b938f9f41 # v7
 
       - name: Cache uv packages
-        uses: actions/cache@627f0f41f6904e6d0c5cf4805c662d6f8db5e89a # v4
+        uses: actions/cache@828189cfd49baf3f3c2b95ad9dbda38d2e06d6b9 # v4.1.2
         with:
           path: ~/.cache/uv
           key: uv-${{ runner.os }}-${{ matrix.python-version }}-${{ hashFiles('uv.lock') }}
@@ -93,7 +93,7 @@ jobs:
         uses: astral-sh/setup-uv@85856786d1ce8acfbcc2f13a5f3fbd6b938f9f41 # v7
 
       - name: Cache uv packages
-        uses: actions/cache@627f0f41f6904e6d0c5cf4805c662d6f8db5e89a # v4
+        uses: actions/cache@828189cfd49baf3f3c2b95ad9dbda38d2e06d6b9 # v4.1.2
         with:
           path: ~/.cache/uv
           key: uv-${{ runner.os }}-3.15-${{ hashFiles('uv.lock') }}

@@ -1,9 +1,0 @@
-[bandit]
-# Configuration for bandit security linter
-
-# Skip tests directory from security scanning
-exclude_dirs = ["/test","/tests"]
-
-# Tests that should not be applied (comma separated)
-# B101 - assert_used (assertions are useful in tests)
-skips = B101
