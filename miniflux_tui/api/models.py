@@ -29,6 +29,10 @@ class Feed:
     site_url: str
     feed_url: str
     category_id: int | None = None
+    parsing_error_message: str = ""
+    parsing_error_count: int = 0
+    checked_at: str | None = None
+    disabled: bool = False
 
     @classmethod
     def from_dict(cls, data: dict) -> "Feed":
@@ -39,7 +43,16 @@ class Feed:
             site_url=data["site_url"],
             feed_url=data["feed_url"],
             category_id=data.get("category_id"),
+            parsing_error_message=data.get("parsing_error_message", ""),
+            parsing_error_count=data.get("parsing_error_count", 0),
+            checked_at=data.get("checked_at"),
+            disabled=data.get("disabled", False),
         )
+
+    @property
+    def has_errors(self) -> bool:
+        """Check if feed has parsing errors."""
+        return bool(self.parsing_error_message or self.parsing_error_count > 0)
 
 
 @dataclass

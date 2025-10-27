@@ -377,7 +377,7 @@ class TestMinifluxTUIOnMount:
 
     @pytest.mark.asyncio
     async def test_on_mount_installs_screens(self, sample_config):
-        """Test on_mount installs entry list and help screens."""
+        """Test on_mount installs entry list, help, and status screens."""
         app = MinifluxTUI(sample_config)
 
         # Mock required methods
@@ -389,8 +389,8 @@ class TestMinifluxTUIOnMount:
         ):
             await app.on_mount()
 
-            # Verify install_screen was called twice (for entry_list and help)
-            assert mock_install.call_count == 2
+            # Verify install_screen was called three times (for entry_list, help, and status)
+            assert mock_install.call_count == 3
 
     @pytest.mark.asyncio
     async def test_on_mount_pushes_initial_screen(self, sample_config):

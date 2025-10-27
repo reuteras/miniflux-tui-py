@@ -354,3 +354,17 @@ class MinifluxClient:
             Dictionary with current user details (username, timezone, language, etc.)
         """
         return await self._call_with_retry(self.client.me)
+
+    async def get_feeds(self) -> list[Feed]:
+        """Get all feeds with retry logic.
+
+        Returns:
+            List of Feed objects with error/status information
+        """
+        response = await self._call_with_retry(self.client.get_feeds)
+        # The official client returns a list directly
+        if isinstance(response, list):
+            return [Feed.from_dict(feed) for feed in response]
+        # Fallback for dict response with 'feeds' key
+        feeds_data = response.get("feeds", []) if isinstance(response, dict) else []
+        return [Feed.from_dict(feed) for feed in feeds_data]

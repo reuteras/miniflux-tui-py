@@ -52,6 +52,7 @@ class HelpScreen(Screen):
             yield Static("  u               Show unread entries")
             yield Static("  t               Show starred entries")
             yield Static("  ?               Show this help")
+            yield Static("  i               Show system status")
             yield Static("  q               Quit application\n")
 
             yield Static("[bold yellow]Entry Reader View[/bold yellow]")
@@ -65,7 +66,8 @@ class HelpScreen(Screen):
             yield Static("  f               Fetch original content")
             yield Static("  J               Next entry")
             yield Static("  K               Previous entry")
-            yield Static("  ?               Show this help\n")
+            yield Static("  ?               Show this help")
+            yield Static("  i               Show system status\n")
 
             yield Static("[bold yellow]About[/bold yellow]")
             yield Static(self._get_about_text())

@@ -13,6 +13,7 @@ from miniflux_tui.constants import DEFAULT_ENTRY_LIMIT
 from .screens.entry_list import EntryListScreen
 from .screens.entry_reader import EntryReaderScreen
 from .screens.help import HelpScreen
+from .screens.status import StatusScreen
 
 
 class MinifluxTUI(App):
@@ -119,6 +120,7 @@ class MinifluxTUI(App):
         )
 
         self.install_screen(HelpScreen(), name="help")
+        self.install_screen(StatusScreen(), name="status")
 
         # Push initial screen
         self.push_screen("entry_list")
