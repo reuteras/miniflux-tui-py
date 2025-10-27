@@ -1,6 +1,7 @@
 """Main TUI application."""
 
 import traceback
+from typing import TYPE_CHECKING
 
 from textual.app import App
 from textual.driver import Driver
@@ -11,8 +12,10 @@ from miniflux_tui.config import Config
 from miniflux_tui.constants import DEFAULT_ENTRY_LIMIT
 
 from .screens.entry_list import EntryListScreen
-from .screens.entry_reader import EntryReaderScreen
 from .screens.help import HelpScreen
+
+if TYPE_CHECKING:
+    from .screens.entry_reader import EntryReaderScreen
 
 
 class MinifluxTUI(App):
@@ -202,6 +205,8 @@ class MinifluxTUI(App):
             entry_list: Full list of entries for navigation
             current_index: Current position in the entry list
         """
+        from .screens.entry_reader import EntryReaderScreen
+
         reader_screen = EntryReaderScreen(
             entry=entry,
             entry_list=entry_list or self.entries,
