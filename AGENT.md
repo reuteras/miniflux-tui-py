@@ -1,6 +1,6 @@
-# CLAUDE.md - miniflux-tui-py Project Guide
+# AGENT.md - miniflux-tui-py Project Guide
 
-This document provides context about the miniflux-tui-py project for Claude Code.
+This document provides context about the miniflux-tui-py project for coding agents working via the Codex CLI.
 
 ## Project Overview
 

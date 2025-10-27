@@ -7,7 +7,7 @@ import pytest
 from textual.binding import Binding
 from textual.widgets import ListItem, ListView
 
-from miniflux_tui.api.models import Entry, Feed
+from miniflux_tui.api.models import Category, Entry, Feed
 from miniflux_tui.constants import SORT_MODES
 from miniflux_tui.ui.screens.entry_list import (
     EntryListItem,
@@ -682,6 +682,45 @@ class TestEntryListScreenFoldOperations:
 class TestEntryListScreenIncrementalUpdates:
     """Test incremental update functionality."""
 
+    def test_update_single_item_success(self, diverse_entries):
+        """Test _update_single_item successfully replaces an existing item."""
+        screen = EntryListScreen(entries=diverse_entries)
+        entry = diverse_entries[0]
+
+        # Prepare existing item and list view state
+        old_item = MagicMock(spec=EntryListItem)
+        old_item.entry = entry
+        placeholder_item = MagicMock(spec=EntryListItem)
+        fake_children = [old_item, placeholder_item]
+
+        # Removing the old item should update the fake children list
+        old_item.remove = MagicMock(side_effect=lambda: fake_children.remove(old_item))
+
+        screen.list_view = MagicMock()
+        screen.list_view.children = fake_children
+
+        def mount(new_item, before=None):
+            if before and before in fake_children:
+                index = fake_children.index(before)
+                fake_children.insert(index, new_item)
+            else:
+                fake_children.append(new_item)
+
+        screen.list_view.mount = MagicMock(side_effect=mount)
+        screen.entry_item_map[entry.id] = old_item
+        screen.displayed_items = [old_item]
+
+        result = screen._update_single_item(entry)
+
+        assert result is True
+        new_item = screen.entry_item_map[entry.id]
+        assert new_item is not old_item
+        assert screen.displayed_items[0] is new_item
+        assert new_item.entry is entry
+        screen.list_view.mount.assert_called()
+        # Ensure refresh optimizer tracked the partial refresh
+        assert screen.refresh_optimizer.partial_refresh_count == 1
+
     def test_update_single_item_not_found(self, diverse_entries):
         """Test _update_single_item when item not found."""
         screen = EntryListScreen(entries=diverse_entries)
@@ -729,6 +768,105 @@ class TestEntryListScreenGrouping:
         screen._add_grouped_entries(diverse_entries)
         # Maps should be populated - at least entry_item_map should have items
         assert len(screen.entry_item_map) > 0
+
+    def test_update_feed_visibility_collapsed_and_expanded(self, diverse_entries):
+        """Test _update_feed_visibility toggles CSS classes."""
+        screen = EntryListScreen(entries=diverse_entries, group_by_feed=True)
+        feed_title = diverse_entries[0].feed.title
+
+        item = EntryListItem(diverse_entries[0])
+        item.add_class = MagicMock()
+        item.remove_class = MagicMock()
+
+        screen.list_view = MagicMock()
+        screen.list_view.children = [item]
+
+        # Collapse feed
+        screen.feed_fold_state[feed_title] = False
+        screen._update_feed_visibility(feed_title)
+        item.add_class.assert_called_with("collapsed")
+
+        # Expand feed
+        screen.feed_fold_state[feed_title] = True
+        screen._update_feed_visibility(feed_title)
+        item.remove_class.assert_called_with("collapsed")
+
+    def test_action_toggle_fold_updates_state(self, diverse_entries):
+        """Test action_toggle_fold toggles state and updates visibility."""
+        screen = EntryListScreen(entries=diverse_entries, group_by_feed=True)
+        feed_title = diverse_entries[0].feed.title
+
+        header = FeedHeaderItem(feed_title)
+        header.toggle_fold = MagicMock()
+
+        screen.feed_fold_state[feed_title] = True
+        screen.list_view = MagicMock()
+        screen.list_view.highlighted_child = header
+        screen._update_feed_visibility = MagicMock()
+
+        screen.action_toggle_fold()
+
+        assert screen.feed_fold_state[feed_title] is False
+        header.toggle_fold.assert_called_once()
+        screen._update_feed_visibility.assert_called_with(feed_title)
+
+    def test_action_collapse_feed_calls_set_state(self, diverse_entries):
+        """Test action_collapse_feed collapses highlighted feed."""
+        screen = EntryListScreen(entries=diverse_entries, group_by_feed=True)
+        feed_title = diverse_entries[0].feed.title
+
+        header = FeedHeaderItem(feed_title)
+        screen.list_view = MagicMock()
+        screen.list_view.highlighted_child = header
+
+        screen.feed_fold_state[feed_title] = True
+        screen._set_feed_fold_state = MagicMock()
+
+        screen.action_collapse_feed()
+
+        screen._set_feed_fold_state.assert_called_once_with(feed_title, False)
+
+    def test_action_expand_feed_calls_set_state(self, diverse_entries):
+        """Test action_expand_feed expands highlighted feed."""
+        screen = EntryListScreen(entries=diverse_entries, group_by_feed=True)
+        feed_title = diverse_entries[0].feed.title
+
+        header = FeedHeaderItem(feed_title)
+        screen.list_view = MagicMock()
+        screen.list_view.highlighted_child = header
+
+        screen.feed_fold_state[feed_title] = False
+        screen._set_feed_fold_state = MagicMock()
+
+        screen.action_expand_feed()
+
+        screen._set_feed_fold_state.assert_called_once_with(feed_title, True)
+
+    def test_action_expand_all_updates_collapsed_feeds(self, diverse_entries):
+        """Test action_expand_all expands all collapsed feeds."""
+        screen = EntryListScreen(entries=diverse_entries, group_by_feed=True)
+        screen.list_view = MagicMock()
+        screen.feed_fold_state = {"Feed A": False, "Feed B": True}
+        screen._set_feed_fold_state = MagicMock()
+        screen.notify = MagicMock()
+
+        screen.action_expand_all()
+
+        screen._set_feed_fold_state.assert_called_once_with("Feed A", True)
+        screen.notify.assert_called_once_with("All feeds expanded")
+
+    def test_action_collapse_all_collapses_expanded_feeds(self, diverse_entries):
+        """Test action_collapse_all collapses all expanded feeds."""
+        screen = EntryListScreen(entries=diverse_entries, group_by_feed=True)
+        screen.list_view = MagicMock()
+        screen.feed_fold_state = {"Feed A": True, "Feed B": False}
+        screen._set_feed_fold_state = MagicMock()
+        screen.notify = MagicMock()
+
+        screen.action_collapse_all()
+
+        screen._set_feed_fold_state.assert_called_once_with("Feed A", False)
+        screen.notify.assert_called_once_with("All feeds collapsed")
 
 
 class TestEntryListScreenMultipleFeedsGrouping:
@@ -1417,6 +1555,90 @@ class TestActionMethodsCallability:
         # Verify method exists and is callable
         assert callable(screen.action_show_help)
 
+    def test_action_quit_exists(self, diverse_entries):
+        """Test action_quit exists and is callable."""
+        screen = EntryListScreen(entries=diverse_entries)
+
+        # Verify method exists and is callable
+        assert callable(screen.action_quit)
+
+
+class TestEntryActionBehaviour:
+    """Test entry-related actions for correct behaviour."""
+
+    @pytest.mark.asyncio
+    async def test_action_toggle_read_updates_status(self, diverse_entries):
+        """Test action_toggle_read toggles status and uses incremental update."""
+        screen = EntryListScreen(entries=diverse_entries)
+        entry_item = EntryListItem(diverse_entries[0])
+        screen.list_view = MagicMock()
+        screen.list_view.highlighted_child = entry_item
+        screen.list_view.index = 0
+
+        screen._update_single_item = MagicMock(return_value=True)
+        screen._populate_list = MagicMock()
+        screen.notify = MagicMock()
+
+        mock_client = AsyncMock()
+        mock_client.change_entry_status = AsyncMock()
+        mock_app = MagicMock()
+        mock_app.client = mock_client
+
+        with patch.object(type(screen), "app", new_callable=lambda: property(lambda _: mock_app)):
+            await screen.action_toggle_read()
+
+        mock_client.change_entry_status.assert_awaited_once_with(entry_item.entry.id, "read")
+        assert entry_item.entry.status == "read"
+        screen._populate_list.assert_not_called()
+        screen.notify.assert_called_with("Entry marked as read")
+
+    @pytest.mark.asyncio
+    async def test_action_toggle_star_refreshes_when_incremental_fails(self, diverse_entries):
+        """Test action_toggle_star toggles star and falls back to full refresh."""
+        screen = EntryListScreen(entries=diverse_entries)
+        entry_item = EntryListItem(diverse_entries[0])
+        screen.list_view = MagicMock()
+        screen.list_view.highlighted_child = entry_item
+        screen.list_view.index = 0
+
+        screen._update_single_item = MagicMock(return_value=False)
+        screen._populate_list = MagicMock()
+        screen.notify = MagicMock()
+
+        mock_client = AsyncMock()
+        mock_client.toggle_starred = AsyncMock()
+        mock_app = MagicMock()
+        mock_app.client = mock_client
+
+        with patch.object(type(screen), "app", new_callable=lambda: property(lambda _: mock_app)):
+            await screen.action_toggle_star()
+
+        mock_client.toggle_starred.assert_awaited_once_with(entry_item.entry.id)
+        assert entry_item.entry.starred is True
+        screen._populate_list.assert_called_once()
+        assert "Entry starred" in screen.notify.call_args[0][0]
+
+    @pytest.mark.asyncio
+    async def test_action_save_entry_calls_api(self, diverse_entries):
+        """Test action_save_entry calls save_entry and notifies user."""
+        screen = EntryListScreen(entries=diverse_entries)
+        entry_item = EntryListItem(diverse_entries[0])
+        screen.list_view = MagicMock()
+        screen.list_view.highlighted_child = entry_item
+        screen.list_view.index = 0
+        screen.notify = MagicMock()
+
+        mock_client = AsyncMock()
+        mock_client.save_entry = AsyncMock()
+        mock_app = MagicMock()
+        mock_app.client = mock_client
+
+        with patch.object(type(screen), "app", new_callable=lambda: property(lambda _: mock_app)):
+            await screen.action_save_entry()
+
+        mock_client.save_entry.assert_awaited_once_with(entry_item.entry.id)
+        screen.notify.assert_called_with(f"Entry saved: {entry_item.entry.title}")
+
 
 class TestRefreshActions:
     """Test refresh actions for Issue #55 - Feed operations."""
@@ -1614,3 +1836,340 @@ class TestRefreshActions:
 
         # Verify error notification
         assert any("network error" in str(call[0][0]).lower() for call in screen.notify.call_args_list)
+
+    @pytest.mark.asyncio
+    async def test_action_refresh_handles_general_exception(self, diverse_entries):
+        """Test refresh action handles unexpected exceptions."""
+
+        screen = EntryListScreen(entries=diverse_entries)
+
+        mock_client = AsyncMock()
+        mock_client.refresh_feed = AsyncMock(side_effect=RuntimeError("boom"))
+        mock_app = MagicMock()
+        mock_app.client = mock_client
+        mock_app.load_entries = AsyncMock()
+
+        mock_list_view = MagicMock()
+        mock_list_view.index = 0
+        mock_entry_item = EntryListItem(diverse_entries[0], unread_color="cyan", read_color="gray")
+        mock_list_view.highlighted_child = mock_entry_item
+        screen.list_view = mock_list_view
+
+        screen.notify = MagicMock()
+
+        with patch.object(type(screen), "app", new_callable=lambda: property(lambda _: mock_app)):
+            await screen.action_refresh()
+
+        assert any("Error refreshing feed" in str(call[0][0]) for call in screen.notify.call_args_list)
+        mock_app.load_entries.assert_not_called()
+
+    @pytest.mark.asyncio
+    async def test_action_refresh_all_handles_general_exception(self, diverse_entries):
+        """Test refresh all feeds handles unexpected exceptions."""
+
+        screen = EntryListScreen(entries=diverse_entries)
+
+        mock_client = AsyncMock()
+        mock_client.refresh_all_feeds = AsyncMock(side_effect=RuntimeError("boom"))
+        mock_app = MagicMock()
+        mock_app.client = mock_client
+        mock_app.load_entries = AsyncMock()
+        mock_app.current_view = "unread"
+
+        screen.notify = MagicMock()
+
+        with patch.object(type(screen), "app", new_callable=lambda: property(lambda _: mock_app)):
+            await screen.action_refresh_all_feeds()
+
+        assert any("Error refreshing all feeds" in str(call[0][0]) for call in screen.notify.call_args_list)
+        mock_app.load_entries.assert_not_called()
+
+
+class TestViewFilteringActions:
+    """Test actions that switch between entry views."""
+
+    @pytest.mark.asyncio
+    async def test_action_show_unread_resets_filters(self, diverse_entries):
+        """Test action_show_unread loads unread entries and clears filters."""
+        screen = EntryListScreen(entries=diverse_entries)
+        screen.filter_unread_only = True
+        screen.filter_starred_only = True
+        screen._populate_list = MagicMock()
+
+        mock_app = MagicMock()
+        mock_app.load_entries = AsyncMock()
+        mock_app.client = AsyncMock()
+        mock_app.current_view = "unread"
+
+        with patch.object(type(screen), "app", new_callable=lambda: property(lambda _: mock_app)):
+            await screen.action_show_unread()
+
+        mock_app.load_entries.assert_awaited_once_with("unread")
+        assert screen.filter_unread_only is False
+        assert screen.filter_starred_only is False
+        screen._populate_list.assert_called_once()
+
+    @pytest.mark.asyncio
+    async def test_action_show_starred_resets_filters(self, diverse_entries):
+        """Test action_show_starred loads starred entries and clears filters."""
+        screen = EntryListScreen(entries=diverse_entries)
+        screen.filter_unread_only = True
+        screen.filter_starred_only = True
+        screen._populate_list = MagicMock()
+
+        mock_app = MagicMock()
+        mock_app.load_entries = AsyncMock()
+        mock_app.client = AsyncMock()
+        mock_app.current_view = "starred"
+
+        with patch.object(type(screen), "app", new_callable=lambda: property(lambda _: mock_app)):
+            await screen.action_show_starred()
+
+        mock_app.load_entries.assert_awaited_once_with("starred")
+        assert screen.filter_unread_only is False
+        assert screen.filter_starred_only is False
+        screen._populate_list.assert_called_once()
+
+class TestCategoryGrouping:
+    """Test category grouping functionality for Issue #54."""
+
+    def test_get_category_title_with_valid_id(self):
+        """Test getting category title with valid category ID."""
+
+        categories = [
+            Category(id=1, title="News"),
+            Category(id=2, title="Tech"),
+        ]
+        screen = EntryListScreen(entries=[], categories=categories)
+
+        assert screen._get_category_title(1) == "News"
+        assert screen._get_category_title(2) == "Tech"
+
+    def test_get_category_title_with_none(self):
+        """Test getting category title when category_id is None."""
+        screen = EntryListScreen(entries=[], categories=[])
+
+        assert screen._get_category_title(None) == "Uncategorized"
+
+    def test_get_category_title_with_nonexistent_id(self):
+        """Test getting category title with non-existent category ID."""
+
+        categories = [Category(id=1, title="News")]
+        screen = EntryListScreen(entries=[], categories=categories)
+
+        assert screen._get_category_title(999) == "Category 999"
+
+    def test_get_category_title_with_no_categories(self):
+        """Test getting category title when categories list is empty."""
+        screen = EntryListScreen(entries=[], categories=[])
+
+        assert screen._get_category_title(5) == "Category 5"
+
+    def test_action_toggle_category_group_no_categories(self):
+        """Test toggle category group when no categories available."""
+        screen = EntryListScreen(entries=[], categories=[])
+        screen.notify = MagicMock()
+
+        screen.action_toggle_category_group()
+
+        screen.notify.assert_called_once()
+        assert "no categories" in screen.notify.call_args[0][0].lower()
+
+    def test_action_toggle_category_group_enable(self, diverse_entries):
+        """Test enabling category grouping."""
+
+        categories = [Category(id=1, title="News")]
+        screen = EntryListScreen(entries=diverse_entries, categories=categories)
+        screen.notify = MagicMock()
+        screen._populate_list = MagicMock()
+
+        # Initially both grouping modes off
+        assert not screen.group_by_category
+        assert not screen.group_by_feed
+
+        # Enable category grouping
+        screen.action_toggle_category_group()
+
+        assert screen.group_by_category is True
+        assert screen.group_by_feed is False
+        screen.notify.assert_called_with("Grouping by category")
+        screen._populate_list.assert_called_once()
+
+    def test_action_toggle_category_group_disable(self, diverse_entries):
+        """Test disabling category grouping."""
+
+        categories = [Category(id=1, title="News")]
+        screen = EntryListScreen(entries=diverse_entries, categories=categories)
+        screen.notify = MagicMock()
+        screen._populate_list = MagicMock()
+        screen.group_by_category = True
+
+        # Disable category grouping
+        screen.action_toggle_category_group()
+
+        assert screen.group_by_category is False
+        screen.notify.assert_called_with("Category grouping disabled")
+        screen._populate_list.assert_called_once()
+
+    def test_action_toggle_category_group_disables_feed_grouping(self, diverse_entries):
+        """Test that enabling category grouping disables feed grouping."""
+
+        categories = [Category(id=1, title="News")]
+        screen = EntryListScreen(entries=diverse_entries, categories=categories)
+        screen.notify = MagicMock()
+        screen._populate_list = MagicMock()
+        screen.group_by_feed = True
+
+        # Enable category grouping
+        screen.action_toggle_category_group()
+
+        assert screen.group_by_category is True
+        assert screen.group_by_feed is False
+
+    def test_get_sorted_entries_with_category_grouping(self, diverse_entries):
+        """Test entry sorting when category grouping is enabled."""
+
+        categories = [
+            Category(id=1, title="News"),
+            Category(id=2, title="Tech"),
+        ]
+        screen = EntryListScreen(entries=diverse_entries, categories=categories)
+        screen.group_by_category = True
+
+        # Mock feed category_id
+        for i, entry in enumerate(diverse_entries):
+            entry.feed.category_id = 1 if i % 2 == 0 else 2
+
+        sorted_entries = screen._get_sorted_entries()
+
+        # Should be sorted by category title first
+        assert len(sorted_entries) > 0
+        # Verify grouping: all entries with same category_id should be together
+        prev_category = None
+        for entry in sorted_entries:
+            current_category = screen._get_category_title(entry.feed.category_id)
+            if prev_category and prev_category != current_category:
+                # Category changed, shouldn't go back to previous category
+                remaining_entries = sorted_entries[sorted_entries.index(entry) :]
+                remaining_categories = [screen._get_category_title(e.feed.category_id) for e in remaining_entries]
+                assert prev_category not in remaining_categories
+            prev_category = current_category
+
+    def test_category_fold_state_initialization(self):
+        """Test that category fold state is initialized."""
+        screen = EntryListScreen(entries=[])
+
+        assert isinstance(screen.category_fold_state, dict)
+        assert isinstance(screen.category_header_map, dict)
+        assert screen.last_highlighted_category is None
+
+    def test_display_entries_with_category_grouping(self, diverse_entries):
+        """Test _display_entries delegates to category grouping."""
+
+        categories = [Category(id=1, title="News")]
+        screen = EntryListScreen(entries=diverse_entries, categories=categories)
+        screen.group_by_category = True
+        screen._add_grouped_entries_by_category = MagicMock()
+
+        screen._display_entries(diverse_entries)
+
+        screen._add_grouped_entries_by_category.assert_called_once_with(diverse_entries)
+
+    def test_display_entries_without_category_grouping(self, diverse_entries):
+        """Test _display_entries doesn't use category grouping when disabled."""
+        screen = EntryListScreen(entries=diverse_entries)
+        screen.group_by_category = False
+        screen._add_grouped_entries_by_category = MagicMock()
+        screen._add_flat_entries = MagicMock()
+        screen._add_grouped_entries = MagicMock()
+
+        screen._display_entries(diverse_entries)
+
+        screen._add_grouped_entries_by_category.assert_not_called()
+
+    def test_category_grouping_sorts_before_feed_grouping(self, diverse_entries):
+        """Test that category grouping takes precedence over feed grouping."""
+
+        categories = [Category(id=1, title="News")]
+        screen = EntryListScreen(entries=diverse_entries, categories=categories)
+        screen.group_by_category = True
+        screen.group_by_feed = True  # Both set, but category should win
+
+        # Mock feed category_id
+        for entry in diverse_entries:
+            entry.feed.category_id = 1
+
+        sorted_entries = screen._get_sorted_entries()
+
+        # Should use category sorting (by category title + date)
+        # Not feed sorting (by feed title + date)
+        assert len(sorted_entries) > 0
+
+
+class TestSearchActions:
+    """Test search-related actions."""
+
+    def test_action_search_clears_active_search(self, diverse_entries):
+        """Test action_search clears active search and repopulates list."""
+        screen = EntryListScreen(entries=diverse_entries)
+        screen.search_active = True
+        screen.search_term = "test"
+        screen._populate_list = MagicMock()
+        screen.notify = MagicMock()
+
+        screen.action_search()
+
+        screen._populate_list.assert_called_once()
+        screen.notify.assert_called_with("Search cleared")
+        assert screen.search_active is False
+        assert screen.search_term == ""
+
+    def test_action_search_without_active_search_shows_hint(self, diverse_entries):
+        """Test action_search shows hint when no search term is active."""
+        screen = EntryListScreen(entries=diverse_entries)
+        screen.notify = MagicMock()
+        screen._populate_list = MagicMock()
+
+        screen.action_search()
+
+        # No populate call when nothing to clear
+        screen._populate_list.assert_not_called()
+        assert "Use set_search_term" in screen.notify.call_args[0][0]
+
+    def test_set_search_term_applies_filter(self, diverse_entries):
+        """Test set_search_term stores term and notifies about results."""
+        screen = EntryListScreen(entries=diverse_entries)
+        screen._populate_list = MagicMock()
+        screen.notify = MagicMock()
+
+        with patch.object(screen, "_filter_entries", return_value=diverse_entries[:2]) as mock_filter:
+            screen.set_search_term("News")
+
+        screen._populate_list.assert_called_once()
+        mock_filter.assert_called_once_with(screen.entries)
+        screen.notify.assert_called_with("Search: 2 entries match 'News'")
+        assert screen.search_active is True
+
+
+class TestNavigationActions:
+    """Test navigation-related actions."""
+
+    def test_action_show_help_pushes_help_screen(self, diverse_entries):
+        """Test action_show_help pushes the help screen."""
+        screen = EntryListScreen(entries=diverse_entries)
+        mock_app = MagicMock()
+
+        with patch.object(type(screen), "app", new_callable=lambda: property(lambda _: mock_app)):
+            screen.action_show_help()
+
+        mock_app.push_screen.assert_called_once_with("help")
+
+    def test_action_quit_exits_application(self, diverse_entries):
+        """Test action_quit calls app.exit()."""
+        screen = EntryListScreen(entries=diverse_entries)
+        mock_app = MagicMock()
+
+        with patch.object(type(screen), "app", new_callable=lambda: property(lambda _: mock_app)):
+            screen.action_quit()
+
+        mock_app.exit.assert_called_once()
