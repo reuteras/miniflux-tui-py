@@ -4,7 +4,7 @@ Thank you for your interest in contributing to miniflux-tui-py! This document pr
 
 ## Code of Conduct
 
-Please read our [CODE_OF_CONDUCT.md](../CODE_OF_CONDUCT.md) before contributing. We are committed to providing a welcoming and inspiring community for all.
+Please read our [Code of Conduct](https://github.com/reuteras/miniflux-tui-py/blob/main/CODE_OF_CONDUCT.md) before contributing. We are committed to providing a welcoming and inspiring community for all.
 
 ## Development Setup
 
@@ -220,7 +220,7 @@ When ready to release:
 - Check existing issues and discussions
 - Ask questions in GitHub Discussions
 - Report bugs in GitHub Issues
-- See [SECURITY.md](../SECURITY.md) for security-related concerns
+- See [Security](security.md) for security-related concerns
 
 ## Thank You
 

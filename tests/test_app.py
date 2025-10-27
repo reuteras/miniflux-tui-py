@@ -150,13 +150,12 @@ class TestMinifluxTUILoadEntries:
     """Test load_entries method."""
 
     @pytest.mark.asyncio
-    async def test_load_entries_unread(self, sample_config, sample_entry):
+    async def test_load_entries_unread(self, sample_config, sample_entry, async_client_factory):
         """Test load_entries loads unread entries."""
         app = MinifluxTUI(sample_config)
 
         # Mock the client
-        app.client = AsyncMock()
-        app.client.get_unread_entries = AsyncMock(return_value=[sample_entry])
+        app.client = async_client_factory(entries=[sample_entry])
 
         # Mock notify and is_screen_installed
         app.notify = MagicMock()
@@ -174,13 +173,12 @@ class TestMinifluxTUILoadEntries:
         assert app.current_view == "unread"
 
     @pytest.mark.asyncio
-    async def test_load_entries_starred(self, sample_config, sample_entry):
+    async def test_load_entries_starred(self, sample_config, sample_entry, async_client_factory):
         """Test load_entries loads starred entries."""
         app = MinifluxTUI(sample_config)
 
         # Mock the client
-        app.client = AsyncMock()
-        app.client.get_starred_entries = AsyncMock(return_value=[sample_entry])
+        app.client = async_client_factory(starred=[sample_entry])
 
         # Mock notify and is_screen_installed
         app.notify = MagicMock()
@@ -214,13 +212,12 @@ class TestMinifluxTUILoadEntries:
         assert "not initialized" in app.notify.call_args[0][0].lower()
 
     @pytest.mark.asyncio
-    async def test_load_entries_updates_screen(self, sample_config, sample_entry):
+    async def test_load_entries_updates_screen(self, sample_config, sample_entry, async_client_factory):
         """Test load_entries updates the entry list screen."""
         app = MinifluxTUI(sample_config)
 
         # Mock the client
-        app.client = AsyncMock()
-        app.client.get_unread_entries = AsyncMock(return_value=[sample_entry])
+        app.client = async_client_factory(entries=[sample_entry])
 
         # Mock screen access
         mock_screen = MagicMock()
@@ -237,13 +234,12 @@ class TestMinifluxTUILoadEntries:
             mock_screen._populate_list.assert_called_once()
 
     @pytest.mark.asyncio
-    async def test_load_entries_empty_result(self, sample_config):
+    async def test_load_entries_empty_result(self, sample_config, async_client_factory):
         """Test load_entries handles empty results."""
         app = MinifluxTUI(sample_config)
 
         # Mock the client to return empty list
-        app.client = AsyncMock()
-        app.client.get_unread_entries = AsyncMock(return_value=[])
+        app.client = async_client_factory(entries=[])
 
         # Mock notify and is_screen_installed
         app.notify = MagicMock()
@@ -258,12 +254,12 @@ class TestMinifluxTUILoadEntries:
         assert any("no" in str(call).lower() for call in calls)
 
     @pytest.mark.asyncio
-    async def test_load_entries_api_error(self, sample_config):
+    async def test_load_entries_api_error(self, sample_config, async_client_factory):
         """Test load_entries handles API errors."""
         app = MinifluxTUI(sample_config)
 
         # Mock the client to raise an error
-        app.client = AsyncMock()
+        app.client = async_client_factory()
         app.client.get_unread_entries = AsyncMock(side_effect=Exception("API Error"))
 
         # Mock notify
@@ -281,11 +277,10 @@ class TestMinifluxTUIActions:
     """Test action methods."""
 
     @pytest.mark.asyncio
-    async def test_action_refresh_entries(self, sample_config, sample_entry):
+    async def test_action_refresh_entries(self, sample_config, sample_entry, async_client_factory):
         """Test refresh entries action."""
         app = MinifluxTUI(sample_config)
-        app.client = AsyncMock()
-        app.client.get_unread_entries = AsyncMock(return_value=[sample_entry])
+        app.client = async_client_factory(entries=[sample_entry])
         app.notify = MagicMock()
         app.is_screen_installed = MagicMock(return_value=False)
 
@@ -295,11 +290,10 @@ class TestMinifluxTUIActions:
         assert "refresh" in app.notify.call_args[0][0].lower()
 
     @pytest.mark.asyncio
-    async def test_action_show_unread(self, sample_config, sample_entry):
+    async def test_action_show_unread(self, sample_config, sample_entry, async_client_factory):
         """Test show unread action."""
         app = MinifluxTUI(sample_config)
-        app.client = AsyncMock()
-        app.client.get_unread_entries = AsyncMock(return_value=[sample_entry])
+        app.client = async_client_factory(entries=[sample_entry])
         app.notify = MagicMock()
         app.is_screen_installed = MagicMock(return_value=False)
 
@@ -309,11 +303,10 @@ class TestMinifluxTUIActions:
         app.notify.assert_called()
 
     @pytest.mark.asyncio
-    async def test_action_show_starred(self, sample_config, sample_entry):
+    async def test_action_show_starred(self, sample_config, sample_entry, async_client_factory):
         """Test show starred action."""
         app = MinifluxTUI(sample_config)
-        app.client = AsyncMock()
-        app.client.get_starred_entries = AsyncMock(return_value=[sample_entry])
+        app.client = async_client_factory(starred=[sample_entry])
         app.notify = MagicMock()
         app.is_screen_installed = MagicMock(return_value=False)
 
