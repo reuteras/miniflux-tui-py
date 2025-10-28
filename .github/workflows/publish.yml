@@ -82,8 +82,46 @@ jobs:
           packages-dir: dist/
           attestations: true
 
-  release:
+  binaries:
     needs: build
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, macos-latest, windows-latest]
+    runs-on: ${{ matrix.os }}
+    permissions:
+      contents: read
+    steps:
+      - name: Harden the runner (Audit all outbound calls)
+        uses: step-security/harden-runner@f4a75cfd619ee5ce8d5b864b0d183aff3c69b55a # v2.13.1
+        with:
+          egress-policy: audit
+
+      - uses: actions/checkout@08c6903cd8c0fde910a37f88322edcfb5dd907a8 # v5
+        with:
+          persist-credentials: false
+
+      - name: Install uv
+        uses: astral-sh/setup-uv@85856786d1ce8acfbcc2f13a5f3fbd6b938f9f41 # v7
+
+      - name: Set up Python
+        run: uv python install 3.11
+
+      - name: Install dependencies
+        run: uv sync --group binary
+
+      - name: Build executable archive
+        run: uv run python scripts/build_binary.py
+
+      - name: Upload binary artifact
+        uses: actions/upload-artifact@330a01c490aca151604b8cf639adc76d48f6c5d4 # v5
+        with:
+          name: miniflux-tui-${{ matrix.os }}
+          path: build/binary/*
+          retention-days: 7
+
+  release:
+    needs: [build, binaries]
     runs-on: ubuntu-latest
     permissions:
       contents: write
@@ -106,10 +144,20 @@ jobs:
           name: dist
           path: dist/
 
+      - name: Download binary artifacts
+        if: github.event_name != 'pull_request'
+        uses: actions/download-artifact@018cc2cf5baa6db3ef3c5f8a56943fffe632ef53 # v6
+        with:
+          pattern: miniflux-tui-*
+          merge-multiple: true
+          path: binaries/
+
       - name: Generate GitHub attestations
         uses: actions/attest-build-provenance@ef244123eb79f2f7a7e75d99086184180e6d0018 # v2.0.0
         with:
-          subject-path: 'dist/*'
+          subject-path: |
+            dist/*
+            binaries/*
 
       - name: Publish GitHub Release
         uses: softprops/action-gh-release@6da8fa9354ddfdc4aeace5fc48d7f679b5214090 # v2
@@ -118,5 +166,6 @@ jobs:
           prerelease: false
           files: |
             dist/**
+            binaries/*
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
