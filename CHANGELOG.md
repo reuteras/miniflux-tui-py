@@ -2,8 +2,16 @@
 
 ## [Unreleased]
 
+## [0.4.6] - 2025-10-28
+
+### Changed
+- Standardize macOS config path to `~/.config/miniflux-tui/config.toml` (same as Linux) ([#127](https://github.com/reuteras/miniflux-tui-py/pull/127))
+  - Previous path: `~/Library/Application Support/miniflux-tui/config.toml`
+  - Existing macOS users need to move their config file to the new location
+
 ### Security
-- Raise minimum supported versions for runtime and documentation dependencies (textual, miniflux, html2text, mkdocs suite) to address upstream advisories highlighted by Dependabot.
+- Fix CodeQL security alert by implementing principle of least privilege for GitHub Actions token permissions ([#129](https://github.com/reuteras/miniflux-tui-py/pull/129))
+- Raise minimum supported versions for runtime and documentation dependencies (textual, miniflux, html2text, mkdocs suite) to address upstream advisories highlighted by Dependabot
 
 ## [0.4.5] - 2025-10-27
 

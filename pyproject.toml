@@ -1,6 +1,6 @@
 [project]
 name = "miniflux-tui-py"
-version = "0.4.5"
+version = "0.4.6"
 description = "A Python TUI client for Miniflux RSS reader with feed sorting capabilities"
 readme = "README.md"
 requires-python = ">=3.11"
