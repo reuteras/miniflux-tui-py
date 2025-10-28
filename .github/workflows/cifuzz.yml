@@ -27,7 +27,7 @@ jobs:
       - name: Build Fuzzers
         run: |
           python -m pip install --upgrade pip
-          pip install .[fuzz]
+          pip install '.[fuzz]'
 
       - name: Run Fuzzers
         run: |
