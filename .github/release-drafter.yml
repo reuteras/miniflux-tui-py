@@ -60,8 +60,6 @@ categories:
 
 # Template for the release notes
 template: |
-  # $RELEASE_TITLE
-
   ## Overview
   Exciting new features, improved test coverage, and better code quality.
 
