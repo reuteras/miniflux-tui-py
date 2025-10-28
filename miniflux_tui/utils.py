@@ -1,6 +1,7 @@
 """Utility functions and helpers for miniflux-tui."""
 
 import tomllib
+from collections.abc import Iterator
 from contextlib import asynccontextmanager
 from importlib import metadata
 from pathlib import Path
@@ -21,14 +22,17 @@ def get_app_version() -> str:
         Version string if it can be determined, otherwise ``"unknown"``.
     """
 
-    try:
-        return metadata.version("miniflux-tui-py")
-    except metadata.PackageNotFoundError:
-        return _get_version_from_pyproject()
-    except Exception:
-        # Unexpected metadata errors should not crash the application; fallback
-        # to the file-based lookup instead.
-        return _get_version_from_pyproject()
+    for distribution_name in _iter_distribution_candidates():
+        try:
+            return metadata.version(distribution_name)
+        except metadata.PackageNotFoundError:
+            continue
+        except Exception:
+            # Unexpected metadata errors should not crash the application;
+            # fall back to the file-based lookup instead.
+            return _get_version_from_pyproject()
+
+    return _get_version_from_pyproject()
 
 
 def _get_version_from_pyproject() -> str:
@@ -44,6 +48,33 @@ def _get_version_from_pyproject() -> str:
         return "unknown"
 
     return "unknown"
+
+
+def _iter_distribution_candidates() -> Iterator[str]:
+    """Yield potential distribution names that provide :mod:`miniflux_tui`.
+
+    The canonical distribution name is ``miniflux-tui-py``. When the package is
+    installed in editable mode the metadata lookup can, however, vary between
+    environments. To make the lookup resilient we ask ``importlib.metadata`` for
+    the distributions that provide ``miniflux_tui`` and try those as well.
+    """
+
+    seen: set[str] = set()
+
+    def _unique(name: str) -> Iterator[str]:
+        if name and name not in seen:
+            seen.add(name)
+            yield name
+
+    yield from _unique("miniflux-tui-py")
+
+    try:
+        packages = metadata.packages_distributions()
+    except Exception:
+        return
+
+    for candidate in packages.get("miniflux_tui", []) or []:
+        yield from _unique(candidate)
 
 
 def get_star_icon(is_starred: bool) -> str:

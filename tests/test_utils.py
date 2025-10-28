@@ -192,6 +192,46 @@ class TestGetAppVersion:
             raise utils.metadata.PackageNotFoundError
 
         monkeypatch.setattr(utils.metadata, "version", raise_not_found)
+        monkeypatch.setattr(utils.metadata, "packages_distributions", dict)
+
+        expected_data = tomllib.loads(Path("pyproject.toml").read_text(encoding="utf-8"))
+        expected_version = expected_data.get("project", {}).get("version")
+
+        assert utils.get_app_version() == expected_version
+
+    def test_get_app_version_tries_alternative_distribution_names(self, monkeypatch):
+        """Lookup falls back to alternative distributions that provide the package."""
+
+        calls = []
+
+        def fake_version(name: str) -> str:
+            calls.append(name)
+            if name == "miniflux-tui-py":
+                raise utils.metadata.PackageNotFoundError
+            if name == "alt-dist":
+                return "1.2.3"
+            message = f"Unexpected distribution lookup for {name}"
+            raise AssertionError(message)
+
+        monkeypatch.setattr(utils.metadata, "version", fake_version)
+        monkeypatch.setattr(
+            utils.metadata,
+            "packages_distributions",
+            lambda: {"miniflux_tui": ["alt-dist"]},
+        )
+
+        assert utils.get_app_version() == "1.2.3"
+        assert calls == ["miniflux-tui-py", "alt-dist"]
+
+    def test_get_app_version_handles_metadata_errors(self, monkeypatch):
+        """Unexpected metadata errors still fall back to the file lookup."""
+
+        def raise_runtime_error(_: str) -> str:
+            message = "boom"
+            raise RuntimeError(message)
+
+        monkeypatch.setattr(utils.metadata, "version", raise_runtime_error)
+        monkeypatch.setattr(utils.metadata, "packages_distributions", dict)
 
         expected_data = tomllib.loads(Path("pyproject.toml").read_text(encoding="utf-8"))
         expected_version = expected_data.get("project", {}).get("version")
