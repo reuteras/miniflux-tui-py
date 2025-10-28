@@ -35,18 +35,18 @@ This issue tracks the manual testing checklist that must be completed before eac
 Two testing checklists are available in the repository:
 
 1. **`PRE_RELEASE_TEST_CHECKLIST.md`** - Essential tests for minor/major releases (~45-60 min)
-  - Critical functionality verification
-  - Major features testing
-  - Cross-platform checks
-  - Performance benchmarks
-  - Documentation verification
+- Critical functionality verification
+- Major features testing
+- Cross-platform checks
+- Performance benchmarks
+- Documentation verification
 
 2. **`MANUAL_TEST_CHECKLIST.md`** - Comprehensive testing guide (~2-4 hours)
-  - Complete feature coverage
-  - Edge cases and error handling
-  - Performance testing
-  - Accessibility checks
-  - Useful for major releases or significant refactors
+- Complete feature coverage
+- Edge cases and error handling
+- Performance testing
+- Accessibility checks
+- Useful for major releases or significant refactors
 
 ### Testing Requirements
 
@@ -74,28 +74,28 @@ Two testing checklists are available in the repository:
 ### Testing Process
 
 1. **Pre-Testing Setup:**
-   - [ ] Ensure test Miniflux server is accessible
-   - [ ] Have feeds with various states (unread, starred, errors)
-   - [ ] Clear any local config to test fresh installation
-   - [ ] Document testing environment details
+    - [ ] Ensure test Miniflux server is accessible
+    - [ ] Have feeds with various states (unread, starred, errors)
+    - [ ] Clear any local config to test fresh installation
+    - [ ] Document testing environment details
 
 2. **Execute Tests:**
-   - [ ] Follow `PRE_RELEASE_TEST_CHECKLIST.md` step by step
-   - [ ] Mark items as complete
-   - [ ] Document any failures or issues
-   - [ ] Record performance metrics
+    - [ ] Follow `PRE_RELEASE_TEST_CHECKLIST.md` step by step
+    - [ ] Mark items as complete
+    - [ ] Document any failures or issues
+    - [ ] Record performance metrics
 
 3. **Document Results:**
-   - [ ] Fill out "Test Results" section in checklist
-   - [ ] Create GitHub issues for any bugs found
-   - [ ] Add test summary to release notes
-   - [ ] Update this issue with test results
+    - [ ] Fill out "Test Results" section in checklist
+    - [ ] Create GitHub issues for any bugs found
+    - [ ] Add test summary to release notes
+    - [ ] Update this issue with test results
 
 4. **Sign-Off:**
-   - [ ] Tester approval
-   - [ ] Maintainer approval
-   - [ ] All critical issues resolved or documented
-   - [ ] Ready for release
+    - [ ] Tester approval
+    - [ ] Maintainer approval
+    - [ ] All critical issues resolved or documented
+    - [ ] Ready for release
 
 ### Success Criteria
 

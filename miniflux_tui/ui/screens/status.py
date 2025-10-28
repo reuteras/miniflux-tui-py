@@ -31,14 +31,25 @@ class StatusScreen(Screen):
         self.username: str = "Loading..."
         self.feeds: list[Feed] = []
         self.error_feeds: list[Feed] = []
+        self._header_widget: Header | None = None
+        self._scroll_container: VerticalScroll | None = None
+        self._footer_widget: Footer | None = None
 
     app: "MinifluxTUI"
 
     def compose(self) -> ComposeResult:
         """Create child widgets."""
-        yield Header()
+        header = Header()
+        scroll = VerticalScroll()
+        footer = Footer()
 
-        with VerticalScroll():
+        self._header_widget = header
+        self._scroll_container = scroll
+        self._footer_widget = footer
+
+        yield header
+
+        with scroll:
             yield Static("[bold cyan]System Status[/bold cyan]\n", id="title")
 
             yield Static("[bold yellow]Server Information[/bold yellow]")
@@ -55,7 +66,7 @@ class StatusScreen(Screen):
 
             yield Static("[dim]Press r to refresh, Esc or q to close[/dim]")
 
-        yield Footer()
+        yield footer
 
     async def on_mount(self) -> None:
         """Called when screen is mounted - load status information."""

@@ -83,6 +83,7 @@ class Config:
         self,
         server_url: str,
         api_key: str,
+        *,
         allow_invalid_certs: bool = False,
         unread_color: str = "cyan",
         read_color: str = "gray",

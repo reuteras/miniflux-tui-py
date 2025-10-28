@@ -118,7 +118,7 @@ class TestEntryListScreen:
         # Should return only unread entries
         assert len(filtered) == 2  # IDs 1 and 4
         assert all(e.is_unread for e in filtered)
-        assert all(e.id in [1, 4] for e in filtered)
+        assert all(e.id in {1, 4} for e in filtered)
 
     def test_filter_starred_only(self, diverse_entries):
         """Test filtering to show only starred entries."""
@@ -128,7 +128,7 @@ class TestEntryListScreen:
         # Should return only starred entries
         assert len(filtered) == 2  # IDs 3 and 4
         assert all(e.starred for e in filtered)
-        assert all(e.id in [3, 4] for e in filtered)
+        assert all(e.id in {3, 4} for e in filtered)
 
     def test_filters_are_mutually_exclusive(self, diverse_entries):
         """Test that only one filter is applied at a time."""
@@ -2123,7 +2123,7 @@ class TestSearchActions:
         screen._populate_list.assert_called_once()
         screen.notify.assert_called_with("Search cleared")
         assert screen.search_active is False
-        assert screen.search_term == ""
+        assert not screen.search_term
 
     def test_action_search_without_active_search_shows_hint(self, diverse_entries):
         """Test action_search shows hint when no search term is active."""

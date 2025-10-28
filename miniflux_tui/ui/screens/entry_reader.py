@@ -107,7 +107,8 @@ class EntryReaderScreen(Screen):
                 self.log(traceback.format_exc())
                 self.notify(f"Error marking as read: {e}", severity="error")
 
-    def _html_to_markdown(self, html_content: str) -> str:
+    @staticmethod
+    def _html_to_markdown(html_content: str) -> str:
         """Convert HTML content to markdown for display.
 
         Converts HTML from RSS feed entries to markdown format for better
@@ -272,7 +273,8 @@ class EntryReaderScreen(Screen):
         """
         return self._ensure_scroll_container()
 
-    def _clear_scroll_content(self, scroll: VerticalScroll):
+    @staticmethod
+    def _clear_scroll_content(scroll: VerticalScroll):
         """Remove all children from scroll container."""
         for child in scroll.children:
             child.remove()
@@ -308,7 +310,8 @@ class EntryReaderScreen(Screen):
         """Mount entry URL widget."""
         scroll.mount(Static(f"[dim]{self.entry.url}[/dim]", classes="entry-url"))
 
-    def _mount_separator(self, scroll: VerticalScroll):
+    @staticmethod
+    def _mount_separator(scroll: VerticalScroll):
         """Mount visual separator widget."""
         scroll.mount(Static(CONTENT_SEPARATOR, classes="separator"))
 

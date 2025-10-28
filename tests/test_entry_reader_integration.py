@@ -291,7 +291,7 @@ class TestEntryReaderScreenContentDisplay:
 
         async with app.run_test():
             screen = app.entry_reader_screen
-            assert screen.entry.content == ""
+            assert not screen.entry.content
 
     async def test_complex_html_conversion(self, test_feed):
         """Test conversion of complex HTML content."""
@@ -322,7 +322,7 @@ class TestEntryReaderScreenContentDisplay:
         async with app.run_test():
             screen = app.entry_reader_screen
             markdown = screen._html_to_markdown(html_content)
-            assert "Introduction" in markdown or markdown != ""
+            assert "Introduction" in markdown or bool(markdown)
 
 
 class TestEntryReaderScreenBindings:

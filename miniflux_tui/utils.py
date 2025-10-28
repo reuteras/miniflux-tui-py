@@ -2,7 +2,7 @@
 
 import tomllib
 from collections.abc import Iterator
-from contextlib import asynccontextmanager
+from contextlib import contextmanager
 from importlib import metadata
 from pathlib import Path
 
@@ -107,12 +107,14 @@ def get_status_icon(is_unread: bool) -> str:
     return "●" if is_unread else "○"
 
 
-@asynccontextmanager
-async def api_call(screen, operation_name: str = "Operation"):
+@contextmanager
+def api_call(screen, operation_name: str = "Operation"):
     """Context manager for safe API calls with error handling.
 
     Usage:
-        async with api_call(self, "marking entry as read") as client:
+        with api_call(self, "marking entry as read") as client:
+            if client is None:
+                return
             await client.mark_as_read(entry_id)
 
     Args:
@@ -122,12 +124,14 @@ async def api_call(screen, operation_name: str = "Operation"):
     Yields:
         The API client instance
     """
-    if not hasattr(screen.app, "client") or not screen.app.client:
+    client = getattr(screen.app, "client", None)
+    if not client:
         screen.notify("API client not available", severity="error")
+        yield None
         return
 
     try:
-        yield screen.app.client
+        yield client
     except TimeoutError:
         screen.notify(f"Request timeout during {operation_name}", severity="error")
         screen.log(f"Timeout during {operation_name}")
