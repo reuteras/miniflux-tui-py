@@ -111,6 +111,15 @@ Test on each target platform:
 
 ---
 
+## Container Image (if publishing)
+
+- [ ] Pull the image from GHCR (default `latest` or the release tag)
+- [ ] Run `docker run --rm -it ghcr.io/reuteras/miniflux-tui:TAG --init` and confirm config creation works
+- [ ] Run the container with a mounted config directory and verify the TUI launches successfully
+- [ ] (Optional) Verify the signature: `cosign verify ghcr.io/reuteras/miniflux-tui:TAG`
+
+---
+
 ## Error Handling and Edge Cases
 
 ### API Errors

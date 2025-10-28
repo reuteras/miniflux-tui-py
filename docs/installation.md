@@ -53,6 +53,7 @@ A signed container image is published to GitHub Container Registry on every push
 
 ```bash
 # Pull the image
+# `latest` follows the default branch. Use a release tag (e.g. v0.4.0) to pin builds.
 docker pull ghcr.io/reuteras/miniflux-tui:latest
 
 # Create a configuration directory on the host if it does not exist

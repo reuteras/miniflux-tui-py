@@ -48,6 +48,7 @@ miniflux-tui
 
 ```bash
 # Pull the signed image from GitHub Container Registry
+# `latest` tracks the default branch. Replace with a release tag (e.g. v0.4.0) to pin.
 docker pull ghcr.io/reuteras/miniflux-tui:latest
 
 # Create a configuration directory on the host if it does not exist

@@ -10,6 +10,8 @@ The application will load your feeds and display them in the entry list.
 
 If you installed via the container image, use:
 
+The `latest` tag follows the default branch. Replace it with a release tag (for example `v0.4.0`) if you want to pin a specific version.
+
 ```bash
 docker run --rm -it \
   -v ~/.config/miniflux-tui:/home/miniflux/.config/miniflux-tui \
