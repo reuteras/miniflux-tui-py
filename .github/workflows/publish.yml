@@ -11,6 +11,9 @@ permissions:
 
 jobs:
   build:
+    permissions:
+      contents: read
+      actions: write
     runs-on: ubuntu-latest
     steps:
       - name: Harden the runner (Audit all outbound calls)
@@ -58,6 +61,8 @@ jobs:
       name: pypi
       url: https://pypi.org/project/miniflux-tui-py/
     permissions:
+      contents: read
+      actions: read
       id-token: write
     steps:
       - name: Harden the runner (Audit all outbound calls)
@@ -91,6 +96,7 @@ jobs:
     runs-on: ${{ matrix.os }}
     permissions:
       contents: read
+      actions: write
     steps:
       - name: Harden the runner (Audit all outbound calls)
         uses: step-security/harden-runner@f4a75cfd619ee5ce8d5b864b0d183aff3c69b55a # v2.13.1
@@ -125,6 +131,7 @@ jobs:
     runs-on: ubuntu-latest
     permissions:
       contents: write
+      actions: read
       id-token: write
       attestations: write
     steps:
