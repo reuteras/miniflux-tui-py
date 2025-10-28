@@ -118,6 +118,13 @@ Test on each target platform:
 - [ ] Run the container with a mounted config directory and verify the TUI launches successfully
 - [ ] (Optional) Verify the signature: `cosign verify ghcr.io/reuteras/miniflux-tui:TAG`
 
+## Prebuilt Binaries (if publishing)
+
+- [ ] Linux archive (`miniflux-tui-linux-amd64.tar.gz`) extracts and `./miniflux-tui --check-config` runs
+- [ ] macOS archive (`miniflux-tui-macos-arm64.tar.gz`) runs after clearing quarantine (`xattr -d ...`)
+- [ ] Windows archive (`miniflux-tui-windows-amd64.zip`) runs via PowerShell (`.\miniflux-tui.exe --check-config`)
+- [ ] README and docs reference the correct binary download instructions
+
 ---
 
 ## Error Handling and Edge Cases

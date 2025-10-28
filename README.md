@@ -44,6 +44,19 @@ miniflux-tui --init
 miniflux-tui
 ```
 
+### Prebuilt Binaries (GitHub Releases)
+
+If you do not want to manage a Python environment, each tagged release now attaches standalone binaries for Linux (x86_64), macOS (arm64), and Windows (x86_64):
+
+1. Download the archive for your platform from the [GitHub Releases page](https://github.com/reuteras/miniflux-tui-py/releases).
+2. Extract the archive:
+   - Linux/macOS: `tar -xzf miniflux-tui-<os>-<arch>.tar.gz`
+   - Windows: right-click the `.zip` file and choose **Extract All…**
+3. (Linux/macOS only) Make the binary executable: `chmod +x miniflux-tui`
+4. Run the TUI: `./miniflux-tui --init`
+
+> **Note:** macOS may quarantine binaries downloaded from the internet. If macOS blocks execution, run `xattr -d com.apple.quarantine miniflux-tui` once after extraction.
+
 ### Container Image (Docker/Podman)
 
 ```bash

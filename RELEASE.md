@@ -39,6 +39,7 @@ The release script handles:
 - GitHub Actions workflow triggers automatically
 - Runs full test suite
 - Builds distribution packages
+- Builds standalone binaries for Linux/macOS/Windows
 - Publishes to PyPI
 - Creates GitHub Release with artifacts
 
@@ -147,12 +148,17 @@ Once you push the tag, GitHub Actions automatically:
 - Publishes to PyPI using Trusted Publisher
 - No secrets required!
 
-3. **Release Job** (after build succeeds)
+3. **Binary Job** (after build succeeds)
+- Runs on Linux, macOS, and Windows runners
+- Builds PyInstaller-based standalone executables
+- Packages OS-specific archives and uploads them as artifacts
+
+4. **Release Job** (after build and binary jobs succeed)
 - Creates GitHub Release
-- Attaches distribution artifacts
+- Attaches distribution and binary artifacts
 - Auto-generates release notes
 
-4. **Container Image Job** (triggered on `main` and tags)
+5. **Container Image Job** (triggered on `main` and tags)
 - Builds a multi-architecture image (linux/amd64 + linux/arm64)
 - Pushes to GitHub Container Registry with branch, semver, and `latest` tags
 - Generates SBOM and SLSA provenance attestations
