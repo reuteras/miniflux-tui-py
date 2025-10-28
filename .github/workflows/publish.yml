@@ -29,7 +29,7 @@ jobs:
         run: uv python install 3.11
 
       - name: Install dependencies
-        run: uv sync
+        run: uv sync --locked
 
       - name: Check formatting with ruff
         run: uv run ruff check miniflux_tui tests
@@ -108,7 +108,7 @@ jobs:
         run: uv python install 3.11
 
       - name: Install dependencies
-        run: uv sync --group binary
+        run: uv sync --group binary --locked
 
       - name: Build executable archive
         run: uv run python scripts/build_binary.py

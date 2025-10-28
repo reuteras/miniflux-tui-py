@@ -44,7 +44,7 @@ jobs:
         run: uv python install ${{ matrix.python-version }}
 
       - name: Install dependencies
-        run: uv sync
+        run: uv sync --locked
 
       - name: Check formatting with ruff
         run: uv run ruff check miniflux_tui tests
@@ -108,7 +108,7 @@ jobs:
         run: uv python install 3.15
 
       - name: Install dependencies
-        run: uv sync
+        run: uv sync --locked
 
       - name: Check formatting with ruff
         run: uv run ruff check miniflux_tui tests
