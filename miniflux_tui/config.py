@@ -119,7 +119,11 @@ class Config:
             msg = f"Config file not found: {path}"
             raise FileNotFoundError(msg)
 
-        data = tomllib.loads(path.read_text(encoding="utf-8"))
+        try:
+            data = tomllib.loads(path.read_text(encoding="utf-8"))
+        except (tomllib.TOMLDecodeError, TypeError) as exc:
+            msg = f"Invalid configuration: {exc}"
+            raise ValueError(msg) from exc
 
         # Validate configuration
         is_valid, error_msg = validate_config(data)
