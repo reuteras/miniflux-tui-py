@@ -2,6 +2,13 @@
 
 ## [Unreleased]
 
+## [0.4.7] - 2025-10-28
+
+### Fixed
+- Correct release title template (remove invalid `$RELEASE_TITLE` variable) ([#131](https://github.com/reuteras/miniflux-tui-py/pull/131))
+- Add GitHub attestations for cryptographic build provenance ([#131](https://github.com/reuteras/miniflux-tui-py/pull/131))
+- Restore PyPI attestations (was accidentally removed) ([#131](https://github.com/reuteras/miniflux-tui-py/pull/131))
+
 ## [0.4.6] - 2025-10-28
 
 ### Changed
