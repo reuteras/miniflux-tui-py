@@ -74,28 +74,28 @@ Two testing checklists are available in the repository:
 ### Testing Process
 
 1. **Pre-Testing Setup:**
-   - [ ] Ensure test Miniflux server is accessible
-   - [ ] Have feeds with various states (unread, starred, errors)
-   - [ ] Clear any local config to test fresh installation
-   - [ ] Document testing environment details
+    - [ ] Ensure test Miniflux server is accessible
+    - [ ] Have feeds with various states (unread, starred, errors)
+    - [ ] Clear any local config to test fresh installation
+    - [ ] Document testing environment details
 
 2. **Execute Tests:**
-   - [ ] Follow `PRE_RELEASE_TEST_CHECKLIST.md` step by step
-   - [ ] Mark items as complete
-   - [ ] Document any failures or issues
-   - [ ] Record performance metrics
+    - [ ] Follow `PRE_RELEASE_TEST_CHECKLIST.md` step by step
+    - [ ] Mark items as complete
+    - [ ] Document any failures or issues
+    - [ ] Record performance metrics
 
 3. **Document Results:**
-   - [ ] Fill out "Test Results" section in checklist
-   - [ ] Create GitHub issues for any bugs found
-   - [ ] Add test summary to release notes
-   - [ ] Update this issue with test results
+    - [ ] Fill out "Test Results" section in checklist
+    - [ ] Create GitHub issues for any bugs found
+    - [ ] Add test summary to release notes
+    - [ ] Update this issue with test results
 
 4. **Sign-Off:**
-   - [ ] Tester approval
-   - [ ] Maintainer approval
-   - [ ] All critical issues resolved or documented
-   - [ ] Ready for release
+    - [ ] Tester approval
+    - [ ] Maintainer approval
+    - [ ] All critical issues resolved or documented
+    - [ ] Ready for release
 
 ### Success Criteria
 

@@ -186,12 +186,12 @@ List any new features introduced in this release and verify they work:
 If fixing critical bugs, verify the original issue is resolved:
 
 1. Issue #____: ______________________________
-   - [ ] Original bug no longer occurs
-   - [ ] Fix doesn't introduce new issues
+    - [ ] Original bug no longer occurs
+    - [ ] Fix doesn't introduce new issues
 
 2. Issue #____: ______________________________
-   - [ ] Original bug no longer occurs
-   - [ ] Fix doesn't introduce new issues
+    - [ ] Original bug no longer occurs
+    - [ ] Fix doesn't introduce new issues
 
 ---
 
