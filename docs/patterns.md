@@ -22,15 +22,15 @@ async def action_toggle_read(self):
 from miniflux_tui.utils import api_call
 
 async def action_toggle_read(self):
-  """Mark entry as read."""
-  async with api_call(
-  action="Mark as read",
-  success_message="Entry marked as read",
-  error_title="Failed to mark entry as read",
-  ):
-  await self.app.client.mark_as_read(self.entry.id)
-  self.entry.status = "read"
-  self._refresh_display()
+    """Mark entry as read."""
+    with api_call(self, "marking entry as read") as client:
+        if client is None:
+            return
+
+        await client.change_entry_status(self.entry.id, "read")
+
+    self.entry.status = "read"
+    self._refresh_display()
 ```text
 
 **Benefits:**
@@ -147,25 +147,25 @@ def action_toggle_read(self):
 ### Good Pattern (Pattern 4) - Use This
 ```python
 async def action_toggle_read(self):
-  """Toggle entry read/unread status."""
-  # 1. Update state
-  new_status = "read" if self.entry.is_unread else "unread"
+    """Toggle entry read/unread status."""
+    # 1. Update desired state
+    new_status = "read" if self.entry.is_unread else "unread"
 
-  # 2. Persist to server
-  async with api_call(
-  action=f"Mark as {new_status}",
-  success_message=f"Entry marked as {new_status}",
-  ):
-  if self.entry.is_unread:
-  await self.app.client.mark_as_read(self.entry.id)
-  else:
-  await self.app.client.mark_as_unread(self.entry.id)
+    # 2. Persist to server with unified error handling
+    with api_call(self, f"marking entry as {new_status}") as client:
+        if client is None:
+            return
 
-  # 3. Update local state
-  self.entry.status = new_status
+        if new_status == "read":
+            await client.change_entry_status(self.entry.id, "read")
+        else:
+            await client.change_entry_status(self.entry.id, "unread")
 
-  # 4. Update UI
-  self._update_entry_display()
+    # 3. Update local state
+    self.entry.status = new_status
+
+    # 4. Update UI
+    self._update_entry_display()
 ```text
 
 **Pattern:**
@@ -406,12 +406,11 @@ except Exception as e:
 
 **Or Use the api_call Context Manager:**
 ```python
-async with api_call(
-  action="Do something",
-  success_message="Done!",
-  error_title="Failed",
-):
-  await something()
+with api_call(self, "marking entry as read") as client:
+    if client is None:
+        return
+
+    await client.change_entry_status(entry_id, "read")
 ```text
 
 ## Pattern 11: Constants Instead of Magic Numbers

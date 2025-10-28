@@ -348,13 +348,13 @@ All API calls use the `api_call` context manager:
 from miniflux_tui.utils import api_call
 
 async def action_toggle_read(self):
-  async with api_call(
-  action="Mark as read",
-  success_message="Entry marked as read",
-  error_title="Failed to mark entry as read",
-  ):
-  await self.app.client.mark_as_read(self.entry.id)
-  self.entry.status = "read"
+    with api_call(self, "marking entry as read") as client:
+        if client is None:
+            return
+
+        await client.change_entry_status(self.entry.id, "read")
+
+    self.entry.status = "read"
 ```text
 
 This handles:

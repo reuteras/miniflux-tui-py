@@ -887,12 +887,12 @@ class TestEntryReaderActionMethods:
             mock_client.mark_as_unread = MagicMock(return_value=None)
 
             # Use unittest.mock to patch __getattribute__ for this test
-            async def simulate_mark_unread():
+            def simulate_mark_unread():
                 # Simulate the action by directly executing the logic
                 screen.entry.status = "unread"
                 screen.notify("Marked as unread")
 
-            await simulate_mark_unread()
+            simulate_mark_unread()
 
             # Verify state changed
             assert screen.entry.status == "unread"

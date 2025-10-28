@@ -82,7 +82,8 @@ class HelpScreen(Screen):
 
         yield Footer()
 
-    def _get_about_text(self) -> str:
+    @staticmethod
+    def _get_about_text() -> str:
         """Generate about section text with application information.
 
         Returns:

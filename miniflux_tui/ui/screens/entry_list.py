@@ -130,6 +130,7 @@ class EntryListScreen(Screen):
         self,
         entries: list[Entry],
         categories: list[Category] | None = None,
+        *,
         unread_color: str = "cyan",
         read_color: str = "gray",
         default_sort: str = "date",
@@ -163,12 +164,23 @@ class EntryListScreen(Screen):
         self.last_highlighted_category: str | None = None  # Track last highlighted category for position persistence
         self.last_highlighted_entry_id: int | None = None  # Track last highlighted entry ID for position
         self.last_cursor_index: int = 0  # Track cursor position for non-grouped mode
+        self._header_widget: Header | None = None
+        self._footer_widget: Footer | None = None
 
     def compose(self) -> ComposeResult:
         """Create child widgets."""
-        yield Header()
-        yield ListView()
-        yield Footer()
+        header = Header()
+        list_view = ListView()
+        footer = Footer()
+
+        # Store references for later use (e.g. focus management)
+        self._header_widget = header
+        self.list_view = list_view
+        self._footer_widget = footer
+
+        yield header
+        yield list_view
+        yield footer
 
     def on_mount(self) -> None:
         """Called when screen is mounted."""
@@ -759,7 +771,8 @@ class EntryListScreen(Screen):
         except (ValueError, IndexError):
             return False
 
-    def _is_item_visible(self, item: ListItem) -> bool:
+    @staticmethod
+    def _is_item_visible(item: ListItem) -> bool:
         """Check if an item is visible (not hidden by CSS class)."""
         return "collapsed" not in item.classes
 
@@ -820,7 +833,10 @@ class EntryListScreen(Screen):
             new_status = "read" if highlighted.entry.is_unread else "unread"
 
             # Use consistent error handling context
-            async with api_call(self, f"marking entry as {new_status}") as client:
+            with api_call(self, f"marking entry as {new_status}") as client:
+                if client is None:
+                    return
+
                 # Call API to persist change
                 await client.change_entry_status(highlighted.entry.id, new_status)
 
@@ -843,7 +859,10 @@ class EntryListScreen(Screen):
         highlighted = self.list_view.highlighted_child
         if highlighted and isinstance(highlighted, EntryListItem):
             # Use consistent error handling context
-            async with api_call(self, "toggling star status") as client:
+            with api_call(self, "toggling star status") as client:
+                if client is None:
+                    return
+
                 # Call API to toggle star
                 await client.toggle_starred(highlighted.entry.id)
 
@@ -867,7 +886,10 @@ class EntryListScreen(Screen):
         highlighted = self.list_view.highlighted_child
         if highlighted and isinstance(highlighted, EntryListItem):
             # Use consistent error handling context
-            async with api_call(self, "saving entry") as client:
+            with api_call(self, "saving entry") as client:
+                if client is None:
+                    return
+
                 await client.save_entry(highlighted.entry.id)
                 self.notify(f"Entry saved: {highlighted.entry.title}")
 

@@ -56,7 +56,8 @@ class MinifluxClient:
         """Async context manager exit."""
         await self.close()
 
-    async def _run_sync(self, func, *args, **kwargs):
+    @staticmethod
+    async def _run_sync(func, *args, **kwargs):
         """Run a synchronous function in an executor."""
         loop = asyncio.get_event_loop()
         return await loop.run_in_executor(None, partial(func, *args, **kwargs))

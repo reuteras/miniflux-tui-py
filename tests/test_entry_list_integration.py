@@ -380,7 +380,7 @@ class TestEntryListScreenSearch:
         async with app.run_test():
             screen = app.entry_list_screen
             assert screen.search_active is False
-            assert screen.search_term == ""
+            assert not screen.search_term
 
     async def test_search_action_exists(self, integration_entries):
         """Test that search action exists and is callable."""
@@ -448,7 +448,7 @@ class TestEntryListScreenSearch:
             # Clear with empty string
             screen.set_search_term("")
             assert screen.search_active is False
-            assert screen.search_term == ""
+            assert not screen.search_term
 
     async def test_search_with_whitespace_is_trimmed(self, integration_entries):
         """Test that search terms with leading/trailing whitespace are trimmed."""
@@ -505,5 +505,5 @@ class TestEntryListScreenSearch:
             # Run action_search to clear
             screen.action_search()
             assert screen.search_active is False
-            assert screen.search_term == ""
+            assert not screen.search_term
             assert isinstance(screen.feed_fold_state, dict)

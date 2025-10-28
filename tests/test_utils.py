@@ -47,7 +47,7 @@ class TestGetStatusIcon:
 
 
 class TestApiCallContextManager:
-    """Test api_call async context manager."""
+    """Test api_call context manager."""
 
     @pytest.mark.asyncio
     async def test_api_call_yields_client(self):
@@ -63,7 +63,7 @@ class TestApiCallContextManager:
         mock_screen.log = MagicMock()
 
         # Use context manager
-        async with api_call(mock_screen, "test operation") as client:
+        with api_call(mock_screen, "test operation") as client:
             assert client is mock_client
 
     @pytest.mark.asyncio
@@ -81,7 +81,7 @@ class TestApiCallContextManager:
 
         # Test that ConnectionError is caught and handled
         error_msg = "Network failed"
-        async with api_call(mock_screen, "test operation") as _:
+        with api_call(mock_screen, "test operation") as _:
             raise ConnectionError(error_msg)
 
         # Verify error was logged
@@ -103,7 +103,7 @@ class TestApiCallContextManager:
 
         # Test that TimeoutError is caught and handled
         error_msg = "Request timed out"
-        async with api_call(mock_screen, "test operation") as _:
+        with api_call(mock_screen, "test operation") as _:
             raise TimeoutError(error_msg)
 
         # Verify error was logged
@@ -125,7 +125,7 @@ class TestApiCallContextManager:
 
         # Test that ValueError is caught and handled
         error_msg = "Invalid input"
-        async with api_call(mock_screen, "test operation") as _:
+        with api_call(mock_screen, "test operation") as _:
             raise ValueError(error_msg)
 
         # Verify error was logged
@@ -147,7 +147,7 @@ class TestApiCallContextManager:
 
         # Test that generic Exception is caught and handled
         error_msg = "Some error"
-        async with api_call(mock_screen, "test operation") as _:
+        with api_call(mock_screen, "test operation") as _:
             raise Exception(error_msg)
 
         # Verify error was logged
@@ -164,11 +164,10 @@ class TestApiCallContextManager:
             delattr(mock_screen.app, "client")
         mock_screen.notify = MagicMock()
 
-        # The context manager returns early without yielding when client is unavailable
-        # This is the expected behavior - it prevents operations when client is not available
-        with pytest.raises(RuntimeError, match="generator didn't yield"):
-            async with api_call(mock_screen, "test operation") as _:
-                pytest.fail("Should not reach here when client is unavailable")
+        # The context manager yields ``None`` when the client is unavailable so callers can
+        # exit early without attempting API operations.
+        with api_call(mock_screen, "test operation") as client:
+            assert client is None
 
         # Verify that the user was notified
         mock_screen.notify.assert_called()

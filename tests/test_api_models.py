@@ -116,7 +116,7 @@ class TestFeed:
         }
         feed = Feed.from_dict(data)
         assert feed.id == 8
-        assert feed.parsing_error_message == ""
+        assert not feed.parsing_error_message
         assert feed.parsing_error_count == 0
         assert feed.checked_at is None
         assert feed.disabled is False
