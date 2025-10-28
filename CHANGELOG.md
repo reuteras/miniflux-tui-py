@@ -1,5 +1,17 @@
 # Changelog
 
+## [Unreleased]
+
+### Added
+-
+
+### Changed
+-
+
+### Fixed
+-
+
+
 ## [0.4.11] - 2025-10-28
 
 ### Added
@@ -27,8 +39,6 @@
 ### Bug Fixes
 - Add attestations:write permission for GitHub attestations
 
-
-## [Unreleased]
 
 ## [0.4.7] - 2025-10-28
 
