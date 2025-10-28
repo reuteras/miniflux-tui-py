@@ -158,14 +158,11 @@ def get_config_dir() -> Path:
     Returns:
         Path to config directory
     """
-    if sys.platform == "darwin":
-        # macOS
-        base = Path.home() / "Library" / "Application Support"
-    elif sys.platform == "win32":
+    if sys.platform == "win32":
         # Windows
         base = Path(os.environ.get("APPDATA", Path.home() / "AppData" / "Roaming"))
     else:
-        # Linux and other Unix-like systems
+        # Linux, macOS, and other Unix-like systems
         base = Path(os.environ.get("XDG_CONFIG_HOME", Path.home() / ".config"))
 
     return base / "miniflux-tui"

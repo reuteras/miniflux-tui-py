@@ -98,7 +98,7 @@ Responsibilities:
 
 ```bash
 ~/.config/miniflux-tui/config.toml  (Linux, XDG)
-~/Library/Application Support/miniflux-tui/config.toml  (macOS)
+~/.config/miniflux-tui/config.toml  (macOS)
 %APPDATA%\miniflux-tui\config.toml  (Windows)
 ```text
 

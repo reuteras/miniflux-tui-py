@@ -18,7 +18,7 @@ This comprehensive checklist covers all features and functions of the miniflux-t
 - [ ] Run `miniflux-tui --init` to create default config
 - [ ] Verify config file created at correct OS-specific location:
   - Linux: `~/.config/miniflux-tui/config.toml`
-  - macOS: `~/Library/Application Support/miniflux-tui/config.toml`
+  - macOS: `~/.config/miniflux-tui/config.toml`
   - Windows: `%APPDATA%\miniflux-tui\config.toml`
 - [ ] Edit config file with valid server URL and API key
 - [ ] Run `miniflux-tui --check-config` to verify configuration

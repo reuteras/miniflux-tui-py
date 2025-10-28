@@ -300,7 +300,7 @@ uv run mkdocs serve              # Preview docs locally
 
 Location varies by OS:
 - Linux: `~/.config/miniflux-tui/config.toml`
-- macOS: `~/Library/Application Support/miniflux-tui/config.toml`
+- macOS: `~/.config/miniflux-tui/config.toml`
 - Windows: `%APPDATA%\miniflux-tui\config.toml`
 
 Example:

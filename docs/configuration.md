@@ -76,10 +76,10 @@ The config file is stored in `$XDG_CONFIG_HOME` (defaults to `~/.config`):
 
 ### macOS
 
-The config file is stored in `~/Library/Application Support`:
+The config file is stored in `~/.config`:
 
 ```text
-~/Library/Application Support/miniflux-tui/config.toml
+~/.config/miniflux-tui/config.toml
 ```
 
 ### Windows
