@@ -80,6 +80,7 @@ jobs:
         uses: pypa/gh-action-pypi-publish@ed0c53931b1dc9bd32cbe73a98c7f6766f8a527e # release/v1
         with:
           packages-dir: dist/
+          attestations: true
 
   release:
     needs: build
@@ -103,6 +104,11 @@ jobs:
         with:
           name: dist
           path: dist/
+
+      - name: Generate GitHub attestations
+        uses: actions/attest-build-provenance@ef244123eb79f2f7a7e75d99086184180e6d0018 # v2.0.0
+        with:
+          subject-path: 'dist/*'
 
       - name: Publish GitHub Release
         uses: softprops/action-gh-release@6da8fa9354ddfdc4aeace5fc48d7f679b5214090 # v2
