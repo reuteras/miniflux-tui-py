@@ -46,6 +46,7 @@ Thumbs.db
 coverage.xml
 htmlcov/
 *.cover
+fuzz/artifacts/
 
 # Configuration (local)
 config.toml
