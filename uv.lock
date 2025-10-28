@@ -1,5 +1,5 @@
 version = 1
-revision = 3
+revision = 2
 requires-python = ">=3.11"
 resolution-markers = [
     "python_full_version >= '3.12'",
@@ -22,6 +22,15 @@ source = { registry = "https://pypi.org/simple" }
 sdist = { url = "https://files.pythonhosted.org/packages/a7/d1/6eee8726a863f28ff50d26c5eacb1a590f96ccbb273ce0a8c047ffb10f5a/astroid-4.0.1.tar.gz", hash = "sha256:0d778ec0def05b935e198412e62f9bcca8b3b5c39fdbe50b0ba074005e477aab", size = 405414, upload-time = "2025-10-11T15:15:42.6Z" }
 wheels = [
     { url = "https://files.pythonhosted.org/packages/47/f4/034361a9cbd9284ef40c8ad107955ede4efae29cbc17a059f63f6569c06a/astroid-4.0.1-py3-none-any.whl", hash = "sha256:37ab2f107d14dc173412327febf6c78d39590fdafcb44868f03b6c03452e3db0", size = 276268, upload-time = "2025-10-11T15:15:40.585Z" },
+]
+
+[[package]]
+name = "atheris"
+version = "2.3.0"
+source = { registry = "https://pypi.org/simple" }
+sdist = { url = "https://files.pythonhosted.org/packages/3f/80/65938e910e1b61ecf2a66339f2e1860b84d1d0f0e604a0b08910d00707a5/atheris-2.3.0.tar.gz", hash = "sha256:cf1fdf5fa220a41a2f262b32363fc566549502b2cb0addf4e1baad5531c0e825", size = 304139, upload-time = "2023-08-29T20:53:14.063Z" }
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/00/01/3a2a31c0016233599b12e8fa6c956ec6c1df78630d8cec9cfa78904d0013/atheris-2.3.0-cp311-cp311-manylinux_2_17_x86_64.manylinux2014_x86_64.whl", hash = "sha256:e4e43d1ee4760916a84ff73c9c6cf9ac6eee80fc030479bbed43fe0b8e994981", size = 31182450, upload-time = "2023-08-29T20:52:58.899Z" },
 ]
 
 [[package]]
@@ -536,6 +545,9 @@ docs = [
     { name = "mkdocs-material" },
     { name = "mkdocstrings", extra = ["python"] },
 ]
+fuzz = [
+    { name = "atheris" },
+]
 
 [package.dev-dependencies]
 binary = [
@@ -555,9 +567,13 @@ docs = [
     { name = "mkdocs-material" },
     { name = "mkdocstrings", extra = ["python"] },
 ]
+fuzz = [
+    { name = "atheris" },
+]
 
 [package.metadata]
 requires-dist = [
+    { name = "atheris", marker = "extra == 'fuzz'", specifier = ">=2.3.0" },
     { name = "html2text", specifier = ">=2025.4.15" },
     { name = "miniflux", specifier = ">=1.1.4" },
     { name = "mkdocs", marker = "extra == 'docs'", specifier = ">=1.6.1" },
@@ -571,7 +587,7 @@ requires-dist = [
     { name = "textual", specifier = ">=6.4.0" },
     { name = "tomli", marker = "python_full_version < '3.11'", specifier = ">=2.0.1" },
 ]
-provides-extras = ["dev", "docs"]
+provides-extras = ["dev", "docs", "fuzz"]
 
 [package.metadata.requires-dev]
 binary = [{ name = "pyinstaller", specifier = ">=6.10.0" }]
@@ -589,6 +605,7 @@ docs = [
     { name = "mkdocs-material", specifier = ">=9.6.22" },
     { name = "mkdocstrings", extras = ["python"], specifier = ">=0.30.1" },
 ]
+fuzz = [{ name = "atheris", specifier = ">=2.3.0" }]
 
 [[package]]
 name = "mkdocs"
