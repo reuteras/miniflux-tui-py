@@ -238,6 +238,38 @@ class TestGetAppVersion:
 
         assert utils.get_app_version() == expected_version
 
+    def test_get_app_version_recovers_from_metadata_error_with_other_candidates(
+        self, monkeypatch
+    ):
+        """Continue trying alternative distributions after metadata errors."""
+
+        calls = []
+
+        def fake_version(name: str) -> str:
+            calls.append(name)
+            if name == "miniflux-tui-py":
+                message = "boom"
+                raise RuntimeError(message)
+            if name == "alt-dist":
+                return "1.2.3"
+            raise utils.metadata.PackageNotFoundError
+
+        monkeypatch.setattr(utils.metadata, "version", fake_version)
+        monkeypatch.setattr(
+            utils.metadata,
+            "packages_distributions",
+            lambda: {"miniflux_tui": ["alt-dist"]},
+        )
+        monkeypatch.setattr(
+            utils,
+            "_get_version_from_pyproject",
+            lambda: "from-pyproject",
+            raising=False,
+        )
+
+        assert utils.get_app_version() == "1.2.3"
+        assert calls == ["miniflux-tui-py", "alt-dist"]
+
     def test_get_app_version_returns_unknown_when_version_missing(self, monkeypatch, tmp_path):
         """Missing metadata and pyproject should return "unknown"."""
 

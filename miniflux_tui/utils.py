@@ -22,15 +22,21 @@ def get_app_version() -> str:
         Version string if it can be determined, otherwise ``"unknown"``.
     """
 
+    last_metadata_error: Exception | None = None
+
     for distribution_name in _iter_distribution_candidates():
         try:
             return metadata.version(distribution_name)
         except metadata.PackageNotFoundError:
-            continue
-        except Exception:
-            # Unexpected metadata errors should not crash the application;
-            # fall back to the file-based lookup instead.
-            return _get_version_from_pyproject()
+            pass
+        except Exception as error:
+            # Unexpected metadata errors should not crash the application. Try
+            # any remaining candidates before falling back to the file-based
+            # lookup instead.
+            last_metadata_error = error
+
+    if last_metadata_error is not None:
+        return _get_version_from_pyproject()
 
     return _get_version_from_pyproject()
 
