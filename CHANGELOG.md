@@ -1,5 +1,14 @@
 # Changelog
 
+## [0.4.9] - 2025-10-28
+
+### Features
+- publish signed container image
+
+### CI/CD
+- align container image publishing
+
+
 ## [0.4.8] - 2025-10-28
 
 ### Bug Fixes
