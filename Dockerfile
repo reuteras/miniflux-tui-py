@@ -1,6 +1,6 @@
 # syntax=docker/dockerfile:1.7
 
-ARG PYTHON_VERSION=3.13.3
+ARG PYTHON_VERSION=3.13.9
 
 FROM python:${PYTHON_VERSION}-slim AS builder
 
@@ -16,7 +16,7 @@ RUN python -m venv "${UV_PROJECT_ENV}"
 ENV PATH=${UV_PROJECT_ENV}/bin:$PATH
 
 # hadolint ignore=DL3013
-RUN pip install --upgrade pip==24.2 uv==0.4.29
+RUN pip install --upgrade pip==25.3 uv==0.9.5
 
 COPY pyproject.toml uv.lock README.md LICENSE /src/
 COPY miniflux_tui /src/miniflux_tui
