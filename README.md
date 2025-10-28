@@ -50,8 +50,8 @@ If you do not want to manage a Python environment, each tagged release now attac
 
 1. Download the archive for your platform from the [GitHub Releases page](https://github.com/reuteras/miniflux-tui-py/releases).
 2. Extract the archive:
-   - Linux/macOS: `tar -xzf miniflux-tui-<os>-<arch>.tar.gz`
-   - Windows: right-click the `.zip` file and choose **Extract All…**
+    - Linux/macOS: `tar -xzf miniflux-tui-<os>-<arch>.tar.gz`
+    - Windows: right-click the `.zip` file and choose **Extract All…**
 3. (Linux/macOS only) Make the binary executable: `chmod +x miniflux-tui`
 4. Run the TUI: `./miniflux-tui --init`
 
