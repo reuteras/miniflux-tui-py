@@ -356,8 +356,23 @@ Co-Authored-By: Claude <noreply@anthropic.com>"""
 
     # Push changes and tag
     print_info("Pushing changes and tag to origin...")
-    run_command(["git", "push", "origin", "main"])
-    run_command(["git", "push", "origin", f"v{new_version}"])
+    push_branch_ok = run_command(
+        ["git", "push", "origin", "main"],
+        "Push branch",
+        show_output=True,
+    )
+    push_tag_ok = False
+    if push_branch_ok:
+        push_tag_ok = run_command(
+            ["git", "push", "origin", f"v{new_version}"],
+            "Push tag",
+            show_output=True,
+        )
+
+    if not push_branch_ok or not push_tag_ok:
+        print_error("Failed to push changes and/or tag. Please resolve the git issue above and push manually.")
+        sys.exit(1)
+
     print_success("Changes and tag pushed to GitHub")
 
     print_header("Release Complete! 🚀")
