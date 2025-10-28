@@ -15,7 +15,8 @@ RUN python -m venv "${UV_PROJECT_ENV}"
 
 ENV PATH=${UV_PROJECT_ENV}/bin:$PATH
 
-RUN pip install --upgrade pip uv==0.4.29
+# hadolint ignore=DL3013
+RUN pip install --upgrade pip==24.2 uv==0.4.29
 
 COPY pyproject.toml uv.lock README.md LICENSE /src/
 COPY miniflux_tui /src/miniflux_tui
@@ -42,6 +43,7 @@ ENV PYTHONDONTWRITEBYTECODE=1 \
     PATH=/opt/app/.venv/bin:$PATH \
     HOME=/home/miniflux
 
+# hadolint ignore=DL3008
 RUN apt-get update \
     && apt-get install --no-install-recommends --yes ca-certificates \
     && rm -rf /var/lib/apt/lists/*
@@ -54,11 +56,13 @@ COPY --chown=miniflux:miniflux config.toml.example /opt/app/config.toml.example
 WORKDIR "${HOME}"
 
 LABEL org.opencontainers.image.title="miniflux-tui-py" \
-      org.opencontainers.image.description="Terminal UI client for Miniflux packaged as a container" \
-      org.opencontainers.image.url="https://github.com/reuteras/miniflux-tui-py" \
-      org.opencontainers.image.source="https://github.com/reuteras/miniflux-tui-py" \
-      org.opencontainers.image.licenses="MIT"
+    org.opencontainers.image.description="Terminal UI client for Miniflux packaged as a container" \
+    org.opencontainers.image.url="https://github.com/reuteras/miniflux-tui-py" \
+    org.opencontainers.image.source="https://github.com/reuteras/miniflux-tui-py" \
+    org.opencontainers.image.licenses="MIT"
 
 USER miniflux
+
+HEALTHCHECK --interval=60s --timeout=10s --start-period=30s --retries=3 CMD ["miniflux-tui", "--version"]
 
 ENTRYPOINT ["miniflux-tui"]
