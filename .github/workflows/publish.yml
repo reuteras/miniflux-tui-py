@@ -81,36 +81,6 @@ jobs:
         with:
           packages-dir: dist/
 
-  generate-provenance:
-    needs: publish
-    runs-on: ubuntu-latest
-    permissions:
-      id-token: write
-      contents: write
-    steps:
-      - name: Harden the runner (Audit all outbound calls)
-        uses: step-security/harden-runner@f4a75cfd619ee5ce8d5b864b0d183aff3c69b55a # v2.13.1
-        with:
-          egress-policy: audit
-
-      - uses: actions/checkout@08c6903cd8c0fde910a37f88322edcfb5dd907a8  # v5
-        with:
-          persist-credentials: false
-
-      - name: Download artifacts
-        if: github.event_name != 'pull_request'
-        uses: actions/download-artifact@018cc2cf5baa6db3ef3c5f8a56943fffe632ef53 # v6
-        with:
-          name: dist
-          path: dist/
-
-      - name: Generate SLSA provenance
-        uses: slsa-framework/slsa-github-generator@5a775b367a56d5bd118a224a811bba288150a563 # v2.0.0
-        with:
-          base64-subjects: ${{ hashFiles('dist/**') }}
-          upload-assets: true
-          draft-release: false
-
   release:
     needs: build
     runs-on: ubuntu-latest
