@@ -3,6 +3,7 @@
 ## [0.4.9] - 2025-10-28
 
 ### Features
+- publish standalone binaries
 - publish signed container image
 
 ### CI/CD
