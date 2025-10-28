@@ -44,6 +44,34 @@ miniflux-tui --init
 miniflux-tui
 ```
 
+### Container Image (Docker/Podman)
+
+```bash
+# Pull the signed image from GitHub Container Registry
+# `latest` tracks the default branch. Replace with a release tag (e.g. v0.4.0) to pin.
+docker pull ghcr.io/reuteras/miniflux-tui:latest
+
+# Create a configuration directory on the host if it does not exist
+mkdir -p ~/.config/miniflux-tui
+
+# Generate a config file (writes to the mounted directory)
+docker run --rm -it \
+  -v ~/.config/miniflux-tui:/home/miniflux/.config/miniflux-tui \
+  ghcr.io/reuteras/miniflux-tui:latest \
+  --init
+
+# Launch the TUI (shares configuration and uses your terminal)
+docker run --rm -it \
+  -v ~/.config/miniflux-tui:/home/miniflux/.config/miniflux-tui \
+  ghcr.io/reuteras/miniflux-tui:latest
+```
+
+The image is built in CI, published to GHCR, and signed with Sigstore Cosign using GitHub OIDC so you can verify it with:
+
+```bash
+cosign verify ghcr.io/reuteras/miniflux-tui:latest
+```
+
 ### From Source (For Developers)
 
 ```bash

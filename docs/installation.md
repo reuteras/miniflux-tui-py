@@ -47,6 +47,36 @@ uv sync --all-groups
 uv run miniflux-tui
 ```
 
+## Container Image (Docker or Podman)
+
+A signed container image is published to GitHub Container Registry on every push to `main` and for releases. To use it:
+
+```bash
+# Pull the image
+# `latest` follows the default branch. Use a release tag (e.g. v0.4.0) to pin builds.
+docker pull ghcr.io/reuteras/miniflux-tui:latest
+
+# Create a configuration directory on the host if it does not exist
+mkdir -p ~/.config/miniflux-tui
+
+# Generate a configuration file
+docker run --rm -it \
+  -v ~/.config/miniflux-tui:/home/miniflux/.config/miniflux-tui \
+  ghcr.io/reuteras/miniflux-tui:latest \
+  --init
+
+# Launch the TUI with the shared configuration
+docker run --rm -it \
+  -v ~/.config/miniflux-tui:/home/miniflux/.config/miniflux-tui \
+  ghcr.io/reuteras/miniflux-tui:latest
+```
+
+The build workflow signs the image with [Sigstore Cosign](https://docs.sigstore.dev/cosign/overview/). You can verify the signature using GitHub's OIDC identity:
+
+```bash
+cosign verify ghcr.io/reuteras/miniflux-tui:latest
+```
+
 ## Setup Your Configuration
 
 Before running the application for the first time, you need to configure it:
