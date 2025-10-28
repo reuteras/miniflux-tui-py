@@ -119,8 +119,7 @@ class Config:
             msg = f"Config file not found: {path}"
             raise FileNotFoundError(msg)
 
-        with Path.open(path, "rb") as f:
-            data = tomllib.load(f)
+        data = tomllib.loads(path.read_text(encoding="utf-8"))
 
         # Validate configuration
         is_valid, error_msg = validate_config(data)
@@ -217,7 +216,8 @@ default_sort = "date"
 default_group_by_feed = false
 """
 
-    with Path.open(config_path, "w") as f:
+    # Always write config using UTF-8 to avoid locale-dependent encoding issues
+    with Path.open(config_path, "w", encoding="utf-8") as f:
         f.write(default_config)
 
     return config_path
