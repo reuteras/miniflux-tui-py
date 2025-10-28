@@ -39,6 +39,7 @@ The release script handles:
 - GitHub Actions workflow triggers automatically
 - Runs full test suite
 - Builds distribution packages
+- Builds standalone binaries for Linux/macOS/Windows
 - Publishes to PyPI
 - Creates GitHub Release with artifacts
 
@@ -147,10 +148,21 @@ Once you push the tag, GitHub Actions automatically:
 - Publishes to PyPI using Trusted Publisher
 - No secrets required!
 
-3. **Release Job** (after build succeeds)
+3. **Binary Job** (after build succeeds)
+- Runs on Linux, macOS, and Windows runners
+- Builds PyInstaller-based standalone executables
+- Packages OS-specific archives and uploads them as artifacts
+
+4. **Release Job** (after build and binary jobs succeed)
 - Creates GitHub Release
-- Attaches distribution artifacts
+- Attaches distribution and binary artifacts
 - Auto-generates release notes
+
+5. **Container Image Job** (triggered on `main` and tags)
+- Builds a multi-architecture image (linux/amd64 + linux/arm64)
+- Pushes to GitHub Container Registry with branch, semver, and `latest` tags
+- Generates SBOM and SLSA provenance attestations
+- Signs the image with Sigstore Cosign (keyless via GitHub OIDC)
 
 ### 7. Verify Release
 
@@ -293,6 +305,7 @@ After the release:
 - [ ] Check GitHub Actions workflow passed
 - [ ] Verify release on GitHub: [https://github.com/reuteras/miniflux-tui-py/releases](https://github.com/reuteras/miniflux-tui-py/releases)
 - [ ] Verify on PyPI: [https://pypi.org/project/miniflux-tui-py/](https://pypi.org/project/miniflux-tui-py/)
+- [ ] Pull the container image from GHCR and verify signature: `docker pull ghcr.io/reuteras/miniflux-tui:latest && cosign verify ghcr.io/reuteras/miniflux-tui:latest`
 - [ ] Test installation: `pip install miniflux-tui-py --upgrade`
 
 ## Manual Release (Advanced)

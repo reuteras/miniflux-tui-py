@@ -31,6 +31,23 @@ pip install miniflux-tui-py
 miniflux-tui
 ```
 
+## Prebuilt Binaries (GitHub Releases)
+
+Every tagged release includes standalone executables for Linux (x86_64), macOS (arm64), and Windows (x86_64). This is the easiest way to try miniflux-tui-py without installing Python.
+
+1. Visit the [GitHub Releases](https://github.com/reuteras/miniflux-tui-py/releases) page and download the archive named `miniflux-tui-<os>-<arch>`.
+2. Extract the archive into a directory of your choice.
+   - Linux/macOS: `tar -xzf miniflux-tui-<os>-<arch>.tar.gz`
+   - Windows: right-click the `.zip` file and choose **Extract All…**
+3. (Linux/macOS) Make the binary executable if necessary: `chmod +x miniflux-tui`
+4. Run the application from the extracted directory: `./miniflux-tui --init`
+
+If macOS reports that the binary is from an unidentified developer, remove the quarantine attribute once after extraction:
+
+```bash
+xattr -d com.apple.quarantine miniflux-tui
+```
+
 ## From Source (For Development)
 
 To install from source for development:
@@ -45,6 +62,36 @@ uv sync --all-groups
 
 # Run the application
 uv run miniflux-tui
+```
+
+## Container Image (Docker or Podman)
+
+A signed container image is published to GitHub Container Registry on every push to `main` and for releases. To use it:
+
+```bash
+# Pull the image
+# `latest` follows the default branch. Use a release tag (e.g. v0.4.0) to pin builds.
+docker pull ghcr.io/reuteras/miniflux-tui:latest
+
+# Create a configuration directory on the host if it does not exist
+mkdir -p ~/.config/miniflux-tui
+
+# Generate a configuration file
+docker run --rm -it \
+  -v ~/.config/miniflux-tui:/home/miniflux/.config/miniflux-tui \
+  ghcr.io/reuteras/miniflux-tui:latest \
+  --init
+
+# Launch the TUI with the shared configuration
+docker run --rm -it \
+  -v ~/.config/miniflux-tui:/home/miniflux/.config/miniflux-tui \
+  ghcr.io/reuteras/miniflux-tui:latest
+```
+
+The build workflow signs the image with [Sigstore Cosign](https://docs.sigstore.dev/cosign/overview/). You can verify the signature using GitHub's OIDC identity:
+
+```bash
+cosign verify ghcr.io/reuteras/miniflux-tui:latest
 ```
 
 ## Setup Your Configuration

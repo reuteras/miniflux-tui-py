@@ -1,0 +1,64 @@
+# syntax=docker/dockerfile:1.7
+
+ARG PYTHON_VERSION=3.13.3
+
+FROM python:${PYTHON_VERSION}-slim AS builder
+
+ENV PIP_NO_CACHE_DIR=1 \
+    PYTHONDONTWRITEBYTECODE=1 \
+    PYTHONUNBUFFERED=1 \
+    UV_PROJECT_ENV=/opt/app/.venv
+
+WORKDIR /src
+
+RUN python -m venv "${UV_PROJECT_ENV}"
+
+ENV PATH=${UV_PROJECT_ENV}/bin:$PATH
+
+RUN pip install --upgrade pip uv==0.4.29
+
+COPY pyproject.toml uv.lock README.md LICENSE /src/
+COPY miniflux_tui /src/miniflux_tui
+
+RUN uv export \
+        --format requirements-txt \
+        --frozen \
+        --no-dev \
+        --no-editable \
+        --no-emit-project \
+        --output-file requirements.txt \
+    && pip install --no-cache-dir --require-hashes -r requirements.txt \
+    && pip install --no-cache-dir --no-deps . \
+    && rm requirements.txt \
+    && find "${UV_PROJECT_ENV}" -type d -name "__pycache__" -prune -exec rm -rf {} +
+
+
+FROM python:${PYTHON_VERSION}-slim AS runtime
+
+ENV PYTHONDONTWRITEBYTECODE=1 \
+    PYTHONUNBUFFERED=1 \
+    PIP_NO_CACHE_DIR=1 \
+    UV_PROJECT_ENV=/opt/app/.venv \
+    PATH=/opt/app/.venv/bin:$PATH \
+    HOME=/home/miniflux
+
+RUN apt-get update \
+    && apt-get install --no-install-recommends --yes ca-certificates \
+    && rm -rf /var/lib/apt/lists/*
+
+RUN useradd --create-home --home-dir "${HOME}" --shell /usr/sbin/nologin --system miniflux
+
+COPY --from=builder /opt/app/.venv /opt/app/.venv
+COPY --chown=miniflux:miniflux config.toml.example /opt/app/config.toml.example
+
+WORKDIR "${HOME}"
+
+LABEL org.opencontainers.image.title="miniflux-tui-py" \
+      org.opencontainers.image.description="Terminal UI client for Miniflux packaged as a container" \
+      org.opencontainers.image.url="https://github.com/reuteras/miniflux-tui-py" \
+      org.opencontainers.image.source="https://github.com/reuteras/miniflux-tui-py" \
+      org.opencontainers.image.licenses="MIT"
+
+USER miniflux
+
+ENTRYPOINT ["miniflux-tui"]
