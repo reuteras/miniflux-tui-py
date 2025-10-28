@@ -221,8 +221,7 @@ class TestConfigDirectory:
         """Test get_config_dir() on macOS."""
         with patch.object(sys, "platform", "darwin"):
             config_dir = get_config_dir()
-            assert "Library" in str(config_dir)
-            assert "Application Support" in str(config_dir)
+            assert ".config" in str(config_dir)
             assert "miniflux-tui" in str(config_dir)
 
     def test_get_config_dir_win32(self):
