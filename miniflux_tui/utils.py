@@ -2,27 +2,46 @@
 
 import tomllib
 from contextlib import asynccontextmanager
+from importlib import metadata
 from pathlib import Path
+
+PYPROJECT_PATH = Path(__file__).resolve().parent.parent / "pyproject.toml"
 
 
 def get_app_version() -> str:
-    """Get application version from pyproject.toml.
+    """Return the application version.
+
+    The preferred source for the version is the installed package metadata. This
+    works both for editable installs and when the project is installed from a
+    wheel. When the metadata isn't available (for example when running the
+    source tree directly without installing), the function falls back to reading
+    the version from ``pyproject.toml``.
 
     Returns:
-        Version string from pyproject.toml, or "unknown" if not found
+        Version string if it can be determined, otherwise ``"unknown"``.
     """
-    try:
-        # Find pyproject.toml in the package directory
-        package_dir = Path(__file__).parent.parent
-        pyproject_path = package_dir / "pyproject.toml"
 
-        if pyproject_path.exists():
-            data = tomllib.loads(pyproject_path.read_text())
-            version = data.get("project", {}).get("version", "unknown")
-            return str(version)
-    except Exception:  # noqa: S110
-        # Fail silently and return "unknown" if version cannot be determined
-        pass
+    try:
+        return metadata.version("miniflux-tui-py")
+    except metadata.PackageNotFoundError:
+        return _get_version_from_pyproject()
+    except Exception:
+        # Unexpected metadata errors should not crash the application; fallback
+        # to the file-based lookup instead.
+        return _get_version_from_pyproject()
+
+
+def _get_version_from_pyproject() -> str:
+    """Read the version from ``pyproject.toml`` if it is available."""
+
+    try:
+        if PYPROJECT_PATH.exists():
+            data = tomllib.loads(PYPROJECT_PATH.read_text(encoding="utf-8"))
+            version = data.get("project", {}).get("version")
+            if version:
+                return str(version)
+    except (OSError, tomllib.TOMLDecodeError, AttributeError):
+        return "unknown"
 
     return "unknown"
 
