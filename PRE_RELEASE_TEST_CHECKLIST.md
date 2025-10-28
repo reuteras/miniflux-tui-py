@@ -101,7 +101,7 @@ Test on each target platform:
 
 ### macOS
 - [ ] All critical functionality passes
-- [ ] Config path: `~/Library/Application Support/miniflux-tui/config.toml`
+- [ ] Config path: `~/.config/miniflux-tui/config.toml`
 - [ ] Terminal rendering correct (Terminal.app and iTerm2)
 
 ### Windows

@@ -66,7 +66,7 @@ This will:
 The configuration is saved to a platform-specific location:
 
 - **Linux**: `~/.config/miniflux-tui/config.toml`
-- **macOS**: `~/Library/Application Support/miniflux-tui/config.toml`
+- **macOS**: `~/.config/miniflux-tui/config.toml`
 - **Windows**: `%APPDATA%\miniflux-tui\config.toml`
 
 ## Getting Your Miniflux API Key
