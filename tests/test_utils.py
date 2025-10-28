@@ -238,9 +238,7 @@ class TestGetAppVersion:
 
         assert utils.get_app_version() == expected_version
 
-    def test_get_app_version_recovers_from_metadata_error_with_other_candidates(
-        self, monkeypatch
-    ):
+    def test_get_app_version_recovers_from_metadata_error_with_other_candidates(self, monkeypatch):
         """Continue trying alternative distributions after metadata errors."""
 
         calls = []
