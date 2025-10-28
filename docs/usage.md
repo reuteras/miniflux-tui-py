@@ -8,6 +8,14 @@ miniflux-tui
 
 The application will load your feeds and display them in the entry list.
 
+If you installed via the container image, use:
+
+```bash
+docker run --rm -it \
+  -v ~/.config/miniflux-tui:/home/miniflux/.config/miniflux-tui \
+  ghcr.io/reuteras/miniflux-tui:latest
+```
+
 ## Main Screen Layout
 
 The main screen is divided into three sections:
