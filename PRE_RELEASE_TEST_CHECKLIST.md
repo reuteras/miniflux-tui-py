@@ -165,19 +165,19 @@ Record approximate times for these operations (for performance regression tracki
 List any new features introduced in this release and verify they work:
 
 1. Feature: ______________________________
-  - [ ] Works as designed
-  - [ ] Documented
-  - [ ] Tested
+- [ ] Works as designed
+- [ ] Documented
+- [ ] Tested
 
 2. Feature: ______________________________
-  - [ ] Works as designed
-  - [ ] Documented
-  - [ ] Tested
+- [ ] Works as designed
+- [ ] Documented
+- [ ] Tested
 
 3. Feature: ______________________________
-  - [ ] Works as designed
-  - [ ] Documented
-  - [ ] Tested
+- [ ] Works as designed
+- [ ] Documented
+- [ ] Tested
 
 ---
 

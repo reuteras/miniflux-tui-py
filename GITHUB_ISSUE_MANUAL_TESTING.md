@@ -35,18 +35,18 @@ This issue tracks the manual testing checklist that must be completed before eac
 Two testing checklists are available in the repository:
 
 1. **`PRE_RELEASE_TEST_CHECKLIST.md`** - Essential tests for minor/major releases (~45-60 min)
-  - Critical functionality verification
-  - Major features testing
-  - Cross-platform checks
-  - Performance benchmarks
-  - Documentation verification
+- Critical functionality verification
+- Major features testing
+- Cross-platform checks
+- Performance benchmarks
+- Documentation verification
 
 2. **`MANUAL_TEST_CHECKLIST.md`** - Comprehensive testing guide (~2-4 hours)
-  - Complete feature coverage
-  - Edge cases and error handling
-  - Performance testing
-  - Accessibility checks
-  - Useful for major releases or significant refactors
+- Complete feature coverage
+- Edge cases and error handling
+- Performance testing
+- Accessibility checks
+- Useful for major releases or significant refactors
 
 ### Testing Requirements
 
