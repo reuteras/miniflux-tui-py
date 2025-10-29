@@ -23,6 +23,7 @@ def _cleanup_temp_file(path: Path | None) -> None:
     try:
         path.unlink()
     except FileNotFoundError:
+        # The file did not exist; cleanup is already complete.
         pass
     except OSError:
         # The file might already have been removed by the OS or another
