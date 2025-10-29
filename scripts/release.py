@@ -450,6 +450,13 @@ def update_release_files(current_version: str, new_version: str) -> None:
         sys.exit(1)
     print_success(f"Version updated: {current_version} → {new_version}")
 
+    print_info("Regenerating uv.lock to capture the new version...")
+    if not run_command(["uv", "lock"], "Regenerate uv.lock", show_output=True):
+        print_error("Failed to regenerate uv.lock; reverting version change.")
+        update_version(current_version)
+        sys.exit(1)
+    print_success("uv.lock updated")
+
     print_header("Edit CHANGELOG")
     if not edit_changelog(new_version):
         update_version(current_version)
@@ -460,7 +467,7 @@ def update_release_files(current_version: str, new_version: str) -> None:
 def create_release_commit(new_version: str) -> None:
     """Stage and commit release artifacts."""
     if not run_command(
-        ["git", "add", "pyproject.toml", "CHANGELOG.md"],
+        ["git", "add", "pyproject.toml", "CHANGELOG.md", "uv.lock"],
         "Stage release files",
     ):
         print_error("Failed to stage release files.")
