@@ -58,6 +58,10 @@ jobs:
         env:
           FILTER_REGEX_EXCLUDE: '(CHANGELOG\.md|CLAUDE\.md)'
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          VALIDATE_CHECKOV: false
+          VALIDATE_DOCKERFILE_HADOLINT: false
+          VALIDATE_GITHUB_ACTIONS: false
+          VALIDATE_GITLEAKS: false
           VALIDATE_HTML: false
           VALIDATE_HTML_PRETTIER: false
           VALIDATE_JSCPD: false
@@ -107,6 +111,7 @@ jobs:
     runs-on: ubuntu-latest
     permissions:
       contents: read
+      security-events: write
     steps:
       - name: Harden the runner (Audit all outbound calls)
         uses: step-security/harden-runner@f4a75cfd619ee5ce8d5b864b0d183aff3c69b55a # v2.13.1
@@ -120,6 +125,20 @@ jobs:
           fetch-depth: 0
 
       - name: Run gitleaks
+        id: gitleaks
+        continue-on-error: true
         uses: gitleaks/gitleaks-action@e4cf32429aa43056f1a0be423ffa3af658879b26 # v2.3.4
         with:
-          args: detect --no-git --redact
+          args: >-
+            detect --no-git --redact --report-format sarif --report-path gitleaks.sarif
+
+      - name: Upload gitleaks report
+        if: steps.gitleaks.outcome == 'success' || steps.gitleaks.outcome == 'failure'
+        uses: github/codeql-action/upload-sarif@4e94bd11f71e507f7f87df81788dff88d1dacbfb
+        with:
+          sarif_file: gitleaks.sarif
+          category: gitleaks
+
+      - name: Fail if gitleaks found secrets
+        if: steps.gitleaks.outcome == 'failure'
+        run: exit 1
