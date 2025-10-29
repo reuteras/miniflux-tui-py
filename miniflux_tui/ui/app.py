@@ -4,10 +4,11 @@ from __future__ import annotations
 
 import traceback
 from importlib import import_module
-from typing import TYPE_CHECKING, Any
+from typing import TYPE_CHECKING
 
 from textual.app import App
 from textual.driver import Driver
+from textual.screen import Screen
 
 from miniflux_tui.api.client import MinifluxClient
 from miniflux_tui.api.models import Category, Entry
@@ -18,21 +19,16 @@ from .screens.help import HelpScreen
 
 if TYPE_CHECKING:
     from miniflux_tui.ui.screens import entry_reader as entry_reader_types
-    from miniflux_tui.ui.screens.entry_list import EntryListScreen as EntryListScreenType
-    from miniflux_tui.ui.screens.status import StatusScreen as StatusScreenType
-else:  # pragma: no cover - hints only used during type checking
-    EntryListScreenType = Any
-    StatusScreenType = Any
 
 
-def _load_entry_list_screen_cls() -> type[EntryListScreenType]:
+def _load_entry_list_screen_cls() -> type[Screen]:
     """Import and return the entry list screen class."""
 
     module = import_module("miniflux_tui.ui.screens.entry_list")
     return module.EntryListScreen  # type: ignore[return-value]
 
 
-def _load_status_screen_cls() -> type[StatusScreenType]:
+def _load_status_screen_cls() -> type[Screen]:
     """Import and return the status screen class."""
 
     module = import_module("miniflux_tui.ui.screens.status")
@@ -118,8 +114,8 @@ class MinifluxTUI(App):
         self.entries: list[Entry] = []
         self.categories: list[Category] = []
         self.current_view = "unread"  # or "starred"
-        self._entry_list_screen_cls: type[EntryListScreenType] | None = None
-        self._status_screen_cls: type[StatusScreenType] | None = None
+        self._entry_list_screen_cls: type[Screen] | None = None
+        self._status_screen_cls: type[Screen] | None = None
 
     async def on_mount(self) -> None:
         """Called when app is mounted."""

@@ -28,9 +28,10 @@ RUN uv export \
         --no-editable \
         --no-emit-project \
         --output-file requirements.txt \
+    && uv build --wheel --out dist \
     && pip install --no-cache-dir --require-hashes -r requirements.txt \
-    && pip install --no-cache-dir --no-deps . \
-    && rm requirements.txt \
+    && pip install --no-cache-dir --no-deps dist/*.whl \
+    && rm -rf requirements.txt dist \
     && find "${UV_PROJECT_ENV}" -type d -name "__pycache__" -prune -exec rm -rf {} +
 
 
