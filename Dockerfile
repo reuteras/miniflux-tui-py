@@ -28,7 +28,7 @@ RUN uv export \
         --no-editable \
         --no-emit-project \
         --output-file requirements.txt \
-    && uv build --wheel --out dist \
+    && uv build --wheel --out-dir dist \
     && pip install --no-cache-dir --require-hashes -r requirements.txt \
     && pip install --no-cache-dir --no-deps dist/*.whl \
     && rm -rf requirements.txt dist \
