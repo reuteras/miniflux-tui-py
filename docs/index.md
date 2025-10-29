@@ -36,7 +36,8 @@ Create your configuration with:
 miniflux-tui --init
 ```
 
-This will prompt you for your Miniflux server URL and API key.
+This writes a starter config file. Edit it to set your server URL and the
+password command that retrieves your Miniflux API token from a password manager.
 
 ### Running
 

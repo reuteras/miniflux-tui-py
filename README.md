@@ -134,7 +134,7 @@ Example configuration:
 
 ```toml
 server_url = "https://miniflux.example.com"
-api_key = "your-api-key-here"
+password = ["op", "read", "op://Personal/Miniflux/API Token"]
 allow_invalid_certs = false
 
 [theme]
@@ -146,9 +146,26 @@ default_sort = "feed"  # Options: "feed", "date", "status"
 default_group_by_feed = false
 ```
 
-To generate an API key for your Miniflux account:
-1. Log into your Miniflux server
-2. Go to **Settings** -> **API Keys** -> **Create a new API key**
+### Retrieving your API token securely
+
+Miniflux authenticates using API tokens. Instead of storing the token directly
+in `config.toml`, configure the `password` field with a command that prints the
+token to stdout. This keeps the secret in your password manager (for example
+1Password, Bitwarden, or pass).
+
+To create a token:
+1. Log into your Miniflux server.
+2. Go to **Settings** → **API Keys** → **Create a new API key**.
+3. Store the generated token in your password manager.
+4. Update the `password` command so it outputs the token, e.g.:
+
+    ```toml
+    # 1Password example
+    password = ["op", "read", "op://Personal/Miniflux/API Token"]
+
+    # Environment variable example
+    password = ["/bin/sh", "-c", "printf %s \"$MINIFLUX_TOKEN\""]
+    ```
 
 ## Keyboard Shortcuts
 

@@ -10,12 +10,12 @@ The configuration is stored in TOML format. You can edit it manually or use `min
 
 ```toml
 server_url = "https://miniflux.example.com"
-api_key = "your-api-key-here"
+password = ["op", "read", "op://Personal/Miniflux/API Token"]
 allow_invalid_certs = false
 ```
 
 - **server_url**: The URL of your Miniflux instance
-- **api_key**: Your Miniflux API token (get this from Settings → API Tokens)
+- **password**: Command that prints your Miniflux API token (kept in your password manager)
 - **allow_invalid_certs**: Set to `true` if your server uses a self-signed certificate (not recommended for production)
 
 ### Theme Settings
@@ -52,7 +52,7 @@ default_group_by_feed = false
 
 ```toml
 server_url = "https://miniflux.example.com"
-api_key = "your-secret-api-key"
+password = ["op", "read", "op://Personal/Miniflux/API Token"]
 allow_invalid_certs = false
 
 [theme]
@@ -63,6 +63,28 @@ read_color = "gray"
 default_sort = "date"
 default_group_by_feed = true
 ```
+
+### Retrieving your API token securely
+
+Miniflux authenticates using API tokens. To keep the token out of your config
+file, store it in a password manager and configure the `password` command to
+print the token to stdout.
+
+Examples:
+
+```toml
+# 1Password CLI
+password = ["op", "read", "op://Personal/Miniflux/API Token"]
+
+# Bitwarden CLI
+password = ["bw", "get", "password", "miniflux"]
+
+# Environment variable via shell
+password = ["/bin/sh", "-c", "printf %s \"$MINIFLUX_TOKEN\""]
+```
+
+Make sure the command outputs only the token with no additional text or
+trailing newline (other than the typical newline printed by `printf`/`echo`).
 
 ## Configuration File Location
 
@@ -108,7 +130,7 @@ Run `miniflux-tui --init` to create a new configuration.
 
 - Verify your `server_url` is correct (including `https://` or `http://`)
 - Check that your Miniflux instance is accessible
-- Verify your API key is correct (copy it from Settings → API Tokens)
+- Run your password command manually to verify it outputs the expected API token
 
 ### SSL certificate errors
 

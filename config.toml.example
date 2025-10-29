@@ -4,9 +4,10 @@
 # Required: Your Miniflux server URL
 server_url = "https://miniflux.example.com"
 
-# Required: Your Miniflux API key
-# Generate this from Settings > API Keys in your Miniflux web interface
-api_key = "your-api-key-here"
+# Required: Command that prints your Miniflux API token
+# This keeps your token in a secure password manager instead of on disk.
+# The example below uses 1Password; replace it with your own command.
+password = ["op", "read", "op://Personal/Miniflux/API Token"]
 
 # Optional: Allow invalid SSL certificates (default: false)
 # Set to true only if you're using self-signed certificates

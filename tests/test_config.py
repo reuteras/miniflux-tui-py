@@ -1,11 +1,14 @@
 """Tests for configuration management."""
 
+import subprocess
 import sys
 from unittest.mock import patch
 
 import pytest
 
 from miniflux_tui.config import Config, create_default_config, get_config_dir, get_config_file_path, load_config, validate_config
+
+TEST_TOKEN = "token-for-tests"  # noqa: S105 - static fixture value
 
 
 class TestValidateConfig:
@@ -24,12 +27,12 @@ class TestValidateConfig:
         assert not is_valid
         assert "server_url" in msg
 
-    def test_missing_api_key(self, valid_config_dict):
-        """Test validation fails when api_key is missing."""
-        del valid_config_dict["api_key"]
+    def test_missing_password_command(self, valid_config_dict):
+        """Test validation fails when password command is missing."""
+        del valid_config_dict["password"]
         is_valid, msg = validate_config(valid_config_dict)
         assert not is_valid
-        assert "api_key" in msg
+        assert "password" in msg
 
     def test_empty_server_url(self, valid_config_dict):
         """Test validation fails with empty server_url."""
@@ -51,25 +54,33 @@ class TestValidateConfig:
         is_valid, _ = validate_config(valid_config_dict)
         assert is_valid
 
-    def test_empty_api_key(self, valid_config_dict):
-        """Test validation fails with empty api_key."""
-        valid_config_dict["api_key"] = ""
+    def test_password_command_empty_string(self, valid_config_dict):
+        """Test validation fails when password command is empty string."""
+        valid_config_dict["password"] = ""
         is_valid, msg = validate_config(valid_config_dict)
         assert not is_valid
-        assert "non-empty" in msg.lower() or "empty" in msg.lower()
+        assert "command" in msg.lower()
 
-    def test_short_api_key(self, valid_config_dict):
-        """Test validation fails with api_key < 10 characters."""
-        valid_config_dict["api_key"] = "short"
+    def test_password_command_empty_list(self, valid_config_dict):
+        """Test validation fails when password command list is empty."""
+        valid_config_dict["password"] = []
         is_valid, msg = validate_config(valid_config_dict)
         assert not is_valid
-        assert "short" in msg.lower()
+        assert "command" in msg.lower()
 
-    def test_api_key_with_spaces(self, valid_config_dict):
-        """Test validation fails when api_key is only whitespace."""
-        valid_config_dict["api_key"] = "   "
-        is_valid, _ = validate_config(valid_config_dict)
+    def test_password_command_invalid_argument(self, valid_config_dict):
+        """Test validation fails when command arguments are not strings."""
+        valid_config_dict["password"] = ["cmd", 123]  # type: ignore[list-item]
+        is_valid, msg = validate_config(valid_config_dict)
         assert not is_valid
+        assert "command" in msg.lower()
+
+    def test_api_key_rejected(self, valid_config_dict):
+        """Test validation rejects legacy api_key field."""
+        valid_config_dict["api_key"] = "legacy"
+        is_valid, msg = validate_config(valid_config_dict)
+        assert not is_valid
+        assert "no longer supported" in msg.lower()
 
     def test_invalid_sort_mode(self, valid_config_dict):
         """Test validation fails with invalid default_sort."""
@@ -89,7 +100,7 @@ class TestValidateConfig:
         """Test validation of minimal valid config."""
         config = {
             "server_url": "http://localhost:8080",
-            "api_key": "1234567890",
+            "password": ["cmd", "arg"],
         }
         is_valid, _ = validate_config(config)
         assert is_valid
@@ -102,7 +113,7 @@ class TestConfigClass:
         """Test Config class initialization with all parameters."""
         config = Config(
             server_url="http://localhost:8080",
-            api_key="test-api-key-123456",
+            password=["command"],
             allow_invalid_certs=True,
             unread_color="blue",
             read_color="white",
@@ -110,9 +121,11 @@ class TestConfigClass:
             default_group_by_feed=True,
             group_collapsed=True,
         )
+        config._api_key_cache = TEST_TOKEN
 
         assert config.server_url == "http://localhost:8080"
-        assert config.api_key == "test-api-key-123456"
+        assert config.api_key == TEST_TOKEN
+        assert config.password_command == ("command",)
         assert config.allow_invalid_certs is True
         assert config.unread_color == "blue"
         assert config.read_color == "white"
@@ -124,11 +137,13 @@ class TestConfigClass:
         """Test Config class initialization with default parameters."""
         config = Config(
             server_url="http://localhost:8080",
-            api_key="test-api-key-123456",
+            password=["command"],
         )
+        config._api_key_cache = TEST_TOKEN
 
         assert config.server_url == "http://localhost:8080"
-        assert config.api_key == "test-api-key-123456"
+        assert config.api_key == TEST_TOKEN
+        assert config.password_command == ("command",)
         assert config.allow_invalid_certs is False
         assert config.unread_color == "cyan"
         assert config.read_color == "gray"
@@ -136,12 +151,85 @@ class TestConfigClass:
         assert config.default_group_by_feed is False
         assert config.group_collapsed is False
 
+
+class TestConfigSecretCommand:
+    """Tests for password command execution."""
+
+    def test_get_api_key_executes_command(self):
+        """Command output should be returned and cached."""
+        config = Config(server_url="http://localhost:8080", password=["command"])
+
+        completed = subprocess.CompletedProcess(
+            args=("command",),
+            returncode=0,
+            stdout=f"{TEST_TOKEN}\n",
+            stderr="",
+        )
+
+        with patch("miniflux_tui.config.subprocess.run", return_value=completed) as mock_run:
+            token_first = config.get_api_key()
+            token_second = config.get_api_key()
+
+        assert token_first == TEST_TOKEN
+        assert token_second == TEST_TOKEN
+        mock_run.assert_called_once_with(("command",), capture_output=True, text=True, check=True)
+
+    def test_get_api_key_refresh_executes_again(self):
+        """refresh=True should bypass the cache."""
+        config = Config(server_url="http://localhost:8080", password=["command"])
+
+        completed_one = subprocess.CompletedProcess(args=("command",), returncode=0, stdout="first-token\n", stderr="")
+        completed_two = subprocess.CompletedProcess(args=("command",), returncode=0, stdout="second-token\n", stderr="")
+
+        with (
+            patch("miniflux_tui.config.subprocess.run", side_effect=[completed_one, completed_two]) as mock_run,
+        ):
+            first = config.get_api_key()
+            second = config.get_api_key(refresh=True)
+
+        assert first == "first-token"
+        assert second == "second-token"
+        assert mock_run.call_count == 2
+
+    def test_get_api_key_handles_missing_executable(self):
+        """Missing command should raise a RuntimeError."""
+        config = Config(server_url="http://localhost:8080", password=["missing"])
+
+        with (
+            patch(
+                "miniflux_tui.config.subprocess.run",
+                side_effect=FileNotFoundError("No such file or directory: 'missing'"),
+            ),
+            pytest.raises(RuntimeError, match="Password command failed"),
+        ):
+            config.get_api_key()
+
+    def test_get_api_key_handles_non_zero_exit(self):
+        """Non-zero exit should raise a RuntimeError with stderr."""
+        config = Config(server_url="http://localhost:8080", password=["command"])
+        failure = subprocess.CalledProcessError(
+            returncode=1,
+            cmd=("command",),
+            stderr="permission denied",
+        )
+
+        with patch("miniflux_tui.config.subprocess.run", side_effect=failure), pytest.raises(RuntimeError, match="permission denied"):
+            config.get_api_key()
+
+    def test_get_api_key_rejects_empty_output(self):
+        """Empty stdout should raise a RuntimeError."""
+        config = Config(server_url="http://localhost:8080", password=["command"])
+        completed = subprocess.CompletedProcess(args=("command",), returncode=0, stdout="\n", stderr="")
+
+        with patch("miniflux_tui.config.subprocess.run", return_value=completed), pytest.raises(RuntimeError, match="empty output"):
+            config.get_api_key()
+
     def test_config_from_file_valid(self, tmp_path):
         """Test Config.from_file() with valid config file."""
         config_file = tmp_path / "config.toml"
         config_content = """
 server_url = "http://localhost:8080"
-api_key = "test-api-key-1234567890"
+password = ["python", "-c", "print('fake-token')"]
 allow_invalid_certs = true
 
 [theme]
@@ -158,7 +246,11 @@ group_collapsed = false
         config = Config.from_file(config_file)
 
         assert config.server_url == "http://localhost:8080"
-        assert config.api_key == "test-api-key-1234567890"
+        assert config.password_command == (
+            "python",
+            "-c",
+            "print('fake-token')",
+        )
         assert config.allow_invalid_certs is True
         assert config.unread_color == "green"
         assert config.read_color == "yellow"
@@ -171,14 +263,18 @@ group_collapsed = false
         config_file = tmp_path / "config.toml"
         config_content = """
 server_url = "http://localhost:8080"
-api_key = "test-api-key-1234567890"
+password = ["python", "-c", "print('fake-token')"]
 """
         config_file.write_text(config_content)
 
         config = Config.from_file(config_file)
 
         assert config.server_url == "http://localhost:8080"
-        assert config.api_key == "test-api-key-1234567890"
+        assert config.password_command == (
+            "python",
+            "-c",
+            "print('fake-token')",
+        )
         assert config.allow_invalid_certs is False
         assert config.unread_color == "cyan"
         assert config.read_color == "gray"
@@ -195,7 +291,7 @@ api_key = "test-api-key-1234567890"
         config_file = tmp_path / "config.toml"
         config_content = """
 server_url = "http://localhost:8080"
-api_key = "short"
+password = 123
 """
         config_file.write_text(config_content)
 
@@ -267,7 +363,7 @@ class TestCreateDefaultConfig:
 
             content = config_path.read_text()
             assert "server_url" in content
-            assert "api_key" in content
+            assert "password" in content
             assert "allow_invalid_certs" in content
             assert "[theme]" in content
             assert "[sorting]" in content
@@ -310,7 +406,7 @@ class TestLoadConfig:
         config_file = config_dir / "config.toml"
         config_file.write_text("""
 server_url = "http://localhost:8080"
-api_key = "test-api-key-1234567890"
+password = ["python", "-c", "print('fake-token')"]
 """)
 
         with patch("miniflux_tui.config.get_config_file_path") as mock_get_path:
@@ -319,7 +415,11 @@ api_key = "test-api-key-1234567890"
 
             assert config is not None
             assert config.server_url == "http://localhost:8080"
-            assert config.api_key == "test-api-key-1234567890"
+        assert config.password_command == (
+            "python",
+            "-c",
+            "print('fake-token')",
+        )
 
     def test_load_config_not_found(self, tmp_path):
         """Test load_config() returns None when config doesn't exist."""
@@ -338,7 +438,7 @@ api_key = "test-api-key-1234567890"
         config_file = config_dir / "config.toml"
         config_file.write_text("""
 server_url = "http://localhost:8080"
-api_key = "test-api-key-1234567890"
+password = ["python", "-c", "print('fake-token')"]
 allow_invalid_certs = true
 
 [theme]

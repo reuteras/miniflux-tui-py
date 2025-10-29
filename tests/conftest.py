@@ -1,5 +1,6 @@
 """Pytest configuration and fixtures."""
 
+import sys
 from datetime import UTC, datetime
 from typing import Any
 from unittest.mock import AsyncMock
@@ -101,7 +102,7 @@ def valid_config_dict():
     """Create a valid configuration dictionary."""
     return {
         "server_url": "http://localhost:8080",
-        "api_key": "1234567890abcdef",
+        "password": [sys.executable, "-c", "print('1234567890abcdef')"],
         "allow_invalid_certs": False,
         "theme": {
             "unread_color": "cyan",
@@ -122,7 +123,7 @@ def config_factory():
     def _factory(**overrides: Any) -> dict[str, Any]:
         base = {
             "server_url": "http://localhost:8080",
-            "api_key": "1234567890abcdef",
+            "password": [sys.executable, "-c", "print('1234567890abcdef')"],
             "allow_invalid_certs": False,
             "theme": {
                 "unread_color": "cyan",

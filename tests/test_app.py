@@ -1,5 +1,6 @@
 """Tests for MinifluxTUI application."""
 
+import sys
 from datetime import UTC, datetime
 from unittest.mock import AsyncMock, MagicMock, patch
 
@@ -10,20 +11,24 @@ from miniflux_tui.api.models import Entry, Feed
 from miniflux_tui.config import Config
 from miniflux_tui.ui.app import MinifluxTUI, run_tui
 
+TEST_TOKEN = "token-for-tests"  # noqa: S105 - static fixture value
+
 
 @pytest.fixture
 def sample_config():
     """Create a sample Config for testing."""
-    return Config(
+    config = Config(
         server_url="http://localhost:8080",
-        api_key="test-key",
+        password=["command"],
         allow_invalid_certs=False,
         unread_color="cyan",
         read_color="gray",
         default_sort="date",
         default_group_by_feed=False,
-        group_collapsed={},  # type: ignore[arg-type]
+        group_collapsed=False,
     )
+    config._api_key_cache = TEST_TOKEN
+    return config
 
 
 @pytest.fixture
@@ -549,13 +554,14 @@ class TestThemeConfiguration:
         """Test that app uses custom theme colors from config."""
         custom_config = Config(
             server_url="http://localhost:8080",
-            api_key="test-key-123456",
+            password=["command"],
             allow_invalid_certs=False,
             unread_color="blue",
             read_color="white",
             default_sort="date",
             default_group_by_feed=False,
         )
+        custom_config._api_key_cache = TEST_TOKEN
         app = MinifluxTUI(custom_config)
 
         assert app.config.unread_color == "blue"
@@ -565,13 +571,14 @@ class TestThemeConfiguration:
         """Test that app passes theme colors to EntryListScreen."""
         custom_config = Config(
             server_url="http://localhost:8080",
-            api_key="test-key-123456",
+            password=["command"],
             allow_invalid_certs=False,
             unread_color="green",
             read_color="yellow",
             default_sort="date",
             default_group_by_feed=False,
         )
+        custom_config._api_key_cache = TEST_TOKEN
         app = MinifluxTUI(custom_config)
 
         # Verify app config has the custom colors
@@ -584,11 +591,12 @@ class TestThemeConfiguration:
         """Test that theme defaults to cyan for unread and gray for read."""
         config = Config(
             server_url="http://localhost:8080",
-            api_key="test-key-123456",
+            password=["command"],
             allow_invalid_certs=False,
             default_sort="date",
             default_group_by_feed=False,
         )
+        config._api_key_cache = TEST_TOKEN
 
         # Should use defaults
         assert config.unread_color == "cyan"
@@ -598,9 +606,10 @@ class TestThemeConfiguration:
         """Test that theme colors persist when config is reloaded."""
         # Create a config file with custom colors
         config_file = tmp_path / "config.toml"
-        config_content = """
+        python_exe = sys.executable.replace("\\", "\\\\")
+        config_content = f"""
 server_url = "http://localhost:8080"
-api_key = "test-key-1234567890"
+password = ["{python_exe}", "-c", "print('fake-token')"]
 allow_invalid_certs = false
 
 [theme]

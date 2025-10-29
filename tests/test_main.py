@@ -8,6 +8,8 @@ import pytest
 
 from miniflux_tui.main import main
 
+TEST_TOKEN = "token-for-tests"  # noqa: S105 - static fixture value
+
 
 class TestMainInit:
     """Test --init flag functionality."""
@@ -36,7 +38,7 @@ class TestMainInit:
             captured = capsys.readouterr()
             assert "Created default configuration file" in captured.out
             assert "edit this file" in captured.out.lower()
-            assert "API key" in captured.out
+            assert "password command" in captured.out
             assert result == 0
 
 
@@ -47,7 +49,8 @@ class TestMainCheckConfig:
         """Test --check-config with valid configuration."""
         mock_config = MagicMock()
         mock_config.server_url = "http://localhost:8080"
-        mock_config.api_key = "test-api-key-1234567890"
+        mock_config.password_command = ("op", "read", "token")
+        mock_config.get_api_key.return_value = TEST_TOKEN
         mock_config.allow_invalid_certs = False
         mock_config.unread_color = "cyan"
         mock_config.read_color = "gray"
@@ -69,8 +72,10 @@ class TestMainCheckConfig:
             captured = capsys.readouterr()
             assert "Configuration loaded successfully" in captured.out
             assert "http://localhost:8080" in captured.out
-            assert "*" * 20 in captured.out  # Hidden API key
+            assert "Password command" in captured.out
+            assert "API token retrieval" in captured.out
             assert result == 0
+        mock_config.get_api_key.assert_called_once_with(refresh=True)
 
     def test_check_config_missing_file(self, tmp_path, capsys):
         """Test --check-config when config file doesn't exist."""

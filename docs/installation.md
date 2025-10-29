@@ -102,11 +102,9 @@ Before running the application for the first time, you need to configure it:
 miniflux-tui --init
 ```
 
-This will:
-1. Prompt you for your Miniflux server URL
-2. Ask for your API key
-3. Optionally configure theme colors and sorting preferences
-4. Create the configuration file in your system's config directory
+This will create a starter configuration file in your system's config directory.
+Edit the file to set your server URL and the password command that retrieves
+your Miniflux API token.
 
 ### Configuration File Location
 
@@ -116,13 +114,15 @@ The configuration is saved to a platform-specific location:
 - **macOS**: `~/.config/miniflux-tui/config.toml`
 - **Windows**: `%APPDATA%\miniflux-tui\config.toml`
 
-## Getting Your Miniflux API Key
+## Getting Your Miniflux API Token Securely
 
-1. Log in to your Miniflux instance
-2. Click on "Settings" (usually in the top right)
-3. Go to "API Tokens"
-4. Create a new API token or copy an existing one
-5. Use this token in the miniflux-tui configuration
+1. Log in to your Miniflux instance.
+2. Click on "Settings" → "API Tokens".
+3. Create a new API token or copy an existing one.
+4. Store the token in your password manager of choice.
+5. Configure the `password` command in `config.toml` so it prints the token
+    when run (for example, using 1Password's `op read` command or Bitwarden's
+    `bw get password`).
 
 ## Verifying Installation
 
