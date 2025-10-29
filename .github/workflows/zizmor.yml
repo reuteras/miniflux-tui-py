@@ -49,4 +49,4 @@ jobs:
           persona: regular
           # Colorize output for better readability
           color: true
-          github-token: ${{ secrets.GITHUB_TOKEN }}
+          token: ${{ secrets.GITHUB_TOKEN }}
