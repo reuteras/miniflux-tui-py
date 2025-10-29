@@ -26,11 +26,21 @@ permissions:
 
 jobs:
   test:
-    name: Test Python ${{ matrix.python-version }}
-    runs-on: ubuntu-latest
+    name: "${{ matrix.os }} / Python ${{ matrix.python-version }}"
+    runs-on: ${{ matrix.os }}
+    defaults:
+      run:
+        shell: bash
     strategy:
+      fail-fast: false
       matrix:
+        os: [ubuntu-latest, macos-latest, windows-latest]
         python-version: ["3.11", "3.12", "3.13", "3.14"]
+      exclude:
+        - os: macos-latest
+          python-version: "3.14"
+        - os: windows-latest
+          python-version: "3.14"
     steps:
       - name: Harden the runner (Audit all outbound calls)
         uses: step-security/harden-runner@f4a75cfd619ee5ce8d5b864b0d183aff3c69b55a # v2.13.1
@@ -44,10 +54,15 @@ jobs:
       - name: Install uv
         uses: astral-sh/setup-uv@85856786d1ce8acfbcc2f13a5f3fbd6b938f9f41 # v7
 
+      - name: Determine uv cache directory
+        id: uv-cache-dir
+        run: |
+          echo "dir=$(uv cache dir)" >> "$GITHUB_OUTPUT"
+
       - name: Cache uv packages
         uses: actions/cache@0057852bfaa89a56745cba8c7296529d2fc39830 # v4.3.0
         with:
-          path: ~/.cache/uv
+          path: ${{ steps.uv-cache-dir.outputs.dir }}
           key: uv-${{ runner.os }}-${{ matrix.python-version }}-${{ hashFiles('uv.lock') }}
           restore-keys: |
             uv-${{ runner.os }}-${{ matrix.python-version }}-
@@ -80,21 +95,26 @@ jobs:
 
       - name: Check coverage threshold
         run: |
-          coverage_percent=$(python -c \
-            "import xml.etree.ElementTree as ET; \
-            root = ET.parse('coverage.xml').getroot(); \
-            print(float(root.get('line-rate')) * 100)")
-          threshold=55
-          if (( $(echo "$coverage_percent < $threshold" | bc -l) )); then
-            echo "Coverage $coverage_percent% is below threshold $threshold%"
-            exit 1
-          fi
-          echo "Coverage $coverage_percent% meets threshold $threshold%"
+          uv run python - <<'PY'
+          import sys
+          import xml.etree.ElementTree as ET
+
+          threshold = 55.0
+          coverage = float(ET.parse("coverage.xml").getroot().get("line-rate")) * 100
+
+          if coverage < threshold:
+              sys.exit(f"Coverage {coverage:.2f}% is below threshold {threshold:.0f}%")
+
+          print(f"Coverage {coverage:.2f}% meets threshold {threshold:.0f}%")
+          PY
 
   test-future:
     name: Test Python 3.15 (Preview)
     runs-on: ubuntu-latest
     continue-on-error: true
+    defaults:
+      run:
+        shell: bash
     steps:
       - name: Harden the runner (Audit all outbound calls)
         uses: step-security/harden-runner@f4a75cfd619ee5ce8d5b864b0d183aff3c69b55a # v2.13.1
@@ -108,10 +128,15 @@ jobs:
       - name: Install uv
         uses: astral-sh/setup-uv@85856786d1ce8acfbcc2f13a5f3fbd6b938f9f41 # v7
 
+      - name: Determine uv cache directory
+        id: uv-cache-dir
+        run: |
+          echo "dir=$(uv cache dir)" >> "$GITHUB_OUTPUT"
+
       - name: Cache uv packages
         uses: actions/cache@0057852bfaa89a56745cba8c7296529d2fc39830 # v4.3.0
         with:
-          path: ~/.cache/uv
+          path: ${{ steps.uv-cache-dir.outputs.dir }}
           key: uv-${{ runner.os }}-3.15-${{ hashFiles('uv.lock') }}
           restore-keys: |
             uv-${{ runner.os }}-3.15-
@@ -141,3 +166,17 @@ jobs:
           name: codecov-umbrella
           fail_ci_if_error: false
           token: ${{ secrets.CODECOV_TOKEN }}
+      - name: Check coverage threshold
+        run: |
+          uv run python - <<'PY'
+          import sys
+          import xml.etree.ElementTree as ET
+
+          threshold = 55.0
+          coverage = float(ET.parse("coverage.xml").getroot().get("line-rate")) * 100
+
+          if coverage < threshold:
+              sys.exit(f"Coverage {coverage:.2f}% is below threshold {threshold:.0f}%")
+
+          print(f"Coverage {coverage:.2f}% meets threshold {threshold:.0f}%")
+          PY
