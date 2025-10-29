@@ -1,5 +1,11 @@
 # Changelog
 
+## [0.4.18] - 2025-10-29
+
+### CI/CD
+- improve sbom generation and release reruns ([#188](https://github.com/reuteras/miniflux-tui-py/pull/188))
+
+
 ## [0.4.17] - 2025-10-29
 
 ### CI/CD
