@@ -10,6 +10,8 @@
 [![Test Status](https://github.com/reuteras/miniflux-tui-py/workflows/Test/badge.svg)](https://github.com/reuteras/miniflux-tui-py/actions/workflows/test.yml)
 [![CIFuzz](https://github.com/reuteras/miniflux-tui-py/actions/workflows/cifuzz.yml/badge.svg)](https://github.com/reuteras/miniflux-tui-py/actions/workflows/cifuzz.yml)
 [![OSV Scanner](https://github.com/reuteras/miniflux-tui-py/actions/workflows/osv-scanner.yml/badge.svg)](https://github.com/reuteras/miniflux-tui-py/actions/workflows/osv-scanner.yml)
+[![CodeQL](https://github.com/reuteras/miniflux-tui-py/actions/workflows/codeql.yml/badge.svg)](https://github.com/reuteras/miniflux-tui-py/actions/workflows/codeql.yml)
+[![Dependency Review](https://github.com/reuteras/miniflux-tui-py/actions/workflows/dependency-review.yml/badge.svg)](https://github.com/reuteras/miniflux-tui-py/actions/workflows/dependency-review.yml)
 [![Container Builds](https://github.com/reuteras/miniflux-tui-py/actions/workflows/container-image.yml/badge.svg)](https://github.com/reuteras/miniflux-tui-py/actions/workflows/container-image.yml)
 [![SBOM](https://img.shields.io/badge/SBOM-CycloneDX%20%26%20SPDX-5A45FF)](https://github.com/reuteras/miniflux-tui-py/releases/latest)
 [![codecov](https://codecov.io/gh/reuteras/miniflux-tui-py/graph/badge.svg)](https://codecov.io/gh/reuteras/miniflux-tui-py)
