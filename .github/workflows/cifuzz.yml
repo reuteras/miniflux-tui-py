@@ -2,6 +2,11 @@ name: CIFuzz
 
 on:
   pull_request:
+    paths:
+      - 'miniflux_tui/**'
+      - 'fuzz/**'
+      - 'pyproject.toml'
+      - 'uv.lock'
 
 permissions:
   contents: read

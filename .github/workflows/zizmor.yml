@@ -4,8 +4,12 @@ name: GitHub Actions Security Analysis with zizmor
 on:
   push:
     branches: [main]
+    paths:
+      - '.github/workflows/**'
   pull_request:
     branches: [main]
+    paths:
+      - '.github/workflows/**'
   schedule:
     - cron: '0 0 * * 0'  # Weekly on Sunday
   workflow_dispatch:
