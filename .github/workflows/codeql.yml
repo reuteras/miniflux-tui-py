@@ -4,8 +4,22 @@ name: CodeQL Analysis
 on:
   push:
     branches: [main]
+    paths:
+      - 'miniflux_tui/**'
+      - 'tests/**'
+      - 'fuzz/**'
+      - 'pyproject.toml'
+      - 'uv.lock'
+      - '.github/workflows/**'
   pull_request:
     branches: [main]
+    paths:
+      - 'miniflux_tui/**'
+      - 'tests/**'
+      - 'fuzz/**'
+      - 'pyproject.toml'
+      - 'uv.lock'
+      - '.github/workflows/**'
   schedule:
     - cron: '0 0 * * 0'  # Weekly on Sunday
 

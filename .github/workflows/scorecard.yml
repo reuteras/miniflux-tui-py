@@ -5,8 +5,22 @@ on:
   branch_protection_rule:
   push:
     branches: [main]
+    paths:
+      - 'miniflux_tui/**'
+      - 'tests/**'
+      - 'fuzz/**'
+      - 'pyproject.toml'
+      - 'uv.lock'
+      - '.github/**'
   pull_request:
     branches: [main]
+    paths:
+      - 'miniflux_tui/**'
+      - 'tests/**'
+      - 'fuzz/**'
+      - 'pyproject.toml'
+      - 'uv.lock'
+      - '.github/**'
   schedule:
     - cron: '0 0 * * 0'  # Weekly on Sunday
 
