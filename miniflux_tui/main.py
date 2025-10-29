@@ -13,7 +13,7 @@ def _print_config_summary(config: Config) -> None:
     """Display configuration values without revealing secrets."""
     print("Configuration loaded successfully!")
     print(f"\nServer URL: {config.server_url}")
-    print(f"Password command: {' '.join(config.password_command)}")
+    print(f"Password command: (hidden)")
     try:
         config.get_api_key(refresh=True)
     except RuntimeError as exc:
