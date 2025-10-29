@@ -15,16 +15,10 @@ RUN python -m venv "${UV_PROJECT_ENV}"
 
 ENV PATH=${UV_PROJECT_ENV}/bin:$PATH
 
-ARG UV_VERSION=0.9.5
+COPY --from=ghcr.io/astral-sh/uv:latest@sha256:f459f6f73a8c4ef5d69f4e6fbbdb8af751d6fa40ec34b39a1ab469acd6e289b7 /uv /bin/
+COPY --from=ghcr.io/astral-sh/uv:latest@sha256:f459f6f73a8c4ef5d69f4e6fbbdb8af751d6fa40ec34b39a1ab469acd6e289b7 /uvx /bin/
 
-# hadolint ignore=DL3008
-RUN apt-get update \
-    && apt-get install --no-install-recommends --yes curl \
-    && rm -rf /var/lib/apt/lists/*
-
-# hadolint ignore=DL4006
-RUN curl -LsSf "https://astral.sh/uv/install.sh?v=${UV_VERSION}" | UV_INSTALL_DIR=/usr/local/bin sh \
-    && python -m ensurepip --upgrade
+RUN python -m ensurepip --upgrade
 
 COPY pyproject.toml uv.lock README.md LICENSE /src/
 COPY miniflux_tui /src/miniflux_tui
