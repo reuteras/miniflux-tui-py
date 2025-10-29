@@ -118,6 +118,10 @@ Test on each target platform:
 - [ ] Run the container with a mounted config directory and verify the TUI launches successfully
 - [ ] (Optional) Verify the signature: `cosign verify ghcr.io/reuteras/miniflux-tui:TAG`
 
+## Supply Chain Artifacts
+
+- [ ] Confirm the release contains SBOM files for PyPI distributions, standalone binaries, and the container image in both CycloneDX and SPDX formats
+
 ## Prebuilt Binaries (if publishing)
 
 - [ ] Linux archive (`miniflux-tui-linux-amd64.tar.gz`) extracts and `./miniflux-tui --check-config` runs
