@@ -4,11 +4,10 @@ from __future__ import annotations
 
 import traceback
 from importlib import import_module
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, cast
 
 from textual.app import App
 from textual.driver import Driver
-from textual.screen import Screen
 
 from miniflux_tui.api.client import MinifluxClient
 from miniflux_tui.api.models import Category, Entry
@@ -19,20 +18,22 @@ from .screens.help import HelpScreen
 
 if TYPE_CHECKING:
     from miniflux_tui.ui.screens import entry_reader as entry_reader_types
+    from miniflux_tui.ui.screens.entry_list import EntryListScreen
+    from miniflux_tui.ui.screens.status import StatusScreen
 
 
-def _load_entry_list_screen_cls() -> type[Screen]:
+def _load_entry_list_screen_cls() -> type[EntryListScreen]:
     """Import and return the entry list screen class."""
 
     module = import_module("miniflux_tui.ui.screens.entry_list")
-    return module.EntryListScreen  # type: ignore[return-value]
+    return cast("type[EntryListScreen]", module.EntryListScreen)
 
 
-def _load_status_screen_cls() -> type[Screen]:
+def _load_status_screen_cls() -> type[StatusScreen]:
     """Import and return the status screen class."""
 
     module = import_module("miniflux_tui.ui.screens.status")
-    return module.StatusScreen  # type: ignore[return-value]
+    return cast("type[StatusScreen]", module.StatusScreen)
 
 
 class MinifluxTUI(App):
@@ -114,8 +115,8 @@ class MinifluxTUI(App):
         self.entries: list[Entry] = []
         self.categories: list[Category] = []
         self.current_view = "unread"  # or "starred"
-        self._entry_list_screen_cls: type[Screen] | None = None
-        self._status_screen_cls: type[Screen] | None = None
+        self._entry_list_screen_cls: type[EntryListScreen] | None = None
+        self._status_screen_cls: type[StatusScreen] | None = None
 
     async def on_mount(self) -> None:
         """Called when app is mounted."""
@@ -126,7 +127,7 @@ class MinifluxTUI(App):
             allow_invalid_certs=self.config.allow_invalid_certs,
         )
 
-        entry_list_cls = _load_entry_list_screen_cls()
+        entry_list_cls: type[EntryListScreen] = _load_entry_list_screen_cls()
         self._entry_list_screen_cls = entry_list_cls
         self.install_screen(
             entry_list_cls(
@@ -143,7 +144,7 @@ class MinifluxTUI(App):
 
         self.install_screen(HelpScreen(), name="help")
 
-        status_cls = _load_status_screen_cls()
+        status_cls: type[StatusScreen] = _load_status_screen_cls()
         self._status_screen_cls = status_cls
         self.install_screen(status_cls(), name="status")
 
@@ -154,6 +155,21 @@ class MinifluxTUI(App):
         self.notify("Loading data...")
         await self.load_categories()
         await self.load_entries()
+
+    def _get_entry_list_screen(self) -> EntryListScreen | None:
+        """Return the entry list screen instance if available."""
+        entry_list_cls: type[EntryListScreen] = self._entry_list_screen_cls or _load_entry_list_screen_cls()
+        self._entry_list_screen_cls = entry_list_cls
+
+        if not self.is_screen_installed("entry_list"):
+            return None
+
+        screen = self.get_screen("entry_list")
+        if isinstance(screen, entry_list_cls):
+            return screen
+
+        self.log("entry_list screen is installed but not an EntryListScreen instance")
+        return None
 
     async def load_categories(self) -> None:
         """Load categories from Miniflux API."""
@@ -166,12 +182,9 @@ class MinifluxTUI(App):
             self.log(f"Loaded {len(self.categories)} categories")
 
             # Update the entry list screen if it exists
-            if self.is_screen_installed("entry_list"):
-                screen = self.get_screen("entry_list")
-                entry_list_cls = self._entry_list_screen_cls or _load_entry_list_screen_cls()
-                self._entry_list_screen_cls = entry_list_cls
-                if isinstance(screen, entry_list_cls):
-                    screen.categories = self.categories
+            entry_list_screen = self._get_entry_list_screen()
+            if entry_list_screen:
+                entry_list_screen.categories = self.categories
         except Exception as e:
             error_details = traceback.format_exc()
             self.notify(f"Error loading categories: {e}", severity="error")
@@ -199,18 +212,12 @@ class MinifluxTUI(App):
                 self.notify(f"Loaded {len(self.entries)} unread entries")
 
             # Update the entry list screen if it exists
-            if self.is_screen_installed("entry_list"):
+            entry_list_screen = self._get_entry_list_screen()
+            if entry_list_screen:
                 self.log("entry_list screen is installed")
-                screen = self.get_screen("entry_list")
-                self.log(f"Got screen: {type(screen)}")
-                entry_list_cls = self._entry_list_screen_cls or _load_entry_list_screen_cls()
-                self._entry_list_screen_cls = entry_list_cls
-                if isinstance(screen, entry_list_cls):
-                    self.log(f"Updating screen with {len(self.entries)} entries")
-                    screen.entries = self.entries
-                    screen._populate_list()
-                else:
-                    self.log("Screen is not EntryListScreen!")
+                self.log(f"Updating screen with {len(self.entries)} entries")
+                entry_list_screen.entries = self.entries
+                entry_list_screen._populate_list()
             else:
                 self.log("entry_list screen is NOT installed!")
 
