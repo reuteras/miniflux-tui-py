@@ -43,9 +43,11 @@ jobs:
       - name: Run zizmor security analysis
         uses: zizmorcore/zizmor-action@e673c3917a1aef3c65c972347ed84ccd013ecda4 # v0.2.0
         with:
-          # Enable online audits for comprehensive checks
-          online-audits: true
+          # Disable online audits to avoid cross-repo API calls with limited token scope
+          online-audits: false
           # Use regular persona (not pedantic)
           persona: regular
           # Colorize output for better readability
           color: true
+          # Explicit token for GitHub API access
+          token: ${{ secrets.GITHUB_TOKEN }}

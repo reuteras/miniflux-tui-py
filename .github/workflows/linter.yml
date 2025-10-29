@@ -127,7 +127,7 @@ jobs:
       - name: Run gitleaks
         id: gitleaks
         continue-on-error: true
-        uses: gitleaks/gitleaks-action@e4cf32429aa43056f1a0be423ffa3af658879b26 # v2.3.4
+        uses: gitleaks/gitleaks-action@e6dab246340401bf53eec993b8f05aebe80ac636 # v2.3.4
         with:
           args: >-
             detect --no-git --redact --report-format sarif --report-path gitleaks.sarif
