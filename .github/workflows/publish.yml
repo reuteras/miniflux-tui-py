@@ -162,9 +162,20 @@ jobs:
       - name: Install Syft
         if: github.event_name != 'pull_request'
         run: |
-          SYFT_VERSION=v1.19.1
-          curl -sSfL "https://github.com/anchore/syft/releases/download/${SYFT_VERSION}/syft_${SYFT_VERSION#v}_linux_amd64.tar.gz" \
-            | sudo tar -xz -C /usr/local/bin syft
+          set -euo pipefail
+          SYFT_VERSION=v1.36.0
+          SYFT_BASE_URL="https://github.com/anchore/syft/releases/download/${SYFT_VERSION}"
+          SYFT_ARCHIVE="syft_${SYFT_VERSION#v}_linux_amd64.tar.gz"
+          TMP_DIR="$(mktemp -d)"
+          ARCHIVE_PATH="${TMP_DIR}/syft.tar.gz"
+
+          if ! curl -sSfL "${SYFT_BASE_URL}/${SYFT_ARCHIVE}" -o "${ARCHIVE_PATH}"; then
+            ALT_ARCHIVE="syft_Linux_x86_64.tar.gz"
+            curl -sSfL "${SYFT_BASE_URL}/${ALT_ARCHIVE}" -o "${ARCHIVE_PATH}"
+          fi
+
+          sudo tar -xz -f "${ARCHIVE_PATH}" -C /usr/local/bin syft
+          rm -rf "${TMP_DIR}"
 
       - name: Generate SBOMs for release artifacts
         if: github.event_name != 'pull_request'
