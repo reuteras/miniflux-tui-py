@@ -11,6 +11,9 @@ permissions:
 
 jobs:
   build:
+    env:
+      DIST_ARTIFACT_NAME: dist-${{ github.run_id }}-${{ github.run_attempt }}
+      BINARY_ARTIFACT_PREFIX: miniflux-tui-${{ github.run_id }}-${{ github.run_attempt }}
     permissions:
       contents: read
       actions: read
@@ -52,11 +55,13 @@ jobs:
         if: github.event_name != 'pull_request'
         uses: actions/upload-artifact@330a01c490aca151604b8cf639adc76d48f6c5d4 # v5
         with:
-          name: dist-${{ github.run_id }}-${{ github.run_attempt }}
+          name: ${{ env.DIST_ARTIFACT_NAME }}
           path: dist/
           retention-days: 7
 
   publish:
+    env:
+      DIST_ARTIFACT_NAME: dist-${{ github.run_id }}-${{ github.run_attempt }}
     needs: build
     runs-on: ubuntu-latest
     environment:
@@ -80,7 +85,7 @@ jobs:
         if: github.event_name != 'pull_request'
         uses: actions/download-artifact@018cc2cf5baa6db3ef3c5f8a56943fffe632ef53 # v6
         with:
-          name: dist-${{ github.run_id }}-${{ github.run_attempt }}
+          name: ${{ env.DIST_ARTIFACT_NAME }}
           path: dist/
 
       - name: Publish to PyPI
@@ -90,6 +95,8 @@ jobs:
           attestations: true
 
   binaries:
+    env:
+      BINARY_ARTIFACT_PREFIX: miniflux-tui-${{ github.run_id }}-${{ github.run_attempt }}
     needs: build
     strategy:
       fail-fast: false
@@ -126,11 +133,14 @@ jobs:
       - name: Upload binary artifact
         uses: actions/upload-artifact@330a01c490aca151604b8cf639adc76d48f6c5d4 # v5
         with:
-          name: miniflux-tui-${{ github.run_id }}-${{ github.run_attempt }}-${{ matrix.os }}
+          name: ${{ env.BINARY_ARTIFACT_PREFIX }}-${{ matrix.os }}
           path: build/binary/*
           retention-days: 7
 
   release:
+    env:
+      DIST_ARTIFACT_NAME: dist-${{ github.run_id }}-${{ github.run_attempt }}
+      BINARY_ARTIFACT_PREFIX: miniflux-tui-${{ github.run_id }}-${{ github.run_attempt }}
     needs: [build, binaries]
     runs-on: ubuntu-latest
     permissions:
@@ -185,10 +195,14 @@ jobs:
         if: github.event_name != 'pull_request'
         run: |
           mkdir -p sbom
-          syft dir:dist -o cyclonedx-json --file sbom/miniflux-tui-pypi.cdx.json
-          syft dir:dist -o spdx-json --file sbom/miniflux-tui-pypi.spdx.json
-          syft dir:binaries -o cyclonedx-json --file sbom/miniflux-tui-binaries.cdx.json
-          syft dir:binaries -o spdx-json --file sbom/miniflux-tui-binaries.spdx.json
+          syft dir:dist --output cyclonedx-json=sbom/miniflux-tui-pypi.cdx.json
+          syft dir:dist --output spdx-json=sbom/miniflux-tui-pypi.spdx.json
+          if compgen -G "binaries/*" > /dev/null; then
+            syft dir:binaries --output cyclonedx-json=sbom/miniflux-tui-binaries.cdx.json
+            syft dir:binaries --output spdx-json=sbom/miniflux-tui-binaries.spdx.json
+          else
+            echo "No binary artifacts found; skipping binary SBOM generation."
+          fi
 
       - name: Upload SBOM artifacts
         if: github.event_name != 'pull_request'
