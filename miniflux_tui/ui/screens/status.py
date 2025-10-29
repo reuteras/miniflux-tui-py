@@ -1,17 +1,12 @@
 """Status screen showing server information and problematic feeds."""
 
-from typing import TYPE_CHECKING
-
-from textual.app import ComposeResult
+from textual.app import App, ComposeResult
 from textual.binding import Binding
 from textual.containers import VerticalScroll
 from textual.screen import Screen
 from textual.widgets import Footer, Header, Static
 
 from miniflux_tui.api.models import Feed
-
-if TYPE_CHECKING:
-    from miniflux_tui.ui.app import MinifluxTUI
 
 
 class StatusScreen(Screen):
@@ -35,7 +30,7 @@ class StatusScreen(Screen):
         self._scroll_container: VerticalScroll | None = None
         self._footer_widget: Footer | None = None
 
-    app: "MinifluxTUI"
+    app: App
 
     def compose(self) -> ComposeResult:
         """Create child widgets."""
