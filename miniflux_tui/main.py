@@ -5,8 +5,28 @@ import asyncio
 import sys
 import traceback
 
-from .config import create_default_config, get_config_file_path, load_config
+from .config import Config, create_default_config, get_config_file_path, load_config
 from .ui.app import run_tui
+
+
+def _print_config_summary(config: Config) -> None:
+    """Display configuration values without revealing secrets."""
+    print("Configuration loaded successfully!")
+    print(f"\nServer URL: {config.server_url}")
+    print(f"Password command: {' '.join(config.password_command)}")
+    try:
+        config.get_api_key(refresh=True)
+    except RuntimeError as exc:
+        print(f"API token retrieval: FAILED ({exc})")
+    else:
+        print("API token retrieval: success")
+    print(f"Allow Invalid Certs: {config.allow_invalid_certs}")
+    print("\nTheme:")
+    print(f"  Unread Color: {config.unread_color}")
+    print(f"  Read Color: {config.read_color}")
+    print("\nSorting:")
+    print(f"  Default Sort: {config.default_sort}")
+    print(f"  Group by Feed: {config.default_group_by_feed}")
 
 
 def main():
@@ -34,8 +54,8 @@ def main():
     if args.init:
         config_path = create_default_config()
         print(f"Created default configuration file at: {config_path}")
-        print("\nPlease edit this file and add your Miniflux server URL and API key.")
-        print("You can generate an API key from Settings > API Keys in Miniflux.")
+        print("\nPlease edit this file and add your Miniflux server URL and password command.")
+        print("The password command should retrieve your API token from a password manager.")
         return 0
 
     # Handle --check-config flag
@@ -49,16 +69,7 @@ def main():
         try:
             config = load_config()
             if config:
-                print("Configuration loaded successfully!")
-                print(f"\nServer URL: {config.server_url}")
-                print(f"API Key: {'*' * 20} (hidden)")
-                print(f"Allow Invalid Certs: {config.allow_invalid_certs}")
-                print("\nTheme:")
-                print(f"  Unread Color: {config.unread_color}")
-                print(f"  Read Color: {config.read_color}")
-                print("\nSorting:")
-                print(f"  Default Sort: {config.default_sort}")
-                print(f"  Group by Feed: {config.default_group_by_feed}")
+                _print_config_summary(config)
                 return 0
         except Exception as e:
             print(f"Error loading configuration: {e}")

@@ -5,13 +5,17 @@ from miniflux_tui.ui.app import (
     _load_status_screen_cls,
 )
 
+TEST_TOKEN = "token-for-tests"  # noqa: S105 - static fixture value
+
 
 def build_config() -> Config:
-    return Config(
+    config = Config(
         server_url="https://example.com",
-        api_key="dummy-key",
+        password=["command"],
         allow_invalid_certs=False,
     )
+    config._api_key_cache = TEST_TOKEN
+    return config
 
 
 def test_lazy_entry_list_import():

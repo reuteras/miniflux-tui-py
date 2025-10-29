@@ -1,9 +1,41 @@
 """Configuration management for Miniflux TUI."""
 
+from __future__ import annotations
+
 import os
+import shlex
+import subprocess
 import sys
 import tomllib
+from collections.abc import Sequence
 from pathlib import Path
+
+
+def _normalize_command(command: Sequence[str] | str) -> tuple[str, ...]:
+    """Normalize a command into a tuple of executable arguments."""
+    if isinstance(command, str):
+        parts = shlex.split(command, posix=(os.name != "nt"))
+    elif isinstance(command, Sequence):
+        parts = list(command)
+    else:
+        msg = "Command must be provided as a string or list of strings"
+        raise TypeError(msg)
+
+    if not parts:
+        msg = "Command must contain at least one argument"
+        raise ValueError(msg)
+
+    normalized: list[str] = []
+    for part in parts:
+        if not isinstance(part, str):
+            msg = "Command arguments must be strings"
+            raise TypeError(msg)
+        if not part:
+            msg = "Command arguments cannot be empty strings"
+            raise ValueError(msg)
+        normalized.append(part)
+
+    return tuple(normalized)
 
 
 def validate_config(config_dict: dict) -> tuple[bool, str]:
@@ -22,11 +54,11 @@ def validate_config(config_dict: dict) -> tuple[bool, str]:
     # Check required fields
     if "server_url" not in config_dict:
         validations.append(("server_url" in config_dict, "Missing required field: server_url"))
-    elif "api_key" not in config_dict:
-        validations.append(("api_key" in config_dict, "Missing required field: api_key"))
+    elif "password" not in config_dict:
+        validations.append(("password" in config_dict, "Missing required field: password"))
     else:
         server_url = config_dict["server_url"]
-        api_key = config_dict["api_key"]
+        password_command = config_dict["password"]
 
         # Validate server_url
         validations.append(
@@ -42,19 +74,26 @@ def validate_config(config_dict: dict) -> tuple[bool, str]:
             )
         )
 
-        # Validate api_key
+        try:
+            _normalize_command(password_command)
+            is_valid_password = True
+        except (TypeError, ValueError):
+            is_valid_password = False
+
         validations.append(
             (
-                isinstance(api_key, str) and api_key.strip(),
-                "api_key must be a non-empty string",
+                is_valid_password,
+                "password must be a valid command (string or list of strings)",
             )
         )
-        validations.append(
-            (
-                (len(api_key.strip()) >= 10 if isinstance(api_key, str) else False),
-                "api_key appears to be invalid (too short)",
+
+        if "api_key" in config_dict:
+            validations.append(
+                (
+                    False,
+                    "api_key is no longer supported. Replace it with a password command.",
+                )
             )
-        )
 
         # Validate optional sort mode
         sorting = config_dict.get("sorting", {})
@@ -82,7 +121,7 @@ class Config:
     def __init__(
         self,
         server_url: str,
-        api_key: str,
+        password: Sequence[str] | str,
         *,
         allow_invalid_certs: bool = False,
         unread_color: str = "cyan",
@@ -92,7 +131,8 @@ class Config:
         group_collapsed: bool = False,
     ):
         self.server_url = server_url
-        self.api_key = api_key
+        self._password_command = _normalize_command(password)
+        self._api_key_cache: str | None = None
         self.allow_invalid_certs = allow_invalid_certs
         self.unread_color = unread_color
         self.read_color = read_color
@@ -100,8 +140,52 @@ class Config:
         self.default_group_by_feed = default_group_by_feed
         self.group_collapsed = group_collapsed
 
+    @property
+    def password_command(self) -> tuple[str, ...]:
+        """Return the configured command used to retrieve the API token."""
+        return self._password_command
+
+    def get_api_key(self, *, refresh: bool = False) -> str:
+        """
+        Execute the password command and return the Miniflux API token.
+
+        The result is cached. Pass ``refresh=True`` to force re-execution.
+        """
+        if not refresh and self._api_key_cache is not None:
+            return self._api_key_cache
+
+        try:
+            completed = subprocess.run(  # noqa: S603 - command comes from trusted local config
+                self._password_command,
+                capture_output=True,
+                text=True,
+                check=True,
+            )
+        except FileNotFoundError as exc:
+            msg = f"Password command failed: {exc}"
+            raise RuntimeError(msg) from exc
+        except subprocess.CalledProcessError as exc:
+            stderr = (exc.stderr or "").strip()
+            msg = f"Password command exited with status {exc.returncode}"
+            if stderr:
+                msg = f"{msg}: {stderr}"
+            raise RuntimeError(msg) from exc
+
+        api_key = (completed.stdout or "").strip()
+        if not api_key:
+            msg = "Password command returned empty output"
+            raise RuntimeError(msg)
+
+        self._api_key_cache = api_key
+        return api_key
+
+    @property
+    def api_key(self) -> str:
+        """Backward-compatible access to the retrieved API token."""
+        return self.get_api_key()
+
     @classmethod
-    def from_file(cls, path: Path) -> "Config":
+    def from_file(cls, path: Path) -> Config:
         """
         Load configuration from a TOML file.
 
@@ -144,7 +228,7 @@ class Config:
 
         return cls(
             server_url=data["server_url"],
-            api_key=data["api_key"],
+            password=data["password"],
             allow_invalid_certs=data.get("allow_invalid_certs", False),
             unread_color=unread_color,
             read_color=read_color,
@@ -198,9 +282,10 @@ def create_default_config() -> Path:
 # Required: Your Miniflux server URL
 server_url = "https://miniflux.example.com"
 
-# Required: Your Miniflux API key
-# Generate this from Settings > API Keys in your Miniflux web interface
-api_key = "your-api-key-here"
+# Required: Command that outputs your Miniflux API token (no secrets stored on disk)
+# Replace the example below with a command from your password manager.
+# The command should write ONLY the token to stdout without additional text.
+password = ["op", "read", "op://Personal/Miniflux/API Token"]
 
 # Optional: Allow invalid SSL certificates (default: false)
 allow_invalid_certs = false

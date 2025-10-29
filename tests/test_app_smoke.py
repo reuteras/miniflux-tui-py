@@ -9,6 +9,8 @@ from miniflux_tui.config import Config
 from miniflux_tui.ui.app import MinifluxTUI
 from miniflux_tui.ui.screens.entry_list import EntryListScreen
 
+TEST_TOKEN = "token-for-tests"  # noqa: S105 - static fixture value
+
 
 class _FakeClient:
     """Minimal Miniflux client stub for smoke testing."""
@@ -45,7 +47,8 @@ class _FakeClient:
 async def test_app_initializes_in_headless_mode(sample_entries, sample_categories):
     """Ensure the TUI boots, loads data, and shuts down cleanly headlessly."""
 
-    config = Config(server_url="https://example.com", api_key="abcdef1234567890")
+    config = Config(server_url="https://example.com", password=["command"])
+    config._api_key_cache = TEST_TOKEN
 
     fake_client = _FakeClient(sample_entries, sample_categories)
 

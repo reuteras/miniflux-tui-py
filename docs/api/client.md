@@ -21,7 +21,7 @@
 The client connects to your Miniflux server using:
 
 - __Base URL__: The server's URL (e.g., `https://miniflux.example.com`)
-- __API Key__: Your personal API token (from Miniflux Settings)
+- __API Key__: Your personal API token (retrieved via the password command in `config.toml`)
 - __Certificate Validation__: Configurable for self-signed certificates
 
 ## Async Operations
@@ -48,7 +48,7 @@ await client.change_entry_status(entry_id=123, status="read")
 The client may raise exceptions for:
 
 - Network errors (connection failures)
-- Invalid credentials (wrong API key)
+- Invalid credentials (wrong API token)
 - Server errors (5xx responses)
 - Invalid requests (malformed parameters)
 
