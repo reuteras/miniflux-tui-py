@@ -37,3 +37,5 @@ jobs:
       # Only need to read contents
       contents: read
     uses: "google/osv-scanner-action/.github/workflows/osv-scanner-reusable.yml@e92b5d07338d4f0ba0981dffed17c48976ca4730" # v2.2.3
+    with:
+      github-token: ${{ secrets.GITHUB_TOKEN }}
