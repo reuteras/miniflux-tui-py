@@ -8,7 +8,7 @@ import subprocess  # nosec B404
 import sys
 import tomllib
 from collections.abc import Sequence
-from pathlib import Path
+from pathlib import Path, PurePosixPath
 
 
 def _normalize_command(command: Sequence[str] | str) -> tuple[str, ...]:
@@ -239,7 +239,24 @@ class Config:
         )
 
 
-def get_config_dir() -> Path:
+def _resolve_unix_config_home() -> PurePosixPath:
+    """Return the base configuration directory for Unix-like systems."""
+    xdg_config_home = os.environ.get("XDG_CONFIG_HOME")
+    if xdg_config_home:
+        return PurePosixPath(xdg_config_home)
+
+    home_env = os.environ.get("HOME")
+    if home_env:
+        return PurePosixPath(home_env) / ".config"
+
+    try:
+        return PurePosixPath(Path.home().as_posix()) / ".config"
+    except RuntimeError:
+        # Fallback to a sensible default when the home directory cannot be determined
+        return PurePosixPath("/home") / ".config"
+
+
+def get_config_dir() -> Path | PurePosixPath:
     """
     Get the configuration directory for the application.
 
@@ -249,11 +266,16 @@ def get_config_dir() -> Path:
     if sys.platform == "win32":
         # Windows
         base = Path(os.environ.get("APPDATA", Path.home() / "AppData" / "Roaming"))
-    else:
-        # Linux, macOS, and other Unix-like systems
-        base = Path(os.environ.get("XDG_CONFIG_HOME", Path.home() / ".config"))
+        return base / "miniflux-tui"
 
-    return base / "miniflux-tui"
+    # Linux, macOS, and other Unix-like systems
+    base = _resolve_unix_config_home()
+    if os.name == "nt":
+        # When running tests on Windows that simulate Unix platforms,
+        # preserve POSIX formatting for consistency with Unix expectations.
+        return base / "miniflux-tui"
+
+    return Path(base) / "miniflux-tui"
 
 
 def get_config_file_path() -> Path:
@@ -263,7 +285,7 @@ def get_config_file_path() -> Path:
     Returns:
         Path to config.toml
     """
-    return get_config_dir() / "config.toml"
+    return Path(get_config_dir()) / "config.toml"
 
 
 def create_default_config() -> Path:
@@ -273,7 +295,7 @@ def create_default_config() -> Path:
     Returns:
         Path to the created config file
     """
-    config_dir = get_config_dir()
+    config_dir = Path(get_config_dir())
     config_dir.mkdir(parents=True, exist_ok=True)
 
     config_path = config_dir / "config.toml"

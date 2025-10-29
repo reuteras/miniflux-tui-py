@@ -57,11 +57,13 @@ jobs:
       - name: Compute image tags
         id: image-tags
         shell: bash
+        env:
+          DEFAULT_BRANCH: ${{ github.event.repository.default_branch }}
         run: |
           set -euo pipefail
           tags="${REGISTRY}/${IMAGE_NAME}:${GITHUB_SHA}"
 
-          if [[ "${GITHUB_REF}" == "refs/heads/${{ github.event.repository.default_branch }}" ]]; then
+          if [[ "${GITHUB_REF}" == "refs/heads/${DEFAULT_BRANCH}" ]]; then
             tags+=$'\n'"${REGISTRY}/${IMAGE_NAME}:latest"
           fi
 
@@ -162,5 +164,7 @@ jobs:
         env:
           COSIGN_EXPERIMENTAL: "1"
           IMAGE_DIGEST: ${{ steps.build.outputs.digest }}
+          REGISTRY: ${{ env.REGISTRY }}
+          IMAGE_NAME: ${{ env.IMAGE_NAME }}
         run: |
-          cosign sign --yes "${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}@${IMAGE_DIGEST}"
+          cosign sign --yes "${REGISTRY}/${IMAGE_NAME}@${IMAGE_DIGEST}"
