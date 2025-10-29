@@ -1,5 +1,11 @@
 # Changelog
 
+## [0.4.13] - 2025-10-29
+
+### Bug Fixes
+- detect branch protection in release
+
+
 ## [0.4.12] - 2025-10-29
 
 ### Features
