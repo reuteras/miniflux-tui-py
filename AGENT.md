@@ -473,16 +473,20 @@ Major improvements in October 2025:
 
 Releases are created by project maintainers using the automated release script:
 ```bash
+# Prepare release branch with version + changelog updates
 uv run python scripts/release.py
+
+# After the PR merges, create and push the release tag
+uv run python scripts/release.py tag
 ```
 
-The script automates the entire release workflow:
+The script automates the workflow:
 1. Runs pre-release checks (tests, linting, type checking)
 2. Updates version in `pyproject.toml`
-3. Auto-generates CHANGELOG.md entries from conventional commits
-4. Creates git commit and tag
-5. Pushes to GitHub, triggering CI/CD
-6. GitHub Actions automatically publishes to PyPI
+3. Auto-generates and lets maintainers edit `CHANGELOG.md`
+4. Creates a release branch with the commit and pushes it for review
+5. After merge, the `tag` command creates the annotated git tag
+6. Pushing the tag triggers CI/CD, which publishes to PyPI and builds artifacts
 
 See [RELEASE.md](RELEASE.md) for complete documentation.
 
