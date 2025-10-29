@@ -45,9 +45,9 @@ def TestOneInput(data: bytes) -> None:  # noqa: N802 - required by atheris
         try:
             Config.from_file(temp_path)
         except (ValueError, tomllib.TOMLDecodeError, TypeError):
-            # Invalid configuration data should be reported through these
-            # exceptions. They are not considered crashes for fuzzing.
-            pass
+            # Invalid or malformed documents are expected fuzz outcomes; stop
+            # processing this input and let the fuzzer generate new cases.
+            return
         except RecursionError:
             # Deeply nested tables can trigger Python's recursion limits in the
             # TOML parser. Treat these as benign for the fuzz target.
