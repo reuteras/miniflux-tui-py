@@ -1,5 +1,11 @@
 # Changelog
 
+## [0.4.16] - 2025-10-29
+
+### CI/CD
+- ensure release sbom step handles binary artifacts ([#185](https://github.com/reuteras/miniflux-tui-py/pull/185))
+
+
 ## [0.4.15] - 2025-10-29
 
 ### Bug Fixes
