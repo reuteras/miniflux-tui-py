@@ -1,25 +1,34 @@
 #!/usr/bin/env python3
 """
-miniflux-tui-py Release Script
+miniflux-tui-py release utilities.
 
-Automates the release process:
-1. Validates current state (tests, linting, types)
-2. Updates version in pyproject.toml
-3. Prompts to update CHANGELOG.md
-4. Creates commit and git tag
-5. Pushes to GitHub (triggers PyPI publish)
+This script now supports two complementary flows:
+
+1. `prepare` (default):
+    - Runs quality gates on the current `main`.
+    - Bumps the version and updates the changelog.
+    - Creates a dedicated release branch with the changes.
+    - Pushes the branch so you can open a pull request.
+
+2. `tag`:
+    - Validates that `main` is clean and in sync with `origin/main`.
+    - Creates an annotated git tag (vX.Y.Z) for the current version.
+    - Pushes the tag, which triggers the publish workflow.
 """
 
+from __future__ import annotations
+
+import argparse
 import os
 import re
 import subprocess
 import sys
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 from pathlib import Path
 
 
 class Colors:
-    """ANSI color codes"""
+    """ANSI color codes."""
 
     RED = "\033[0;31m"
     GREEN = "\033[0;32m"
@@ -29,24 +38,24 @@ class Colors:
 
 
 def print_header(text: str) -> None:
-    """Print a formatted header"""
+    """Print a formatted header."""
     print(f"\n{Colors.BLUE}{'━' * 70}{Colors.NC}")
     print(f"{Colors.BLUE}{text}{Colors.NC}")
     print(f"{Colors.BLUE}{'━' * 70}{Colors.NC}\n")
 
 
 def print_success(text: str) -> None:
-    """Print a success message"""
+    """Print a success message."""
     print(f"{Colors.GREEN}✓{Colors.NC} {text}")
 
 
 def print_error(text: str) -> None:
-    """Print an error message"""
+    """Print an error message."""
     print(f"{Colors.RED}✗{Colors.NC} {text}")
 
 
 def print_info(text: str) -> None:
-    """Print an info message"""
+    """Print an info message."""
     print(f"{Colors.YELLOW}[i]{Colors.NC} {text}")
 
 
@@ -96,7 +105,7 @@ def run_command(
     show_output: bool = False,
     forbidden_patterns: list[str] | None = None,
 ) -> bool:
-    """Run a command and return success status"""
+    """Run a command and return success status."""
     try:
         result = subprocess.run(
             cmd,
@@ -113,15 +122,110 @@ def run_command(
                 print_error("Command blocked by repository rules")
             return False
         return True
-    except subprocess.CalledProcessError as e:
+    except subprocess.CalledProcessError as error:
         if description:
             print_error(f"{description} failed")
-        _print_failure_output(e, show_output)
+        _print_failure_output(error, show_output)
         return False
 
 
+def get_current_branch() -> str:
+    """Return the current git branch."""
+    try:
+        result = subprocess.run(
+            ["git", "rev-parse", "--abbrev-ref", "HEAD"],
+            check=True,
+            capture_output=True,
+            text=True,
+        )
+    except subprocess.CalledProcessError:
+        print_error("Could not determine current branch. Are you inside a git repository?")
+        sys.exit(1)
+    return result.stdout.strip()
+
+
+def ensure_current_branch(expected: str) -> None:
+    """Ensure we are on the expected branch."""
+    branch = get_current_branch()
+    if branch != expected:
+        print_error(f"Releases must start from the '{expected}' branch (found '{branch}').")
+        sys.exit(1)
+
+
+def get_git_rev(ref: str) -> str:
+    """Return the commit SHA for a ref."""
+    try:
+        result = subprocess.run(
+            ["git", "rev-parse", ref],
+            check=True,
+            capture_output=True,
+            text=True,
+        )
+    except subprocess.CalledProcessError:
+        print_error(f"Could not resolve git reference '{ref}'.")
+        sys.exit(1)
+    return result.stdout.strip()
+
+
+def ensure_branch_synced(branch: str) -> None:
+    """Ensure local branch matches origin/branch."""
+    if not run_command(["git", "fetch", "origin", branch], f"Fetch origin/{branch}"):
+        sys.exit(1)
+
+    local_rev = get_git_rev("HEAD")
+    remote_rev = get_git_rev(f"origin/{branch}")
+    if local_rev != remote_rev:
+        print_error(f"Local '{branch}' is not in sync with 'origin/{branch}'.")
+        print_info(f"Run 'git pull --rebase origin {branch}' and retry.")
+        sys.exit(1)
+
+
+def branch_exists(branch: str) -> bool:
+    """Return True if a local branch exists."""
+    result = subprocess.run(
+        ["git", "rev-parse", "--verify", branch],
+        check=False,
+        capture_output=True,
+        text=True,
+    )
+    return result.returncode == 0
+
+
+def remote_branch_exists(branch: str) -> bool:
+    """Return True if the branch exists on origin."""
+    result = subprocess.run(
+        ["git", "ls-remote", "--exit-code", "--heads", "origin", branch],
+        check=False,
+        capture_output=True,
+        text=True,
+    )
+    return result.returncode == 0
+
+
+def ensure_branch_available(branch: str) -> None:
+    """Ensure the release branch does not already exist."""
+    if branch_exists(branch):
+        print_error(f"Branch '{branch}' already exists locally.")
+        sys.exit(1)
+
+    if remote_branch_exists(branch):
+        print_error(f"Branch '{branch}' already exists on origin.")
+        sys.exit(1)
+
+
+def tag_exists(tag: str) -> bool:
+    """Return True if an annotated tag exists."""
+    result = subprocess.run(
+        ["git", "rev-parse", "--verify", tag],
+        check=False,
+        capture_output=True,
+        text=True,
+    )
+    return result.returncode == 0
+
+
 def get_current_version() -> str:
-    """Get current version from pyproject.toml"""
+    """Get current version from pyproject.toml."""
     toml_path = Path("pyproject.toml")
     if not toml_path.exists():
         print_error("pyproject.toml not found")
@@ -137,7 +241,7 @@ def get_current_version() -> str:
 
 
 def validate_version(version: str) -> bool:
-    """Validate semantic versioning format"""
+    """Validate semantic versioning format."""
     return bool(re.match(r"^\d+\.\d+\.\d+$", version))
 
 
@@ -155,7 +259,7 @@ def suggest_next_version(current_version: str) -> str:
 
 
 def check_git_status() -> bool:
-    """Check if git working directory is clean"""
+    """Check if git working directory is clean."""
     try:
         result = subprocess.run(
             ["git", "status", "--porcelain"],
@@ -168,8 +272,15 @@ def check_git_status() -> bool:
         return False
 
 
+def ensure_clean_working_tree() -> None:
+    """Ensure there are no local modifications."""
+    if not check_git_status():
+        print_error("Working directory is not clean. Please commit or stash changes first.")
+        sys.exit(1)
+
+
 def update_version(new_version: str) -> bool:
-    """Update version in pyproject.toml"""
+    """Update version in pyproject.toml."""
     toml_path = Path("pyproject.toml")
     content = toml_path.read_text()
     current_version = get_current_version()
@@ -204,9 +315,8 @@ def get_previous_tag() -> str | None:
 def generate_changelog_entry(new_version: str) -> str:
     """Generate changelog entry from commits since last tag."""
     previous_tag = get_previous_tag()
-    release_date = datetime.now(timezone.utc).strftime("%Y-%m-%d")  # noqa: UP017
+    release_date = datetime.now(UTC).strftime("%Y-%m-%d")
 
-    # Try to import the changelog generator
     try:
         script_dir = Path(__file__).parent
         sys.path.insert(0, str(script_dir))
@@ -215,7 +325,6 @@ def generate_changelog_entry(new_version: str) -> str:
         sys.path.pop(0)
         return format_changelog_entry(new_version, from_tag=previous_tag)
     except ImportError:
-        # Fallback to manual template
         return f"""## [{new_version}] - {release_date}
 
 ### Added
@@ -230,31 +339,27 @@ def generate_changelog_entry(new_version: str) -> str:
 
 
 def edit_changelog(new_version: str) -> bool:  # noqa: PLR0911
-    """Update CHANGELOG by auto-generating from commits"""
+    """Update CHANGELOG by auto-generating from commits."""
     changelog_path = Path("CHANGELOG.md")
     if not changelog_path.exists():
         print_error("CHANGELOG.md not found")
         return False
 
-    # Auto-generate changelog from commits (default behavior)
     print_info("Generating changelog entry from commits...")
     changelog_entry = generate_changelog_entry(new_version)
     print("\n" + "=" * 70)
     print(changelog_entry)
     print("=" * 70 + "\n")
 
-    # Read current changelog
     current_content = changelog_path.read_text()
 
-    # Find the position to insert (after the main header)
     lines = current_content.split("\n")
     insert_pos = 0
-    for i, line in enumerate(lines):
+    for idx, line in enumerate(lines):
         if line.startswith("# Changelog"):
-            insert_pos = i + 1
+            insert_pos = idx + 1
             break
 
-    # Insert new entry after header and blank line
     while insert_pos < len(lines) and lines[insert_pos].startswith("#"):
         insert_pos += 1
     if insert_pos < len(lines) and not lines[insert_pos].strip():
@@ -267,32 +372,28 @@ def edit_changelog(new_version: str) -> bool:  # noqa: PLR0911
     changelog_path.write_text("\n".join(lines))
     print_success("Changelog updated with auto-generated entry")
 
-    # Ask if user wants to review/edit (default: no)
     print_info("Press Enter to skip editing, or type 'e' to edit in $EDITOR:")
     edit_response = input("Edit changelog? (e/Enter): ").strip().lower()
 
     if edit_response != "e":
-        # Verify changelog was updated
         content = changelog_path.read_text()
         if f"[{new_version}]" not in content:
             print_error("CHANGELOG.md was not updated")
             return False
         return True
 
-    # User wants to edit - open in $EDITOR
     editor = os.environ.get("EDITOR", "nano").strip()
     try:
         subprocess.run([editor, str(changelog_path)], check=True)
     except FileNotFoundError:
         print_error(f"Editor '{editor}' not found. Set $EDITOR environment variable.")
-        print_info("Please edit CHANGELOG.md manually and run this script again")
+        print_info("Please edit CHANGELOG.md manually and run this script again.")
         return False
-    except Exception as e:
-        print_error(f"Could not open editor: {e}")
-        print_info("Please edit CHANGELOG.md manually and run this script again")
+    except Exception as exc:
+        print_error(f"Could not open editor: {exc}")
+        print_info("Please edit CHANGELOG.md manually and run this script again.")
         return False
 
-    # Verify changelog was updated
     content = changelog_path.read_text()
     if f"[{new_version}]" not in content:
         print_error("CHANGELOG.md was not updated")
@@ -301,52 +402,27 @@ def edit_changelog(new_version: str) -> bool:  # noqa: PLR0911
     return True
 
 
-def main() -> None:  # noqa: PLR0915
-    """Main release process"""
-    # Check if in git repo
-    if not Path(".git").exists():
-        print_error("Not in a git repository")
-        sys.exit(1)
+def changelog_contains_version(version: str) -> bool:
+    """Return True if the changelog references the version."""
+    changelog_path = Path("CHANGELOG.md")
+    if not changelog_path.exists():
+        return False
+    return f"[{version}]" in changelog_path.read_text()
 
-    print_header("miniflux-tui-py Release Script")
 
-    # Get current version
-    current_version = get_current_version()
-    suggested_version = suggest_next_version(current_version)
-    print_info(f"Current version: {current_version}")
-
-    # Prompt for new version
-    print(f"\n{Colors.YELLOW}Enter new version (default: {suggested_version}):{Colors.NC}")
-    new_version = input("New version: ").strip()
-
-    # Use suggested version if user just pressed Enter
-    if not new_version:
-        new_version = suggested_version
-
-    if not validate_version(new_version):
-        print_error("Invalid version format. Use semantic versioning (e.g., 0.2.1)")
-        sys.exit(1)
-
-    print_success(f"Version validated: {new_version}")
-
-    # Check git status
-    if not check_git_status():
-        print_error("Working directory is not clean. Please commit or stash changes first.")
-        sys.exit(1)
-
+def run_pre_release_checks() -> None:
+    """Run tests, linting, and type checking before preparing the release."""
     print_header("Pre-Release Checks")
 
-    # Run tests
     print_info("Running tests...")
     if not run_command(
         ["uv", "run", "pytest", "tests", "--cov=miniflux_tui", "-q"],
         "Tests",
     ):
-        print_error("Tests failed. Fix issues before releasing.")
+        print_error("Tests failed. Fix issues before preparing the release.")
         sys.exit(1)
     print_success("All tests passed")
 
-    # Run linting
     print_info("Running ruff linting...")
     if not run_command(
         ["uv", "run", "ruff", "check", "miniflux_tui", "tests"],
@@ -356,7 +432,6 @@ def main() -> None:  # noqa: PLR0915
         sys.exit(1)
     print_success("Linting passed")
 
-    # Run type checking
     print_info("Running type checking...")
     if not run_command(
         ["uv", "run", "pyright", "miniflux_tui", "tests"],
@@ -366,90 +441,190 @@ def main() -> None:  # noqa: PLR0915
         sys.exit(1)
     print_success("Type checking passed")
 
-    print_header("Updating Files")
 
-    # Update version in pyproject.toml
+def update_release_files(current_version: str, new_version: str) -> None:
+    """Update version and changelog for the release."""
     print_info("Updating version in pyproject.toml...")
     if not update_version(new_version):
         print_error("Could not update version in pyproject.toml")
         sys.exit(1)
     print_success(f"Version updated: {current_version} → {new_version}")
 
-    # Edit CHANGELOG
     print_header("Edit CHANGELOG")
     if not edit_changelog(new_version):
-        # Revert version change if changelog edit failed
         update_version(current_version)
         sys.exit(1)
     print_success(f"CHANGELOG updated with version {new_version}")
 
-    print_header("Creating Release")
 
-    # Stage changes
-    run_command(["git", "add", "pyproject.toml", "CHANGELOG.md"])
+def create_release_commit(new_version: str) -> None:
+    """Stage and commit release artifacts."""
+    if not run_command(
+        ["git", "add", "pyproject.toml", "CHANGELOG.md"],
+        "Stage release files",
+    ):
+        print_error("Failed to stage release files.")
+        sys.exit(1)
     print_success("Files staged for commit")
 
-    # Create commit message
     commit_msg = f"chore: Release v{new_version}"
-    full_msg = f"""{commit_msg}
-
-🤖 Generated with [Claude Code](https://claude.com/claude-code)
-
-Co-Authored-By: Claude <noreply@anthropic.com>"""
-
-    # Commit
-    run_command(["git", "commit", "-m", full_msg])
+    if not run_command(["git", "commit", "-m", commit_msg], "Create release commit"):
+        print_error("Failed to create release commit.")
+        sys.exit(1)
     print_success(f"Commit created: {commit_msg}")
 
-    # Create git tag
-    tag_msg = f"Release v{new_version}\n\nSee CHANGELOG.md for detailed changes."
-    run_command(["git", "tag", "-a", f"v{new_version}", "-m", tag_msg])
-    print_success(f"Git tag created: v{new_version}")
 
-    # Push changes and tag
-    print_info("Pushing changes and tag to origin...")
-    push_branch_ok = run_command(
-        ["git", "push", "origin", "main"],
-        "Push branch",
+def push_release_branch(release_branch: str) -> None:
+    """Push the release branch to origin."""
+    print_info("Pushing release branch to origin...")
+    if not run_command(
+        ["git", "push", "-u", "origin", release_branch],
+        "Push release branch",
         show_output=True,
         forbidden_patterns=BRANCH_PROTECTION_PATTERNS,
-    )
-    push_tag_ok = False
-    if push_branch_ok:
-        push_tag_ok = run_command(
-            ["git", "push", "origin", f"v{new_version}"],
-            "Push tag",
-            show_output=True,
-        )
+    ):
+        print_error("Failed to push release branch. Resolve the issue and push manually.")
+        sys.exit(1)
+    print_success("Release branch pushed to origin")
 
-    if not push_branch_ok or not push_tag_ok:
-        print_error("Failed to push changes and/or tag. Please resolve the git issue above and push manually.")
+
+def print_release_next_steps(new_version: str) -> None:
+    """Display final instructions after preparing the release branch."""
+    print_header("Release Branch Ready")
+    print(f"{Colors.GREEN}Next steps:{Colors.NC}")
+    print("1. Open a pull request from the release branch to main.")
+    print("2. Get the pull request approved and merged.")
+    print("3. After merge, return to an up-to-date main and run:")
+    print(f"   uv run python scripts/release.py tag --version {new_version}")
+
+
+def prepare_release() -> None:
+    """Prepare a release branch with version and changelog updates."""
+    print_header("miniflux-tui-py Release Preparation")
+
+    ensure_current_branch("main")
+    ensure_clean_working_tree()
+    ensure_branch_synced("main")
+
+    current_version = get_current_version()
+    suggested_version = suggest_next_version(current_version)
+    print_info(f"Current version: {current_version}")
+    print(f"\n{Colors.YELLOW}Enter new version (default: {suggested_version}):{Colors.NC}")
+    new_version = input("New version: ").strip()
+
+    if not new_version:
+        new_version = suggested_version
+
+    if not validate_version(new_version):
+        print_error("Invalid version format. Use semantic versioning (e.g., 0.2.1).")
         sys.exit(1)
 
-    print_success("Changes and tag pushed to GitHub")
+    release_branch = f"release/v{new_version}"
+    ensure_branch_available(release_branch)
 
-    print_header("Release Complete! 🚀")
-    print(f"{Colors.GREEN}{'━' * 70}{Colors.NC}")
-    print(f"Version:      {Colors.GREEN}v{new_version}{Colors.NC}")
-    print(f"Release Tag:  {Colors.GREEN}v{new_version}{Colors.NC}")
-    print(f"GitHub:       {Colors.GREEN}https://github.com/reuteras/miniflux-tui-py/releases/tag/v{new_version}{Colors.NC}")
-    print(f"PyPI:         {Colors.GREEN}https://pypi.org/project/miniflux-tui-py/{new_version}/{Colors.NC}")
-    print(f"{Colors.GREEN}{'━' * 70}{Colors.NC}")
+    run_pre_release_checks()
 
-    print(f"\n{Colors.YELLOW}What happens next:{Colors.NC}")
-    print("1. GitHub Actions will automatically:")
-    print("   ✓ Run all tests")
-    print("   ✓ Check linting and types")
-    print("   ✓ Build distribution packages")
-    print("   ✓ Publish to PyPI")
-    print("   ✓ Create GitHub Release with artifacts")
+    print_header("Creating Release Branch")
+
+    if not run_command(["git", "switch", "-c", release_branch], "Create release branch"):
+        sys.exit(1)
+    print_success(f"Branch created: {release_branch}")
+
+    update_release_files(current_version, new_version)
+    create_release_commit(new_version)
+    push_release_branch(release_branch)
+    print_release_next_steps(new_version)
+
+
+def create_release_tag(version_override: str | None) -> None:
+    """Create and push an annotated tag for the current release."""
+    print_header("miniflux-tui-py Tag Creation")
+
+    ensure_current_branch("main")
+    ensure_clean_working_tree()
+    ensure_branch_synced("main")
+
+    version = version_override or get_current_version()
+    if not validate_version(version):
+        print_error("Invalid version format. Use semantic versioning (e.g., 0.2.1).")
+        sys.exit(1)
+
+    tag_name = f"v{version}"
+    if tag_exists(tag_name):
+        print_error(f"Tag '{tag_name}' already exists.")
+        sys.exit(1)
+
+    if not changelog_contains_version(version):
+        print_info(f"Warning: CHANGELOG.md does not mention [{version}]. Proceed only if this is expected.")
+
+    release_date = datetime.now(UTC).strftime("%Y-%m-%d")
+    tag_message = f"Release v{version}\n\nPublished on {release_date}. See CHANGELOG.md for details."
+
+    print_info(f"Creating tag {tag_name}...")
+    if not run_command(["git", "tag", "-a", tag_name, "-m", tag_message], "Create tag"):
+        sys.exit(1)
+    print_success(f"Tag created: {tag_name}")
+
+    print_info("Pushing tag to origin...")
+    if not run_command(
+        ["git", "push", "origin", tag_name],
+        "Push tag",
+        show_output=True,
+    ):
+        print_error("Failed to push tag. Resolve the issue and push manually.")
+        sys.exit(1)
+    print_success("Tag pushed to origin")
+
+    print_header("Release Triggered")
+    print("GitHub Actions will now:")
+    print("  • Build and test the project")
+    print("  • Publish artifacts to PyPI")
+    print("  • Attach binaries and SBOMs to the GitHub release")
     print("")
-    print("2. Monitor the workflow at:")
-    print("   https://github.com/reuteras/miniflux-tui-py/actions")
-    print("")
-    print("3. Check PyPI after publishing (usually within 1-2 minutes):")
-    print("   https://pypi.org/project/miniflux-tui-py/")
-    print("")
+    print("Monitor the workflow at https://github.com/reuteras/miniflux-tui-py/actions")
+    print("PyPI will update once the publish job completes.")
+
+
+def parse_args() -> argparse.Namespace:
+    """Parse CLI arguments."""
+    parser = argparse.ArgumentParser(
+        description="Prepare release branches and create release tags for miniflux-tui-py.",
+    )
+
+    subparsers = parser.add_subparsers(dest="command")
+
+    subparsers.add_parser(
+        "prepare",
+        help="Prepare a release branch (default action).",
+    )
+
+    tag_parser = subparsers.add_parser(
+        "tag",
+        help="Create and push the release tag after the PR merges.",
+    )
+    tag_parser.add_argument(
+        "--version",
+        help="Version to tag. Defaults to the version in pyproject.toml.",
+        default=None,
+    )
+
+    args = parser.parse_args()
+    if args.command is None:
+        args.command = "prepare"
+    return args
+
+
+def main() -> None:
+    """Entry point."""
+    args = parse_args()
+
+    if args.command == "prepare":
+        prepare_release()
+    elif args.command == "tag":
+        create_release_tag(getattr(args, "version", None))
+    else:
+        print_error(f"Unknown command: {args.command}")
+        sys.exit(1)
 
 
 if __name__ == "__main__":
@@ -459,6 +634,6 @@ if __name__ == "__main__":
         print("\n")
         print_error("Release cancelled by user")
         sys.exit(1)
-    except Exception as e:
-        print_error(f"Unexpected error: {e}")
+    except Exception as exc:
+        print_error(f"Unexpected error: {exc}")
         sys.exit(1)
