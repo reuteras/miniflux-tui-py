@@ -4,7 +4,7 @@ from __future__ import annotations
 
 import os
 import shlex
-import subprocess
+import subprocess  # nosec B404
 import sys
 import tomllib
 from collections.abc import Sequence
@@ -155,7 +155,8 @@ class Config:
             return self._api_key_cache
 
         try:
-            completed = subprocess.run(  # noqa: S603 - command comes from trusted local config
+            # Command originates from a trusted local configuration file.
+            completed = subprocess.run(  # nosec B603
                 self._password_command,
                 capture_output=True,
                 text=True,

@@ -124,16 +124,27 @@ jobs:
           persist-credentials: false
           fetch-depth: 0
 
+      - name: Install gitleaks
+        run: |
+          set -euo pipefail
+          version="8.16.1"
+          url="https://github.com/gitleaks/gitleaks/releases/download/v${version}/gitleaks_${version}_linux_x64.tar.gz"
+          tmp_dir="$(mktemp -d)"
+          curl -sSfL "$url" -o "$tmp_dir/gitleaks.tgz"
+          tar -xzf "$tmp_dir/gitleaks.tgz" -C "$tmp_dir" gitleaks
+          sudo install -m 755 "$tmp_dir/gitleaks" /usr/local/bin/gitleaks
+
       - name: Run gitleaks
         id: gitleaks
         continue-on-error: true
-        uses: gitleaks/gitleaks-action@e6dab246340401bf53eec993b8f05aebe80ac636 # v2.3.4
-        with:
-          args: >-
-            detect --no-git --redact --report-format sarif --report-path gitleaks.sarif
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          set -euo pipefail
+          gitleaks detect --no-git --redact --report-format sarif --report-path gitleaks.sarif
 
       - name: Upload gitleaks report
-        if: steps.gitleaks.outcome == 'success' || steps.gitleaks.outcome == 'failure'
+        if: (steps.gitleaks.outcome == 'success' || steps.gitleaks.outcome == 'failure') && github.event_name != 'pull_request'
         uses: github/codeql-action/upload-sarif@4e94bd11f71e507f7f87df81788dff88d1dacbfb
         with:
           sarif_file: gitleaks.sarif
