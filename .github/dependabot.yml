@@ -31,6 +31,8 @@ updates:
           - "textual*"
           - "miniflux*"
           - "html2text*"
+    cooldown:
+      default-days: 7
 
   # Enable version updates for GitHub Actions
   - package-ecosystem: "github-actions"
@@ -42,3 +44,5 @@ updates:
     open-pull-requests-limit: 5
     reviewers:
       - "reuteras"
+    cooldown:
+      default-days: 7

@@ -14,6 +14,7 @@ jobs:
     runs-on: ubuntu-latest
     permissions:
       contents: write
+      pull-requests: write
 
     steps:
       - name: Harden the runner (Audit all outbound calls)
@@ -25,6 +26,31 @@ jobs:
         uses: actions/checkout@08c6903cd8c0fde910a37f88322edcfb5dd907a8 # v5
         with:
           fetch-depth: 0
+          persist-credentials: false
+
+      - name: Install uv
+        uses: astral-sh/setup-uv@85856786d1ce8acfbcc2f13a5f3fbd6b938f9f41 # v7
+
+      - name: Ensure Python availability
+        run: uv python install 3.11
+
+      - name: Install pre-commit
+        run: uv pip install pre-commit
 
       - name: Run pre-commit autoupdate
-        uses: pre-commit/action@2c7b3805fd2a0fd8c1884dcaebf91fc102a13ecd # v3.0.1
+        run: uv run pre-commit autoupdate
+
+      - name: Create pull request
+        uses: peter-evans/create-pull-request@c030c15a3d57baa4d53160436b08b8fe604773c6 # v6.0.4
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+          commit-message: "chore: pre-commit autoupdate"
+          committer: "github-actions[bot] <github-actions[bot]@users.noreply.github.com>"
+          author: "github-actions[bot] <github-actions[bot]@users.noreply.github.com>"
+          branch: chore/pre-commit-autoupdate
+          delete-branch: true
+          title: "chore: pre-commit autoupdate"
+          body: |
+            ## Summary
+            - automatically run `pre-commit autoupdate`
+            - keep hook revisions current
