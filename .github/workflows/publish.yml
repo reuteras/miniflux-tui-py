@@ -141,6 +141,7 @@ jobs:
     env:
       DIST_ARTIFACT_NAME: dist-${{ github.run_id }}-${{ github.run_attempt }}
       BINARY_ARTIFACT_PREFIX: miniflux-tui-${{ github.run_id }}-${{ github.run_attempt }}
+      RELEASE_TAG: ${{ github.ref_name }}
     needs: [build, binaries]
     runs-on: ubuntu-latest
     permissions:
@@ -195,11 +196,13 @@ jobs:
         if: github.event_name != 'pull_request'
         run: |
           mkdir -p sbom
-          syft dir:dist --output cyclonedx-json=sbom/miniflux-tui-pypi.cdx.json
-          syft dir:dist --output spdx-json=sbom/miniflux-tui-pypi.spdx.json
+          TAG_NAME="${RELEASE_TAG}"
+          VERSION="${TAG_NAME#v}"
+          syft dir:dist --name miniflux-tui-py --version "${VERSION}" --output cyclonedx-json=sbom/miniflux-tui-pypi.cdx.json
+          syft dir:dist --name miniflux-tui-py --version "${VERSION}" --output spdx-json=sbom/miniflux-tui-pypi.spdx.json
           if compgen -G "binaries/*" > /dev/null; then
-            syft dir:binaries --output cyclonedx-json=sbom/miniflux-tui-binaries.cdx.json
-            syft dir:binaries --output spdx-json=sbom/miniflux-tui-binaries.spdx.json
+            syft dir:binaries --name miniflux-tui --version "${VERSION}" --output cyclonedx-json=sbom/miniflux-tui-binaries.cdx.json
+            syft dir:binaries --name miniflux-tui --version "${VERSION}" --output spdx-json=sbom/miniflux-tui-binaries.spdx.json
           else
             echo "No binary artifacts found; skipping binary SBOM generation."
           fi
@@ -220,10 +223,12 @@ jobs:
             binaries/*
 
       - name: Publish GitHub Release
+        if: github.run_attempt == 1
         uses: softprops/action-gh-release@6da8fa9354ddfdc4aeace5fc48d7f679b5214090 # v2.4.1
         with:
           draft: false
           prerelease: false
+          allow_updates: true
           files: |
             dist/**
             binaries/*
