@@ -50,21 +50,73 @@ def print_info(text: str) -> None:
     print(f"{Colors.YELLOW}[i]{Colors.NC} {text}")
 
 
-def run_command(cmd: list[str], description: str = "", show_output: bool = False) -> bool:
+BRANCH_PROTECTION_PATTERNS = [
+    "changes must be made through a pull request",
+    "protected branch update failed",
+    "protected branch hook declined",
+    "bypassed rule violations",
+]
+
+
+def _print_command_output(stdout: str | None, stderr: str | None) -> None:
+    """Print captured stdout/stderr from a successful command when requested."""
+    if stdout:
+        print(stdout, end="")
+    if stderr:
+        print(stderr, end="")
+
+
+def _print_failure_output(
+    error: subprocess.CalledProcessError,
+    show_output: bool,
+) -> None:
+    """Print stdout/stderr from a failed command based on configuration."""
+    if show_output:
+        if error.stdout:
+            print(error.stdout, end="")
+        if error.stderr:
+            print(error.stderr, end="")
+    elif error.stderr:
+        print(f"  {error.stderr}")
+
+
+def _has_forbidden_pattern(
+    stdout: str | None,
+    stderr: str | None,
+    forbidden_patterns: list[str],
+) -> bool:
+    """Return True if any forbidden pattern is present in command output."""
+    combined_output = f"{stdout or ''}\n{stderr or ''}".lower()
+    return any(pattern.lower() in combined_output for pattern in forbidden_patterns)
+
+
+def run_command(
+    cmd: list[str],
+    description: str = "",
+    show_output: bool = False,
+    forbidden_patterns: list[str] | None = None,
+) -> bool:
     """Run a command and return success status"""
     try:
-        subprocess.run(
+        result = subprocess.run(
             cmd,
             check=True,
-            capture_output=not show_output,
+            capture_output=True,
             text=True,
         )
+        if show_output:
+            _print_command_output(result.stdout, result.stderr)
+        if forbidden_patterns and _has_forbidden_pattern(result.stdout, result.stderr, forbidden_patterns):
+            if description:
+                print_error(f"{description} blocked by repository rules")
+            else:
+                print_error("Command blocked by repository rules")
+            return False
         return True
     except subprocess.CalledProcessError as e:
         if description:
             print_error(f"{description} failed")
-        if not show_output and hasattr(e, "stderr") and e.stderr:
-            print(f"  {e.stderr}")
+        _print_failure_output(e, show_output)
         return False
 
 
@@ -360,6 +412,7 @@ Co-Authored-By: Claude <noreply@anthropic.com>"""
         ["git", "push", "origin", "main"],
         "Push branch",
         show_output=True,
+        forbidden_patterns=BRANCH_PROTECTION_PATTERNS,
     )
     push_tag_ok = False
     if push_branch_ok:
