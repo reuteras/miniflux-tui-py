@@ -1,5 +1,43 @@
 # Changelog
 
+## [0.4.12] - 2025-10-29
+
+### Features
+- load api token via password command ([#178](https://github.com/reuteras/miniflux-tui-py/pull/178))
+- load api token via password command ([#177](https://github.com/reuteras/miniflux-tui-py/pull/177))
+- publish standalone binaries
+
+### Bug Fixes
+- address code scanning alerts ([#179](https://github.com/reuteras/miniflux-tui-py/pull/179))
+- handle tomllib type errors in config parsing
+- satisfy lint and add healthcheck
+- surface git push failures
+
+### CI/CD
+- fix gitleaks and zizmor regressions ([#175](https://github.com/reuteras/miniflux-tui-py/pull/175))
+- expand security coverage ([#166](https://github.com/reuteras/miniflux-tui-py/pull/166))
+- limit workflows to relevant paths ([#165](https://github.com/reuteras/miniflux-tui-py/pull/165))
+- update cifuzz action pins
+- quote fuzz extras install
+- install clang for fuzzing workflow
+- avoid installing fuzz extras in docs workflow
+- add CIFuzz workflow and configuration fuzz target
+- remove unsupported editorconfig options
+- tighten publish workflow token permissions ([#143](https://github.com/reuteras/miniflux-tui-py/pull/143))
+- run uv sync with locked lockfile
+
+### Maintenance
+- migrate config .renovaterc.json ([#176](https://github.com/reuteras/miniflux-tui-py/pull/176))
+- bump actions/attest-build-provenance from 1.4.4 to 3.0.0 ([#168](https://github.com/reuteras/miniflux-tui-py/pull/168))
+- fix CIFuzz workflow and docs indentation
+- restore unreleased changelog section
+- refresh container base image tooling
+- align uv lockfile with project version
+- Release v0.4.11
+- sync uv metadata after release
+- Release v0.4.9
+
+
 ## [Unreleased]
 
 ### Added
