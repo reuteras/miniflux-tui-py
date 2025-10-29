@@ -7,6 +7,11 @@ on:
   # i.e. "master"
   push:
     branches: [main]
+    paths:
+      - 'pyproject.toml'
+      - 'uv.lock'
+      - 'fuzz/**'
+      - '.github/workflows/osv-scanner.yml'
 
 permissions:
   contents: read
