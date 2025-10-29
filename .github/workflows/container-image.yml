@@ -75,9 +75,9 @@ jobs:
           fi
 
           {
-            echo "tags<<'EOF'"
+            printf 'tags<<EOF\n'
             printf '%s\n' "$tags"
-            echo 'EOF'
+            printf 'EOF\n'
           } >> "$GITHUB_OUTPUT"
 
       - name: Log in to the Container registry
@@ -99,7 +99,6 @@ jobs:
           sbom: true
           platforms: linux/amd64,linux/arm64
           tags: ${{ steps.image-tags.outputs.tags }}
-          labels: ${{ steps.meta.outputs.labels }}
 
       - name: Install Syft
         if: github.event_name != 'pull_request'
