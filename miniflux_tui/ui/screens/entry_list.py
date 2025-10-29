@@ -1,7 +1,7 @@
 """Entry list screen with feed sorting capabilities."""
 
 from contextlib import suppress
-from typing import TYPE_CHECKING, cast
+from typing import TYPE_CHECKING, Any, cast
 
 from textual.app import ComposeResult
 from textual.binding import Binding
@@ -18,7 +18,7 @@ from miniflux_tui.performance import ScreenRefreshOptimizer
 from miniflux_tui.utils import api_call, get_star_icon, get_status_icon
 
 if TYPE_CHECKING:
-    from miniflux_tui.ui.app import MinifluxTUI
+    MinifluxTUI = Any
 
 
 class EntryListItem(ListItem):
