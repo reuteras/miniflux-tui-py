@@ -88,6 +88,32 @@ jobs:
           build-args: |
             PYTHON_VERSION=3.13.3
 
+      - name: Install Syft
+        if: github.event_name != 'pull_request'
+        run: |
+          SYFT_VERSION=v1.19.1
+          curl -sSfL "https://github.com/anchore/syft/releases/download/${SYFT_VERSION}/syft_${SYFT_VERSION#v}_linux_amd64.tar.gz" \
+            | sudo tar -xz -C /usr/local/bin syft
+
+      - name: Generate SBOMs for container image
+        if: github.event_name != 'pull_request'
+        env:
+          IMAGE_DIGEST: ${{ steps.build.outputs.digest }}
+        run: |
+          mkdir -p sbom
+          IMAGE="${REGISTRY}/${IMAGE_NAME}@${IMAGE_DIGEST}"
+          SAFE_DIGEST="${IMAGE_DIGEST/:/-}"
+          syft "${IMAGE}" -o cyclonedx-json --file "sbom/miniflux-tui-image-${SAFE_DIGEST}.cdx.json"
+          syft "${IMAGE}" -o spdx-json --file "sbom/miniflux-tui-image-${SAFE_DIGEST}.spdx.json"
+
+      - name: Upload SBOM artifacts
+        if: github.event_name != 'pull_request'
+        uses: actions/upload-artifact@330a01c490aca151604b8cf639adc76d48f6c5d4 # v5
+        with:
+          name: sbom-container
+          path: sbom/
+          retention-days: 7
+
       - name: Install cosign
         if: github.event_name != 'pull_request'
         uses: sigstore/cosign-installer@faadad0cce49287aee09b3a48701e75088a2c6ad # v4.0.0

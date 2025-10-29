@@ -42,6 +42,7 @@ The release script handles:
 - Builds standalone binaries for Linux/macOS/Windows
 - Publishes to PyPI
 - Creates GitHub Release with artifacts
+- Generates CycloneDX and SPDX SBOMs for PyPI artifacts, OS binaries, and container images
 
 ## Prerequisites
 

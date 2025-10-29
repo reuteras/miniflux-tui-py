@@ -159,6 +159,30 @@ jobs:
           merge-multiple: true
           path: binaries/
 
+      - name: Install Syft
+        if: github.event_name != 'pull_request'
+        run: |
+          SYFT_VERSION=v1.19.1
+          curl -sSfL "https://github.com/anchore/syft/releases/download/${SYFT_VERSION}/syft_${SYFT_VERSION#v}_linux_amd64.tar.gz" \
+            | sudo tar -xz -C /usr/local/bin syft
+
+      - name: Generate SBOMs for release artifacts
+        if: github.event_name != 'pull_request'
+        run: |
+          mkdir -p sbom
+          syft dir:dist -o cyclonedx-json --file sbom/miniflux-tui-pypi.cdx.json
+          syft dir:dist -o spdx-json --file sbom/miniflux-tui-pypi.spdx.json
+          syft dir:binaries -o cyclonedx-json --file sbom/miniflux-tui-binaries.cdx.json
+          syft dir:binaries -o spdx-json --file sbom/miniflux-tui-binaries.spdx.json
+
+      - name: Upload SBOM artifacts
+        if: github.event_name != 'pull_request'
+        uses: actions/upload-artifact@330a01c490aca151604b8cf639adc76d48f6c5d4 # v5
+        with:
+          name: sbom
+          path: sbom/
+          retention-days: 7
+
       - name: Generate GitHub attestations
         uses: actions/attest-build-provenance@ef244123eb79f2f7a7e75d99086184180e6d0018 # v2.0.0
         with:
@@ -174,5 +198,6 @@ jobs:
           files: |
             dist/**
             binaries/*
+            sbom/**
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
