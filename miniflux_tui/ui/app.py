@@ -14,7 +14,7 @@ from miniflux_tui.constants import DEFAULT_ENTRY_LIMIT
 
 from .screens.entry_list import EntryListScreen
 from .screens.help import HelpScreen
-from .screens.status import StatusScreen
+
 
 if TYPE_CHECKING:
     from miniflux_tui.ui.screens import entry_reader as entry_reader_types
