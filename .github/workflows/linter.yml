@@ -8,8 +8,22 @@ name: Code Quality Checks
 on:
   push:
     branches: [main]
+    paths:
+      - '**/*.md'
+      - '.github/**'
+      - 'docs/**'
+      - 'assets/**'
+      - 'config.toml.example'
+      - 'mkdocs.yml'
   pull_request:
     branches: [main]
+    paths:
+      - '**/*.md'
+      - '.github/**'
+      - 'docs/**'
+      - 'assets/**'
+      - 'config.toml.example'
+      - 'mkdocs.yml'
 
 permissions:
   contents: read

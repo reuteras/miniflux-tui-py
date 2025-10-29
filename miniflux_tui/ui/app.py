@@ -1,8 +1,10 @@
 """Main TUI application."""
 
+from __future__ import annotations
+
 import traceback
 from importlib import import_module
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, Any
 
 from textual.app import App
 from textual.driver import Driver
@@ -12,12 +14,29 @@ from miniflux_tui.api.models import Category, Entry
 from miniflux_tui.config import Config
 from miniflux_tui.constants import DEFAULT_ENTRY_LIMIT
 
-from .screens.entry_list import EntryListScreen
 from .screens.help import HelpScreen
-from .screens.status import StatusScreen
 
 if TYPE_CHECKING:
     from miniflux_tui.ui.screens import entry_reader as entry_reader_types
+    from miniflux_tui.ui.screens.entry_list import EntryListScreen as EntryListScreenType
+    from miniflux_tui.ui.screens.status import StatusScreen as StatusScreenType
+else:  # pragma: no cover - hints only used during type checking
+    EntryListScreenType = Any
+    StatusScreenType = Any
+
+
+def _load_entry_list_screen_cls() -> type[EntryListScreenType]:
+    """Import and return the entry list screen class."""
+
+    module = import_module("miniflux_tui.ui.screens.entry_list")
+    return module.EntryListScreen  # type: ignore[return-value]
+
+
+def _load_status_screen_cls() -> type[StatusScreenType]:
+    """Import and return the status screen class."""
+
+    module = import_module("miniflux_tui.ui.screens.status")
+    return module.StatusScreen  # type: ignore[return-value]
 
 
 class MinifluxTUI(App):
@@ -99,6 +118,8 @@ class MinifluxTUI(App):
         self.entries: list[Entry] = []
         self.categories: list[Category] = []
         self.current_view = "unread"  # or "starred"
+        self._entry_list_screen_cls: type[EntryListScreenType] | None = None
+        self._status_screen_cls: type[StatusScreenType] | None = None
 
     async def on_mount(self) -> None:
         """Called when app is mounted."""
@@ -109,9 +130,10 @@ class MinifluxTUI(App):
             allow_invalid_certs=self.config.allow_invalid_certs,
         )
 
-        # Install screens first
+        entry_list_cls = _load_entry_list_screen_cls()
+        self._entry_list_screen_cls = entry_list_cls
         self.install_screen(
-            EntryListScreen(
+            entry_list_cls(
                 entries=self.entries,
                 categories=self.categories,
                 unread_color=self.config.unread_color,
@@ -124,7 +146,10 @@ class MinifluxTUI(App):
         )
 
         self.install_screen(HelpScreen(), name="help")
-        self.install_screen(StatusScreen(), name="status")
+
+        status_cls = _load_status_screen_cls()
+        self._status_screen_cls = status_cls
+        self.install_screen(status_cls(), name="status")
 
         # Push initial screen
         self.push_screen("entry_list")
@@ -147,7 +172,9 @@ class MinifluxTUI(App):
             # Update the entry list screen if it exists
             if self.is_screen_installed("entry_list"):
                 screen = self.get_screen("entry_list")
-                if isinstance(screen, EntryListScreen):
+                entry_list_cls = self._entry_list_screen_cls or _load_entry_list_screen_cls()
+                self._entry_list_screen_cls = entry_list_cls
+                if isinstance(screen, entry_list_cls):
                     screen.categories = self.categories
         except Exception as e:
             error_details = traceback.format_exc()
@@ -180,7 +207,9 @@ class MinifluxTUI(App):
                 self.log("entry_list screen is installed")
                 screen = self.get_screen("entry_list")
                 self.log(f"Got screen: {type(screen)}")
-                if isinstance(screen, EntryListScreen):
+                entry_list_cls = self._entry_list_screen_cls or _load_entry_list_screen_cls()
+                self._entry_list_screen_cls = entry_list_cls
+                if isinstance(screen, entry_list_cls):
                     self.log(f"Updating screen with {len(self.entries)} entries")
                     screen.entries = self.entries
                     screen._populate_list()
