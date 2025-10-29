@@ -12,7 +12,7 @@ from miniflux_tui.api.models import Category, Entry
 from miniflux_tui.config import Config
 from miniflux_tui.constants import DEFAULT_ENTRY_LIMIT
 
-from .screens.entry_list import EntryListScreen
+# from .screens.entry_list import EntryListScreen  # Moved to function-level to avoid cyclic import
 from .screens.help import HelpScreen
 from .screens.status import StatusScreen
 
