@@ -15,8 +15,16 @@ RUN python -m venv "${UV_PROJECT_ENV}"
 
 ENV PATH=${UV_PROJECT_ENV}/bin:$PATH
 
-# hadolint ignore=DL3013
-RUN pip install --upgrade pip==25.3 uv==0.9.5
+ARG UV_VERSION=0.9.5
+
+# hadolint ignore=DL3008
+RUN apt-get update \
+    && apt-get install --no-install-recommends --yes curl \
+    && rm -rf /var/lib/apt/lists/*
+
+# hadolint ignore=DL4006
+RUN curl -LsSf "https://astral.sh/uv/install.sh?v=${UV_VERSION}" | UV_INSTALL_DIR=/usr/local/bin sh \
+    && python -m ensurepip --upgrade
 
 COPY pyproject.toml uv.lock README.md LICENSE /src/
 COPY miniflux_tui /src/miniflux_tui
