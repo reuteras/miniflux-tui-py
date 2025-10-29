@@ -1,5 +1,13 @@
 # Changelog
 
+## [0.4.14] - 2025-10-29
+
+### Bug Fixes
+- detect branch protection in release ([#182](https://github.com/reuteras/miniflux-tui-py/pull/182))
+- detect branch protection in release ([#180](https://github.com/reuteras/miniflux-tui-py/pull/180))
+- detect branch protection in release
+
+
 ## [0.4.13] - 2025-10-29
 
 ### Bug Fixes

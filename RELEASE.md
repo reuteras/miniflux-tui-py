@@ -25,10 +25,11 @@ The default command (`uv run python scripts/release.py`) performs the following:
 2. Runs the quality gates (pytest, ruff, pyright).
 3. Prompts for the new semantic version (suggests the next patch).
 4. Updates `pyproject.toml`.
-5. Pre-populates `CHANGELOG.md` with the commits since the previous tag and lets you edit.
-6. Creates a branch named `release/vX.Y.Z`.
-7. Commits the version + changelog changes.
-8. Pushes the release branch to `origin`.
+5. Regenerates `uv.lock` so dependencies stay in sync.
+6. Pre-populates `CHANGELOG.md` with the commits since the previous tag and lets you edit.
+7. Creates a branch named `release/vX.Y.Z`.
+8. Commits the version + changelog changes.
+9. Pushes the release branch to `origin`.
 
 ### What you do next
 
