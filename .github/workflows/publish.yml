@@ -229,6 +229,7 @@ jobs:
           RELEASE_TAG: ${{ env.RELEASE_TAG }}
           GITHUB_REPOSITORY: ${{ github.repository }}
         run: |
+          # shellcheck shell=bash
           set -euo pipefail
 
           TAG="${RELEASE_TAG:?RELEASE_TAG environment variable is required}"
