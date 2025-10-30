@@ -14,7 +14,7 @@ on:
       - "uv.lock"
       - ".github/workflows/container-image.yml"
       - "miniflux_tui/**"
-  workflow_dispatch: {}
+  workflow_dispatch: { }
 
 permissions:
   contents: read
