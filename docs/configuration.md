@@ -108,6 +108,11 @@ Every collaborator needs to define their own secret. Secrets are scoped to the
 person who created them, so they are not shared when someone else opens the
 repository in Codespaces.
 
+The Codespace automatically configures the VS Code Testing view to discover and
+run the project's pytest tests. It also enables Ruff formatting on save and
+points VS Code at the workspace `.venv`, so linting, formatting, and test runs
+work out of the box.
+
 ## Configuration File Location
 
 ### Linux
