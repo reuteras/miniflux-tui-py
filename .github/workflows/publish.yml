@@ -222,16 +222,57 @@ jobs:
             dist/*
             binaries/*
 
-      - name: Publish GitHub Release
+      - name: Upload release assets
         if: github.run_attempt == 1
-        uses: softprops/action-gh-release@6da8fa9354ddfdc4aeace5fc48d7f679b5214090 # v2.4.1
-        with:
-          draft: false
-          prerelease: false
-          allow_updates: true
-          files: |
-            dist/**
-            binaries/*
-            sbom/**
         env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          RELEASE_TAG: ${{ env.RELEASE_TAG }}
+          GITHUB_REPOSITORY: ${{ github.repository }}
+        run: |
+          set -euo pipefail
+
+          TAG="${RELEASE_TAG:?RELEASE_TAG environment variable is required}"
+          REPO="${GITHUB_REPOSITORY:?GITHUB_REPOSITORY environment variable is required}"
+
+          if ! command -v gh >/dev/null 2>&1; then
+            echo "GitHub CLI is required but was not found in PATH." >&2
+            exit 1
+          fi
+
+          if ! gh release view "${TAG}" --repo "${REPO}" >/dev/null 2>&1; then
+            echo "Release ${TAG} does not exist yet. Creating a release shell before uploading assets."
+            gh release create "${TAG}" --verify-tag --title "${TAG}" --notes "" --repo "${REPO}"
+          fi
+
+          for required_dir in dist sbom; do
+            if [ ! -d "${required_dir}" ]; then
+              echo "Expected release artifact directory '${required_dir}' is missing." >&2
+              exit 1
+            fi
+          done
+
+          upload_files=()
+
+          while IFS= read -r -d '' file; do
+            upload_files+=("${file}")
+          done < <(find dist -maxdepth 1 -type f -print0)
+
+          if [ -d binaries ]; then
+            while IFS= read -r -d '' file; do
+              upload_files+=("${file}")
+            done < <(find binaries -maxdepth 1 -type f -print0)
+          fi
+
+          while IFS= read -r -d '' file; do
+            upload_files+=("${file}")
+          done < <(find sbom -maxdepth 1 -type f -print0)
+
+          if [ ${#upload_files[@]} -eq 0 ]; then
+            echo "No release assets discovered to upload." >&2
+            exit 1
+          fi
+
+          echo "Uploading the following assets to ${TAG}:"
+          printf '  %s\n' "${upload_files[@]}"
+
+          gh release upload "${TAG}" "${upload_files[@]}" --clobber --repo "${REPO}"
