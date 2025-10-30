@@ -106,7 +106,7 @@ jobs:
         if: github.event_name != 'pull_request'
         run: |
           set -euo pipefail
-          SYFT_VERSION=v1.36.0
+          SYFT_VERSION=v1.46.1
           SYFT_BASE_URL="https://github.com/anchore/syft/releases/download/${SYFT_VERSION}"
           SYFT_ARCHIVE="syft_${SYFT_VERSION#v}_linux_amd64.tar.gz"
           TMP_DIR="$(mktemp -d)"
