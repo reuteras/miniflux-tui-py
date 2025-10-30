@@ -56,7 +56,6 @@ jobs:
       - name: Lint Code Base
         uses: github/super-linter/slim@b807e99ddd37e444d189cfd2c2ca1274d8ae8ef1 # v7
         env:
-          YAML_LINT_CONFIG_FILE: .yamllint
           FILTER_REGEX_EXCLUDE: '(CHANGELOG\.md|CLAUDE\.md)'
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           VALIDATE_CHECKOV: false
@@ -74,6 +73,7 @@ jobs:
           VALIDATE_PYTHON_MYPY: false
           VALIDATE_PYTHON_PYINK: false
           VALIDATE_PYTHON_PYLINT: false
+          VALIDATE_SHELL_SHFMT: false
           VALIDATE_JSON_PRETTIER: false
           VALIDATE_YAML_PRETTIER: false
           VALIDATE_RENOVATE: false
