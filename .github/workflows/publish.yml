@@ -200,11 +200,11 @@ jobs:
           mkdir -p sbom
           TAG_NAME="${RELEASE_TAG}"
           VERSION="${TAG_NAME#v}"
-          syft dir:dist --name miniflux-tui-py --version "${VERSION}" --output cyclonedx-json=sbom/miniflux-tui-pypi.cdx.json
-          syft dir:dist --name miniflux-tui-py --version "${VERSION}" --output spdx-json=sbom/miniflux-tui-pypi.spdx.json
+          syft dir:dist --source-name miniflux-tui-py --source-version "${VERSION}" --output cyclonedx-json=sbom/miniflux-tui-pypi.cdx.json
+          syft dir:dist --source-name miniflux-tui-py --source-version "${VERSION}" --output spdx-json=sbom/miniflux-tui-pypi.spdx.json
           if compgen -G "binaries/*" > /dev/null; then
-            syft dir:binaries --name miniflux-tui --version "${VERSION}" --output cyclonedx-json=sbom/miniflux-tui-binaries.cdx.json
-            syft dir:binaries --name miniflux-tui --version "${VERSION}" --output spdx-json=sbom/miniflux-tui-binaries.spdx.json
+            syft dir:binaries --source-name miniflux-tui --source-version "${VERSION}" --output cyclonedx-json=sbom/miniflux-tui-binaries.cdx.json
+            syft dir:binaries --source-name miniflux-tui --source-version "${VERSION}" --output spdx-json=sbom/miniflux-tui-binaries.spdx.json
           else
             echo "No binary artifacts found; skipping binary SBOM generation."
           fi
