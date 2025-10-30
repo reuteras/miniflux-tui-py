@@ -227,17 +227,21 @@ jobs:
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           RELEASE_TAG: ${{ env.RELEASE_TAG }}
+          GITHUB_REPOSITORY: ${{ github.repository }}
         run: |
           set -euo pipefail
+
+          TAG="${RELEASE_TAG:?RELEASE_TAG environment variable is required}"
+          REPO="${GITHUB_REPOSITORY:?GITHUB_REPOSITORY environment variable is required}"
 
           if ! command -v gh >/dev/null 2>&1; then
             echo "GitHub CLI is required but was not found in PATH." >&2
             exit 1
           fi
 
-          if ! gh release view "${RELEASE_TAG}" >/dev/null 2>&1; then
-            echo "Release ${RELEASE_TAG} does not exist yet. Creating a release shell before uploading assets."
-            gh release create "${RELEASE_TAG}" --verify-tag --title "${RELEASE_TAG}" --notes ""
+          if ! gh release view "${TAG}" --repo "${REPO}" >/dev/null 2>&1; then
+            echo "Release ${TAG} does not exist yet. Creating a release shell before uploading assets."
+            gh release create "${TAG}" --verify-tag --title "${TAG}" --notes "" --repo "${REPO}"
           fi
 
           for required_dir in dist sbom; do
@@ -268,7 +272,7 @@ jobs:
             exit 1
           fi
 
-          echo "Uploading the following assets to ${RELEASE_TAG}:"
+          echo "Uploading the following assets to ${TAG}:"
           printf '  %s\n' "${upload_files[@]}"
 
-          gh release upload "${RELEASE_TAG}" "${upload_files[@]}" --clobber
+          gh release upload "${TAG}" "${upload_files[@]}" --clobber --repo "${REPO}"
