@@ -122,6 +122,36 @@ Full documentation is available at [reuteras.github.io/miniflux-tui-py](https://
 - [Usage Guide](https://reuteras.github.io/miniflux-tui-py/usage/)
 - [Contributing](https://reuteras.github.io/miniflux-tui-py/contributing/)
 
+## GitHub Codespaces
+
+GitHub Codespaces provides a preconfigured, browser-accessible development
+environment that works well with the terminal-based interface of
+`miniflux-tui-py`. A devcontainer can install `uv`, sync dependencies, and run
+the application exactly as described in the [From Source](#from-source-for-developers)
+section.
+
+### Keeping your Miniflux token secret
+
+Use [Codespaces secrets](https://docs.github.com/codespaces/managing-your-codespaces/managing-secrets-for-your-codespaces)
+to store your API token so only the Codespaces that you start can read it:
+
+1. In the repository, go to **Settings → Codespaces secrets** and add a new
+   secret named `MINIFLUX_TOKEN` (or add a personal Codespaces secret from your
+   user settings).
+2. Launch a Codespace for this repository. GitHub injects the secret into the
+   environment as `MINIFLUX_TOKEN` each time the Codespace starts.
+3. Configure `config.toml` to read the token from the environment by using a
+   command for the `password` field, for example:
+
+   ```toml
+   password = ["/bin/sh", "-c", "printf %s \"$MINIFLUX_TOKEN\""]
+   ```
+
+Each collaborator must define their own secret—your personal Codespaces secrets
+are never shared with other users, and theirs are not shared with you. Avoid
+writing the raw token to tracked files inside the Codespace so it is not
+accidentally committed.
+
 ## Configuration
 
 Create a configuration file at:

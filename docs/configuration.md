@@ -86,6 +86,26 @@ password = ["/bin/sh", "-c", "printf %s \"$MINIFLUX_TOKEN\""]
 Make sure the command outputs only the token with no additional text or
 trailing newline (other than the typical newline printed by `printf`/`echo`).
 
+### Using GitHub Codespaces secrets
+
+[Codespaces secrets](https://docs.github.com/codespaces/managing-your-codespaces/managing-secrets-for-your-codespaces)
+let every contributor keep their own Miniflux token private while working in a
+shared repository:
+
+1. Create a Codespaces secret (repository or personal) named `MINIFLUX_TOKEN`.
+   Only Codespaces that you start can read your personal secrets.
+2. Start the Codespace. The secret is exposed as the `MINIFLUX_TOKEN`
+   environment variable inside the running container.
+3. Configure `password` to run a shell command that echoes the variable, e.g.:
+
+   ```toml
+   password = ["/bin/sh", "-c", "printf %s \"$MINIFLUX_TOKEN\""]
+   ```
+
+Every collaborator needs to define their own secret. Secrets are scoped to the
+person who created them, so they are not shared when someone else opens the
+repository in Codespaces.
+
 ## Configuration File Location
 
 ### Linux
