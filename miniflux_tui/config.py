@@ -9,6 +9,7 @@ import sys
 import tomllib
 from collections.abc import Sequence
 from pathlib import Path, PurePosixPath
+from textwrap import dedent
 
 
 def _normalize_command(command: Sequence[str] | str) -> tuple[str, ...]:
@@ -208,13 +209,45 @@ class Config:
             data = tomllib.loads(path.read_text(encoding="utf-8"))
         except (tomllib.TOMLDecodeError, TypeError) as exc:
             msg = f"Invalid configuration: {exc}"
-            raise ValueError(msg) from exc
+            raise ConfigurationError(msg) from exc
 
         # Validate configuration
         is_valid, error_msg = validate_config(data)
         if not is_valid:
+            hint_messages: list[str] = []
+
+            if "Missing required field: password" in error_msg:
+                hint_messages.append(
+                    dedent(
+                        """
+                        This configuration predates the password-command format introduced in v0.4.19.
+                        Add a `password` command that returns your Miniflux API token. For example:
+
+                            password = ["op", "read", "op://Personal/Miniflux/API Token"]
+
+                        Alternatively run `miniflux-tui --init` to generate a fresh template and copy
+                        your settings across.
+                        """
+                    ).strip()
+                )
+
+            if "api_key" in data:
+                hint_messages.append(
+                    dedent(
+                        """
+                        Remove the deprecated `api_key` entry and configure a `password` command instead.
+                        The command should output your Miniflux API token, for example:
+
+                            password = ["op", "read", "op://Personal/Miniflux/API Token"]
+                        """
+                    ).strip()
+                )
+
             msg = f"Invalid configuration: {error_msg}"
-            raise ValueError(msg)
+            if hint_messages:
+                msg = f"{msg}\n\n" + "\n\n".join(hint_messages)
+
+            raise ConfigurationError(msg)
 
         # Theme settings
         theme = data.get("theme", {})
@@ -348,3 +381,7 @@ def load_config() -> Config | None:
         return None
 
     return Config.from_file(config_path)
+
+
+class ConfigurationError(ValueError):
+    """Raised when the configuration file is invalid or outdated."""
