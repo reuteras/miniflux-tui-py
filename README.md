@@ -128,7 +128,7 @@ GitHub Codespaces provides a preconfigured, browser-accessible development
 environment that works well with the terminal-based interface of
 `miniflux-tui-py`. This repository includes a `.devcontainer/devcontainer.json`
 so every Codespace starts from a Python 3.11 image, installs `uv`, and runs
-`uv sync --all-groups` automatically. After the first boot you can launch the
+`uv sync --locked --all-groups` automatically. After the first boot you can launch the
 TUI with the same commands documented in the
 [From Source](#from-source-for-developers) section:
 
