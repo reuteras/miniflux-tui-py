@@ -108,6 +108,9 @@ Every collaborator needs to define their own secret. Secrets are scoped to the
 person who created them, so they are not shared when someone else opens the
 repository in Codespaces.
 
+The Codespace automatically configures the VS Code Testing view to discover and
+run the project's pytest tests.
+
 ## Configuration File Location
 
 ### Linux

@@ -165,6 +165,9 @@ are never shared with other users, and theirs are not shared with you. Avoid
 writing the raw token to tracked files inside the Codespace so it is not
 accidentally committed.
 
+The Codespace is set up so the VS Code Testing view is ready to run the project's
+pytest suite without extra configuration.
+
 ## Configuration
 
 Create a configuration file at:
