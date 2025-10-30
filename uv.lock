@@ -524,7 +524,7 @@ wheels = [
 
 [[package]]
 name = "miniflux-tui-py"
-version = "0.4.18"
+version = "0.4.19"
 source = { editable = "." }
 dependencies = [
     { name = "html2text" },
