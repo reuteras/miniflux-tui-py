@@ -24,6 +24,7 @@ jobs:
         with:
           ref: ${{ github.event.pull_request.head.sha }}
           fetch-depth: 0
+          persist-credentials: false
           path: head
 
       - name: Checkout base ref
@@ -31,6 +32,7 @@ jobs:
         with:
           ref: ${{ github.event.pull_request.base.sha }}
           fetch-depth: 0
+          persist-credentials: false
           path: base
 
       - name: Determine relevant changes
