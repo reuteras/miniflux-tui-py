@@ -166,7 +166,9 @@ writing the raw token to tracked files inside the Codespace so it is not
 accidentally committed.
 
 The Codespace is set up so the VS Code Testing view is ready to run the project's
-pytest suite without extra configuration.
+pytest suite without extra configuration. VS Code also auto-formats Python files
+with Ruff on save and wires up the default interpreter to the repo's `.venv`, so
+the editor, formatter, and tests all work straight away.
 
 ## Configuration
 

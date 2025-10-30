@@ -1,0 +1,28 @@
+{
+    "version": "0.2.0",
+    "configurations": [
+        {
+            "name": "Python: Run miniflux-tui",
+            "type": "python",
+            "request": "launch",
+            "module": "miniflux_tui.__main__",
+            "console": "integratedTerminal",
+            "justMyCode": true
+        },
+        {
+            "name": "Python: Debug pytest",
+            "type": "python",
+            "request": "launch",
+            "module": "pytest",
+            "args": [
+                "-q",
+                "tests"
+            ],
+            "console": "integratedTerminal",
+            "justMyCode": false,
+            "purpose": [
+                "debugTest"
+            ]
+        }
+    ]
+}

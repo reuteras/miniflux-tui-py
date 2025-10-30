@@ -9,12 +9,22 @@
         "vscode": {
             "settings": {
                 "terminal.integrated.defaultProfile.linux": "bash",
+                "editor.formatOnSave": true,
+                "[python]": {
+                    "editor.defaultFormatter": "charliermarsh.ruff",
+                    "editor.codeActionsOnSave": {
+                        "source.fixAll.ruff": true,
+                        "source.organizeImports.ruff": true
+                    }
+                },
+                "python.defaultInterpreterPath": "${workspaceFolder}/.venv/bin/python",
                 "python.testing.pytestEnabled": true,
                 "python.testing.unittestEnabled": false,
                 "python.testing.pytestArgs": [
                     "tests"
                 ],
-                "python.testing.cwd": "${workspaceFolder}"
+                "python.testing.cwd": "${workspaceFolder}",
+                "python.analysis.typeCheckingMode": "standard"
             },
             "extensions": [
                 "ms-python.python",
