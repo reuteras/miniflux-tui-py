@@ -2,7 +2,6 @@
 
 import traceback
 import webbrowser
-from typing import TYPE_CHECKING
 
 import html2text
 from textual.app import ComposeResult
@@ -13,10 +12,8 @@ from textual.widgets import Footer, Header, Markdown, Static
 
 from miniflux_tui.api.models import Entry
 from miniflux_tui.constants import CONTENT_SEPARATOR
+from miniflux_tui.ui.protocols import EntryReaderAppProtocol
 from miniflux_tui.utils import get_star_icon
-
-if TYPE_CHECKING:
-    from miniflux_tui.ui.app import MinifluxTUI
 
 
 class EntryReaderScreen(Screen):
@@ -41,7 +38,7 @@ class EntryReaderScreen(Screen):
         Binding("escape", "back", "Back", show=False),
     ]
 
-    app: "MinifluxTUI"
+    app: EntryReaderAppProtocol
 
     def __init__(
         self,
@@ -96,11 +93,20 @@ class EntryReaderScreen(Screen):
         if self.entry.is_unread:
             await self._mark_entry_as_read()
 
+    def _resolve_app(self) -> EntryReaderAppProtocol | None:
+        """Return the parent TUI app if it satisfies the expected protocol."""
+
+        app = self.app
+        if isinstance(app, EntryReaderAppProtocol):
+            return app
+        return None
+
     async def _mark_entry_as_read(self):
         """Mark the current entry as read via API."""
-        if hasattr(self.app, "client") and self.app.client:
+        app = self._resolve_app()
+        if app and app.client:
             try:
-                await self.app.client.mark_as_read(self.entry.id)
+                await app.client.mark_as_read(self.entry.id)
                 self.entry.status = "read"
             except Exception as e:
                 self.log(f"Error marking as read: {e}")
@@ -161,13 +167,16 @@ class EntryReaderScreen(Screen):
 
     def action_back(self):
         """Return to entry list."""
-        self.app.pop_screen()
+        app = self._resolve_app()
+        if app:
+            app.pop_screen()
 
     async def action_mark_unread(self):
         """Mark entry as unread."""
-        if hasattr(self.app, "client") and self.app.client:
+        app = self._resolve_app()
+        if app and app.client:
             try:
-                await self.app.client.mark_as_unread(self.entry.id)
+                await app.client.mark_as_unread(self.entry.id)
                 self.entry.status = "unread"
                 self.notify("Marked as unread")
             except Exception as e:
@@ -175,9 +184,10 @@ class EntryReaderScreen(Screen):
 
     async def action_toggle_star(self):
         """Toggle star status."""
-        if hasattr(self.app, "client") and self.app.client:
+        app = self._resolve_app()
+        if app and app.client:
             try:
-                await self.app.client.toggle_starred(self.entry.id)
+                await app.client.toggle_starred(self.entry.id)
                 self.entry.starred = not self.entry.starred
                 status = "starred" if self.entry.starred else "unstarred"
                 self.notify(f"Entry {status}")
@@ -189,9 +199,10 @@ class EntryReaderScreen(Screen):
 
     async def action_save_entry(self):
         """Save entry to third-party service."""
-        if hasattr(self.app, "client") and self.app.client:
+        app = self._resolve_app()
+        if app and app.client:
             try:
-                await self.app.client.save_entry(self.entry.id)
+                await app.client.save_entry(self.entry.id)
                 self.notify(f"Entry saved: {self.entry.title}")
             except Exception as e:
                 self.notify(f"Failed to save entry: {e}", severity="error")
@@ -206,12 +217,13 @@ class EntryReaderScreen(Screen):
 
     async def action_fetch_original(self):
         """Fetch original content from source."""
-        if hasattr(self.app, "client") and self.app.client:
+        app = self._resolve_app()
+        if app and app.client:
             try:
                 self.notify("Fetching original content...")
 
                 # Fetch original content from API
-                original_content = await self.app.client.fetch_original_content(self.entry.id)
+                original_content = await app.client.fetch_original_content(self.entry.id)
 
                 if original_content:
                     # Update the entry's content
@@ -322,12 +334,18 @@ class EntryReaderScreen(Screen):
 
     def action_show_help(self):
         """Show keyboard help."""
-        self.app.push_screen("help")
+        app = self._resolve_app()
+        if app:
+            app.push_screen("help")
 
     def action_show_status(self):
         """Show system status and feed health."""
-        self.app.push_screen("status")
+        app = self._resolve_app()
+        if app:
+            app.push_screen("status")
 
     def action_quit(self):
         """Quit the application."""
-        self.app.exit()
+        app = self._resolve_app()
+        if app:
+            app.exit()
