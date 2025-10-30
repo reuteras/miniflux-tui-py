@@ -6,6 +6,7 @@ from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
 
+from miniflux_tui.config import ConfigurationError
 from miniflux_tui.main import main
 
 TEST_TOKEN = "token-for-tests"  # noqa: S105 - static fixture value
@@ -107,6 +108,27 @@ class TestMainCheckConfig:
                 assert "Error loading configuration" in captured.out
                 assert result == 1
 
+    def test_check_config_configuration_error(self, tmp_path, capsys):
+        """Test --check-config reports helpful guidance for legacy configs."""
+        config_path = tmp_path / "config.toml"
+        config_path.write_text('server_url = "https://example.com"')
+
+        with patch("miniflux_tui.main.get_config_file_path") as mock_get_path:
+            mock_get_path.return_value = config_path
+            with patch("miniflux_tui.main.load_config") as mock_load:
+                mock_load.side_effect = ConfigurationError(
+                    "Invalid configuration: Missing required field: password\n\n"
+                    "Add a password command"
+                )
+                with patch.object(sys, "argv", ["miniflux-tui", "--check-config"]):
+                    result = main()
+
+                captured = capsys.readouterr()
+                assert "Configuration requires attention" in captured.out
+                assert "password" in captured.out.lower()
+                assert "--init" in captured.out
+                assert result == 1
+
 
 class TestMainNormalStartup:
     """Test normal application startup."""
@@ -115,7 +137,10 @@ class TestMainNormalStartup:
         """Test normal startup with valid configuration."""
         mock_config = MagicMock()
 
-        with patch("miniflux_tui.main.load_config") as mock_load, patch("miniflux_tui.main.run_tui", new=AsyncMock()) as mock_run:
+        with (
+            patch("miniflux_tui.main.load_config") as mock_load,
+            patch("miniflux_tui.main.run_tui", new=AsyncMock()) as mock_run,
+        ):
             mock_load.return_value = mock_config
             with patch.object(sys, "argv", ["miniflux-tui"]):
                 result = main()
@@ -145,7 +170,10 @@ class TestMainNormalStartup:
 
         with (
             patch("miniflux_tui.main.load_config") as mock_load,
-            patch("miniflux_tui.main.run_tui", new=AsyncMock(side_effect=KeyboardInterrupt)) as mock_run,
+            patch(
+                "miniflux_tui.main.run_tui",
+                new=AsyncMock(side_effect=KeyboardInterrupt),
+            ) as mock_run,
         ):
             mock_load.return_value = mock_config
             with patch.object(sys, "argv", ["miniflux-tui"]):
@@ -162,7 +190,10 @@ class TestMainNormalStartup:
 
         with (
             patch("miniflux_tui.main.load_config") as mock_load,
-            patch("miniflux_tui.main.run_tui", new=AsyncMock(side_effect=RuntimeError("Connection failed"))) as mock_run,
+            patch(
+                "miniflux_tui.main.run_tui",
+                new=AsyncMock(side_effect=RuntimeError("Connection failed")),
+            ) as mock_run,
         ):
             mock_load.return_value = mock_config
             with patch.object(sys, "argv", ["miniflux-tui"]):
@@ -173,6 +204,22 @@ class TestMainNormalStartup:
         assert "Connection failed" in captured.out
         assert result == 1
         mock_run.assert_awaited_once_with(mock_config)
+
+    def test_startup_configuration_error(self, capsys):
+        """Test startup prints migration guidance for legacy configs."""
+        with patch("miniflux_tui.main.load_config") as mock_load:
+            mock_load.side_effect = ConfigurationError(
+                "Invalid configuration: Missing required field: password\n\n"
+                "Add a password command"
+            )
+            with patch.object(sys, "argv", ["miniflux-tui"]):
+                result = main()
+
+        captured = capsys.readouterr()
+        assert "Error loading configuration" in captured.out
+        assert "password" in captured.out.lower()
+        assert "--init" in captured.out
+        assert result == 1
 
 
 class TestMainVersion:
@@ -214,7 +261,10 @@ class TestMainArgumentParsing:
 
         with patch("miniflux_tui.main.load_config") as mock_load:
             mock_load.return_value = mock_config
-            with patch("miniflux_tui.main.run_tui", new=AsyncMock()) as mock_run, patch.object(sys, "argv", ["miniflux-tui"]):
+            with (
+                patch("miniflux_tui.main.run_tui", new=AsyncMock()) as mock_run,
+                patch.object(sys, "argv", ["miniflux-tui"]),
+            ):
                 result = main()
         assert result == 0
         mock_run.assert_awaited_once_with(mock_config)
