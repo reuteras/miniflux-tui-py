@@ -1,5 +1,18 @@
 # Changelog
 
+## [0.4.20] - 2025-10-30
+
+### Bug Fixes
+- use syft flags supported by v1.36.0 ([#200](https://github.com/reuteras/miniflux-tui-py/pull/200))
+
+### CI/CD
+- disable credential persistence in malcontent workflow ([#199](https://github.com/reuteras/miniflux-tui-py/pull/199))
+- add malcontent diff workflow ([#198](https://github.com/reuteras/miniflux-tui-py/pull/198))
+
+### Maintenance
+- bump syft to v1.46.1
+
+
 ## [0.4.19] - 2025-10-30
 
 

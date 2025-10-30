@@ -6,7 +6,15 @@ from unittest.mock import patch
 
 import pytest
 
-from miniflux_tui.config import Config, create_default_config, get_config_dir, get_config_file_path, load_config, validate_config
+from miniflux_tui.config import (
+    Config,
+    ConfigurationError,
+    create_default_config,
+    get_config_dir,
+    get_config_file_path,
+    load_config,
+    validate_config,
+)
 
 TEST_TOKEN = "token-for-tests"  # noqa: S105 - static fixture value
 
@@ -178,8 +186,18 @@ class TestConfigSecretCommand:
         """refresh=True should bypass the cache."""
         config = Config(server_url="http://localhost:8080", password=["command"])
 
-        completed_one = subprocess.CompletedProcess(args=("command",), returncode=0, stdout="first-token\n", stderr="")
-        completed_two = subprocess.CompletedProcess(args=("command",), returncode=0, stdout="second-token\n", stderr="")
+        completed_one = subprocess.CompletedProcess(
+            args=("command",),
+            returncode=0,
+            stdout="first-token\n",
+            stderr="",
+        )
+        completed_two = subprocess.CompletedProcess(
+            args=("command",),
+            returncode=0,
+            stdout="second-token\n",
+            stderr="",
+        )
 
         with (
             patch("miniflux_tui.config.subprocess.run", side_effect=[completed_one, completed_two]) as mock_run,
@@ -213,7 +231,10 @@ class TestConfigSecretCommand:
             stderr="permission denied",
         )
 
-        with patch("miniflux_tui.config.subprocess.run", side_effect=failure), pytest.raises(RuntimeError, match="permission denied"):
+        with (
+            patch("miniflux_tui.config.subprocess.run", side_effect=failure),
+            pytest.raises(RuntimeError, match="permission denied"),
+        ):
             config.get_api_key()
 
     def test_get_api_key_rejects_empty_output(self):
@@ -221,7 +242,10 @@ class TestConfigSecretCommand:
         config = Config(server_url="http://localhost:8080", password=["command"])
         completed = subprocess.CompletedProcess(args=("command",), returncode=0, stdout="\n", stderr="")
 
-        with patch("miniflux_tui.config.subprocess.run", return_value=completed), pytest.raises(RuntimeError, match="empty output"):
+        with (
+            patch("miniflux_tui.config.subprocess.run", return_value=completed),
+            pytest.raises(RuntimeError, match="empty output"),
+        ):
             config.get_api_key()
 
     def test_config_from_file_valid(self, tmp_path):
@@ -295,7 +319,7 @@ password = 123
 """
         config_file.write_text(config_content)
 
-        with pytest.raises(ValueError, match="Invalid configuration"):
+        with pytest.raises(ConfigurationError, match="Invalid configuration"):
             Config.from_file(config_file)
 
     def test_config_from_file_missing_required_field(self, tmp_path):
@@ -306,8 +330,35 @@ server_url = "http://localhost:8080"
 """
         config_file.write_text(config_content)
 
-        with pytest.raises(ValueError, match="Invalid configuration"):
+        with pytest.raises(ConfigurationError, match="Invalid configuration"):
             Config.from_file(config_file)
+
+    def test_config_from_file_missing_password_hint(self, tmp_path):
+        """Missing password field should include migration guidance."""
+        config_file = tmp_path / "config.toml"
+        config_file.write_text('server_url = "https://example.com"\n')
+
+        with pytest.raises(ConfigurationError) as exc_info:
+            Config.from_file(config_file)
+
+        message = str(exc_info.value)
+        assert "Missing required field: password" in message
+        assert "password" in message.lower()
+        assert "--init" in message
+
+    def test_config_from_file_rejects_legacy_api_key(self, tmp_path):
+        """Legacy api_key field should produce actionable guidance."""
+        config_file = tmp_path / "config.toml"
+        config_file.write_text(
+            'server_url = "https://example.com"\napi_key = "legacy-token"\n'
+        )
+
+        with pytest.raises(ConfigurationError) as exc_info:
+            Config.from_file(config_file)
+
+        message = str(exc_info.value)
+        assert "api_key" in message
+        assert "password" in message
 
 
 class TestConfigDirectory:
@@ -322,20 +373,29 @@ class TestConfigDirectory:
 
     def test_get_config_dir_win32(self):
         """Test get_config_dir() on Windows."""
-        with patch.object(sys, "platform", "win32"), patch.dict("os.environ", {"APPDATA": "C:\\Users\\test\\AppData\\Roaming"}):
+        with (
+            patch.object(sys, "platform", "win32"),
+            patch.dict("os.environ", {"APPDATA": "C:\\Users\\test\\AppData\\Roaming"}),
+        ):
             config_dir = get_config_dir()
             assert "miniflux-tui" in str(config_dir)
 
     def test_get_config_dir_linux_with_xdg(self):
         """Test get_config_dir() on Linux with XDG_CONFIG_HOME."""
-        with patch.object(sys, "platform", "linux"), patch.dict("os.environ", {"XDG_CONFIG_HOME": "/home/test/.config"}):
+        with (
+            patch.object(sys, "platform", "linux"),
+            patch.dict("os.environ", {"XDG_CONFIG_HOME": "/home/test/.config"}),
+        ):
             config_dir = get_config_dir()
             assert "/home/test/.config" in str(config_dir)
             assert "miniflux-tui" in str(config_dir)
 
     def test_get_config_dir_linux_default(self):
         """Test get_config_dir() on Linux without XDG_CONFIG_HOME."""
-        with patch.object(sys, "platform", "linux"), patch.dict("os.environ", {}, clear=True):
+        with (
+            patch.object(sys, "platform", "linux"),
+            patch.dict("os.environ", {}, clear=True),
+        ):
             config_dir = get_config_dir()
             assert ".config" in str(config_dir)
             assert "miniflux-tui" in str(config_dir)

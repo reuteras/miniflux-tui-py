@@ -5,7 +5,13 @@ import asyncio
 import sys
 import traceback
 
-from .config import Config, create_default_config, get_config_file_path, load_config
+from .config import (
+    Config,
+    ConfigurationError,
+    create_default_config,
+    get_config_file_path,
+    load_config,
+)
 from .ui.app import run_tui
 
 
@@ -29,54 +35,55 @@ def _print_config_summary(config: Config) -> None:
     print(f"  Group by Feed: {config.default_group_by_feed}")
 
 
-def main():
-    """Main entry point for the application."""
-    parser = argparse.ArgumentParser(description="A Python TUI client for Miniflux RSS reader")
-    parser.add_argument(
-        "--init",
-        action="store_true",
-        help="Create a default configuration file",
-    )
-    parser.add_argument(
-        "--check-config",
-        action="store_true",
-        help="Check configuration and display settings",
-    )
-    parser.add_argument(
-        "--version",
-        action="version",
-        version="%(prog)s 0.1.0",
-    )
+def _handle_init() -> int:
+    """Handle the --init CLI flag."""
+    config_path = create_default_config()
+    print(f"Created default configuration file at: {config_path}")
+    print("\nPlease edit this file and add your Miniflux server URL and password command.")
+    print("The password command should retrieve your API token from a password manager.")
+    return 0
 
-    args = parser.parse_args()
 
-    # Handle --init flag
-    if args.init:
-        config_path = create_default_config()
-        print(f"Created default configuration file at: {config_path}")
-        print("\nPlease edit this file and add your Miniflux server URL and password command.")
-        print("The password command should retrieve your API token from a password manager.")
-        return 0
+def _handle_check_config() -> int:
+    """Handle the --check-config CLI flag."""
+    config_path = get_config_file_path()
+    if not config_path.exists():
+        print(f"Error: Config file not found at {config_path}")
+        print("Run 'miniflux-tui --init' to create a default configuration.")
+        return 1
 
-    # Handle --check-config flag
-    if args.check_config:
-        config_path = get_config_file_path()
-        if not config_path.exists():
-            print(f"Error: Config file not found at {config_path}")
-            print("Run 'miniflux-tui --init' to create a default configuration.")
-            return 1
+    try:
+        config = load_config()
+    except ConfigurationError as exc:
+        print("Configuration requires attention:\n")
+        print(exc)
+        print("\nRefer to the release notes or regenerate a template with `miniflux-tui --init`.\n")
+        return 1
+    except Exception as exc:
+        print(f"Error loading configuration: {exc}")
+        return 1
 
-        try:
-            config = load_config()
-            if config:
-                _print_config_summary(config)
-                return 0
-        except Exception as e:
-            print(f"Error loading configuration: {e}")
-            return 1
+    if not config:
+        print("Error: Configuration could not be loaded.")
+        return 1
 
-    # Normal application startup
-    config = load_config()
+    _print_config_summary(config)
+    return 0
+
+
+def _run_application() -> int:
+    """Run the main TUI application."""
+    try:
+        config = load_config()
+    except ConfigurationError as exc:
+        print("Error loading configuration:\n")
+        print(exc)
+        print("\nRun 'miniflux-tui --init' to create a fresh configuration template, then migrate your settings.")
+        return 1
+    except Exception as exc:
+        print(f"Error loading configuration: {exc}")
+        return 1
+
     if not config:
         config_path = get_config_file_path()
         print(f"Error: Config file not found at {config_path}")
@@ -97,6 +104,34 @@ def main():
         error_code = 1
 
     return error_code
+
+
+def main() -> int:
+    """Main entry point for the application."""
+    parser = argparse.ArgumentParser(description="A Python TUI client for Miniflux RSS reader")
+    parser.add_argument(
+        "--init",
+        action="store_true",
+        help="Create a default configuration file",
+    )
+    parser.add_argument(
+        "--check-config",
+        action="store_true",
+        help="Check configuration and display settings",
+    )
+    parser.add_argument(
+        "--version",
+        action="version",
+        version="%(prog)s 0.1.0",
+    )
+
+    args = parser.parse_args()
+
+    if args.init:
+        return _handle_init()
+    if args.check_config:
+        return _handle_check_config()
+    return _run_application()
 
 
 if __name__ == "__main__":
