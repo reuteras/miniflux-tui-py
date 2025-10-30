@@ -149,16 +149,16 @@ Use [Codespaces secrets](https://docs.github.com/codespaces/managing-your-codesp
 to store your API token so only the Codespaces that you start can read it:
 
 1. In the repository, go to **Settings → Codespaces secrets** and add a new
-   secret named `MINIFLUX_TOKEN` (or add a personal Codespaces secret from your
-   user settings).
+    secret named `MINIFLUX_TOKEN` (or add a personal Codespaces secret from your
+    user settings).
 2. Launch a Codespace for this repository. GitHub injects the secret into the
-   environment as `MINIFLUX_TOKEN` each time the Codespace starts.
+    environment as `MINIFLUX_TOKEN` each time the Codespace starts.
 3. Configure `config.toml` to read the token from the environment by using a
-   command for the `password` field, for example:
+    command for the `password` field, for example:
 
-   ```toml
-   password = ["/bin/sh", "-c", "printf %s \"$MINIFLUX_TOKEN\""]
-   ```
+    ```toml
+    password = ["/bin/sh", "-c", "printf %s \"$MINIFLUX_TOKEN\""]
+    ```
 
 Each collaborator must define their own secret—your personal Codespaces secrets
 are never shared with other users, and theirs are not shared with you. Avoid
