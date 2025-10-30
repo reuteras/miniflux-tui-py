@@ -96,7 +96,9 @@ shared repository:
    Only Codespaces that you start can read your personal secrets.
 2. Start the Codespace. The secret is exposed as the `MINIFLUX_TOKEN`
    environment variable inside the running container.
-3. Configure `password` to run a shell command that echoes the variable, e.g.:
+3. The repository's `.devcontainer` installs `uv` and runs `uv sync --all-groups`
+   automatically so the CLI and dependencies are ready for testing.
+4. Configure `password` to run a shell command that echoes the variable, e.g.:
 
    ```toml
    password = ["/bin/sh", "-c", "printf %s \"$MINIFLUX_TOKEN\""]

@@ -126,9 +126,22 @@ Full documentation is available at [reuteras.github.io/miniflux-tui-py](https://
 
 GitHub Codespaces provides a preconfigured, browser-accessible development
 environment that works well with the terminal-based interface of
-`miniflux-tui-py`. A devcontainer can install `uv`, sync dependencies, and run
-the application exactly as described in the [From Source](#from-source-for-developers)
-section.
+`miniflux-tui-py`. This repository includes a `.devcontainer/devcontainer.json`
+so every Codespace starts from a Python 3.11 image, installs `uv`, and runs
+`uv sync --all-groups` automatically. After the first boot you can launch the
+TUI with the same commands documented in the
+[From Source](#from-source-for-developers) section:
+
+```bash
+uv run miniflux-tui --init
+uv run miniflux-tui
+```
+
+To verify the setup before running the application, use:
+
+```bash
+uv run miniflux-tui --check-config
+```
 
 ### Keeping your Miniflux token secret
 
