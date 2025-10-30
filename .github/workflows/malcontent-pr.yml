@@ -1,0 +1,114 @@
+---
+name: Malcontent PR Scan
+
+on:
+  pull_request:
+    types: [opened, synchronize, reopened]
+    paths:
+      - ".github/workflows/**"
+      - ".github/actions/**"
+      - ".github/action.yml"
+
+permissions:
+  contents: read
+
+jobs:
+  malcontent:
+    if: github.event.pull_request.draft == false
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+
+    steps:
+      - name: Checkout PR head
+        uses: actions/checkout@08c6903cd8c0fde910a37f88322edcfb5dd907a8 # v5
+        with:
+          ref: ${{ github.event.pull_request.head.sha }}
+          fetch-depth: 0
+          path: head
+
+      - name: Checkout base ref
+        uses: actions/checkout@08c6903cd8c0fde910a37f88322edcfb5dd907a8 # v5
+        with:
+          ref: ${{ github.event.pull_request.base.sha }}
+          fetch-depth: 0
+          path: base
+
+      - name: Determine relevant changes
+        id: changes
+        run: |
+          set -euo pipefail
+          cd head
+          git diff --name-only --diff-filter=ACMRT \
+            "${{ github.event.pull_request.base.sha }}" \
+            "${{ github.event.pull_request.head.sha }}" \
+            -- '.github/workflows/**' '.github/actions/**' '.github/action.yml' \
+            > "${GITHUB_WORKSPACE}/changed.txt"
+
+          if [ -s "${GITHUB_WORKSPACE}/changed.txt" ]; then
+            echo "changed=true" >> "${GITHUB_OUTPUT}"
+            echo "Detected changes:"
+            cat "${GITHUB_WORKSPACE}/changed.txt"
+          else
+            echo "changed=false" >> "${GITHUB_OUTPUT}"
+          fi
+
+      - name: No workflow changes detected
+        if: steps.changes.outputs.changed != 'true'
+        run: |
+          echo "## Malcontent diff results" >> "${GITHUB_STEP_SUMMARY}"
+          echo "No workflow or composite action changes detected; skipping scan." >> "${GITHUB_STEP_SUMMARY}"
+
+      - name: Prepare comparison directories
+        if: steps.changes.outputs.changed == 'true'
+        run: |
+          set -euo pipefail
+          mkdir -p compare/base compare/head
+          mkdir -p base/.github/workflows base/.github/actions head/.github/workflows head/.github/actions
+
+          rsync -a --delete base/.github/workflows/ compare/base/workflows/ 2>/dev/null || true
+          rsync -a --delete head/.github/workflows/ compare/head/workflows/ 2>/dev/null || true
+          rsync -a --delete base/.github/actions/ compare/base/actions/ 2>/dev/null || true
+          rsync -a --delete head/.github/actions/ compare/head/actions/ 2>/dev/null || true
+
+      - name: Run malcontent diff
+        if: steps.changes.outputs.changed == 'true'
+        id: malcontent
+        run: |
+          set -euo pipefail
+          OUTPUT="${GITHUB_WORKSPACE}/malcontent.md"
+          rm -f "${OUTPUT}"
+
+          set +e
+          docker run --rm \
+            -v "${GITHUB_WORKSPACE}/compare/base:/base:ro" \
+            -v "${GITHUB_WORKSPACE}/compare/head:/head:ro" \
+            -v "${GITHUB_WORKSPACE}:/out" \
+            cgr.dev/chainguard/malcontent:latest \
+            mal diff --min-risk high --min-file-risk high \
+              --format markdown --output /out/malcontent.md \
+              /base /head
+          status=$?
+          set -e
+          echo "status=${status}" >> "${GITHUB_OUTPUT}"
+
+      - name: Publish malcontent results
+        if: steps.changes.outputs.changed == 'true'
+        run: |
+          set -euo pipefail
+          OUTPUT="${GITHUB_WORKSPACE}/malcontent.md"
+
+          echo "## Malcontent diff results" >> "${GITHUB_STEP_SUMMARY}"
+
+          if [ ! -s "${OUTPUT}" ]; then
+            echo "No high-risk capability changes detected in workflows or composite actions." >> "${GITHUB_STEP_SUMMARY}"
+            exit 0
+          fi
+
+          cat "${OUTPUT}" >> "${GITHUB_STEP_SUMMARY}"
+          echo "findings=true" >> "${GITHUB_ENV}"
+
+      - name: Fail on malcontent findings
+        if: env.findings == 'true'
+        run: |
+          echo "::error::Malcontent detected high-risk capability changes. Inspect the workflow diff summary above."
+          exit 1
