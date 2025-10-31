@@ -75,7 +75,7 @@ Screen for managing categories (create, edit, delete, view).
     options:
       docstring_style: google
 
-### Features
+### Category Management Features
 
 - **Category listing**: Shows all available categories
 - **Create categories**: Add new categories with custom names
@@ -83,7 +83,7 @@ Screen for managing categories (create, edit, delete, view).
 - **Delete categories**: Remove categories (feeds are reassigned to Uncategorized)
 - **Navigation**: Vim-style cursor movement (j/k)
 
-### Actions
+### Category Management Actions
 
 | Method | Binding | Description |
 |--------|---------|-------------|
