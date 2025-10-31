@@ -12,7 +12,7 @@
         "automerge": false,
         "pinDigests": true,
         "major": {
-            "enabled": false
+            "enabled": true
         }
     },
     "npm": {
@@ -35,6 +35,21 @@
                 "at any time"
             ],
             "groupName": "security-updates"
+        },
+        {
+            "description": "Major version updates: weekly review, no automerge",
+            "matchUpdateTypes": [
+                "major"
+            ],
+            "matchDatasources": [
+                "docker",
+                "github-actions"
+            ],
+            "automerge": false,
+            "schedule": [
+                "after 10pm on sunday"
+            ],
+            "groupName": "major-version-updates"
         },
         {
             "matchCategories": [
