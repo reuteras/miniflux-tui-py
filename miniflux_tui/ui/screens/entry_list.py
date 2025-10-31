@@ -46,13 +46,22 @@ class EntryListItem(ListItem):
 class FeedHeaderItem(ListItem):
     """Custom list item for feed header with fold/unfold capability."""
 
-    def __init__(self, feed_title: str, is_expanded: bool = True):
+    def __init__(
+        self,
+        feed_title: str,
+        is_expanded: bool = True,
+        category_title: str | None = None,
+    ):
         self.feed_title = feed_title
         self.is_expanded = is_expanded
+        self.category_title = category_title
 
-        # Format header with fold indicator
+        # Format header with fold indicator and optional category
         fold_icon = FOLD_EXPANDED if is_expanded else FOLD_COLLAPSED
-        header_text = f"[bold]{fold_icon} {feed_title}[/bold]"
+        if category_title:
+            header_text = f"[bold]{fold_icon} {feed_title}[/bold] [dim]({category_title})[/dim]"
+        else:
+            header_text = f"[bold]{fold_icon} {feed_title}[/bold]"
         label = Label(header_text, classes="feed-header")
 
         # Initialize with the label
@@ -62,7 +71,10 @@ class FeedHeaderItem(ListItem):
         """Toggle the fold state and update display."""
         self.is_expanded = not self.is_expanded
         fold_icon = FOLD_EXPANDED if self.is_expanded else FOLD_COLLAPSED
-        header_text = f"[bold]{fold_icon} {self.feed_title}[/bold]"
+        if self.category_title:
+            header_text = f"[bold]{fold_icon} {self.feed_title}[/bold] [dim]({self.category_title})[/dim]"
+        else:
+            header_text = f"[bold]{fold_icon} {self.feed_title}[/bold]"
         # Update the label
         if self.children:
             cast(Label, self.children[0]).update(header_text)
@@ -567,7 +579,7 @@ class EntryListScreen(Screen):
         search_lower = self.search_term.lower()
         return [e for e in entries if search_lower in e.title.lower() or search_lower in e.content.lower()]
 
-    def _add_feed_header_if_needed(self, current_feed: str, first_feed_ref: list) -> None:
+    def _add_feed_header_if_needed(self, current_feed: str, first_feed_ref: list, entry: Entry | None = None) -> None:
         """Add a feed header if transitioning to a new feed.
 
         Initializes fold state and creates a FeedHeaderItem for the new feed.
@@ -575,6 +587,7 @@ class EntryListScreen(Screen):
         Args:
             current_feed: Title of the current feed
             first_feed_ref: List with one element to track first feed (mutable ref pattern)
+            entry: Entry object to extract category information from
         """
         # Track first feed for default positioning
         if first_feed_ref[0] is None:
@@ -588,9 +601,14 @@ class EntryListScreen(Screen):
             # Default: expanded if not set, unless group_collapsed is True
             self.feed_fold_state[current_feed] = not self.group_collapsed
 
+        # Get category title if entry is provided
+        category_title = None
+        if entry is not None:
+            category_title = self._get_category_title(entry.feed.category_id)
+
         # Create and add a fold-aware header item
         is_expanded = self.feed_fold_state[current_feed]
-        header = FeedHeaderItem(current_feed, is_expanded=is_expanded)
+        header = FeedHeaderItem(current_feed, is_expanded=is_expanded, category_title=category_title)
         self.feed_header_map[current_feed] = header
         self.list_view.append(header)
 
@@ -629,7 +647,7 @@ class EntryListScreen(Screen):
             # Add feed header if this is a new feed
             if current_feed != entry.feed.title:
                 current_feed = entry.feed.title
-                self._add_feed_header_if_needed(current_feed, first_feed)
+                self._add_feed_header_if_needed(current_feed, first_feed, entry)
 
             # Add the entry with appropriate visibility
             self._add_entry_with_visibility(entry)
