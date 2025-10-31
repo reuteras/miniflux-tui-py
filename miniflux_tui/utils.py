@@ -7,10 +7,7 @@ from collections.abc import Generator, Iterator
 from contextlib import contextmanager
 from importlib import metadata
 from pathlib import Path
-from typing import TYPE_CHECKING, Any
-
-if TYPE_CHECKING:
-    from textual.screen import Screen
+from typing import Any
 
 PYPROJECT_PATH = Path(__file__).resolve().parent.parent / "pyproject.toml"
 
@@ -114,7 +111,7 @@ def get_status_icon(is_unread: bool) -> str:
 
 
 @contextmanager
-def api_call(screen: Screen, operation_name: str = "Operation") -> Generator[Any, None, None]:
+def api_call(screen: Any, operation_name: str = "Operation") -> Generator[Any, None, None]:
     """Context manager for safe API calls with error handling.
 
     Usage:
