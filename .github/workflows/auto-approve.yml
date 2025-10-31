@@ -2,6 +2,7 @@
 name: Auto-Approve Passing PRs
 
 # Trigger when a pull request is opened or when status checks complete
+# Uses bot account (via BOT_TOKEN secret) to approve PRs from reuteras
 on:
   pull_request:
     types: [opened, synchronize]
