@@ -6,7 +6,8 @@ from typing import ClassVar
 from textual.app import ComposeResult
 from textual.binding import Binding
 from textual.containers import Container
-from textual.widgets import Footer, Header, Label, ListItem, ListView, Static
+from textual.screen import Screen
+from textual.widgets import Footer, Header, Label, ListItem, ListView
 
 from miniflux_tui.api.models import Feed
 from miniflux_tui.ui.screens.confirm_dialog import ConfirmDialog
@@ -40,7 +41,7 @@ class FeedListItem(ListItem):
         super().__init__(Label(label_text))
 
 
-class FeedManagementScreen(Static):
+class FeedManagementScreen(Screen):
     """Screen for managing feeds (add, edit, delete, view status).
 
     Features:
@@ -121,7 +122,7 @@ class FeedManagementScreen(Static):
 
         self.list_view.clear()
         for feed in self.feeds:
-            self.list_view.append_child(FeedListItem(feed))
+            self.list_view.append(FeedListItem(feed))
 
     def _get_selected_feed(self) -> Feed | None:
         """Get currently selected feed.
