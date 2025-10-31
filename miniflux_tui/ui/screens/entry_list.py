@@ -151,6 +151,7 @@ class EntryListScreen(Screen):
         self.group_collapsed = group_collapsed  # Start feeds collapsed in grouped mode
         self.filter_unread_only = False  # Filter to show only unread entries
         self.filter_starred_only = False  # Filter to show only starred entries
+        self.filter_category_id: int | None = None  # Filter to show entries from selected category only
         self.search_active = False  # Flag to indicate search is active
         self.search_term = ""  # Current search term
         self.list_view: ListView | None = None
@@ -524,8 +525,9 @@ class EntryListScreen(Screen):
         """Apply active filters to entries.
 
         Filters are applied in order:
-        1. Search filter (if active)
-        2. Status filters (unread/starred - mutually exclusive)
+        1. Category filter (if set)
+        2. Search filter (if active)
+        3. Status filters (unread/starred - mutually exclusive)
 
         Args:
             entries: List of entries to filter
@@ -533,7 +535,11 @@ class EntryListScreen(Screen):
         Returns:
             Filtered list of entries
         """
-        # Apply search filter first if active
+        # Apply category filter first if set
+        if self.filter_category_id is not None:
+            entries = [e for e in entries if e.feed.category_id == self.filter_category_id]
+
+        # Apply search filter if active
         if self.search_active and self.search_term:
             entries = self._filter_search(entries)
 
@@ -544,7 +550,7 @@ class EntryListScreen(Screen):
         if self.filter_starred_only:
             # Show only starred entries
             return [e for e in entries if e.starred]
-        # No status filters active, return all entries (after search filter if applied)
+        # No status filters active, return all entries (after other filters if applied)
         return entries
 
     def _filter_search(self, entries: list[Entry]) -> list[Entry]:
@@ -1098,6 +1104,42 @@ class EntryListScreen(Screen):
             self.filter_unread_only = False
             self.filter_starred_only = False
             self._populate_list()
+
+    def action_clear_filters(self) -> None:
+        """Clear all active filters and show all entries.
+
+        Clears category, search, unread, and starred filters.
+        """
+        self.filter_category_id = None
+        self.filter_unread_only = False
+        self.filter_starred_only = False
+        self.search_active = False
+        self.search_term = ""
+        self._populate_list()
+        self.notify("All filters cleared")
+
+    def set_category_filter(self, category_id: int | None) -> None:
+        """Set category filter to show entries from a specific category.
+
+        Args:
+            category_id: ID of the category to filter by, or None to show all entries
+        """
+        self.filter_category_id = category_id
+        self.filter_unread_only = False
+        self.filter_starred_only = False
+        self.search_active = False
+        self.search_term = ""
+        self._populate_list()
+
+        # Find category name for notification
+        category_name = "All entries"
+        if category_id is not None:
+            for cat in self.categories:
+                if cat.id == category_id:
+                    category_name = cat.title
+                    break
+
+        self.notify(f"Filtered to: {category_name}")
 
     def action_search(self):
         """Clear current search filter.
