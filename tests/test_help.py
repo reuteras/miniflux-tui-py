@@ -45,14 +45,14 @@ class TestHelpScreenBindings:
     def test_help_screen_has_escape_binding(self):
         """Test HelpScreen has Escape key binding."""
         help_screen = HelpScreen()
-        escape_bindings = [b for b in help_screen.BINDINGS if b.key == "escape"]
+        escape_bindings = [b for b in help_screen.BINDINGS if b.key == "escape"]  # type: ignore[attr-defined]
         assert len(escape_bindings) == 1
         assert escape_bindings[0].action == "close"
 
     def test_help_screen_has_q_binding(self):
         """Test HelpScreen has q key binding."""
         help_screen = HelpScreen()
-        q_bindings = [b for b in help_screen.BINDINGS if b.key == "q"]
+        q_bindings = [b for b in help_screen.BINDINGS if b.key == "q"]  # type: ignore[attr-defined]
         assert len(q_bindings) == 1
         assert q_bindings[0].action == "close"
 
@@ -176,14 +176,14 @@ class TestHelpScreenIntegration:
         """Test that binding keys are valid."""
         help_screen = HelpScreen()
         valid_keys = {"escape", "q"}
-        binding_keys = {b.key for b in help_screen.BINDINGS}
+        binding_keys = {b.key for b in help_screen.BINDINGS}  # type: ignore[attr-defined]
         assert binding_keys == valid_keys
 
     def test_help_screen_bindings_valid_actions(self):
         """Test that binding actions are valid."""
         help_screen = HelpScreen()
         valid_actions = {"close"}
-        binding_actions = {b.action for b in help_screen.BINDINGS}
+        binding_actions = {b.action for b in help_screen.BINDINGS}  # type: ignore[attr-defined]
         assert binding_actions == valid_actions
 
     async def test_help_screen_compose_method_works(self):

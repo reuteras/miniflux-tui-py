@@ -47,21 +47,21 @@ class TestStatusScreenBindings:
     def test_status_screen_has_escape_binding(self):
         """Test StatusScreen has Escape key binding."""
         status_screen = StatusScreen()
-        escape_bindings = [b for b in status_screen.BINDINGS if b.key == "escape"]
+        escape_bindings = [b for b in status_screen.BINDINGS if b.key == "escape"]  # type: ignore[attr-defined]
         assert len(escape_bindings) == 1
         assert escape_bindings[0].action == "close"
 
     def test_status_screen_has_q_binding(self):
         """Test StatusScreen has q key binding."""
         status_screen = StatusScreen()
-        q_bindings = [b for b in status_screen.BINDINGS if b.key == "q"]
+        q_bindings = [b for b in status_screen.BINDINGS if b.key == "q"]  # type: ignore[attr-defined]
         assert len(q_bindings) == 1
         assert q_bindings[0].action == "close"
 
     def test_status_screen_has_r_binding(self):
         """Test StatusScreen has r key binding for refresh."""
         status_screen = StatusScreen()
-        r_bindings = [b for b in status_screen.BINDINGS if b.key == "r"]
+        r_bindings = [b for b in status_screen.BINDINGS if b.key == "r"]  # type: ignore[attr-defined]
         assert len(r_bindings) == 1
         assert r_bindings[0].action == "refresh"
 
@@ -622,14 +622,14 @@ class TestStatusScreenIntegration:
         """Test that binding keys are valid."""
         status_screen = StatusScreen()
         valid_keys = {"escape", "q", "r"}
-        binding_keys = {b.key for b in status_screen.BINDINGS}
+        binding_keys = {b.key for b in status_screen.BINDINGS}  # type: ignore[attr-defined]
         assert binding_keys == valid_keys
 
     def test_status_screen_bindings_valid_actions(self):
         """Test that binding actions are valid."""
         status_screen = StatusScreen()
         valid_actions = {"close", "refresh"}
-        binding_actions = {b.action for b in status_screen.BINDINGS}
+        binding_actions = {b.action for b in status_screen.BINDINGS}  # type: ignore[attr-defined]
         assert binding_actions == valid_actions
 
     async def test_status_screen_compose_method_works(self):
