@@ -120,7 +120,7 @@ While this is a volunteer-driven open source project, sponsorship helps sustain 
 
 For other inquiries not covered above, you can reach the maintainer:
 
-- **Email**: peter@reuteras.net
+- **Email**: <peter@reuteras.net>
 - **GitHub**: [@reuteras](https://github.com/reuteras)
 
 **Response time**: As this is an open source project maintained in spare time, please allow reasonable time for responses. GitHub Issues and Discussions are monitored regularly.
