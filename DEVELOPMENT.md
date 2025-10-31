@@ -416,10 +416,10 @@ The project uses **Renovate** to keep dependencies up to date:
 Some critical dependencies with frequent updates should be monitored manually:
 
 1. **Trivy Action** - <https://github.com/aquasecurity/trivy-action>
-  - Container vulnerability scanner
-  - Watch for releases: <https://github.com/aquasecurity/trivy-action/releases>
-  - Latest: `v0.33.1` (September 2025)
-  - To watch: Go to repo → Click **Watch** → Select **Releases**
+- Container vulnerability scanner
+- Watch for releases: <https://github.com/aquasecurity/trivy-action/releases>
+- Latest: `v0.33.1` (September 2025)
+- To watch: Go to repo → Click **Watch** → Select **Releases**
 
 ### Dependency Dashboard
 Check **Issue #70** for the Renovate Dependency Dashboard:
