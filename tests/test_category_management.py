@@ -1,6 +1,9 @@
 """Tests for CategoryManagementScreen."""
 
+from typing import cast
+
 from textual.app import App
+from textual.binding import Binding
 
 from miniflux_tui.api.models import Category
 from miniflux_tui.ui.screens.category_management import CategoryListItem, CategoryManagementScreen
@@ -227,8 +230,8 @@ class TestCategoryManagementScreenBindings:
     def test_category_management_screen_has_bindings(self) -> None:
         """Test CategoryManagementScreen has key bindings."""
         screen = CategoryManagementScreen()
-        bindings = screen.BINDINGS  # type: ignore[attr-defined]
-        binding_keys = [b.key for b in bindings]  # type: ignore[union-attr]
+        bindings = cast(list[Binding], screen.BINDINGS)  # type: ignore[attr-defined]
+        binding_keys = [b.key for b in bindings]
         assert "j" in binding_keys
         assert "k" in binding_keys
         assert "n" in binding_keys
@@ -239,8 +242,8 @@ class TestCategoryManagementScreenBindings:
     def test_category_management_screen_binding_descriptions(self) -> None:
         """Test that bindings have descriptions."""
         screen = CategoryManagementScreen()
-        bindings = screen.BINDINGS  # type: ignore[attr-defined]
-        for binding in bindings:  # type: ignore[union-attr]
+        bindings = cast(list[Binding], screen.BINDINGS)  # type: ignore[attr-defined]
+        for binding in bindings:
             assert binding.description is not None
             assert len(binding.description) > 0
 

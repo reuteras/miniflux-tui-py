@@ -162,7 +162,7 @@ class CategoryManagementScreen(Screen):
         Args:
             title: The name of the new category
         """
-        with api_call(self, "creating category") as app:
+        with api_call(self, "creating category") as app:  # type: ignore
             if app is None:
                 return
 
@@ -205,7 +205,7 @@ class CategoryManagementScreen(Screen):
             category_id: ID of the category to update
             new_title: New name for the category
         """
-        with api_call(self, "updating category") as app:
+        with api_call(self, "updating category") as app:  # type: ignore
             if app is None:
                 return
 
@@ -249,7 +249,7 @@ class CategoryManagementScreen(Screen):
             category_id: ID of the category to delete
             category_title: Title of the category (for notifications)
         """
-        with api_call(self, "deleting category") as app:
+        with api_call(self, "deleting category") as app:  # type: ignore
             if app is None:
                 return
 
