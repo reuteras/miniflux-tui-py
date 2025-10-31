@@ -90,11 +90,23 @@ class InputDialog(Screen):
             value: Initial value for input
             on_submit: Callback when user confirms (receives input value)
             on_cancel: Callback when user cancels
+
+        Raises:
+            TypeError: If callbacks are not callable
         """
         super().__init__(**kwargs)
         self.dialog_title = title
         self.dialog_label = label
         self.initial_value = value
+
+        # Validate callbacks are callable before storing
+        if on_submit is not None and not callable(on_submit):
+            msg = "on_submit must be callable or None"
+            raise TypeError(msg)
+        if on_cancel is not None and not callable(on_cancel):
+            msg = "on_cancel must be callable or None"
+            raise TypeError(msg)
+
         self.on_submit = on_submit
         self.on_cancel = on_cancel
         self.input_widget: Input | None = None

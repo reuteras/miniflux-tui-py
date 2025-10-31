@@ -99,10 +99,22 @@ class ConfirmDialog(Screen):
             on_cancel: Callback when user cancels
             confirm_label: Label for confirm button
             cancel_label: Label for cancel button
+
+        Raises:
+            TypeError: If callbacks are not callable
         """
         super().__init__(**kwargs)
         self.dialog_title = title
         self.dialog_message = message
+
+        # Validate callbacks are callable before storing
+        if on_confirm is not None and not callable(on_confirm):
+            msg = "on_confirm must be callable or None"
+            raise TypeError(msg)
+        if on_cancel is not None and not callable(on_cancel):
+            msg = "on_cancel must be callable or None"
+            raise TypeError(msg)
+
         self.on_confirm = on_confirm
         self.on_cancel = on_cancel
         self.confirm_label = confirm_label

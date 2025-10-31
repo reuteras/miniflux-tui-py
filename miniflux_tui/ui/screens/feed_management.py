@@ -10,6 +10,7 @@ from textual.screen import Screen
 from textual.widgets import Footer, Header, Label, ListItem, ListView
 
 from miniflux_tui.api.models import Feed
+from miniflux_tui.security import sanitize_error_message, validate_feed_url
 from miniflux_tui.ui.screens.confirm_dialog import ConfirmDialog
 from miniflux_tui.ui.screens.input_dialog import InputDialog
 from miniflux_tui.utils import api_call
@@ -143,12 +144,16 @@ class FeedManagementScreen(Screen):
         """Open dialog to add a new feed."""
 
         def on_submit(url: str) -> None:
-            if not url.strip():
-                self.app.notify("URL cannot be empty", severity="warning")
+            url = url.strip()
+
+            # Validate URL format and prevent SSRF attacks
+            is_valid, error_msg = validate_feed_url(url)
+            if not is_valid:
+                self.app.notify(f"Invalid URL: {error_msg}", severity="error")
                 return
 
             # Create feed in background
-            asyncio.create_task(self._create_feed(url.strip()))  # noqa: RUF006
+            asyncio.create_task(self._create_feed(url))  # noqa: RUF006
 
         self.app.push_screen(
             InputDialog(
@@ -174,9 +179,15 @@ class FeedManagementScreen(Screen):
                 self._populate_list()
                 self.app.notify(f"Feed '{feed.title}' added successfully")
             except ValueError as e:
-                self.app.notify(f"Invalid URL: {e}", severity="error")
+                # Log full error for debugging
+                self.app.log(f"ValueError creating feed: {e}")
+                # Show safe message to user
+                self.app.notify(sanitize_error_message(e, "adding feed"), severity="error")
             except Exception as e:
-                self.app.notify(f"Failed to add feed: {e!s}", severity="error")
+                # Log full error for debugging
+                self.app.log(f"Error creating feed: {e}")
+                # Show safe message to user
+                self.app.notify(sanitize_error_message(e, "adding feed"), severity="error")
 
     def action_delete_feed(self) -> None:
         """Delete the selected feed with confirmation."""
@@ -214,7 +225,10 @@ class FeedManagementScreen(Screen):
                 self._populate_list()
                 self.app.notify(f"Feed '{feed.title}' deleted")
             except Exception as e:
-                self.app.notify(f"Failed to delete feed: {e!s}", severity="error")
+                # Log full error for debugging
+                self.app.log(f"Error deleting feed: {e}")
+                # Show safe message to user
+                self.app.notify(sanitize_error_message(e, "deleting feed"), severity="error")
 
     async def action_refresh_feed(self) -> None:
         """Refresh the selected feed."""
@@ -231,7 +245,10 @@ class FeedManagementScreen(Screen):
                 await client.refresh_feed(feed.id)
                 self.app.notify(f"Feed '{feed.title}' refreshed")
             except Exception as e:
-                self.app.notify(f"Failed to refresh feed: {e!s}", severity="error")
+                # Log full error for debugging
+                self.app.log(f"Error refreshing feed: {e}")
+                # Show safe message to user
+                self.app.notify(sanitize_error_message(e, "refreshing feed"), severity="error")
 
     def action_view_details(self) -> None:
         """View details of selected feed (TODO: implement feed details screen)."""
