@@ -5,10 +5,11 @@
 </div>
 
 [![PyPI version](https://img.shields.io/pypi/v/miniflux-tui-py.svg)](https://pypi.org/project/miniflux-tui-py/)
-[![Python 3.11+ | 3.12 | 3.13 | 3.14](https://img.shields.io/badge/python-3.11%20%7C%203.12%20%7C%203.13%20%7C%203.14-blue)](https://pypi.org/project/miniflux-tui-py/)
+[![Python 3.11+ | 3.12 | 3.13 | 3.14 | 3.15](https://img.shields.io/badge/python-3.11%20%7C%203.12%20%7C%203.13%20%7C%203.14%20%7C%203.15-blue)](https://pypi.org/project/miniflux-tui-py/)
 [![Downloads](https://static.pepy.tech/badge/miniflux-tui-py/month)](https://pepy.tech/project/miniflux-tui-py)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 [![Test Status](https://github.com/reuteras/miniflux-tui-py/workflows/Test/badge.svg)](https://github.com/reuteras/miniflux-tui-py/actions/workflows/test.yml)
+[![Python 3.15 Preview](https://img.shields.io/badge/Python%203.15-preview-yellow)](https://github.com/reuteras/miniflux-tui-py/actions/workflows/test.yml)
 [![CIFuzz](https://github.com/reuteras/miniflux-tui-py/actions/workflows/cifuzz.yml/badge.svg)](https://github.com/reuteras/miniflux-tui-py/actions/workflows/cifuzz.yml)
 [![OSV Scanner](https://github.com/reuteras/miniflux-tui-py/actions/workflows/osv-scanner.yml/badge.svg)](https://github.com/reuteras/miniflux-tui-py/actions/workflows/osv-scanner.yml)
 [![CodeQL](https://github.com/reuteras/miniflux-tui-py/actions/workflows/codeql.yml/badge.svg)](https://github.com/reuteras/miniflux-tui-py/actions/workflows/codeql.yml)

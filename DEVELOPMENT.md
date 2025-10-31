@@ -11,10 +11,10 @@ The easiest way to get started:
 1. Click **"Code"** → **"Codespaces"** → **"Create codespace on main"**
 2. Wait for the codespace to launch (~2-3 minutes)
 3. The environment will automatically:
-  - Install `uv` package manager
-  - Install all dependencies (dev, test, docs, fuzzing)
-  - Set up pre-commit hooks
-  - Show you helpful quick-start commands
+    - Install `uv` package manager
+    - Install all dependencies (dev, test, docs, fuzzing)
+    - Set up pre-commit hooks
+    - Show you helpful quick-start commands
 
 **That's it!** You're ready to develop.
 
@@ -164,7 +164,7 @@ git commit --no-verify
 
 ## Project Structure
 
-```
+```text
 miniflux-tui-py/
 ├── miniflux_tui/              # Main package
 │   ├── main.py                # CLI entry point
@@ -403,11 +403,11 @@ def fetch_entries(feed_id: int, limit: int = 10) -> List[Entry]:
 
 ## Resources
 
-- **Documentation**: https://reuteras.github.io/miniflux-tui-py/
-- **Miniflux Docs**: https://miniflux.app
-- **Textual TUI Framework**: https://textual.textualize.io/
-- **uv Package Manager**: https://docs.astral.sh/uv/
-- **Ruff Linter**: https://docs.astral.sh/ruff/
+- **Documentation**: <https://reuteras.github.io/miniflux-tui-py/>
+- **Miniflux Docs**: <https://miniflux.app>
+- **Textual TUI Framework**: <https://textual.textualize.io/>
+- **uv Package Manager**: <https://docs.astral.sh/uv/>
+- **Ruff Linter**: <https://docs.astral.sh/ruff/>
 
 ---
 
