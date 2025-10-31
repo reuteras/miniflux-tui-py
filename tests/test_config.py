@@ -349,9 +349,7 @@ server_url = "http://localhost:8080"
     def test_config_from_file_rejects_legacy_api_key(self, tmp_path):
         """Legacy api_key field should produce actionable guidance."""
         config_file = tmp_path / "config.toml"
-        config_file.write_text(
-            'server_url = "https://example.com"\napi_key = "legacy-token"\n'
-        )
+        config_file.write_text('server_url = "https://example.com"\napi_key = "legacy-token"\n')
 
         with pytest.raises(ConfigurationError) as exc_info:
             Config.from_file(config_file)

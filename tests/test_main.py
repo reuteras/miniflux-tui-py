@@ -117,8 +117,7 @@ class TestMainCheckConfig:
             mock_get_path.return_value = config_path
             with patch("miniflux_tui.main.load_config") as mock_load:
                 mock_load.side_effect = ConfigurationError(
-                    "Invalid configuration: Missing required field: password\n\n"
-                    "Add a password command"
+                    "Invalid configuration: Missing required field: password\n\nAdd a password command"
                 )
                 with patch.object(sys, "argv", ["miniflux-tui", "--check-config"]):
                     result = main()
@@ -208,10 +207,7 @@ class TestMainNormalStartup:
     def test_startup_configuration_error(self, capsys):
         """Test startup prints migration guidance for legacy configs."""
         with patch("miniflux_tui.main.load_config") as mock_load:
-            mock_load.side_effect = ConfigurationError(
-                "Invalid configuration: Missing required field: password\n\n"
-                "Add a password command"
-            )
+            mock_load.side_effect = ConfigurationError("Invalid configuration: Missing required field: password\n\nAdd a password command")
             with patch.object(sys, "argv", ["miniflux-tui"]):
                 result = main()
 
