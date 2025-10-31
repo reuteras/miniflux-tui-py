@@ -401,6 +401,32 @@ def fetch_entries(feed_id: int, limit: int = 10) -> List[Entry]:
 
 ---
 
+## Dependency Management
+
+### Automated Updates
+The project uses **Renovate** to keep dependencies up to date:
+
+- **Regular updates**: Created on Mondays at 10pm (batched for reduced noise)
+- **Security updates**: Created immediately when available (patch updates for Docker and GitHub Actions)
+- **Automatic approval**: Approved and merged automatically when all CI checks pass
+
+### Manual Monitoring (GitHub Watches)
+Some critical dependencies with frequent updates should be monitored manually:
+
+1. **Trivy Action** - <https://github.com/aquasecurity/trivy-action>
+  - Container vulnerability scanner
+  - Watch for releases: <https://github.com/aquasecurity/trivy-action/releases>
+  - Latest: `v0.33.1` (September 2025)
+  - To watch: Go to repo → Click **Watch** → Select **Releases**
+
+### Dependency Dashboard
+Check **Issue #70** for the Renovate Dependency Dashboard:
+- Shows all pending updates
+- Lists security and regular updates separately
+- Allows manual triggering of updates if needed
+
+---
+
 ## Resources
 
 - **Documentation**: <https://reuteras.github.io/miniflux-tui-py/>
@@ -408,6 +434,8 @@ def fetch_entries(feed_id: int, limit: int = 10) -> List[Entry]:
 - **Textual TUI Framework**: <https://textual.textualize.io/>
 - **uv Package Manager**: <https://docs.astral.sh/uv/>
 - **Ruff Linter**: <https://docs.astral.sh/ruff/>
+- **Renovate Docs**: <https://docs.renovatebot.com/>
+- **Trivy Action**: <https://github.com/aquasecurity/trivy-action>
 
 ---
 
