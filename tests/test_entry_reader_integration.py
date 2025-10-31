@@ -335,7 +335,7 @@ class TestEntryReaderScreenBindings:
         async with app.run_test():
             screen = app.entry_reader_screen
             assert len(screen.BINDINGS) > 0
-            binding_keys = [b.key for b in screen.BINDINGS]
+            binding_keys = [b.key for b in screen.BINDINGS]  # type: ignore[attr-defined]
             assert "j" in binding_keys  # Scroll down
             assert "k" in binding_keys  # Scroll up
             assert "J" in binding_keys  # Next entry

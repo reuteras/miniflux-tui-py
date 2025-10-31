@@ -292,7 +292,7 @@ class TestEntryReaderScreenBindings:
     def test_has_scroll_bindings(self, sample_entry):
         """Test screen has scroll key bindings."""
         screen = EntryReaderScreen(entry=sample_entry)
-        binding_keys = [b.key for b in screen.BINDINGS]
+        binding_keys = [b.key for b in screen.BINDINGS]  # type: ignore[attr-defined]
         # Should have j and k for scrolling
         assert "j" in binding_keys or "k" in binding_keys
 
@@ -794,14 +794,14 @@ class TestEntryReaderScreenIntegration:
     def test_bindings_include_navigation_keys(self, sample_entry):
         """Test bindings include J and K for navigation."""
         screen = EntryReaderScreen(entry=sample_entry)
-        binding_keys = [b.key for b in screen.BINDINGS]
+        binding_keys = [b.key for b in screen.BINDINGS]  # type: ignore[attr-defined]
         assert "J" in binding_keys  # Next entry
         assert "K" in binding_keys  # Previous entry
 
     def test_bindings_include_scroll_keys(self, sample_entry):
         """Test bindings include j and k for scrolling."""
         screen = EntryReaderScreen(entry=sample_entry)
-        binding_keys = [b.key for b in screen.BINDINGS]
+        binding_keys = [b.key for b in screen.BINDINGS]  # type: ignore[attr-defined]
         assert "j" in binding_keys  # Scroll down
         assert "k" in binding_keys  # Scroll up
 
