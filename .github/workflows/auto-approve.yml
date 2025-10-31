@@ -42,7 +42,7 @@ jobs:
             echo "already_approved=false" >> $GITHUB_OUTPUT
           fi
         env:
-          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GH_TOKEN: ${{ secrets.BOT_TOKEN }}
         continue-on-error: true
 
       - name: Wait for status checks to complete
@@ -51,7 +51,7 @@ jobs:
           # Give GitHub Actions a moment to update check status
           sleep 5
         env:
-          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GH_TOKEN: ${{ secrets.BOT_TOKEN }}
 
       - name: Check all required status checks pass
         if: steps.check-approval.outputs.already_approved == 'false'
@@ -72,7 +72,7 @@ jobs:
 
           echo "All checks passed!"
         env:
-          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GH_TOKEN: ${{ secrets.BOT_TOKEN }}
         continue-on-error: true
 
       - name: Auto-approve PR
@@ -84,4 +84,4 @@ jobs:
             --body "✅ All automated checks passed. Auto-approved for \
               solo developer workflow."
         env:
-          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GH_TOKEN: ${{ secrets.BOT_TOKEN }}
