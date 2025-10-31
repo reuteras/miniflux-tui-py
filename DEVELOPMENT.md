@@ -406,9 +406,11 @@ def fetch_entries(feed_id: int, limit: int = 10) -> List[Entry]:
 ### Automated Updates
 The project uses **Renovate** to keep dependencies up to date:
 
+- **Security patches**: Created immediately when available (patch-level updates)
 - **Regular updates**: Created on Mondays at 10pm (batched for reduced noise)
-- **Security updates**: Created immediately when available (patch updates for Docker and GitHub Actions)
-- **Automatic approval**: Approved and merged automatically when all CI checks pass
+- **Major version updates**: Created on Sundays at 10pm (requires manual review)
+- **Automatic approval**: Security and regular updates approved and merged when all CI checks pass
+- **Manual review**: Major version updates require your approval before merging
 
 ### Manual Monitoring (GitHub Watches)
 Some critical dependencies with frequent updates should be monitored manually:
