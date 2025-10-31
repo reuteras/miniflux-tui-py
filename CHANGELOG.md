@@ -1,5 +1,26 @@
 # Changelog
 
+## [0.5.0] - 2025-10-31
+
+### Features
+- Add comprehensive category management support with CRUD operations
+- Add category filtering to entry list for viewing entries by category
+- Display category information in feed headers alongside error indicators
+- Add feed error indicators to entry list headers (yellow ⚠ for parsing errors, red ⊘ for disabled feeds)
+- Category-based grouping for organizing entries by category hierarchy
+- Enhanced feed header display with category and error status badges
+
+### Improvements
+- Better visual feedback for feed health status in the main entry list
+- Improved feed organization with category and error indicators visible at a glance
+- Enhanced feed management workflow with category-aware operations
+
+### Documentation
+- Comprehensive category management documentation in usage guide
+- Updated keyboard shortcut reference with category-specific commands
+- Added section for feed status and error indicators
+- Enhanced API documentation for category operations
+
 ## [0.4.22] - 2025-10-31
 
 ### Features
