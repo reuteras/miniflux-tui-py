@@ -1,7 +1,8 @@
 """Tests for FeedManagementScreen."""
 
-from textual.app import App, ComposeResult
+from textual.app import App
 from textual.screen import Screen
+from textual.widgets import ListView
 
 from miniflux_tui.api.models import Feed
 from miniflux_tui.ui.screens.feed_management import FeedListItem, FeedManagementScreen
@@ -409,7 +410,7 @@ class TestFeedManagementScreenMounted:
             )
         ]
         app = FeedManagementTestApp(feeds=feeds)
-        async with app.run_test() as pilot:
+        async with app.run_test():
             # Get the active screen
             screen = app.screen
             if isinstance(screen, FeedManagementScreen):
@@ -425,7 +426,6 @@ class TestFeedManagementScreenMounted:
         screen._populate_list()  # Should handle gracefully
 
         # Now set list_view and test again
-        from textual.widgets import ListView
         screen.list_view = ListView()
         feeds = [
             Feed(
@@ -451,7 +451,6 @@ class TestFeedManagementScreenMounted:
     async def test_get_selected_feed_with_no_highlighted_child(self) -> None:
         """Test _get_selected_feed returns None when nothing highlighted."""
         screen = FeedManagementScreen()
-        from textual.widgets import ListView
         screen.list_view = ListView()
         selected = screen._get_selected_feed()
         assert selected is None
@@ -459,7 +458,6 @@ class TestFeedManagementScreenMounted:
     async def test_action_cursor_down_with_list_view(self) -> None:
         """Test action_cursor_down delegates to list_view."""
         screen = FeedManagementScreen()
-        from textual.widgets import ListView
         screen.list_view = ListView()
         # action_cursor_down should not raise
         screen.action_cursor_down()
@@ -467,7 +465,6 @@ class TestFeedManagementScreenMounted:
     async def test_action_cursor_up_with_list_view(self) -> None:
         """Test action_cursor_up delegates to list_view."""
         screen = FeedManagementScreen()
-        from textual.widgets import ListView
         screen.list_view = ListView()
         # action_cursor_up should not raise
         screen.action_cursor_up()
