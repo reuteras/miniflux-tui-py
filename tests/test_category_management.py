@@ -227,7 +227,8 @@ class TestCategoryManagementScreenBindings:
     def test_category_management_screen_has_bindings(self) -> None:
         """Test CategoryManagementScreen has key bindings."""
         screen = CategoryManagementScreen()
-        binding_keys = [b.key for b in screen.BINDINGS]  # type: ignore[attr-defined]
+        bindings = screen.BINDINGS  # type: ignore[attr-defined]
+        binding_keys = [b.key for b in bindings]  # type: ignore[union-attr]
         assert "j" in binding_keys
         assert "k" in binding_keys
         assert "n" in binding_keys
@@ -238,7 +239,8 @@ class TestCategoryManagementScreenBindings:
     def test_category_management_screen_binding_descriptions(self) -> None:
         """Test that bindings have descriptions."""
         screen = CategoryManagementScreen()
-        for binding in screen.BINDINGS:  # type: ignore[attr-defined]
+        bindings = screen.BINDINGS  # type: ignore[attr-defined]
+        for binding in bindings:  # type: ignore[union-attr]
             assert binding.description is not None
             assert len(binding.description) > 0
 
