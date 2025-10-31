@@ -293,6 +293,20 @@ class MinifluxTUI(App):
         management_screen: FeedManagementScreen = feed_management_cls(feeds=self.feeds)
         self.push_screen(management_screen)
 
+    async def push_category_management_screen(self) -> None:
+        """Push category management screen."""
+        try:
+            categories = await self.client.get_categories() if self.client else []
+        except Exception:
+            categories = []
+
+        from miniflux_tui.ui.screens.category_management import (  # noqa: PLC0415
+            CategoryManagementScreen,
+        )
+
+        management_screen = CategoryManagementScreen(categories=categories)
+        self.push_screen(management_screen)
+
     async def on_unmount(self) -> None:
         """Called when app is unmounted."""
         # Close API client
