@@ -23,6 +23,20 @@
     ],
     "packageRules": [
         {
+            "description": "Security updates: run immediately/daily",
+            "matchUpdateTypes": [
+                "patch"
+            ],
+            "matchDatasources": [
+                "docker",
+                "github-actions"
+            ],
+            "schedule": [
+                "at any time"
+            ],
+            "groupName": "security-updates"
+        },
+        {
             "matchCategories": [
                 "python"
             ],
