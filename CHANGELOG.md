@@ -1,5 +1,18 @@
 # Changelog
 
+## [0.4.22] - 2025-10-31
+
+### Features
+- Add GitHub issue templates for bugs and features
+
+### Bug Fixes
+- Wrap bare email URL in angle brackets for markdown linting
+- use correct syft flags --source-name and --source-version
+
+### Documentation
+- Add SUPPORT.md community health file
+
+
 ## [0.4.21] - 2025-10-30
 
 ### Added
