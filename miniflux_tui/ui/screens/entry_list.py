@@ -51,17 +51,36 @@ class FeedHeaderItem(ListItem):
         feed_title: str,
         is_expanded: bool = True,
         category_title: str | None = None,
+        has_errors: bool = False,
+        feed_disabled: bool = False,
     ):
         self.feed_title = feed_title
         self.is_expanded = is_expanded
         self.category_title = category_title
+        self.has_errors = has_errors
+        self.feed_disabled = feed_disabled
 
-        # Format header with fold indicator and optional category
+        # Format header with fold indicator, category, and error indicators
         fold_icon = FOLD_EXPANDED if is_expanded else FOLD_COLLAPSED
+        error_indicators = []
+
+        if feed_disabled:
+            error_indicators.append("[red]⊘ DISABLED[/red]")
+        elif has_errors:
+            error_indicators.append("[yellow]⚠ ERRORS[/yellow]")
+
+        error_text = " ".join(error_indicators)
+
         if category_title:
-            header_text = f"[bold]{fold_icon} {feed_title}[/bold] [dim]({category_title})[/dim]"
+            if error_text:
+                header_text = f"[bold]{fold_icon} {feed_title}[/bold] [dim]({category_title})[/dim] {error_text}"
+            else:
+                header_text = f"[bold]{fold_icon} {feed_title}[/bold] [dim]({category_title})[/dim]"
+        elif error_text:
+            header_text = f"[bold]{fold_icon} {feed_title}[/bold] {error_text}"
         else:
             header_text = f"[bold]{fold_icon} {feed_title}[/bold]"
+
         label = Label(header_text, classes="feed-header")
 
         # Initialize with the label
@@ -71,10 +90,25 @@ class FeedHeaderItem(ListItem):
         """Toggle the fold state and update display."""
         self.is_expanded = not self.is_expanded
         fold_icon = FOLD_EXPANDED if self.is_expanded else FOLD_COLLAPSED
+
+        error_indicators = []
+        if self.feed_disabled:
+            error_indicators.append("[red]⊘ DISABLED[/red]")
+        elif self.has_errors:
+            error_indicators.append("[yellow]⚠ ERRORS[/yellow]")
+
+        error_text = " ".join(error_indicators)
+
         if self.category_title:
-            header_text = f"[bold]{fold_icon} {self.feed_title}[/bold] [dim]({self.category_title})[/dim]"
+            if error_text:
+                header_text = f"[bold]{fold_icon} {self.feed_title}[/bold] [dim]({self.category_title})[/dim] {error_text}"
+            else:
+                header_text = f"[bold]{fold_icon} {self.feed_title}[/bold] [dim]({self.category_title})[/dim]"
+        elif error_text:
+            header_text = f"[bold]{fold_icon} {self.feed_title}[/bold] {error_text}"
         else:
             header_text = f"[bold]{fold_icon} {self.feed_title}[/bold]"
+
         # Update the label
         if self.children:
             cast(Label, self.children[0]).update(header_text)
@@ -601,14 +635,24 @@ class EntryListScreen(Screen):
             # Default: expanded if not set, unless group_collapsed is True
             self.feed_fold_state[current_feed] = not self.group_collapsed
 
-        # Get category title if entry is provided
+        # Get category title and error status if entry is provided
         category_title = None
+        has_errors = False
+        feed_disabled = False
         if entry is not None:
             category_title = self._get_category_title(entry.feed.category_id)
+            has_errors = entry.feed.has_errors
+            feed_disabled = entry.feed.disabled
 
         # Create and add a fold-aware header item
         is_expanded = self.feed_fold_state[current_feed]
-        header = FeedHeaderItem(current_feed, is_expanded=is_expanded, category_title=category_title)
+        header = FeedHeaderItem(
+            current_feed,
+            is_expanded=is_expanded,
+            category_title=category_title,
+            has_errors=has_errors,
+            feed_disabled=feed_disabled,
+        )
         self.feed_header_map[current_feed] = header
         self.list_view.append(header)
 
