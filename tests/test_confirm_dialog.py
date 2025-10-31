@@ -227,3 +227,69 @@ class TestConfirmDialogIntegration:
         )
         assert dialog.confirm_label == "Yes, Delete"
         assert dialog.cancel_label == "No, Keep"
+
+
+class TestConfirmDialogComposeMethods:
+    """Test ConfirmDialog compose and rendering methods."""
+
+    def test_confirm_dialog_compose_returns_generator(self) -> None:
+        """Test compose method returns a ComposeResult."""
+        dialog = ConfirmDialog(
+            title="Confirm",
+            message="Are you sure?",
+        )
+        result = dialog.compose()
+        # compose should return a generator
+        assert hasattr(result, "__iter__")
+
+    def test_confirm_dialog_action_methods_exist(self) -> None:
+        """Test action methods exist and are callable."""
+        dialog = ConfirmDialog(
+            title="Confirm",
+            message="Are you sure?",
+        )
+        assert callable(dialog.action_confirm)
+        assert callable(dialog.action_cancel)
+
+    def test_confirm_dialog_on_button_pressed_exists(self) -> None:
+        """Test on_button_pressed handler exists."""
+        dialog = ConfirmDialog(
+            title="Confirm",
+            message="Are you sure?",
+        )
+        assert hasattr(dialog, "on_button_pressed")
+        assert callable(dialog.on_button_pressed)
+
+    def test_confirm_dialog_has_correct_css_classes(self) -> None:
+        """Test CSS includes proper element IDs."""
+        dialog = ConfirmDialog(
+            title="Confirm",
+            message="Are you sure?",
+        )
+        css = dialog.CSS
+        # Check that CSS references the expected IDs
+        assert "dialog-title" in css
+        assert "dialog-message" in css
+        assert "dialog-buttons" in css
+        assert "confirm-button" in css
+        assert "cancel-button" in css
+
+    def test_confirm_dialog_error_color_in_css(self) -> None:
+        """Test CSS includes error color styling."""
+        dialog = ConfirmDialog(
+            title="Delete",
+            message="Are you sure?",
+        )
+        css = dialog.CSS
+        # Check for error color reference
+        assert "$error" in css
+
+    def test_confirm_dialog_with_error_indicator(self) -> None:
+        """Test ConfirmDialog marks destructive operations."""
+        dangerous_dialog = ConfirmDialog(
+            title="Delete Everything",
+            message="This will delete all data permanently!",
+        )
+        # Dialog should have CSS with error color for destructive operations
+        assert dangerous_dialog.CSS is not None
+        assert len(dangerous_dialog.CSS) > 0

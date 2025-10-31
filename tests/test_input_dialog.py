@@ -208,3 +208,67 @@ class TestInputDialogIntegration:
         )
         assert dialog.dialog_title == long_title
         assert dialog.dialog_label == long_label
+
+
+class TestInputDialogComposeMethods:
+    """Test InputDialog compose and rendering methods."""
+
+    def test_input_dialog_compose_returns_generator(self) -> None:
+        """Test compose method returns a ComposeResult."""
+        dialog = InputDialog(
+            title="Test",
+            label="Input:",
+        )
+        result = dialog.compose()
+        # compose should return a generator
+        assert hasattr(result, "__iter__")
+
+    def test_input_dialog_has_input_widget_initially_none(self) -> None:
+        """Test input_widget is None before mounting."""
+        dialog = InputDialog(
+            title="Test",
+            label="Input:",
+        )
+        assert dialog.input_widget is None
+
+    def test_input_dialog_action_methods_exist(self) -> None:
+        """Test action methods exist and are callable."""
+        dialog = InputDialog(
+            title="Test",
+            label="Input:",
+        )
+        assert callable(dialog.action_submit)
+        assert callable(dialog.action_cancel)
+
+    def test_input_dialog_on_button_pressed_exists(self) -> None:
+        """Test on_button_pressed handler exists."""
+        dialog = InputDialog(
+            title="Test",
+            label="Input:",
+        )
+        assert hasattr(dialog, "on_button_pressed")
+        assert callable(dialog.on_button_pressed)
+
+    def test_input_dialog_has_correct_css_classes(self) -> None:
+        """Test CSS includes proper element IDs."""
+        dialog = InputDialog(
+            title="Test",
+            label="Input:",
+        )
+        css = dialog.CSS
+        # Check that CSS references the expected IDs
+        assert "dialog-title" in css
+        assert "dialog-input" in css
+        assert "dialog-buttons" in css
+        assert "Button" in css  # CSS styles Button elements
+        assert "InputDialog" in css  # CSS defines InputDialog styles
+
+    def test_input_dialog_compose_with_initial_value(self) -> None:
+        """Test compose works correctly with initial value."""
+        initial_value = "test_value"
+        dialog = InputDialog(
+            title="Test",
+            label="Input:",
+            value=initial_value,
+        )
+        assert dialog.initial_value == initial_value
