@@ -111,6 +111,45 @@ When in grouped mode (`g` to toggle):
 | `Shift+G` | Enable grouping by feed and expand all feeds |
 | `Shift+Z` | Collapse all feeds |
 
+## Category Management
+
+### Accessing Category Management
+
+Press `c` to open the category management screen where you can:
+
+- View all categories
+- Create new categories
+- Edit category names
+- Delete categories
+
+### Category Management Actions
+
+In the category management screen:
+
+| Key | Action |
+|-----|--------|
+| `j` / `↓` | Move cursor down |
+| `k` / `↑` | Move cursor up |
+| `n` | Create new category |
+| `e` | Edit the selected category name |
+| `d` | Delete the selected category (with confirmation) |
+| `Esc` | Return to entry list |
+
+### Organizing Feeds with Categories
+
+You can organize your feeds into categories via the Miniflux web interface or API. Then:
+
+1. Press `c` to open category management
+2. Create categories as needed by pressing `n`
+3. Assign feeds to categories through Miniflux
+4. Press `Shift+C` to group entries by category in the entry list
+
+### Category Information
+
+When deleting a category:
+- Feeds in that category will be moved to the default "Uncategorized" category
+- No feeds are deleted, only reassigned
+
 ## Refreshing
 
 | Key | Action |

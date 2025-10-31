@@ -172,7 +172,7 @@ class CategoryManagementScreen(Screen):
                 self._populate_list()
                 self.app.notify(f"Created category: {title}")
             except Exception as e:
-                error_msg = sanitize_error_message(str(e))
+                error_msg = sanitize_error_message(e, "creating category")
                 self.app.notify(f"Failed to create category: {error_msg}", severity="error")
 
     async def action_edit_category(self) -> None:
@@ -219,7 +219,7 @@ class CategoryManagementScreen(Screen):
                 self._populate_list()
                 self.app.notify(f"Updated category to: {new_title}")
             except Exception as e:
-                error_msg = sanitize_error_message(str(e))
+                error_msg = sanitize_error_message(e, "updating category")
                 self.app.notify(f"Failed to update category: {error_msg}", severity="error")
 
     async def action_delete_category(self) -> None:
@@ -259,7 +259,7 @@ class CategoryManagementScreen(Screen):
                 self._populate_list()
                 self.app.notify(f"Deleted category: {category_title}")
             except Exception as e:
-                error_msg = sanitize_error_message(str(e))
+                error_msg = sanitize_error_message(e, "deleting category")
                 self.app.notify(f"Failed to delete category: {error_msg}", severity="error")
 
     def action_cursor_down(self) -> None:

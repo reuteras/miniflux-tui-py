@@ -106,6 +106,7 @@ class EntryListScreen(Screen):
         Binding("s", "cycle_sort", "Cycle Sort"),
         Binding("g", "toggle_group", "Group by Feed"),
         Binding("shift+c", "toggle_category_group", "Group by Category"),
+        Binding("c", "manage_categories", "Manage Categories"),
         Binding("shift+g", "expand_all", "Expand All"),
         Binding("shift+z", "collapse_all", "Collapse All"),
         Binding("o", "toggle_fold", "Fold/Unfold Feed"),
@@ -1127,6 +1128,10 @@ class EntryListScreen(Screen):
         if self.search_active:
             result_count = len(self._filter_entries(self.entries))
             self.notify(f"Search: {result_count} entries match '{self.search_term}'")
+
+    async def action_manage_categories(self) -> None:
+        """Open the category management screen."""
+        await self.app.push_category_management_screen()
 
     def action_show_help(self):
         """Show keyboard help."""
