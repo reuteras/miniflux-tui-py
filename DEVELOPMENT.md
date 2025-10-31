@@ -11,10 +11,10 @@ The easiest way to get started:
 1. Click **"Code"** → **"Codespaces"** → **"Create codespace on main"**
 2. Wait for the codespace to launch (~2-3 minutes)
 3. The environment will automatically:
-  - Install `uv` package manager
-  - Install all dependencies (dev, test, docs, fuzzing)
-  - Set up pre-commit hooks
-  - Show you helpful quick-start commands
+    - Install `uv` package manager
+    - Install all dependencies (dev, test, docs, fuzzing)
+    - Set up pre-commit hooks
+    - Show you helpful quick-start commands
 
 **That's it!** You're ready to develop.
 
