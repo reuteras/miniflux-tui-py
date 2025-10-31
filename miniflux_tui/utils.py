@@ -1,10 +1,13 @@
 """Utility functions and helpers for miniflux-tui."""
 
+from __future__ import annotations
+
 import tomllib
-from collections.abc import Iterator
+from collections.abc import Generator, Iterator
 from contextlib import contextmanager
 from importlib import metadata
 from pathlib import Path
+from typing import Any
 
 PYPROJECT_PATH = Path(__file__).resolve().parent.parent / "pyproject.toml"
 
@@ -108,7 +111,7 @@ def get_status_icon(is_unread: bool) -> str:
 
 
 @contextmanager
-def api_call(screen, operation_name: str = "Operation"):
+def api_call(screen: Any, operation_name: str = "Operation") -> Generator[Any, None, None]:
     """Context manager for safe API calls with error handling.
 
     Usage:

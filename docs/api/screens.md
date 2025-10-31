@@ -67,6 +67,43 @@ Shows keyboard shortcuts and help information.
     options:
       docstring_style: google
 
+## CategoryManagementScreen
+
+Screen for managing categories (create, edit, delete, view).
+
+::: miniflux_tui.ui.screens.category_management.CategoryManagementScreen
+    options:
+      docstring_style: google
+
+### Category Management Features
+
+- **Category listing**: Shows all available categories
+- **Create categories**: Add new categories with custom names
+- **Edit categories**: Modify existing category names
+- **Delete categories**: Remove categories (feeds are reassigned to Uncategorized)
+- **Navigation**: Vim-style cursor movement (j/k)
+
+### Category Management Actions
+
+| Method | Binding | Description |
+|--------|---------|-------------|
+| `action_cursor_down` | `j` | Move cursor down |
+| `action_cursor_up` | `k` | Move cursor up |
+| `action_create_category` | `n` | Create new category |
+| `action_edit_category` | `e` | Edit selected category |
+| `action_delete_category` | `d` | Delete selected category |
+| `action_back` | `Esc` | Return to entry list |
+
+### Category Operations
+
+All category operations use the Miniflux API:
+
+- **Creating**: Adds a new category with validation (names cannot be empty)
+- **Editing**: Updates the name of an existing category
+- **Deleting**: Removes a category and reassigns its feeds to Uncategorized
+
+All operations provide user feedback via notifications and handle errors gracefully.
+
 ## MinifluxTUI (Main App)
 
 The main application container.
@@ -87,10 +124,15 @@ MinifluxTUI (App)
 ├─ EntryListScreen (main view)
 │  ├─ navigate with j/k
 │  ├─ press Enter → EntryReaderScreen
+│  ├─ press c → CategoryManagementScreen
 │  ├─ press ? → HelpScreen
 │  └─ press q → exit
 ├─ EntryReaderScreen (detail view)
 │  ├─ navigate with J/K
+│  └─ press Escape → back to EntryListScreen
+├─ CategoryManagementScreen (category management view)
+│  ├─ navigate with j/k
+│  ├─ press n to create, e to edit, d to delete
 │  └─ press Escape → back to EntryListScreen
 └─ HelpScreen (help view)
   └─ press any key → back to previous screen
@@ -106,7 +148,15 @@ Custom ListItem for displaying an entry in the list.
 
 Custom ListItem for displaying a feed group header.
 
-Both use CSS-based hiding for collapsed feeds (via the "collapsed" class).
+### CategoryHeaderItem
+
+Custom ListItem for displaying a category group header.
+
+### CategoryListItem
+
+Custom ListItem for displaying a category in the category management screen.
+
+The list items use CSS-based hiding for collapsed feeds (via the "collapsed" class) in grouped mode.
 
 ## Styling
 

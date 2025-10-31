@@ -28,7 +28,7 @@ class HelpScreen(Screen):
         self.api_version: str = "Loading..."
         self.username: str = "Loading..."
 
-    def compose(self) -> ComposeResult:
+    def compose(self) -> ComposeResult:  # noqa: PLR0915
         """Create child widgets."""
         yield Header()
 
@@ -43,17 +43,27 @@ class HelpScreen(Screen):
             yield Static("  e               Save entry to third-party service")
             yield Static("  s               Cycle sort mode (date/feed/status)")
             yield Static("  g               Toggle grouping by feed")
+            yield Static("  Shift+C         Group by category")
             yield Static("  Shift+G         Enable grouping and expand all feeds")
             yield Static("  Shift+Z         Collapse all feeds")
             yield Static("  o               Toggle fold/unfold on feed header")
             yield Static("  h or ←          Collapse individual feed")
             yield Static("  l or →          Expand individual feed")
             yield Static("  r or ,          Refresh entries")
+            yield Static("  c               Manage categories")
             yield Static("  u               Show unread entries")
             yield Static("  t               Show starred entries")
+            yield Static("  /               Search entries")
             yield Static("  ?               Show this help")
             yield Static("  i               Show system status")
             yield Static("  q               Quit application\n")
+
+            yield Static("[bold yellow]Category Management View[/bold yellow]")
+            yield Static("  ↑/↓ or k/j      Navigate categories")
+            yield Static("  n               Create new category")
+            yield Static("  e               Edit selected category name")
+            yield Static("  d               Delete selected category")
+            yield Static("  Esc             Return to entry list\n")
 
             yield Static("[bold yellow]Entry Reader View[/bold yellow]")
             yield Static("  ↑/↓ or k/j      Scroll up/down")
