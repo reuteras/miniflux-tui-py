@@ -16,32 +16,32 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Harden the runner (Audit all outbound calls)
-        # v2.13.1
-        uses: step-security/harden-runner@f4a75cfd619ee5ce8d5b864b0d183aff3c69b55a
+        uses: step-security/harden-runner@f4a75cfd619ee5ce8d5b864b0d183aff3c69b55a # v2.13.1
         with:
           egress-policy: audit
 
       - name: Check for issue reference
+        env:
+          PR_BODY: ${{ github.event.pull_request.body }}
+          PR_TITLE: ${{ github.event.pull_request.title }}
+          GH_ACTOR: ${{ github.actor }}
         run: |
-          pr_body="${{ github.event.pull_request.body }}"
-          pr_title="${{ github.event.pull_request.title }}"
-
           # Check for issue references in body or title
           # Allows: Fixes #123, Closes #456, Related to #789, Addresses #000
-          if echo "$pr_body $pr_title" | grep -qiE \
+          if echo "$PR_BODY $PR_TITLE" | grep -qiE \
             '(fixes|closes|resolves|addresses|related to) #[0-9]+'; then
             echo "✅ Issue reference found"
             exit 0
           fi
 
           # Check for dependabot (auto-generated)
-          if [ "${{ github.actor }}" == "dependabot[bot]" ]; then
+          if [ "$GH_ACTOR" == "dependabot[bot]" ]; then
             echo "✅ Dependabot PR (auto-exempt)"
             exit 0
           fi
 
           # Check for release commits (auto-generated)
-          if echo "$pr_title" | grep -qiE '^(chore|release): (Release|Bump) v[0-9]'; then
+          if echo "$PR_TITLE" | grep -qiE '^(chore|release): (Release|Bump) v[0-9]'; then
             echo "✅ Release PR (auto-exempt)"
             exit 0
           fi
