@@ -37,3 +37,19 @@ if ! command -v uv >/dev/null 2>&1; then
 fi
 
 uv sync --locked --all-groups
+
+# Install pre-commit hooks for development
+echo "Installing pre-commit hooks..."
+uv run pre-commit install
+
+echo "✅ Codespace setup complete!"
+echo ""
+echo "Quick start:"
+echo "  • Run tests:     uv run pytest tests"
+echo "  • Lint code:     uv run ruff check miniflux_tui tests"
+echo "  • Format code:   uv run ruff format miniflux_tui tests"
+echo "  • Type check:    uv run pyright miniflux_tui tests"
+echo "  • Run app:       uv run miniflux-tui --init"
+echo "  • View docs:     uv run mkdocs serve"
+echo ""
+echo "Or use VS Code tasks (Ctrl+Shift+B for test/build)!"
