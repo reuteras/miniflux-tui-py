@@ -56,10 +56,9 @@ jobs:
         with:
           results_file: results.sarif
           results_format: sarif
-          # Use GITHUB_TOKEN (has permissions to read branch protection rules with latest Scorecard)
+          # Use GITHUB_TOKEN for API calls
           repo_token: ${{ secrets.GITHUB_TOKEN }}
-          # (Optional) "write" permissions required to publish results.
-          # Uncomment to enable branch protection enforcement.
+          # Publish results to security tab
           publish_results: true
 
       - name: Upload results to code-scanning
