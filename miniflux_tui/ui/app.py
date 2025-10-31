@@ -10,7 +10,7 @@ from textual.app import App
 from textual.driver import Driver
 
 from miniflux_tui.api.client import MinifluxClient
-from miniflux_tui.api.models import Category, Entry
+from miniflux_tui.api.models import Category, Entry, Feed
 from miniflux_tui.config import Config
 from miniflux_tui.constants import DEFAULT_ENTRY_LIMIT
 
@@ -19,6 +19,7 @@ from .screens.help import HelpScreen
 if TYPE_CHECKING:
     from miniflux_tui.ui.screens.entry_list import EntryListScreen
     from miniflux_tui.ui.screens.entry_reader import EntryReaderScreen
+    from miniflux_tui.ui.screens.feed_management import FeedManagementScreen
     from miniflux_tui.ui.screens.status import StatusScreen
 
 
@@ -114,6 +115,7 @@ class MinifluxTUI(App):
         self.client: MinifluxClient | None = None
         self.entries: list[Entry] = []
         self.categories: list[Category] = []
+        self.feeds: list[Feed] = []
         self.current_view = "unread"  # or "starred"
         self._entry_list_screen_cls: type[EntryListScreen] | None = None
         self._status_screen_cls: type[StatusScreen] | None = None
@@ -267,6 +269,29 @@ class MinifluxTUI(App):
         """Show starred entries."""
         await self.load_entries("starred")
         self.notify("Showing starred entries")
+
+    async def load_feeds(self) -> None:
+        """Load feeds from Miniflux API."""
+        if not self.client:
+            self.notify("API client not initialized", severity="error")
+            return
+
+        try:
+            self.feeds = await self.client.get_feeds()
+            self.log(f"Loaded {len(self.feeds)} feeds")
+        except Exception as e:
+            error_details = traceback.format_exc()
+            self.notify(f"Error loading feeds: {e}", severity="error")
+            self.log(f"Full error:\n{error_details}")
+
+    def push_feed_management_screen(self) -> None:
+        """Push feed management screen."""
+        feed_management_module = import_module("miniflux_tui.ui.screens.feed_management")
+        feed_management_cls: type[FeedManagementScreen]
+        feed_management_cls = feed_management_module.FeedManagementScreen
+
+        management_screen: FeedManagementScreen = feed_management_cls(feeds=self.feeds)
+        self.push_screen(management_screen)
 
     async def on_unmount(self) -> None:
         """Called when app is unmounted."""
