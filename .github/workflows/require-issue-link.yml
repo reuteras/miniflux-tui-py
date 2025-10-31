@@ -1,0 +1,60 @@
+---
+name: Require Linked Issue
+
+# Trigger on pull requests to ensure issue linking
+on:
+  pull_request:
+    types: [opened, edited]
+
+permissions:
+  pull-requests: read
+  contents: read
+
+jobs:
+  check-issue-link:
+    name: Check Issue Link
+    runs-on: ubuntu-latest
+    steps:
+      - name: Harden the runner (Audit all outbound calls)
+        uses: step-security/harden-runner@f4a75cfd619ee5ce8d5b864b0d183aff3c69b55a
+          # v2.13.1
+        with:
+          egress-policy: audit
+
+      - name: Check for issue reference
+        run: |
+          pr_body="${{ github.event.pull_request.body }}"
+          pr_title="${{ github.event.pull_request.title }}"
+
+          # Check for issue references in body or title
+          # Allows: Fixes #123, Closes #456, Related to #789, Addresses #000
+          if echo "$pr_body $pr_title" | grep -qiE \
+            '(fixes|closes|resolves|addresses|related to) #[0-9]+'; then
+            echo "✅ Issue reference found"
+            exit 0
+          fi
+
+          # Check for dependabot (auto-generated)
+          if [ "${{ github.actor }}" == "dependabot[bot]" ]; then
+            echo "✅ Dependabot PR (auto-exempt)"
+            exit 0
+          fi
+
+          # Check for release commits (auto-generated)
+          if echo "$pr_title" | grep -qiE '^(chore|release): (Release|Bump) v[0-9]'; then
+            echo "✅ Release PR (auto-exempt)"
+            exit 0
+          fi
+
+          # No issue reference found
+          echo "❌ No issue reference found"
+          echo ""
+          echo "Please link an issue to this PR by including one of:"
+          echo "  • Fixes #123"
+          echo "  • Closes #123"
+          echo "  • Resolves #123"
+          echo "  • Addresses #123"
+          echo "  • Related to #123"
+          echo ""
+          echo "Or create an issue first if one doesn't exist."
+          exit 1
