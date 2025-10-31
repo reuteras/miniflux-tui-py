@@ -40,6 +40,7 @@ repos:
     hooks:
       - id: pylint
         args: ["--errors-only", "--rcfile=/dev/null"]
+        exclude: ^fuzz/
         additional_dependencies:
           - "textual>=6.4.0"
           - "miniflux>=1.1.4"
