@@ -17,7 +17,11 @@ jobs:
     name: Auto-Approve PR
     runs-on: ubuntu-latest
     # Only approve PRs from reuteras (solo developer)
-    if: github.actor == 'reuteras' && github.event.pull_request.draft == false
+    # Skip if PR number not available (check_suite context)
+    if: >-
+      github.actor == 'reuteras' &&
+      github.event.pull_request.draft == false &&
+      github.event.pull_request.number != null
     steps:
       - name: Harden the runner (Audit all outbound calls)
         uses: >-
