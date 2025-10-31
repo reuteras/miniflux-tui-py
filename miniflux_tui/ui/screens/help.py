@@ -50,6 +50,7 @@ class HelpScreen(Screen):
             yield Static("  h or ←          Collapse individual feed")
             yield Static("  l or →          Expand individual feed")
             yield Static("  r or ,          Refresh entries")
+            yield Static("  [dim]Feed headers show category and error status[/dim]")
             yield Static("  c               Manage categories")
             yield Static("  u               Show unread entries")
             yield Static("  t               Show starred entries")

@@ -150,6 +150,30 @@ When deleting a category:
 - Feeds in that category will be moved to the default "Uncategorized" category
 - No feeds are deleted, only reassigned
 
+## Feed Status and Error Indicators
+
+### Feed Error Badges
+
+When viewing entries in grouped mode, feed headers display status information:
+- **⚠ ERRORS**: Feed has parsing errors (shown in yellow)
+- **⊘ DISABLED**: Feed is disabled (shown in red)
+- **(Category Name)**: Category assignment shown in parentheses
+
+This allows you to quickly identify problematic feeds without opening the status screen.
+
+### Status Screen
+
+For detailed feed health information and error messages:
+
+| Key | Action |
+|-----|--------|
+| `i` | Show system status with detailed feed health |
+
+The status screen displays:
+- Total feed count and health summary
+- Detailed list of all problematic feeds
+- Error messages and last check timestamps
+
 ## Refreshing
 
 | Key | Action |
