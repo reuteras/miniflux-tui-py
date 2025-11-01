@@ -48,7 +48,7 @@ jobs:
         run: uv sync --locked
 
       - name: Install pip-licenses
-        run: uv pip install pip-licenses
+        run: uv pip install --system pip-licenses
 
       - name: Generate license report
         run: |
@@ -68,7 +68,7 @@ jobs:
           COPYLEFT = ['GPL', 'AGPL', 'LGPL']
           # Known safe licenses (partial matching allowed)
           SAFE_LICENSES = ['MIT', 'Apache', 'BSD', 'ISC', 'Python Software Foundation', 'Public Domain', 'PSF', '0BSD']
-          
+
           # Dev-only packages (copyleft is acceptable in dev dependencies)
           DEV_ONLY = [
               'pytest', 'pytest-cov', 'pytest-asyncio', 'coverage',
@@ -82,17 +82,17 @@ jobs:
 
           issues = []
           warnings = []
-          
+
           for pkg in licenses:
               name = pkg.get('Name', 'Unknown')
               license_name = pkg.get('License', 'Unknown')
-              
+
               # Skip if it's a dev-only package
               is_dev_only = any(dev in name.lower() for dev in [d.lower() for d in DEV_ONLY])
-              
+
               # Check if license contains any copyleft terms
               has_copyleft = any(cl in license_name for cl in COPYLEFT)
-              
+
               if has_copyleft:
                   # Check if it's not a false positive (e.g., "GPL" in "GPL-compatible")
                   if not any(safe in license_name for safe in ['compatible', 'exception']):
