@@ -1,5 +1,6 @@
 """Tests for CategoryManagementScreen."""
 
+import asyncio
 from typing import cast
 
 from textual.app import App
@@ -290,3 +291,37 @@ class TestCategoryManagementScreenIntegration:
         special_category = Category(id=1, title="News & Updates (2025)")
         screen = CategoryManagementScreen(categories=[special_category])
         assert screen.categories[0].title == "News & Updates (2025)"
+
+
+class TestCategoryManagementAsyncMethods:
+    """Test that async methods exist and are properly defined."""
+
+    def test_action_create_category_is_async(self) -> None:
+        """Test that action_create_category is an async method."""
+        screen = CategoryManagementScreen()
+        assert asyncio.iscoroutinefunction(screen.action_create_category)
+
+    def test_do_create_category_is_async(self) -> None:
+        """Test that _do_create_category is an async method."""
+        screen = CategoryManagementScreen()
+        assert asyncio.iscoroutinefunction(screen._do_create_category)
+
+    def test_action_edit_category_is_async(self) -> None:
+        """Test that action_edit_category is an async method."""
+        screen = CategoryManagementScreen()
+        assert asyncio.iscoroutinefunction(screen.action_edit_category)
+
+    def test_do_edit_category_is_async(self) -> None:
+        """Test that _do_edit_category is an async method."""
+        screen = CategoryManagementScreen()
+        assert asyncio.iscoroutinefunction(screen._do_edit_category)
+
+    def test_action_delete_category_is_async(self) -> None:
+        """Test that action_delete_category is an async method."""
+        screen = CategoryManagementScreen()
+        assert asyncio.iscoroutinefunction(screen.action_delete_category)
+
+    def test_do_delete_category_is_async(self) -> None:
+        """Test that _do_delete_category is an async method."""
+        screen = CategoryManagementScreen()
+        assert asyncio.iscoroutinefunction(screen._do_delete_category)
