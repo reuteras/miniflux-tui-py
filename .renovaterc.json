@@ -5,7 +5,6 @@
     ],
     "semanticCommits": "enabled",
     "commitMessagePrefix": "chore(deps):",
-    "prCreation": "auto",
     "prConcurrentLimit": 10,
     "github-actions": {
         "enabled": true,
