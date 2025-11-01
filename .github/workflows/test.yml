@@ -78,8 +78,10 @@ jobs:
 
       - name: Run tests with coverage
         run: |
+          uv pip install pytest-xdist
           uv run pytest tests --cov=miniflux_tui --cov-report=xml \
-            --cov-report=term-missing --cov-report=html
+            --cov-report=term-missing --cov-report=html \
+            -n auto --dist=loadscope
 
       - name: Upload coverage artifact
         uses: actions/upload-artifact@330a01c490aca151604b8cf639adc76d48f6c5d4 # v5
@@ -98,6 +100,31 @@ jobs:
           format: cobertura
           flag-name: ${{ matrix.os }}-py${{ matrix.python-version }}
           parallel: true
+
+      - name: Coverage differential for PRs
+        if: github.event_name == 'pull_request' && matrix.os == 'ubuntu-latest' && matrix.python-version == '3.11'
+        continue-on-error: true
+        run: |
+          uv pip install diff-cover
+          {
+            echo "## Coverage Differential"
+            echo ""
+            echo "Analyzing coverage changes in this PR..."
+            echo ""
+          } >> "$GITHUB_STEP_SUMMARY"
+          # Run diff-cover to show coverage of changes
+          uv run diff-cover coverage.xml \
+            --compare-branch="origin/${{ github.base_ref }}" \
+            --fail-under=70 \
+            --markdown-report=diff-coverage.md || true
+          # Add results to step summary
+          if [ -f diff-coverage.md ]; then
+            cat diff-coverage.md >> "$GITHUB_STEP_SUMMARY"
+          fi
+          {
+            echo ""
+            echo "ℹ️ Target: ≥70% coverage on changed lines"
+          } >> "$GITHUB_STEP_SUMMARY"
 
       - name: Coverage comment on PR
         if: github.event_name == 'pull_request' && matrix.os == 'ubuntu-latest' && matrix.python-version == '3.13'
