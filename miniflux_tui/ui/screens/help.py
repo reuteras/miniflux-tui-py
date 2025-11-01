@@ -58,6 +58,7 @@ class HelpScreen(Screen):
             yield Static("  ?               Show this help")
             yield Static("  i               Show system status")
             yield Static("  Shift+S         Show user settings")
+            yield Static("  Shift+H         Show reading history")
             yield Static("  q               Quit application\n")
 
             yield Static("[bold yellow]Category Management View[/bold yellow]")
