@@ -6,9 +6,5 @@
         {
             "pattern": "^https://localhost"
         }
-    ],
-    "timeout": "10s",
-    "retryOn": [429],
-    "retryCount": 2,
-    "fallbackRetryDelay": "30s"
+    ]
 }
