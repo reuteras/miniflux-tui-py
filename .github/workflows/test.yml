@@ -36,11 +36,6 @@ jobs:
       matrix:
         os: [ubuntu-latest, macos-latest, windows-latest]
         python-version: ["3.11", "3.12", "3.13", "3.14"]
-        exclude:
-          - os: macos-latest
-            python-version: "3.14"
-          - os: windows-latest
-            python-version: "3.14"
     steps:
       - name: Harden the runner (Audit all outbound calls)
         uses: step-security/harden-runner@f4a75cfd619ee5ce8d5b864b0d183aff3c69b55a # v2.13.1
@@ -101,7 +96,7 @@ jobs:
           import sys
           import xml.etree.ElementTree as ET
 
-          threshold = 55.0
+          threshold = 60.0
           coverage = float(ET.parse("coverage.xml").getroot().get("line-rate")) * 100
 
           if coverage < threshold:
@@ -176,7 +171,7 @@ jobs:
           import sys
           import xml.etree.ElementTree as ET
 
-          threshold = 55.0
+          threshold = 60.0
           coverage = float(ET.parse("coverage.xml").getroot().get("line-rate")) * 100
 
           if coverage < threshold:
