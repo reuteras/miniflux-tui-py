@@ -398,8 +398,8 @@ class TestMinifluxTUIOnMount:
         ):
             await app.on_mount()
 
-            # Verify install_screen was called three times (for entry_list, help, and status)
-            assert mock_install.call_count == 3
+            # Verify install_screen was called four times (for entry_list, help, status, and settings)
+            assert mock_install.call_count == 4
 
     @pytest.mark.asyncio
     async def test_on_mount_pushes_initial_screen(self, sample_config):

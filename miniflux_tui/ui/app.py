@@ -20,6 +20,7 @@ if TYPE_CHECKING:
     from miniflux_tui.ui.screens.entry_list import EntryListScreen
     from miniflux_tui.ui.screens.entry_reader import EntryReaderScreen
     from miniflux_tui.ui.screens.feed_management import FeedManagementScreen
+    from miniflux_tui.ui.screens.settings_management import SettingsScreen
     from miniflux_tui.ui.screens.status import StatusScreen
 
 
@@ -35,6 +36,13 @@ def _load_status_screen_cls() -> type[StatusScreen]:
 
     module = import_module("miniflux_tui.ui.screens.status")
     return cast("type[StatusScreen]", module.StatusScreen)
+
+
+def _load_settings_screen_cls() -> type[SettingsScreen]:
+    """Import and return the settings screen class."""
+
+    module = import_module("miniflux_tui.ui.screens.settings_management")
+    return cast("type[SettingsScreen]", module.SettingsScreen)
 
 
 class MinifluxTUI(App):
@@ -150,6 +158,9 @@ class MinifluxTUI(App):
         status_cls: type[StatusScreen] = _load_status_screen_cls()
         self._status_screen_cls = status_cls
         self.install_screen(status_cls(), name="status")
+
+        settings_cls: type[SettingsScreen] = _load_settings_screen_cls()
+        self.install_screen(settings_cls(), name="settings")
 
         # Push initial screen
         self.push_screen("entry_list")
