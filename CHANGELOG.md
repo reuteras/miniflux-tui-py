@@ -1,5 +1,29 @@
 # Changelog
 
+## [0.5.0] - 2025-11-01
+
+### Features
+- Implement v0.5.0 category support and feed management enhancements ([#217](https://github.com/reuteras/miniflux-tui-py/pull/217))
+- Phase 2 - Comprehensive category management implementation ([#216](https://github.com/reuteras/miniflux-tui-py/pull/216))
+- Phase 1 feed management with security hardening (#58) ([#215](https://github.com/reuteras/miniflux-tui-py/pull/215))
+- Comprehensive developer experience improvements
+- Add sponsorship support and improved badges
+
+### Bug Fixes
+- Enable malcontent to run on all PRs ([#222](https://github.com/reuteras/miniflux-tui-py/pull/222))
+- Add explanatory comment to empty except clause ([#218](https://github.com/reuteras/miniflux-tui-py/pull/218))
+- Remove path filters from linter.yml to ensure build check runs ([#219](https://github.com/reuteras/miniflux-tui-py/pull/219))
+- Force refresh of OpenSSF Best Practices badge cache
+- Create release as draft to allow asset uploads
+
+### Documentation
+- Improve scorecard workflow comments for clarity
+
+### Maintenance
+- Configure Renovate for dependency automation ([#214](https://github.com/reuteras/miniflux-tui-py/pull/214))
+- Add auto-approve workflow for solo developer ([#212](https://github.com/reuteras/miniflux-tui-py/pull/212))
+
+
 ## [0.5.0] - 2025-10-31
 
 ### Features
