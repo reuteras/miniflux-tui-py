@@ -23,9 +23,10 @@ class EntryHistoryItem(ListItem):
         """Render the history item."""
         # Format the published date
         try:
-            pub_date = datetime.fromisoformat(self.entry.published_at.replace("Z", "+00:00"))
+            # published_at is already a datetime object from the miniflux library
+            pub_date = self.entry.published_at
             date_str = pub_date.strftime("%Y-%m-%d %H:%M")
-        except (ValueError, AttributeError):
+        except (ValueError, AttributeError, TypeError):
             date_str = "Unknown date"
 
         # Truncate title if too long
