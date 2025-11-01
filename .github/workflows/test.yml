@@ -79,7 +79,33 @@ jobs:
       - name: Run tests with coverage
         run: |
           uv run pytest tests --cov=miniflux_tui --cov-report=xml \
-            --cov-report=term-missing
+            --cov-report=term-missing --cov-report=html
+
+      - name: Upload coverage artifact
+        uses: actions/upload-artifact@330a01c490aca151604b8cf639adc76d48f6c5d4 # v5
+        with:
+          name: coverage-${{ matrix.os }}-py${{ matrix.python-version }}
+          path: |
+            coverage.xml
+            .coverage
+          retention-days: 7
+
+      - name: Upload coverage to Coveralls
+        uses: coverallsapp/github-action@643bc377ffa44ace6394b2b5d0d3950076de9f63 # v2.3.0
+        with:
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          file: ./coverage.xml
+          format: cobertura
+          flag-name: ${{ matrix.os }}-py${{ matrix.python-version }}
+          parallel: true
+
+      - name: Coverage comment on PR
+        if: github.event_name == 'pull_request' && matrix.os == 'ubuntu-latest' && matrix.python-version == '3.13'
+        uses: py-cov-action/python-coverage-comment-action@v3
+        with:
+          GITHUB_TOKEN: ${{ github.token }}
+          MINIMUM_GREEN: 80
+          MINIMUM_ORANGE: 60
 
       - name: Upload coverage to Codecov
         uses: codecov/codecov-action@5a1091511ad55cbe89839c7260b706298ca349f7 # v5
@@ -179,3 +205,67 @@ jobs:
 
           print(f"Coverage {coverage:.2f}% meets threshold {threshold:.0f}%")
           PY
+
+  coverage-finish:
+    name: Finish Coveralls
+    needs: [test, test-future]
+    runs-on: ubuntu-latest
+    if: always()
+    steps:
+      - name: Harden the runner (Audit all outbound calls)
+        uses: step-security/harden-runner@f4a75cfd619ee5ce8d5b864b0d183aff3c69b55a # v2.13.1
+        with:
+          egress-policy: audit
+
+      - name: Coveralls Finished
+        uses: coverallsapp/github-action@643bc377ffa44ace6394b2b5d0d3950076de9f63 # v2.3.0
+        with:
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          parallel-finished: true
+
+  coverage-report:
+    name: Generate Coverage Report
+    needs: test
+    runs-on: ubuntu-latest
+    if: github.ref == 'refs/heads/main'
+    permissions:
+      contents: write
+    steps:
+      - name: Harden the runner (Audit all outbound calls)
+        uses: step-security/harden-runner@f4a75cfd619ee5ce8d5b864b0d183aff3c69b55a # v2.13.1
+        with:
+          egress-policy: audit
+
+      - uses: actions/checkout@08c6903cd8c0fde910a37f88322edcfb5dd907a8 # v5
+        with:
+          persist-credentials: false
+
+      - name: Download coverage artifacts
+        uses: actions/download-artifact@018cc2cf5baa6db3ef3c5f8a56943fffe632ef53 # v6
+        with:
+          pattern: coverage-*
+          merge-multiple: true
+          path: coverage-data
+
+      - name: Install uv
+        uses: astral-sh/setup-uv@85856786d1ce8acfbcc2f13a5f3fbd6b938f9f41 # v7
+        with:
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Install coverage tools
+        run: uv pip install coverage
+
+      - name: Combine coverage reports
+        run: |
+          cd coverage-data
+          uv run coverage combine --keep
+          uv run coverage xml -o ../coverage.xml
+          uv run coverage html --directory=../htmlcov
+
+      - name: Deploy coverage HTML to GitHub Pages
+        uses: peaceiris/actions-gh-pages@4f9cc6602d3f66b9c108549d475ec49e8ef4d45e # v4.0.0
+        with:
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          publish_dir: ./htmlcov
+          destination_dir: coverage
+          enable_jekyll: false

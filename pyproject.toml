@@ -153,6 +153,9 @@ line-ending = "auto"
 asyncio_mode = "auto"
 testpaths = ["tests"]
 
+[tool.coverage.run]
+relative_files = true
+
 [tool.pyright]
 include = ["miniflux_tui", "tests"]
 exclude = ["**/node_modules", "**/__pycache__"]
