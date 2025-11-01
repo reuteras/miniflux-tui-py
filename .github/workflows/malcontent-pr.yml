@@ -4,10 +4,6 @@ name: Malcontent PR Scan
 on:
   pull_request:
     types: [opened, synchronize, reopened]
-    paths:
-      - ".github/workflows/**"
-      - ".github/actions/**"
-      - ".github/action.yml"
 
 permissions:
   contents: read
@@ -82,13 +78,12 @@ jobs:
 
           set +e
           docker run --rm \
-            -v "${GITHUB_WORKSPACE}/compare/base:/base:ro" \
-            -v "${GITHUB_WORKSPACE}/compare/head:/head:ro" \
+            -v "${GITHUB_WORKSPACE}/compare:/compare:ro" \
             -v "${GITHUB_WORKSPACE}:/out" \
             cgr.dev/chainguard/malcontent:latest \
             mal diff --min-risk high --min-file-risk high \
               --format markdown --output /out/malcontent.md \
-              /base /head
+              /compare/base /compare/head
           status=$?
           set -e
           echo "status=${status}" >> "${GITHUB_OUTPUT}"
