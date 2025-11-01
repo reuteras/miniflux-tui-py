@@ -96,6 +96,52 @@ jobs:
       - name: Run Bandit security checks
         run: uv run bandit -q -r miniflux_tui
 
+  complexity:
+    name: Code Complexity Analysis
+    runs-on: ubuntu-latest
+    steps:
+      - name: Harden the runner (Audit all outbound calls)
+        uses: step-security/harden-runner@f4a75cfd619ee5ce8d5b864b0d183aff3c69b55a # v2.13.1
+        with:
+          egress-policy: audit
+
+      - name: Checkout code
+        uses: actions/checkout@08c6903cd8c0fde910a37f88322edcfb5dd907a8 # v5
+        with:
+          persist-credentials: false
+
+      - name: Install uv
+        uses: astral-sh/setup-uv@85856786d1ce8acfbcc2f13a5f3fbd6b938f9f41 # v7
+        with:
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Set up Python
+        run: uv python install 3.11
+
+      - name: Create virtual environment
+        run: uv venv
+
+      - name: Install radon and xenon
+        run: |
+          uv pip install radon xenon
+
+      - name: Check cyclomatic complexity
+        run: |
+          echo "## Cyclomatic Complexity Report"
+          uv run radon cc miniflux_tui tests -a -s --total-average
+          echo ""
+          echo "## Maintainability Index"
+          uv run radon mi miniflux_tui tests -s
+
+      - name: Enforce complexity thresholds
+        run: |
+          # Xenon enforces complexity limits
+          # -a: Average complexity threshold (A = excellent)
+          # -m: Modules threshold (B = good)
+          # -b: Blocks threshold (C = acceptable, allows up to CC 20)
+          # We set lenient thresholds initially and can tighten over time
+          uv run xenon --max-average B --max-modules B --max-absolute C miniflux_tui
+
   gitleaks:
     name: Gitleaks Secret Scan
     runs-on: ubuntu-latest
