@@ -279,3 +279,75 @@ jobs:
           publish_dir: ./htmlcov
           destination_dir: coverage
           enable_jekyll: false
+
+  mutation-testing:
+    name: Mutation Testing
+    runs-on: ubuntu-latest
+    if: github.event_name == 'pull_request'
+    continue-on-error: true
+    steps:
+      - name: Harden the runner (Audit all outbound calls)
+        uses: step-security/harden-runner@f4a75cfd619ee5ce8d5b864b0d183aff3c69b55a # v2.13.1
+        with:
+          egress-policy: audit
+
+      - uses: actions/checkout@08c6903cd8c0fde910a37f88322edcfb5dd907a8 # v5
+        with:
+          persist-credentials: false
+
+      - name: Install uv
+        uses: astral-sh/setup-uv@85856786d1ce8acfbcc2f13a5f3fbd6b938f9f41 # v7
+        with:
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Set up Python 3.11
+        run: uv python install 3.11
+
+      - name: Install dependencies
+        run: uv sync --locked
+
+      - name: Install mutmut
+        run: uv pip install mutmut
+
+      - name: Run mutation testing
+        id: mutmut
+        continue-on-error: true
+        timeout-minutes: 30
+        run: |
+          # Run mutmut on the main codebase
+          # Note: Mutation testing can be slow. We run with a timeout to prevent excessive CI time.
+          echo "## Mutation Testing Results" >> $GITHUB_STEP_SUMMARY
+          echo "Running mutation testing (limited to 30 minutes)..." >> $GITHUB_STEP_SUMMARY
+          
+          # Run with pytest runner
+          uv run mutmut run --paths-to-mutate=miniflux_tui --runner="pytest -x -q" --tests-dir=tests || true
+          
+          # Generate results
+          uv run mutmut results > mutation-results.txt || true
+          uv run mutmut html || true
+          
+          # Show summary
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "### Summary" >> $GITHUB_STEP_SUMMARY
+          uv run mutmut results | head -30 >> $GITHUB_STEP_SUMMARY || true
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "📝 Full report available in artifacts" >> $GITHUB_STEP_SUMMARY
+
+      - name: Upload mutation report
+        if: always()
+        uses: actions/upload-artifact@330a01c490aca151604b8cf639adc76d48f6c5d4 # v5
+        with:
+          name: mutation-testing-report
+          path: |
+            mutation-results.txt
+            html/
+          retention-days: 30
+
+      - name: Comment mutation score
+        if: always()
+        run: |
+          echo "✨ Mutation testing completed!"
+          echo "📊 Check the uploaded artifacts for detailed results"
+          echo "🎯 Target: >80% mutation score for high-quality tests"
+          echo ""
+          echo "Note: Mutation testing is informational and does not block PR merging."
