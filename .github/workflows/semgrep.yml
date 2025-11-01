@@ -1,0 +1,60 @@
+---
+name: Semgrep Security Scan
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'miniflux_tui/**'
+      - 'tests/**'
+      - '.github/workflows/semgrep.yml'
+  pull_request:
+    branches: [main]
+    paths:
+      - 'miniflux_tui/**'
+      - 'tests/**'
+      - '.github/workflows/semgrep.yml'
+  schedule:
+    - cron: '0 0 * * 0'  # Weekly on Sunday at midnight UTC
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  semgrep:
+    name: Semgrep Security Analysis
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      security-events: write
+      actions: read
+
+    steps:
+      - name: Harden the runner (Audit all outbound calls)
+        uses: step-security/harden-runner@f4a75cfd619ee5ce8d5b864b0d183aff3c69b55a # v2.13.1
+        with:
+          egress-policy: audit
+
+      - name: Checkout repository
+        uses: actions/checkout@08c6903cd8c0fde910a37f88322edcfb5dd907a8 # v5
+        with:
+          persist-credentials: false
+
+      - name: Run Semgrep
+        uses: semgrep/semgrep-action@f73d65653a28eafb50c3c9b5b50857c0c2fc5ebd # v1
+        with:
+          config: >-
+            p/security-audit
+            p/python
+            p/owasp-top-ten
+            p/command-injection
+            p/secrets
+          generateSarif: true
+
+      - name: Upload SARIF file to GitHub Security
+        uses: github/codeql-action/upload-sarif@4e94bd11f71e507f7f87df81788dff88d1dacbfb # v3.31.0
+        if: always()
+        with:
+          sarif_file: semgrep.sarif
+          category: semgrep
