@@ -356,6 +356,14 @@ class MinifluxClient:
         """
         return await self._call_with_retry(self.client.me)
 
+    async def get_integrations_status(self) -> bool:
+        """Get integrations status from the server.
+
+        Returns:
+            bool: True if at least one third-party integration is enabled
+        """
+        return await self._call_with_retry(self.client.get_integrations_status)
+
     async def get_feeds(self) -> list[Feed]:
         """Get all feeds with retry logic.
 
