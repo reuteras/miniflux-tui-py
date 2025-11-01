@@ -57,6 +57,7 @@ class HelpScreen(Screen):
             yield Static("  /               Search entries")
             yield Static("  ?               Show this help")
             yield Static("  i               Show system status")
+            yield Static("  Shift+S         Show user settings")
             yield Static("  q               Quit application\n")
 
             yield Static("[bold yellow]Category Management View[/bold yellow]")
@@ -78,7 +79,8 @@ class HelpScreen(Screen):
             yield Static("  J               Next entry")
             yield Static("  K               Previous entry")
             yield Static("  ?               Show this help")
-            yield Static("  i               Show system status\n")
+            yield Static("  i               Show system status")
+            yield Static("  Shift+S         Show user settings\n")
 
             yield Static("[bold yellow]About[/bold yellow]")
             yield Static(self._get_about_text())
