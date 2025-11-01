@@ -216,14 +216,19 @@ class MinifluxTUI(App):
         for feed in self.feeds:
             feed_category_map[feed.id] = feed.category_id
             # Debug: show what categories are available
-            self.log(f"Feed {feed.id} ({feed.title}): category_id={feed.category_id}")
+            self.log(f"  Feed lookup: ID={feed.id}, Title={feed.title}, category_id={feed.category_id}")
 
         # Enrich each entry's feed with category information
         enriched_count = 0
         for entry in entries:
+            self.log(f"  Entry {entry.id}: feed_id={entry.feed_id}, current category_id={entry.feed.category_id}")
             if entry.feed_id in feed_category_map:
+                old_category_id = entry.feed.category_id
                 entry.feed.category_id = feed_category_map[entry.feed_id]
                 enriched_count += 1
+                self.log(f"    ✓ Matched: enriched from {old_category_id} to {entry.feed.category_id}")
+            else:
+                self.log(f"    ✗ No match: feed_id={entry.feed_id} not in feed_category_map")
 
         self.log(f"Enriched {enriched_count}/{len(entries)} entries with category info")
 
@@ -320,6 +325,11 @@ class MinifluxTUI(App):
         try:
             self.feeds = await self.client.get_feeds()
             self.log(f"Loaded {len(self.feeds)} feeds")
+
+            # Debug: Log feed details to help diagnose category_id issues
+            self.log("DEBUG: Feed details:")
+            for i, feed in enumerate(self.feeds):
+                self.log(f"  Feed {i}: ID={feed.id}, Title={feed.title}, category_id={feed.category_id}")
         except Exception as e:
             error_details = traceback.format_exc()
             self.notify(f"Error loading feeds: {e}", severity="error")
