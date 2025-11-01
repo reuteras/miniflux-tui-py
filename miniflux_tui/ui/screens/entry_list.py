@@ -169,6 +169,7 @@ class EntryListScreen(Screen):
         Binding("question_mark", "show_help", "Help"),
         Binding("i", "show_status", "Status"),
         Binding("shift+s", "show_settings", "Settings"),
+        Binding("shift+h", "show_history", "History"),
         Binding("q", "quit", "Quit"),
     ]
 
@@ -1389,6 +1390,10 @@ class EntryListScreen(Screen):
     def action_show_settings(self):
         """Show user settings and integrations."""
         self.app.push_screen("settings")
+
+    def action_show_history(self):
+        """Show reading history."""
+        self.app.push_screen("history")
 
     def action_quit(self):
         """Quit the application."""

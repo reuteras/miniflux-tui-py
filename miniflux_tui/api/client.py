@@ -153,6 +153,23 @@ class MinifluxClient:
 
         return [Entry.from_dict(entry) for entry in response.get("entries", [])]
 
+    async def get_read_entries(self, limit: int = 100, offset: int = 0) -> list[Entry]:
+        """
+        Get read feed entries (history) with retry logic.
+
+        Args:
+            limit: Maximum number of entries to retrieve
+            offset: Offset for pagination
+
+        Returns:
+            List of read Entry objects ordered by most recently read first
+        """
+        response = await self._call_with_retry(
+            self.client.get_entries, status=["read"], limit=limit, offset=offset, order="published_at", direction="desc"
+        )
+
+        return [Entry.from_dict(entry) for entry in response.get("entries", [])]
+
     async def change_entry_status(self, entry_id: int, status: str) -> None:
         """
         Change the read status of an entry with retry logic.

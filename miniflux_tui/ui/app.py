@@ -17,6 +17,7 @@ from miniflux_tui.constants import DEFAULT_ENTRY_LIMIT
 from .screens.help import HelpScreen
 
 if TYPE_CHECKING:
+    from miniflux_tui.ui.screens.entry_history import EntryHistoryScreen
     from miniflux_tui.ui.screens.entry_list import EntryListScreen
     from miniflux_tui.ui.screens.entry_reader import EntryReaderScreen
     from miniflux_tui.ui.screens.feed_management import FeedManagementScreen
@@ -43,6 +44,13 @@ def _load_settings_screen_cls() -> type[SettingsScreen]:
 
     module = import_module("miniflux_tui.ui.screens.settings_management")
     return cast("type[SettingsScreen]", module.SettingsScreen)
+
+
+def _load_history_screen_cls() -> type[EntryHistoryScreen]:
+    """Import and return the history screen class."""
+
+    module = import_module("miniflux_tui.ui.screens.entry_history")
+    return cast("type[EntryHistoryScreen]", module.EntryHistoryScreen)
 
 
 class MinifluxTUI(App):
@@ -161,6 +169,9 @@ class MinifluxTUI(App):
 
         settings_cls: type[SettingsScreen] = _load_settings_screen_cls()
         self.install_screen(settings_cls(), name="settings")
+
+        history_cls: type[EntryHistoryScreen] = _load_history_screen_cls()
+        self.install_screen(history_cls(), name="history")
 
         # Push initial screen
         self.push_screen("entry_list")
