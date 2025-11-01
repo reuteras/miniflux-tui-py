@@ -4,10 +4,6 @@ name: Malcontent PR Scan
 on:
   pull_request:
     types: [opened, synchronize, reopened]
-    paths:
-      - ".github/workflows/**"
-      - ".github/actions/**"
-      - ".github/action.yml"
 
 permissions:
   contents: read
