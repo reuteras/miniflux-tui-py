@@ -1,6 +1,5 @@
 """Entry history screen showing previously read entries."""
 
-from datetime import datetime
 from typing import TYPE_CHECKING
 
 from textual.app import ComposeResult
