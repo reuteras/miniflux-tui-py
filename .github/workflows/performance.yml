@@ -45,14 +45,18 @@ jobs:
 
       - name: Run benchmarks
         run: |
-          echo "## Performance Benchmark Results" >> $GITHUB_STEP_SUMMARY
-          echo "" >> $GITHUB_STEP_SUMMARY
+          {
+            echo "## Performance Benchmark Results"
+            echo ""
+          } >> "$GITHUB_STEP_SUMMARY"
           uv run pytest tests/test_benchmarks.py --benchmark-only \
             --benchmark-json=benchmark.json \
             --benchmark-columns=min,max,mean,stddev,rounds,iterations \
             --benchmark-sort=mean || true
-          echo "" >> $GITHUB_STEP_SUMMARY
-          echo "📊 Benchmark data saved to artifacts" >> $GITHUB_STEP_SUMMARY
+          {
+            echo ""
+            echo "📊 Benchmark data saved to artifacts"
+          } >> "$GITHUB_STEP_SUMMARY"
 
       - name: Download previous benchmark data
         if: github.event_name == 'pull_request'
@@ -67,13 +71,15 @@ jobs:
         continue-on-error: true
         run: |
           if [ -f ./cache/benchmark.json ]; then
-            echo "### Performance Comparison" >> $GITHUB_STEP_SUMMARY
-            echo "" >> $GITHUB_STEP_SUMMARY
-            echo "Comparing current PR benchmarks with base branch..." >> $GITHUB_STEP_SUMMARY
+            {
+              echo "### Performance Comparison"
+              echo ""
+              echo "Comparing current PR benchmarks with base branch..."
+            } >> "$GITHUB_STEP_SUMMARY"
             uv run pytest-benchmark compare ./cache/benchmark.json benchmark.json \
-              --columns=min,max,mean,stddev || echo "Comparison not available" >> $GITHUB_STEP_SUMMARY
+              --columns=min,max,mean,stddev || echo "Comparison not available" >> "$GITHUB_STEP_SUMMARY"
           else
-            echo "No previous benchmark data found for comparison" >> $GITHUB_STEP_SUMMARY
+            echo "No previous benchmark data found for comparison" >> "$GITHUB_STEP_SUMMARY"
           fi
 
       - name: Store benchmark result
