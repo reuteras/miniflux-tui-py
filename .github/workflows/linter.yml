@@ -17,16 +17,16 @@ permissions:
 # A workflow run is made up of one or more jobs that can run sequentially
 # or in parallel
 jobs:
-  # This workflow contains a single job called "build"
-  build:
-    # The type of runner that the job will run on
+  # This workflow contains linting jobs
+  megalinter:
+    name: MegaLinter
     runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      issues: write
+      pull-requests: write
 
-    # Steps represent a sequence of tasks that will be executed as part of
-    # the job
     steps:
-      # Checks-out your repository under $GITHUB_WORKSPACE, so your job can
-      # access it
       - name: Harden the runner (Audit all outbound calls)
         uses: step-security/harden-runner@f4a75cfd619ee5ce8d5b864b0d183aff3c69b55a # v2.13.1
         with:
@@ -38,31 +38,27 @@ jobs:
           persist-credentials: false
           fetch-depth: 0
 
-      # Runs a single command using the runners shell
-      - name: Lint Code Base
-        uses: github/super-linter/slim@b807e99ddd37e444d189cfd2c2ca1274d8ae8ef1 # v7
+      - name: MegaLinter
+        id: ml
+        uses: oxsecurity/megalinter/flavors/python@v8
         env:
-          FILTER_REGEX_EXCLUDE: '(CHANGELOG\.md|CLAUDE\.md)'
+          VALIDATE_ALL_CODEBASE: ${{ github.event_name == 'push' && github.ref == 'refs/heads/main' }}
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          VALIDATE_CHECKOV: false
-          VALIDATE_DOCKERFILE_HADOLINT: false
-          VALIDATE_GITHUB_ACTIONS: false
-          VALIDATE_GITLEAKS: false
-          VALIDATE_HTML: false
-          VALIDATE_HTML_PRETTIER: false
-          VALIDATE_JSCPD: false
-          VALIDATE_MARKDOWN_PRETTIER: false
-          VALIDATE_NATURAL_LANGUAGE: false
-          VALIDATE_PYTHON_BLACK: false
-          VALIDATE_PYTHON_FLAKE8: false
-          VALIDATE_PYTHON_ISORT: false
-          VALIDATE_PYTHON_MYPY: false
-          VALIDATE_PYTHON_PYINK: false
-          VALIDATE_PYTHON_PYLINT: false
-          VALIDATE_SHELL_SHFMT: false
-          VALIDATE_JSON_PRETTIER: false
-          VALIDATE_YAML_PRETTIER: false
-          VALIDATE_RENOVATE: false
+          FILTER_REGEX_EXCLUDE: '(CHANGELOG\.md|CLAUDE\.md|AGENT\.md|WORKFLOW_IMPROVEMENTS\.md)'
+          # Disable linters that overlap with project tools or cause false positives
+          DISABLE_LINTERS: SPELL_CSPELL,MARKDOWN_MARKDOWNLINT,PYTHON_BANDIT,PYTHON_PYRIGHT,PYTHON_RUFF,COPYPASTE_JSCPD,REPOSITORY_CHECKOV,REPOSITORY_GITLEAKS,SPELL_LYCHEE
+          # Python-specific configs
+          PYTHON_RUFF_CONFIG_FILE: pyproject.toml
+          PYTHON_MYPY_CONFIG_FILE: pyproject.toml
+
+      - name: Upload MegaLinter artifacts
+        if: always()
+        uses: actions/upload-artifact@330a01c490aca151604b8cf639adc76d48f6c5d4 # v5
+        with:
+          name: MegaLinter reports
+          path: |
+            megalinter-reports
+            mega-linter.log
 
   bandit:
     name: Bandit Security Analysis
