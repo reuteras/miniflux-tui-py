@@ -106,21 +106,25 @@ jobs:
         continue-on-error: true
         run: |
           uv pip install diff-cover
-          echo "## Coverage Differential" >> $GITHUB_STEP_SUMMARY
-          echo "" >> $GITHUB_STEP_SUMMARY
-          echo "Analyzing coverage changes in this PR..." >> $GITHUB_STEP_SUMMARY
-          echo "" >> $GITHUB_STEP_SUMMARY
+          {
+            echo "## Coverage Differential"
+            echo ""
+            echo "Analyzing coverage changes in this PR..."
+            echo ""
+          } >> "$GITHUB_STEP_SUMMARY"
           # Run diff-cover to show coverage of changes
           uv run diff-cover coverage.xml \
-            --compare-branch=origin/${{ github.base_ref }} \
+            --compare-branch="origin/${{ github.base_ref }}" \
             --fail-under=70 \
             --markdown-report=diff-coverage.md || true
           # Add results to step summary
           if [ -f diff-coverage.md ]; then
-            cat diff-coverage.md >> $GITHUB_STEP_SUMMARY
+            cat diff-coverage.md >> "$GITHUB_STEP_SUMMARY"
           fi
-          echo "" >> $GITHUB_STEP_SUMMARY
-          echo "ℹ️ Target: ≥70% coverage on changed lines" >> $GITHUB_STEP_SUMMARY
+          {
+            echo ""
+            echo "ℹ️ Target: ≥70% coverage on changed lines"
+          } >> "$GITHUB_STEP_SUMMARY"
 
       - name: Coverage comment on PR
         if: github.event_name == 'pull_request' && matrix.os == 'ubuntu-latest' && matrix.python-version == '3.13'
