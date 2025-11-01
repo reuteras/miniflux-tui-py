@@ -16,7 +16,7 @@
 [![Dependency Review](https://github.com/reuteras/miniflux-tui-py/actions/workflows/dependency-review.yml/badge.svg)](https://github.com/reuteras/miniflux-tui-py/actions/workflows/dependency-review.yml)
 [![Container Builds](https://github.com/reuteras/miniflux-tui-py/actions/workflows/container-image.yml/badge.svg)](https://github.com/reuteras/miniflux-tui-py/actions/workflows/container-image.yml)
 [![SBOM](https://img.shields.io/badge/SBOM-CycloneDX%20%26%20SPDX-5A45FF)](https://github.com/reuteras/miniflux-tui-py/releases/latest)
-[![codecov](https://codecov.io/gh/reuteras/miniflux-tui-py/graph/badge.svg)](https://codecov.io/gh/reuteras/miniflux-tui-py)
+[![Coverage Status](https://coveralls.io/repos/github/reuteras/miniflux-tui-py/badge.svg?branch=main)](https://coveralls.io/github/reuteras/miniflux-tui-py?branch=main)
 [![Documentation](https://img.shields.io/badge/docs-GitHub%20Pages-blue)](https://reuteras.github.io/miniflux-tui-py/)
 [![pre-commit](https://img.shields.io/badge/pre--commit-enabled-brightgreen?logo=pre-commit)](https://github.com/pre-commit/pre-commit)
 [![OpenSSF Scorecard](https://api.securityscorecards.dev/projects/github.com/reuteras/miniflux-tui-py/badge)](https://securityscorecards.dev/viewer/?uri=github.com/reuteras/miniflux-tui-py)
