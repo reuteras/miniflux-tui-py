@@ -5,8 +5,7 @@
     ],
     "semanticCommits": "enabled",
     "commitMessagePrefix": "chore(deps):",
-    "prCreation": "auto",
-    "prConcurrentLimit": 2,
+    "prConcurrentLimit": 10,
     "github-actions": {
         "enabled": true,
         "automerge": false,
@@ -18,9 +17,6 @@
     "npm": {
         "enabled": false
     },
-    "schedule": [
-        "after 10pm on monday"
-    ],
     "packageRules": [
         {
             "description": "Security updates: run immediately/daily",
@@ -55,7 +51,7 @@
             "matchCategories": [
                 "python"
             ],
-            "enabled": false
+            "enabled": true
         },
         {
             "matchDatasources": [
