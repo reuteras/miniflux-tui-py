@@ -1,7 +1,5 @@
 """Entry history screen showing previously read entries."""
 
-from datetime import datetime
-
 from textual.app import ComposeResult
 from textual.binding import Binding
 from textual.containers import VerticalScroll
