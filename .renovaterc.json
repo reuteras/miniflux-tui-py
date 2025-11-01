@@ -1,66 +1,54 @@
 {
     "$schema": "https://docs.renovatebot.com/renovate-schema.json",
     "extends": [
-        "config:recommended"
+        "github>reuteras/github-renovate-config"
     ],
     "semanticCommits": "enabled",
     "commitMessagePrefix": "chore(deps):",
-    "prConcurrentLimit": 10,
-    "github-actions": {
-        "enabled": true,
-        "automerge": false,
-        "pinDigests": true,
-        "major": {
-            "enabled": true
-        }
-    },
     "npm": {
         "enabled": false
     },
     "packageRules": [
         {
-            "description": "Security updates: run immediately/daily",
-            "matchUpdateTypes": [
-                "patch"
-            ],
-            "matchDatasources": [
-                "docker",
-                "github-actions"
-            ],
-            "schedule": [
-                "at any time"
-            ],
-            "groupName": "security-updates"
+            "description": "Disable npm updates (not used in this project)",
+            "matchManagers": ["npm"],
+            "enabled": false
         },
         {
-            "description": "Major version updates: weekly review, no automerge",
-            "matchUpdateTypes": [
-                "major"
-            ],
-            "matchDatasources": [
-                "docker",
-                "github-actions"
-            ],
+            "description": "Security updates for github-actions: run immediately/daily",
+            "matchManagers": ["github-actions"],
+            "matchUpdateTypes": ["patch"],
+            "schedule": ["at any time"],
+            "groupName": "security-updates-github-actions"
+        },
+        {
+            "description": "Major version updates for github-actions: weekly review",
+            "matchManagers": ["github-actions"],
+            "matchUpdateTypes": ["major"],
             "automerge": false,
-            "schedule": [
-                "after 10pm on sunday"
-            ],
-            "groupName": "major-version-updates"
+            "schedule": ["after 10pm on sunday"],
+            "groupName": "major-version-updates-github-actions"
         },
         {
-            "matchCategories": [
-                "python"
-            ],
-            "enabled": true
+            "description": "Security updates for docker: run immediately/daily",
+            "matchDatasources": ["docker"],
+            "matchUpdateTypes": ["patch"],
+            "schedule": ["at any time"],
+            "groupName": "security-updates-docker"
         },
         {
-            "matchDatasources": [
-                "github-tags"
-            ],
+            "description": "Major version updates for docker: weekly review",
+            "matchDatasources": ["docker"],
+            "matchUpdateTypes": ["major"],
+            "automerge": false,
+            "schedule": ["after 10pm on sunday"],
+            "groupName": "major-version-updates-docker"
+        },
+        {
+            "description": "Restrict slsa-github-generator to v1.x only",
+            "matchDatasources": ["github-tags"],
             "allowedVersions": "<=2.0.0",
-            "matchPackageNames": [
-                "/slsa-framework/slsa-github-generator/"
-            ]
+            "matchPackageNames": ["/slsa-framework/slsa-github-generator/"]
         }
     ]
 }
