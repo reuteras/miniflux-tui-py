@@ -137,7 +137,7 @@ jobs:
         run: |
           # Xenon enforces complexity limits
           # -a: Average complexity threshold (A = excellent)
-          # -m: Modules threshold (B = good)  
+          # -m: Modules threshold (B = good)
           # -b: Blocks threshold (C = acceptable, allows up to CC 20)
           # We set lenient thresholds initially and can tighten over time
           uv run xenon --max-average B --max-modules B --max-absolute C miniflux_tui
