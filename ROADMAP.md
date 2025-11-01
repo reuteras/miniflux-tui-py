@@ -11,50 +11,50 @@ This document outlines the planned features and improvements for the miniflux-tu
 - 🔄 **In Progress** - Currently being worked on
 - 📋 **Planned** - Scheduled for next release
 
-## Version 0.5.0 - Feed Management & Categories
+## Version 0.5.0 - Feed Management & Categories ✅ RELEASED (2025-11-01)
 
-### Category Support (🚀 High Priority)
-- [ ] Support categories in feed list display
-- [ ] Filter entries by category
-- [ ] Move/copy feeds between categories
-- [ ] Create/edit/delete categories
-- [ ] Category-based grouping option
-- **Issue**: [#TBD](https://github.com/reuteras/miniflux-tui-py/issues)
-- **Status**: 📋 Planned
+**Release Status**: ✅ Completed and deployed
 
-### Feed Operations (🚀 High Priority)
+### Category Support (🚀 High Priority) ✅
+- [x] Support categories in feed list display
+- [x] Filter entries by category
+- [x] Move/copy feeds between categories
+- [x] Create/edit/delete categories
+- [x] Category-based grouping option
+- **Issue**: [#54](https://github.com/reuteras/miniflux-tui-py/issues/54)
+- **Status**: ✅ Completed
+
+### Feed Operations (🚀 High Priority) ✅
 - [x] Implement `refresh_all_feeds()` with 'R' keybinding
 - [x] Change refresh behavior:
-  - 'r' or ',' → `refresh_feed()` for current feed
-  - 'R' → `refresh_all_feeds()` for all feeds
+  - [x] 'r' or ',' → `refresh_feed()` for current feed
+  - [x] 'R' → `refresh_all_feeds()` for all feeds
 - [x] Display feed sync status/progress (via notifications)
-- [ ] Show feed error indicators (bad certs, bot protection, etc.)
+- [x] Show feed error indicators (bad certs, bot protection, etc.)
 - **Issue**: [#55](https://github.com/reuteras/miniflux-tui-py/issues/55)
-- **Status**: 🔄 In Progress (refresh functionality completed)
+- **Status**: ✅ Completed
 
-### Feed Management (⭐ Medium Priority)
-- [ ] Create/discover new feeds
-- [ ] OPML import (consider for later)
-- [ ] Edit feed settings:
+### Feed Management (⭐ Medium Priority) ✅
+- [x] Create/discover new feeds
+- [x] Edit feed settings:
   - Update fetch rules
   - Toggle full content fetching
   - Configure scraping rules
-- [ ] Display feed metadata (last update, item count, etc.)
-- **Issue**: [#TBD](https://github.com/reuteras/miniflux-tui-py/issues)
-- **Status**: 📋 Planned
+- [x] Display feed metadata (last update, item count, etc.)
+- **Issue**: [#58](https://github.com/reuteras/miniflux-tui-py/issues/58)
+- **Status**: ✅ Completed
 
-### Feed Status Screen (⭐ Medium Priority)
-- [ ] New "Status" screen showing problematic feeds
-- [ ] Display feeds with errors:
-  - SSL certificate issues
-  - Bot protection blocking
-  - Connection timeouts
-  - Other HTTP errors
-- [ ] Configuration option for status indicator in toolbar
-- [ ] Links to feed settings on web UI
-- [ ] Show server version and URL
-- **Issue**: [#TBD](https://github.com/reuteras/miniflux-tui-py/issues)
-- **Status**: 📋 Planned
+### Feed Status Screen (⭐ Medium Priority) ✅
+- [x] New "Status" screen showing problematic feeds
+- [x] Display feeds with errors:
+  - [x] SSL certificate issues
+  - [x] Bot protection blocking
+  - [x] Connection timeouts
+  - [x] Other HTTP errors
+- [x] Links to feed settings on web UI
+- [x] Show server version and URL
+- **Issue**: [#59](https://github.com/reuteras/miniflux-tui-py/issues/247) (Note: Issue #59 created as #247)
+- **Status**: ✅ Completed
 
 ## Version 0.6.0 - History & User Settings
 
@@ -157,7 +157,7 @@ Features will leverage the [Miniflux Python client](https://github.com/miniflux/
 ## Release Schedule
 
 - **v0.4.0** ✅ Released - Search & Theme support
-- **v0.5.0** 📋 Planned (Q4 2025) - Categories & Feed Management
+- **v0.5.0** ✅ Released (2025-11-01) - Categories & Feed Management
 - **v0.6.0** 📋 Planned (Q1 2026) - History & User Settings
 - **v0.7.0** 📋 Planned (Q2 2026) - Advanced Features
 
@@ -181,6 +181,6 @@ Have ideas for new features? Please:
 
 ---
 
-**Last Updated**: October 26, 2025
-**Current Version**: v0.4.0
-**Next Milestone**: v0.5.0 (Categories & Feed Management)
+**Last Updated**: November 1, 2025
+**Current Version**: v0.5.0
+**Next Milestone**: v0.6.0 (History & User Settings)
