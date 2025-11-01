@@ -34,6 +34,7 @@ class EntryReaderScreen(Screen):
         Binding("f", "fetch_original", "Fetch Original"),
         Binding("question_mark", "show_help", "Help"),
         Binding("i", "show_status", "Status"),
+        Binding("shift+s", "show_settings", "Settings"),
         Binding("q", "quit", "Quit"),
         Binding("escape", "back", "Back", show=False),
     ]
@@ -343,6 +344,12 @@ class EntryReaderScreen(Screen):
         app = self._resolve_app()
         if app:
             app.push_screen("status")
+
+    def action_show_settings(self):
+        """Show user settings and integrations."""
+        app = self._resolve_app()
+        if app:
+            app.push_screen("settings")
 
     def action_quit(self):
         """Quit the application."""

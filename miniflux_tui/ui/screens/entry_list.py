@@ -168,6 +168,7 @@ class EntryListScreen(Screen):
         Binding("slash", "search", "Search"),
         Binding("question_mark", "show_help", "Help"),
         Binding("i", "show_status", "Status"),
+        Binding("shift+s", "show_settings", "Settings"),
         Binding("q", "quit", "Quit"),
     ]
 
@@ -1384,6 +1385,10 @@ class EntryListScreen(Screen):
     def action_show_status(self):
         """Show system status and feed health."""
         self.app.push_screen("status")
+
+    def action_show_settings(self):
+        """Show user settings and integrations."""
+        self.app.push_screen("settings")
 
     def action_quit(self):
         """Quit the application."""
