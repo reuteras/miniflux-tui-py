@@ -262,48 +262,50 @@ class EntryListScreen(Screen):
 
     def on_list_view_selected(self, event: ListView.Selected) -> None:
         """Handle ListView selection (Enter key)."""
-        # Get the selected item
         if event.item and isinstance(event.item, FeedHeaderItem):
-            # When Enter is pressed on a feed header in grouped mode, open the first entry
-            feed_title = event.item.feed_title
-            # Find the first visible (or any) entry in this feed
-            for entry in self.sorted_entries:
-                if entry.feed.title == feed_title:
-                    # Save the feed of the current entry for position restoration
-                    self.last_highlighted_feed = feed_title
-                    self.last_highlighted_entry_id = entry.id
-
-                    # Find the index of this entry in the sorted entry list
-                    entry_index = 0
-                    for i, e in enumerate(self.sorted_entries):
-                        if e.id == entry.id:
-                            entry_index = i
-                            break
-
-                    # Open entry reader screen with navigation context
-                    if isinstance(self.app, self.app.__class__) and hasattr(self.app, "push_entry_reader"):
-                        self.app.push_entry_reader(entry=entry, entry_list=self.sorted_entries, current_index=entry_index)
-                    return
-
+            # Open first entry in the selected feed
+            self._open_first_entry_by_feed(event.item.feed_title)
+        elif event.item and isinstance(event.item, CategoryHeaderItem):
+            # Open first entry in the selected category
+            self._open_first_entry_by_category(event.item.category_title)
         elif event.item and isinstance(event.item, EntryListItem):
-            # Save the feed of the current entry for position restoration
-            self.last_highlighted_feed = event.item.entry.feed.title
-            self.last_highlighted_entry_id = event.item.entry.id
+            # Open the selected entry directly
+            self._open_entry(event.item.entry)
 
-            # Save the cursor index in the list view
-            if self.list_view and self.list_view.index is not None:
-                self.last_cursor_index = self.list_view.index
+    def _open_first_entry_by_feed(self, feed_title: str) -> None:
+        """Find and open the first entry in a feed."""
+        for entry in self.sorted_entries:
+            if entry.feed.title == feed_title:
+                self._open_entry(entry)
+                return
 
-            # Find the index of this entry in the sorted entry list
-            entry_index = 0
-            for i, entry in enumerate(self.sorted_entries):
-                if entry.id == event.item.entry.id:
-                    entry_index = i
-                    break
+    def _open_first_entry_by_category(self, category_title: str) -> None:
+        """Find and open the first entry in a category."""
+        for entry in self.sorted_entries:
+            if self._get_category_title(entry.feed.category_id) == category_title:
+                self._open_entry(entry)
+                return
 
-            # Open entry reader screen with navigation context
-            if isinstance(self.app, self.app.__class__) and hasattr(self.app, "push_entry_reader"):
-                self.app.push_entry_reader(entry=event.item.entry, entry_list=self.sorted_entries, current_index=entry_index)
+    def _open_entry(self, entry: Entry) -> None:
+        """Open an entry in the entry reader screen."""
+        # Save the entry for position restoration
+        self.last_highlighted_feed = entry.feed.title
+        self.last_highlighted_entry_id = entry.id
+
+        # Save the cursor index in the list view
+        if self.list_view and self.list_view.index is not None:
+            self.last_cursor_index = self.list_view.index
+
+        # Find the index of this entry in the sorted entry list
+        entry_index = 0
+        for i, e in enumerate(self.sorted_entries):
+            if e.id == entry.id:
+                entry_index = i
+                break
+
+        # Open entry reader screen with navigation context
+        if isinstance(self.app, self.app.__class__) and hasattr(self.app, "push_entry_reader"):
+            self.app.push_entry_reader(entry=entry, entry_list=self.sorted_entries, current_index=entry_index)
 
     def _populate_list(self):
         """Populate the list with sorted and filtered entries."""
