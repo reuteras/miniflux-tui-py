@@ -153,9 +153,11 @@ class MinifluxTUI(App):
         # Push initial screen
         self.push_screen("entry_list")
 
-        # Load categories and entries after screen is shown
+        # Load categories, feeds, and entries after screen is shown
+        # Order matters: feeds are needed to enrich entries with category info
         self.notify("Loading data...")
         await self.load_categories()
+        await self.load_feeds()
         await self.load_entries()
 
     def _get_entry_list_screen(self) -> EntryListScreen | None:
@@ -192,6 +194,31 @@ class MinifluxTUI(App):
             self.notify(f"Error loading categories: {e}", severity="error")
             self.log(f"Full error:\n{error_details}")
 
+    def _enrich_entries_with_category_info(self, entries: list) -> list:
+        """
+        Enrich entries with category information from loaded feeds.
+
+        The entries API endpoint doesn't include category_id in feed data,
+        so we merge it from the separately loaded feeds.
+
+        Args:
+            entries: List of entries to enrich
+
+        Returns:
+            List of entries with category information populated
+        """
+        # Create a feed_id -> category_id lookup from loaded feeds
+        feed_category_map: dict[int, int | None] = {}
+        for feed in self.feeds:
+            feed_category_map[feed.id] = feed.category_id
+
+        # Enrich each entry's feed with category information
+        for entry in entries:
+            if entry.feed_id in feed_category_map:
+                entry.feed.category_id = feed_category_map[entry.feed_id]
+
+        return entries
+
     async def load_entries(self, view: str = "unread") -> None:
         """
         Load entries from Miniflux API.
@@ -212,6 +239,10 @@ class MinifluxTUI(App):
                 self.entries = await self.client.get_unread_entries(limit=DEFAULT_ENTRY_LIMIT)
                 self.current_view = "unread"
                 self.notify(f"Loaded {len(self.entries)} unread entries")
+
+            # Enrich entries with category information from loaded feeds
+            if self.feeds:
+                self.entries = self._enrich_entries_with_category_info(self.entries)
 
             # Update the entry list screen if it exists
             entry_list_screen = self._get_entry_list_screen()

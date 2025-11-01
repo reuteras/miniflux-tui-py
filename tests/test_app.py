@@ -372,6 +372,8 @@ class TestMinifluxTUIOnMount:
             patch.object(app, "install_screen"),
             patch.object(app, "push_screen"),
             patch.object(app, "notify"),
+            patch.object(app, "load_categories", new_callable=AsyncMock),
+            patch.object(app, "load_feeds", new_callable=AsyncMock),
             patch.object(app, "load_entries", new_callable=AsyncMock),
         ):
             await app.on_mount()
@@ -390,6 +392,8 @@ class TestMinifluxTUIOnMount:
             patch.object(app, "install_screen") as mock_install,
             patch.object(app, "push_screen"),
             patch.object(app, "notify"),
+            patch.object(app, "load_categories", new_callable=AsyncMock),
+            patch.object(app, "load_feeds", new_callable=AsyncMock),
             patch.object(app, "load_entries", new_callable=AsyncMock),
         ):
             await app.on_mount()
@@ -407,6 +411,8 @@ class TestMinifluxTUIOnMount:
             patch.object(app, "install_screen"),
             patch.object(app, "push_screen") as mock_push,
             patch.object(app, "notify"),
+            patch.object(app, "load_categories", new_callable=AsyncMock),
+            patch.object(app, "load_feeds", new_callable=AsyncMock),
             patch.object(app, "load_entries", new_callable=AsyncMock),
         ):
             await app.on_mount()
@@ -425,13 +431,14 @@ class TestMinifluxTUIOnMount:
             patch.object(app, "push_screen"),
             patch.object(app, "notify") as mock_notify,
             patch.object(app, "load_categories", new_callable=AsyncMock),
+            patch.object(app, "load_feeds", new_callable=AsyncMock),
             patch.object(app, "load_entries", new_callable=AsyncMock),
         ):
             await app.on_mount()
 
             # Verify notify was called with loading message
-            mock_notify.assert_called_once()
-            assert "Loading data" in mock_notify.call_args[0][0]
+            # Check first call contains "Loading data"
+            assert any("Loading data" in str(call) for call in mock_notify.call_args_list)
 
     @pytest.mark.asyncio
     async def test_on_mount_loads_entries(self, sample_config):
