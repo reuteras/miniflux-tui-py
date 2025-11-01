@@ -120,7 +120,7 @@ jobs:
 
       - name: Install radon and xenon
         run: |
-          uv pip install --system radon xenon
+          uv pip install --break-system-packages radon xenon
 
       - name: Check cyclomatic complexity
         run: |
