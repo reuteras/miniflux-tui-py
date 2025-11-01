@@ -194,6 +194,33 @@ class MinifluxTUI(App):
             self.notify(f"Error loading categories: {e}", severity="error")
             self.log(f"Full error:\n{error_details}")
 
+    async def _enrich_feeds_with_category_details(self) -> None:
+        """Fetch individual feed details to get category_id if bulk fetch didn't include it.
+
+        When get_feeds() doesn't return category_id, try fetching individual feeds.
+        This is a fallback for certain Miniflux API versions or configurations.
+        """
+        if not self.client or not self.feeds:
+            self.log("Skipping feed detail enrichment: no client or feeds")
+            return
+
+        self.log(f"Fetching details for {len(self.feeds)} feeds...")
+        enriched_count = 0
+
+        for feed in self.feeds:
+            try:
+                # Fetch individual feed details which might have more complete info
+                detailed_feed = await self.client.get_feed(feed.id)
+                # Update the feed with detailed info
+                if detailed_feed.category_id is not None:
+                    feed.category_id = detailed_feed.category_id
+                    enriched_count += 1
+                    self.log(f"  ✓ Feed {feed.id}: enriched category_id = {feed.category_id}")
+            except Exception as e:
+                self.log(f"  ✗ Feed {feed.id}: failed to fetch details - {e}")
+
+        self.log(f"Enriched {enriched_count}/{len(self.feeds)} feeds with detailed info")
+
     def _enrich_entries_with_category_info(self, entries: list) -> list:
         """
         Enrich entries with category information from loaded feeds.
@@ -328,8 +355,18 @@ class MinifluxTUI(App):
 
             # Debug: Log feed details to help diagnose category_id issues
             self.log("DEBUG: Feed details:")
+            has_category_ids = False
             for i, feed in enumerate(self.feeds):
                 self.log(f"  Feed {i}: ID={feed.id}, Title={feed.title}, category_id={feed.category_id}")
+                if feed.category_id is not None:
+                    has_category_ids = True
+
+            # Check if feeds have category_id - if not, try to fetch individual feed details
+            if not has_category_ids:
+                self.log("WARNING: No feeds have category_id set. Attempting to fetch individual feed details...")
+                await self._enrich_feeds_with_category_details()
+            else:
+                self.log("✓ Feeds loaded with category information")
         except Exception as e:
             error_details = traceback.format_exc()
             self.notify(f"Error loading feeds: {e}", severity="error")
