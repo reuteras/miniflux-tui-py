@@ -431,19 +431,19 @@ jobs:
 
 ## FAQ
 
-**Q: Will I lose coverage history switching from Codecov?**  
+**Q: Will I lose coverage history switching from Codecov?**
 A: Coveralls will start fresh, but GitHub Pages will maintain historical reports as commits.
 
-**Q: Is Coveralls really unlimited?**  
+**Q: Is Coveralls really unlimited?**
 A: Yes, for public/open source repositories. No rate limits, no usage caps.
 
-**Q: What about private repos?**  
+**Q: What about private repos?**
 A: For private repos, use the self-hosted GitHub Pages approach - completely free.
 
-**Q: Can I use multiple coverage services?**  
+**Q: Can I use multiple coverage services?**
 A: Yes! You can upload to both Coveralls and self-host. No conflicts.
 
-**Q: How long does migration take?**  
+**Q: How long does migration take?**
 A: Coverage migration: 1-2 hours. Full stack migration: 1-2 weeks testing everything.
 
 ## Support
