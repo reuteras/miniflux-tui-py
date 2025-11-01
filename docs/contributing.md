@@ -161,6 +161,33 @@ def test_entry_properties():
     assert entry.is_unread is True
 ```
 
+### Test Coverage Requirements
+
+- **Minimum coverage threshold**: 60% line coverage
+- **Target coverage**: 75%+ for maintainability
+- Coverage is checked automatically in CI/CD
+- PRs that reduce coverage may be rejected
+
+Check local coverage:
+```bash
+uv run pytest tests --cov=miniflux_tui --cov-report=term-missing
+```
+
+### Python Version Support
+
+miniflux-tui-py is tested on:
+- **Supported versions**: Python 3.11, 3.12, 3.13, 3.14
+- **Preview versions**: Python 3.15 (optional, may fail)
+- **All platforms**: Linux (Ubuntu), macOS, Windows
+
+Tests run automatically on all combinations in CI/CD. If your changes have version-specific behavior, test locally:
+
+```bash
+# Test with specific Python version
+uv python install 3.13
+uv run -p 3.13 pytest tests
+```
+
 ## Updating Documentation
 
 Documentation is built with MkDocs and located in the `docs/` folder.

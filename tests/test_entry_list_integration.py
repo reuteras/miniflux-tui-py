@@ -218,7 +218,7 @@ class TestEntryListScreenGrouping:
             initial_group = screen.group_by_feed
 
             # Toggle grouping
-            screen.action_toggle_group()
+            screen.action_toggle_group_feed()
 
             # State should have flipped
             assert screen.group_by_feed != initial_group
@@ -232,8 +232,8 @@ class TestEntryListScreenGrouping:
             initial_group = screen.group_by_feed
 
             # Toggle twice
-            screen.action_toggle_group()
-            screen.action_toggle_group()
+            screen.action_toggle_group_feed()
+            screen.action_toggle_group_feed()
 
             # Should be back to original
             assert screen.group_by_feed == initial_group

@@ -251,6 +251,29 @@ git push origin --delete feat/your-feature-name
 - ✅ Wait for CI/CD to pass
 - ✅ Delete branch after merge
 
+**⚠️ CRITICAL: SSH SIGNING WITH 1PASSWORD**
+
+**If commit signing fails or doesn't work, STOP and WAIT immediately. Do NOT proceed.**
+
+This project uses 1Password for SSH commit signing approval. When you attempt to commit:
+- If signing works: 1Password will prompt for approval, and the commit will be signed
+- If signing fails: It means the maintainer (Peter) is away or busy and cannot approve
+- If 1Password is unreachable: WAIT - do not attempt to work around this
+
+**Never:**
+- ❌ Try to disable signing (commit.gpgsign=false)
+- ❌ Try to commit without signing
+- ❌ Use alternate signing methods
+- ❌ Attempt any workaround
+
+**If you get signing errors:**
+1. Stop all work
+2. Wait for the maintainer to come back online
+3. Check that 1Password SSH Agent is running (macOS: System Preferences → Password Manager → SSH Agent)
+4. Retry the commit
+
+This ensures all commits are verified and trusted.
+
 **Why this workflow?**
 - Ensures code quality through automated CI checks (no breaking commits)
 - Enables peer review and knowledge sharing

@@ -116,6 +116,7 @@ class MinifluxTUI(App):
         self.entries: list[Entry] = []
         self.categories: list[Category] = []
         self.feeds: list[Feed] = []
+        self.entry_category_map: dict[int, int] = {}  # Maps entry_id → category_id
         self.current_view = "unread"  # or "starred"
         self._entry_list_screen_cls: type[EntryListScreen] | None = None
         self._status_screen_cls: type[StatusScreen] | None = None
@@ -153,9 +154,16 @@ class MinifluxTUI(App):
         # Push initial screen
         self.push_screen("entry_list")
 
-        # Load categories and entries after screen is shown
+        # Load categories, feeds, and entries after screen is shown
+        # Order matters: categories are needed to build entry→category mapping
         self.notify("Loading data...")
         await self.load_categories()
+        await self.load_feeds()
+
+        # Build category mapping using category API (better than feed-based approach)
+        # This creates a mapping of entry_id → category_id that we'll use later
+        self.entry_category_map = await self._build_entry_category_mapping()
+
         await self.load_entries()
 
     def _get_entry_list_screen(self) -> EntryListScreen | None:
@@ -192,6 +200,66 @@ class MinifluxTUI(App):
             self.notify(f"Error loading categories: {e}", severity="error")
             self.log(f"Full error:\n{error_details}")
 
+    async def _build_entry_category_mapping(self) -> dict[int, int]:
+        """Build a mapping of entry_id → category_id using the category API.
+
+        Since the feeds endpoint doesn't include category_id, we use a different
+        approach: fetch entries from each category and build a mapping.
+
+        Returns:
+            Dictionary mapping entry_id to category_id
+        """
+        if not self.client or not self.categories:
+            self.log("Skipping category mapping: no client or categories")
+            return {}
+
+        entry_category_map: dict[int, int] = {}
+        self.log(f"Building entry→category mapping from {len(self.categories)} categories...")
+
+        for category in self.categories:
+            try:
+                # Fetch all entries in this category
+                category_entries = await self.client.get_category_entries(category.id, limit=10000)
+                self.log(f"  Category {category.id} ({category.title}): {len(category_entries)} entries")
+
+                # Map each entry to this category
+                for entry in category_entries:
+                    entry_category_map[entry.id] = category.id
+                    self.log(f"    ✓ Entry {entry.id} → Category {category.id}")
+
+            except Exception as e:
+                self.log(f"  ✗ Category {category.id}: failed to fetch entries - {e}")
+
+        self.log(f"Built mapping for {len(entry_category_map)} entries across categories")
+        return entry_category_map
+
+    def _enrich_entries_with_category_mapping(self, entries: list, entry_category_map: dict[int, int]) -> list:
+        """
+        Enrich entries with category_id using a pre-built entry→category mapping.
+
+        Args:
+            entries: List of entries to enrich
+            entry_category_map: Dictionary mapping entry_id to category_id
+
+        Returns:
+            List of entries with category information populated
+        """
+        self.log(f"Applying category mapping to {len(entries)} entries")
+        self.log(f"Entry→category mapping has {len(entry_category_map)} entries")
+
+        enriched_count = 0
+        for entry in entries:
+            if entry.id in entry_category_map:
+                category_id = entry_category_map[entry.id]
+                entry.feed.category_id = category_id
+                enriched_count += 1
+                self.log(f"  ✓ Entry {entry.id}: set category_id = {category_id}")
+            else:
+                self.log(f"  - Entry {entry.id}: not in any category")
+
+        self.log(f"Applied category mapping to {enriched_count}/{len(entries)} entries")
+        return entries
+
     async def load_entries(self, view: str = "unread") -> None:
         """
         Load entries from Miniflux API.
@@ -212,6 +280,10 @@ class MinifluxTUI(App):
                 self.entries = await self.client.get_unread_entries(limit=DEFAULT_ENTRY_LIMIT)
                 self.current_view = "unread"
                 self.notify(f"Loaded {len(self.entries)} unread entries")
+
+            # Enrich entries with category information using the mapping
+            if self.entry_category_map:
+                self.entries = self._enrich_entries_with_category_mapping(self.entries, self.entry_category_map)
 
             # Update the entry list screen if it exists
             entry_list_screen = self._get_entry_list_screen()
@@ -257,6 +329,8 @@ class MinifluxTUI(App):
 
     async def action_refresh_entries(self) -> None:
         """Refresh entries from API."""
+        # Rebuild category mapping and reload entries
+        self.entry_category_map = await self._build_entry_category_mapping()
         await self.load_entries(self.current_view)
         self.notify("Entries refreshed")
 
@@ -271,7 +345,11 @@ class MinifluxTUI(App):
         self.notify("Showing starred entries")
 
     async def load_feeds(self) -> None:
-        """Load feeds from Miniflux API."""
+        """Load feeds from Miniflux API.
+
+        Note: Category information is obtained via the category API, not from
+        individual feeds (which don't expose category_id on all Miniflux versions).
+        """
         if not self.client:
             self.notify("API client not initialized", severity="error")
             return
@@ -279,6 +357,7 @@ class MinifluxTUI(App):
         try:
             self.feeds = await self.client.get_feeds()
             self.log(f"Loaded {len(self.feeds)} feeds")
+            # Note: Category information will be obtained from category API via _build_entry_category_mapping()
         except Exception as e:
             error_details = traceback.format_exc()
             self.notify(f"Error loading feeds: {e}", severity="error")

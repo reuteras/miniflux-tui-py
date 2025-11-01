@@ -369,3 +369,23 @@ class MinifluxClient:
         # Fallback for dict response with 'feeds' key
         feeds_data = response.get("feeds", []) if isinstance(response, dict) else []
         return [Feed.from_dict(feed) for feed in feeds_data]
+
+    async def get_category_entries(self, category_id: int, **kwargs) -> list[Entry]:
+        """Get all entries for a specific category with retry logic.
+
+        This is useful for building a category_id → entry mapping when the
+        feeds endpoint doesn't include category_id information.
+
+        Args:
+            category_id: ID of the category to fetch entries for
+            **kwargs: Additional parameters (limit, offset, status, etc.)
+
+        Returns:
+            List of Entry objects in the category
+        """
+        response = await self._call_with_retry(self.client.get_category_entries, category_id, **kwargs)
+        # Handle both dict and list responses
+        if isinstance(response, list):
+            return [Entry.from_dict(entry) for entry in response]
+        entries_data = response.get("entries", []) if isinstance(response, dict) else []
+        return [Entry.from_dict(entry) for entry in entries_data]
