@@ -134,6 +134,7 @@ class CategoryManagementScreen(Screen):
             if isinstance(highlighted_child, CategoryListItem):
                 return highlighted_child.category
         except (IndexError, AttributeError):
+            # If the list is empty or the child cannot be accessed, return None
             pass
 
         return None

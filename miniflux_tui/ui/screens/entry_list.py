@@ -46,13 +46,41 @@ class EntryListItem(ListItem):
 class FeedHeaderItem(ListItem):
     """Custom list item for feed header with fold/unfold capability."""
 
-    def __init__(self, feed_title: str, is_expanded: bool = True):
+    def __init__(
+        self,
+        feed_title: str,
+        is_expanded: bool = True,
+        category_title: str | None = None,
+        has_errors: bool = False,
+        feed_disabled: bool = False,
+    ):
         self.feed_title = feed_title
         self.is_expanded = is_expanded
+        self.category_title = category_title
+        self.has_errors = has_errors
+        self.feed_disabled = feed_disabled
 
-        # Format header with fold indicator
+        # Format header with fold indicator, category, and error indicators
         fold_icon = FOLD_EXPANDED if is_expanded else FOLD_COLLAPSED
-        header_text = f"[bold]{fold_icon} {feed_title}[/bold]"
+        error_indicators = []
+
+        if feed_disabled:
+            error_indicators.append("[red]⊘ DISABLED[/red]")
+        elif has_errors:
+            error_indicators.append("[yellow]⚠ ERRORS[/yellow]")
+
+        error_text = " ".join(error_indicators)
+
+        if category_title:
+            if error_text:
+                header_text = f"[bold]{fold_icon} {feed_title}[/bold] [dim]({category_title})[/dim] {error_text}"
+            else:
+                header_text = f"[bold]{fold_icon} {feed_title}[/bold] [dim]({category_title})[/dim]"
+        elif error_text:
+            header_text = f"[bold]{fold_icon} {feed_title}[/bold] {error_text}"
+        else:
+            header_text = f"[bold]{fold_icon} {feed_title}[/bold]"
+
         label = Label(header_text, classes="feed-header")
 
         # Initialize with the label
@@ -62,7 +90,25 @@ class FeedHeaderItem(ListItem):
         """Toggle the fold state and update display."""
         self.is_expanded = not self.is_expanded
         fold_icon = FOLD_EXPANDED if self.is_expanded else FOLD_COLLAPSED
-        header_text = f"[bold]{fold_icon} {self.feed_title}[/bold]"
+
+        error_indicators = []
+        if self.feed_disabled:
+            error_indicators.append("[red]⊘ DISABLED[/red]")
+        elif self.has_errors:
+            error_indicators.append("[yellow]⚠ ERRORS[/yellow]")
+
+        error_text = " ".join(error_indicators)
+
+        if self.category_title:
+            if error_text:
+                header_text = f"[bold]{fold_icon} {self.feed_title}[/bold] [dim]({self.category_title})[/dim] {error_text}"
+            else:
+                header_text = f"[bold]{fold_icon} {self.feed_title}[/bold] [dim]({self.category_title})[/dim]"
+        elif error_text:
+            header_text = f"[bold]{fold_icon} {self.feed_title}[/bold] {error_text}"
+        else:
+            header_text = f"[bold]{fold_icon} {self.feed_title}[/bold]"
+
         # Update the label
         if self.children:
             cast(Label, self.children[0]).update(header_text)
@@ -151,6 +197,7 @@ class EntryListScreen(Screen):
         self.group_collapsed = group_collapsed  # Start feeds collapsed in grouped mode
         self.filter_unread_only = False  # Filter to show only unread entries
         self.filter_starred_only = False  # Filter to show only starred entries
+        self.filter_category_id: int | None = None  # Filter to show entries from selected category only
         self.search_active = False  # Flag to indicate search is active
         self.search_term = ""  # Current search term
         self.list_view: ListView | None = None
@@ -524,8 +571,9 @@ class EntryListScreen(Screen):
         """Apply active filters to entries.
 
         Filters are applied in order:
-        1. Search filter (if active)
-        2. Status filters (unread/starred - mutually exclusive)
+        1. Category filter (if set)
+        2. Search filter (if active)
+        3. Status filters (unread/starred - mutually exclusive)
 
         Args:
             entries: List of entries to filter
@@ -533,7 +581,11 @@ class EntryListScreen(Screen):
         Returns:
             Filtered list of entries
         """
-        # Apply search filter first if active
+        # Apply category filter first if set
+        if self.filter_category_id is not None:
+            entries = [e for e in entries if e.feed.category_id == self.filter_category_id]
+
+        # Apply search filter if active
         if self.search_active and self.search_term:
             entries = self._filter_search(entries)
 
@@ -544,7 +596,7 @@ class EntryListScreen(Screen):
         if self.filter_starred_only:
             # Show only starred entries
             return [e for e in entries if e.starred]
-        # No status filters active, return all entries (after search filter if applied)
+        # No status filters active, return all entries (after other filters if applied)
         return entries
 
     def _filter_search(self, entries: list[Entry]) -> list[Entry]:
@@ -561,7 +613,7 @@ class EntryListScreen(Screen):
         search_lower = self.search_term.lower()
         return [e for e in entries if search_lower in e.title.lower() or search_lower in e.content.lower()]
 
-    def _add_feed_header_if_needed(self, current_feed: str, first_feed_ref: list) -> None:
+    def _add_feed_header_if_needed(self, current_feed: str, first_feed_ref: list, entry: Entry | None = None) -> None:
         """Add a feed header if transitioning to a new feed.
 
         Initializes fold state and creates a FeedHeaderItem for the new feed.
@@ -569,6 +621,7 @@ class EntryListScreen(Screen):
         Args:
             current_feed: Title of the current feed
             first_feed_ref: List with one element to track first feed (mutable ref pattern)
+            entry: Entry object to extract category information from
         """
         # Track first feed for default positioning
         if first_feed_ref[0] is None:
@@ -582,9 +635,24 @@ class EntryListScreen(Screen):
             # Default: expanded if not set, unless group_collapsed is True
             self.feed_fold_state[current_feed] = not self.group_collapsed
 
+        # Get category title and error status if entry is provided
+        category_title = None
+        has_errors = False
+        feed_disabled = False
+        if entry is not None:
+            category_title = self._get_category_title(entry.feed.category_id)
+            has_errors = entry.feed.has_errors
+            feed_disabled = entry.feed.disabled
+
         # Create and add a fold-aware header item
         is_expanded = self.feed_fold_state[current_feed]
-        header = FeedHeaderItem(current_feed, is_expanded=is_expanded)
+        header = FeedHeaderItem(
+            current_feed,
+            is_expanded=is_expanded,
+            category_title=category_title,
+            has_errors=has_errors,
+            feed_disabled=feed_disabled,
+        )
         self.feed_header_map[current_feed] = header
         self.list_view.append(header)
 
@@ -623,7 +691,7 @@ class EntryListScreen(Screen):
             # Add feed header if this is a new feed
             if current_feed != entry.feed.title:
                 current_feed = entry.feed.title
-                self._add_feed_header_if_needed(current_feed, first_feed)
+                self._add_feed_header_if_needed(current_feed, first_feed, entry)
 
             # Add the entry with appropriate visibility
             self._add_entry_with_visibility(entry)
@@ -1098,6 +1166,42 @@ class EntryListScreen(Screen):
             self.filter_unread_only = False
             self.filter_starred_only = False
             self._populate_list()
+
+    def action_clear_filters(self) -> None:
+        """Clear all active filters and show all entries.
+
+        Clears category, search, unread, and starred filters.
+        """
+        self.filter_category_id = None
+        self.filter_unread_only = False
+        self.filter_starred_only = False
+        self.search_active = False
+        self.search_term = ""
+        self._populate_list()
+        self.notify("All filters cleared")
+
+    def set_category_filter(self, category_id: int | None) -> None:
+        """Set category filter to show entries from a specific category.
+
+        Args:
+            category_id: ID of the category to filter by, or None to show all entries
+        """
+        self.filter_category_id = category_id
+        self.filter_unread_only = False
+        self.filter_starred_only = False
+        self.search_active = False
+        self.search_term = ""
+        self._populate_list()
+
+        # Find category name for notification
+        category_name = "All entries"
+        if category_id is not None:
+            for cat in self.categories:
+                if cat.id == category_id:
+                    category_name = cat.title
+                    break
+
+        self.notify(f"Filtered to: {category_name}")
 
     def action_search(self):
         """Clear current search filter.

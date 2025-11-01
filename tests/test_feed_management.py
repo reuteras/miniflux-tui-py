@@ -1,5 +1,7 @@
 """Tests for FeedManagementScreen."""
 
+import asyncio
+
 from textual.app import App
 from textual.screen import Screen
 from textual.widgets import ListView
@@ -517,3 +519,22 @@ class TestFeedManagementScreenMounted:
         assert callable(screen.action_view_details)
         # Verify it handles no selection gracefully
         screen.list_view = None
+
+
+class TestFeedManagementAsyncMethods:
+    """Test that async methods exist and are properly defined."""
+
+    def test_create_feed_is_async(self) -> None:
+        """Test that _create_feed is an async method."""
+        screen = FeedManagementScreen()
+        assert asyncio.iscoroutinefunction(screen._create_feed)
+
+    def test_action_refresh_feed_is_async(self) -> None:
+        """Test that action_refresh_feed is an async method."""
+        screen = FeedManagementScreen()
+        assert asyncio.iscoroutinefunction(screen.action_refresh_feed)
+
+    def test_do_delete_feed_is_async(self) -> None:
+        """Test that _do_delete_feed is an async method."""
+        screen = FeedManagementScreen()
+        assert asyncio.iscoroutinefunction(screen._do_delete_feed)
