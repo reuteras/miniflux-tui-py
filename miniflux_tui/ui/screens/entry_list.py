@@ -161,7 +161,7 @@ class EntryListScreen(Screen):
         Binding("left", "collapse_fold", "Collapse Feed/Category", show=False),
         Binding("right", "expand_fold", "Expand Feed/Category", show=False),
         Binding("r", "refresh", "Refresh Current Feed"),
-        Binding("comma", "refresh", "Refresh Current Feed", show=False),
+        Binding("comma", "sync_entries", "Sync Entries", show=False),
         Binding("shift+r", "refresh_all_feeds", "Refresh All Feeds"),
         Binding("u", "show_unread", "Unread"),
         Binding("t", "show_starred", "Starred"),
@@ -1264,6 +1264,30 @@ class EntryListScreen(Screen):
             self.notify(f"Network error refreshing feeds: {e}", severity="error")
         except Exception as e:
             self.notify(f"Error refreshing all feeds: {e}", severity="error")
+
+    async def action_sync_entries(self):
+        """Sync/reload entries from server without refreshing feeds.
+
+        This fetches the latest entries that already exist on the Miniflux server
+        without telling the server to fetch new content from RSS feeds.
+        Use this to get entries that were added elsewhere or by another client.
+        """
+        if not hasattr(self.app, "load_entries"):
+            self.notify("Cannot sync entries", severity="error")
+            return
+
+        try:
+            self.notify("Syncing entries from server...")
+            # Rebuild category mapping for fresh data
+            if hasattr(self.app, "_build_entry_category_mapping"):
+                self.app.entry_category_map = await self.app._build_entry_category_mapping()
+            # Reload entries without refreshing feeds
+            await self.app.load_entries(self.app.current_view)
+            self.notify("Entries synced")
+        except (ConnectionError, TimeoutError) as e:
+            self.notify(f"Network error syncing entries: {e}", severity="error")
+        except Exception as e:
+            self.notify(f"Error syncing entries: {e}", severity="error")
 
     async def action_show_unread(self):
         """Load and show only unread entries."""
