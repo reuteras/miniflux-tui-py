@@ -257,10 +257,10 @@ class TestEntryListScreen:
         """Test that vim navigation actions exist."""
         screen = EntryListScreen(entries=diverse_entries, group_by_feed=True)
         # Check that the vim navigation actions are defined
-        assert hasattr(screen, "action_expand_feed")
-        assert hasattr(screen, "action_collapse_feed")
-        assert callable(screen.action_expand_feed)
-        assert callable(screen.action_collapse_feed)
+        assert hasattr(screen, "action_expand_fold")
+        assert hasattr(screen, "action_collapse_fold")
+        assert callable(screen.action_expand_fold)
+        assert callable(screen.action_collapse_fold)
 
     def test_restore_cursor_position_method_exists(self, diverse_entries):
         """Test that cursor position restore method exists."""
@@ -443,7 +443,7 @@ class TestEntryListScreenCompose:
         screen = EntryListScreen(entries=diverse_entries)
         required_actions = [
             "action_cycle_sort",
-            "action_toggle_group",
+            "action_toggle_group_feed",
             "action_toggle_fold",
             "action_toggle_read",
             "action_toggle_star",
@@ -470,14 +470,14 @@ class TestEntryListScreenActions:
         next_sort = SORT_MODES[(current_index + 1) % len(SORT_MODES)]
         assert next_sort == "feed"
 
-    def test_action_toggle_group(self, diverse_entries):
+    def test_action_toggle_group_feed(self, diverse_entries):
         """Test toggling group by feed."""
         screen = EntryListScreen(entries=diverse_entries, group_by_feed=False)
         assert screen.group_by_feed is False
 
-        # Test that action_toggle_group method exists
-        assert hasattr(screen, "action_toggle_group")
-        assert callable(screen.action_toggle_group)
+        # Test that action_toggle_group_feed method exists
+        assert hasattr(screen, "action_toggle_group_feed")
+        assert callable(screen.action_toggle_group_feed)
 
         # Test the grouping logic directly
         original_state = screen.group_by_feed
@@ -631,17 +631,17 @@ class TestEntryListScreenFoldOperations:
         assert hasattr(screen, "action_toggle_fold")
         assert callable(screen.action_toggle_fold)
 
-    def test_action_collapse_feed_exists(self, diverse_entries):
+    def test_action_collapse_fold_exists(self, diverse_entries):
         """Test collapse_feed action exists."""
         screen = EntryListScreen(entries=diverse_entries)
-        assert hasattr(screen, "action_collapse_feed")
-        assert callable(screen.action_collapse_feed)
+        assert hasattr(screen, "action_collapse_fold")
+        assert callable(screen.action_collapse_fold)
 
-    def test_action_expand_feed_exists(self, diverse_entries):
+    def test_action_expand_fold_exists(self, diverse_entries):
         """Test expand_feed action exists."""
         screen = EntryListScreen(entries=diverse_entries)
-        assert hasattr(screen, "action_expand_feed")
-        assert callable(screen.action_expand_feed)
+        assert hasattr(screen, "action_expand_fold")
+        assert callable(screen.action_expand_fold)
 
     def test_toggle_fold_without_grouped_mode(self, diverse_entries):
         """Test toggle_fold when not in grouped mode."""
@@ -655,14 +655,14 @@ class TestEntryListScreenFoldOperations:
         screen = EntryListScreen(entries=diverse_entries, group_by_feed=False)
         screen.list_view = MagicMock()
         # Should return early
-        screen.action_collapse_feed()
+        screen.action_collapse_fold()
 
     def test_expand_feed_without_grouped_mode(self, diverse_entries):
         """Test expand_feed when not in grouped mode."""
         screen = EntryListScreen(entries=diverse_entries, group_by_feed=False)
         screen.list_view = MagicMock()
         # Should return early
-        screen.action_expand_feed()
+        screen.action_expand_fold()
 
     def test_update_feed_visibility(self, diverse_entries):
         """Test _update_feed_visibility method."""
@@ -810,8 +810,8 @@ class TestEntryListScreenGrouping:
         header.toggle_fold.assert_called_once()
         screen._update_feed_visibility.assert_called_with(feed_title)
 
-    def test_action_collapse_feed_calls_set_state(self, diverse_entries):
-        """Test action_collapse_feed collapses highlighted feed."""
+    def test_action_collapse_fold_calls_set_state(self, diverse_entries):
+        """Test action_collapse_fold collapses highlighted feed."""
         screen = EntryListScreen(entries=diverse_entries, group_by_feed=True)
         feed_title = diverse_entries[0].feed.title
 
@@ -822,12 +822,12 @@ class TestEntryListScreenGrouping:
         screen.feed_fold_state[feed_title] = True
         screen._set_feed_fold_state = MagicMock()
 
-        screen.action_collapse_feed()
+        screen.action_collapse_fold()
 
         screen._set_feed_fold_state.assert_called_once_with(feed_title, False)
 
-    def test_action_expand_feed_calls_set_state(self, diverse_entries):
-        """Test action_expand_feed expands highlighted feed."""
+    def test_action_expand_fold_calls_set_state(self, diverse_entries):
+        """Test action_expand_fold expands highlighted feed."""
         screen = EntryListScreen(entries=diverse_entries, group_by_feed=True)
         feed_title = diverse_entries[0].feed.title
 
@@ -838,7 +838,7 @@ class TestEntryListScreenGrouping:
         screen.feed_fold_state[feed_title] = False
         screen._set_feed_fold_state = MagicMock()
 
-        screen.action_expand_feed()
+        screen.action_expand_fold()
 
         screen._set_feed_fold_state.assert_called_once_with(feed_title, True)
 
@@ -1502,13 +1502,13 @@ class TestActionMethodsCallability:
         # Verify method exists and is callable
         assert callable(screen.action_cycle_sort)
 
-    def test_action_toggle_group_switches_mode(self, diverse_entries):
-        """Test action_toggle_group toggles grouping."""
+    def test_action_toggle_group_feed_switches_mode(self, diverse_entries):
+        """Test action_toggle_group_feed toggles grouping."""
         screen = EntryListScreen(entries=diverse_entries, group_by_feed=False)
         screen._populate_list = MagicMock()
 
         # Verify method exists and is callable
-        assert callable(screen.action_toggle_group)
+        assert callable(screen.action_toggle_group_feed)
 
     def test_action_toggle_fold_exists(self, diverse_entries):
         """Test action_toggle_fold exists and is callable."""
@@ -1518,21 +1518,21 @@ class TestActionMethodsCallability:
         # Verify method exists and is callable
         assert callable(screen.action_toggle_fold)
 
-    def test_action_collapse_feed_exists(self, diverse_entries):
-        """Test action_collapse_feed exists and is callable."""
+    def test_action_collapse_fold_exists(self, diverse_entries):
+        """Test action_collapse_fold exists and is callable."""
         screen = EntryListScreen(entries=diverse_entries, group_by_feed=True)
         screen.list_view = MagicMock()
 
         # Verify method exists and is callable
-        assert callable(screen.action_collapse_feed)
+        assert callable(screen.action_collapse_fold)
 
-    def test_action_expand_feed_exists(self, diverse_entries):
-        """Test action_expand_feed exists and is callable."""
+    def test_action_expand_fold_exists(self, diverse_entries):
+        """Test action_expand_fold exists and is callable."""
         screen = EntryListScreen(entries=diverse_entries, group_by_feed=True)
         screen.list_view = MagicMock()
 
         # Verify method exists and is callable
-        assert callable(screen.action_expand_feed)
+        assert callable(screen.action_expand_fold)
 
     def test_action_expand_all_exists(self, diverse_entries):
         """Test action_expand_all exists and is callable."""
@@ -1966,17 +1966,17 @@ class TestCategoryGrouping:
 
         assert screen._get_category_title(5) == "Category 5"
 
-    def test_action_toggle_category_group_no_categories(self):
+    def test_action_toggle_group_feed_category_no_categories(self):
         """Test toggle category group when no categories available."""
         screen = EntryListScreen(entries=[], categories=[])
         screen.notify = MagicMock()
 
-        screen.action_toggle_category_group()
+        screen.action_toggle_group_category()
 
         screen.notify.assert_called_once()
         assert "no categories" in screen.notify.call_args[0][0].lower()
 
-    def test_action_toggle_category_group_enable(self, diverse_entries):
+    def test_action_toggle_group_feed_category_enable(self, diverse_entries):
         """Test enabling category grouping."""
 
         categories = [Category(id=1, title="News")]
@@ -1989,14 +1989,14 @@ class TestCategoryGrouping:
         assert not screen.group_by_feed
 
         # Enable category grouping
-        screen.action_toggle_category_group()
+        screen.action_toggle_group_category()
 
         assert screen.group_by_category is True
         assert screen.group_by_feed is False
-        screen.notify.assert_called_with("Grouping by category")
+        screen.notify.assert_called_with("Grouping by category (use h/l to collapse/expand)")
         screen._populate_list.assert_called_once()
 
-    def test_action_toggle_category_group_disable(self, diverse_entries):
+    def test_action_toggle_group_feed_category_disable(self, diverse_entries):
         """Test disabling category grouping."""
 
         categories = [Category(id=1, title="News")]
@@ -2006,13 +2006,13 @@ class TestCategoryGrouping:
         screen.group_by_category = True
 
         # Disable category grouping
-        screen.action_toggle_category_group()
+        screen.action_toggle_group_category()
 
         assert screen.group_by_category is False
         screen.notify.assert_called_with("Category grouping disabled")
         screen._populate_list.assert_called_once()
 
-    def test_action_toggle_category_group_disables_feed_grouping(self, diverse_entries):
+    def test_action_toggle_group_feed_category_disables_feed_grouping(self, diverse_entries):
         """Test that enabling category grouping disables feed grouping."""
 
         categories = [Category(id=1, title="News")]
@@ -2022,7 +2022,7 @@ class TestCategoryGrouping:
         screen.group_by_feed = True
 
         # Enable category grouping
-        screen.action_toggle_category_group()
+        screen.action_toggle_group_category()
 
         assert screen.group_by_category is True
         assert screen.group_by_feed is False
@@ -2411,12 +2411,12 @@ class TestExpandAllWithToggle:
         screen = EntryListScreen(entries=diverse_entries)
         screen.group_by_feed = False  # Not grouped
         screen.list_view = MagicMock()
-        screen.action_toggle_group = MagicMock()
+        screen.action_toggle_group_feed = MagicMock()
 
         screen.action_expand_all()
 
-        # Should call action_toggle_group to enable grouping
-        screen.action_toggle_group.assert_called_once()
+        # Should call action_toggle_group_feed to enable grouping
+        screen.action_toggle_group_feed.assert_called_once()
 
     def test_action_expand_all_with_grouping_skips_toggle(self, diverse_entries):
         """Test that when already grouped, expand_all doesn't toggle."""
@@ -2425,12 +2425,12 @@ class TestExpandAllWithToggle:
         screen.feed_fold_state = {"Feed A": False}
         screen._set_feed_fold_state = MagicMock()
         screen.notify = MagicMock()
-        screen.action_toggle_group = MagicMock()
+        screen.action_toggle_group_feed = MagicMock()
 
         screen.action_expand_all()
 
         # Should NOT call toggle_group since already grouped
-        screen.action_toggle_group.assert_not_called()
+        screen.action_toggle_group_feed.assert_not_called()
         # Should expand the feeds
         screen._set_feed_fold_state.assert_called_once()
 
@@ -2438,9 +2438,9 @@ class TestExpandAllWithToggle:
         """Test that expand_all returns early if no list_view."""
         screen = EntryListScreen(entries=diverse_entries)
         screen.list_view = None
-        screen.action_toggle_group = MagicMock()
+        screen.action_toggle_group_feed = MagicMock()
 
         screen.action_expand_all()
 
         # Should return early without calling toggle
-        screen.action_toggle_group.assert_not_called()
+        screen.action_toggle_group_feed.assert_not_called()

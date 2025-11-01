@@ -150,16 +150,16 @@ class EntryListScreen(Screen):
         Binding("asterisk", "toggle_star", "Toggle Star"),
         Binding("e", "save_entry", "Save Entry"),
         Binding("s", "cycle_sort", "Cycle Sort"),
-        Binding("g", "toggle_group", "Group by Feed"),
-        Binding("shift+c", "toggle_category_group", "Group by Category"),
-        Binding("c", "manage_categories", "Manage Categories"),
+        Binding("g", "toggle_group_feed", "Group by Feed"),
+        Binding("c", "toggle_group_category", "Group by Category"),
+        Binding("shift+m", "manage_categories", "Manage Categories"),
         Binding("shift+g", "expand_all", "Expand All"),
         Binding("shift+z", "collapse_all", "Collapse All"),
-        Binding("o", "toggle_fold", "Fold/Unfold Feed"),
-        Binding("h", "collapse_feed", "Collapse Feed"),
-        Binding("l", "expand_feed", "Expand Feed"),
-        Binding("left", "collapse_feed", "Collapse Feed", show=False),
-        Binding("right", "expand_feed", "Expand Feed", show=False),
+        Binding("o", "toggle_fold", "Fold/Unfold Feed/Category"),
+        Binding("h", "collapse_fold", "Collapse Feed/Category"),
+        Binding("l", "expand_fold", "Expand Feed/Category"),
+        Binding("left", "collapse_fold", "Collapse Feed/Category", show=False),
+        Binding("right", "expand_fold", "Expand Feed/Category", show=False),
         Binding("r", "refresh", "Refresh Current Feed"),
         Binding("comma", "refresh", "Refresh Current Feed", show=False),
         Binding("shift+r", "refresh_all_feeds", "Refresh All Feeds"),
@@ -483,6 +483,30 @@ class EntryListScreen(Screen):
 
         # Update CSS visibility
         self._update_feed_visibility(feed_title)
+
+    def _set_category_fold_state(self, category_title: str, is_expanded: bool) -> None:
+        """Set fold state for a category and update UI.
+
+        Updates the category's fold state, toggles the header visual indicator,
+        and updates the CSS visibility of category entries.
+
+        Args:
+            category_title: Title of the category to update
+            is_expanded: True to expand category, False to collapse
+        """
+        # Ensure fold state entry exists
+        if category_title not in self.category_fold_state:
+            self.category_fold_state[category_title] = not self.group_collapsed
+
+        # Update fold state
+        self.category_fold_state[category_title] = is_expanded
+
+        # Update header visual indicator
+        if category_title in self.category_header_map:
+            self.category_header_map[category_title].toggle_fold()
+
+        # Update CSS visibility
+        self._update_category_visibility(category_title)
 
     def _ensure_list_view_and_grouped(self) -> bool:
         """Ensure list view is available and we're in grouped mode.
@@ -973,45 +997,63 @@ class EntryListScreen(Screen):
         # Re-populate list
         self._populate_list()
 
-    def action_toggle_group(self):
-        """Toggle grouping by feed."""
+    def action_toggle_group_feed(self):
+        """Toggle grouping by feed (g key)."""
+        # Disable category grouping when enabling feed grouping
+        if not self.group_by_feed and self.group_by_category:
+            self.group_by_category = False
+
         self.group_by_feed = not self.group_by_feed
+
+        if self.group_by_feed:
+            self.notify("Grouping by feed (use h/l to collapse/expand)")
+        else:
+            self.notify("Feed grouping disabled")
+
         self._populate_list()
 
-    def action_toggle_category_group(self):
-        """Toggle grouping by category (Issue #54 - Category support)."""
+    def action_toggle_group_category(self):
+        """Toggle grouping by category (c key - Issue #54 - Category support)."""
         if not self.categories:
             self.notify("No categories available", severity="warning")
             return
 
+        # Disable feed grouping when enabling category grouping
+        if not self.group_by_category and self.group_by_feed:
+            self.group_by_feed = False
+
         # Toggle category grouping
         self.group_by_category = not self.group_by_category
 
-        # Disable feed grouping when category grouping is enabled
         if self.group_by_category:
-            self.group_by_feed = False
-            self.notify("Grouping by category")
+            self.notify("Grouping by category (use h/l to collapse/expand)")
         else:
             self.notify("Category grouping disabled")
 
         self._populate_list()
 
     def action_toggle_fold(self):
-        """Toggle fold state of highlighted feed (only works in grouped mode)."""
-        if not self.list_view or not self.group_by_feed:
+        """Toggle fold state of highlighted feed or category (o key)."""
+        if not self.list_view or (not self.group_by_feed and not self.group_by_category):
             return
 
         highlighted = self.list_view.highlighted_child
-        if highlighted and isinstance(highlighted, FeedHeaderItem):
+
+        # Handle feed grouping mode
+        if self.group_by_feed and isinstance(highlighted, FeedHeaderItem):
             feed_title = highlighted.feed_title
-            # Save current position
             self.last_highlighted_feed = feed_title
-            # Toggle the fold state
             self.feed_fold_state[feed_title] = not self.feed_fold_state[feed_title]
             highlighted.toggle_fold()
-
-            # Update CSS class for entries: toggle "collapsed" class
             self._update_feed_visibility(feed_title)
+
+        # Handle category grouping mode
+        elif self.group_by_category and isinstance(highlighted, CategoryHeaderItem):
+            category_title = highlighted.category_title
+            self.last_highlighted_category = category_title
+            self.category_fold_state[category_title] = not self.category_fold_state[category_title]
+            highlighted.toggle_fold()
+            self._update_category_visibility(category_title)
 
     def _update_feed_visibility(self, feed_title: str) -> None:
         """Update CSS visibility for all entries of a feed based on fold state.
@@ -1029,72 +1071,144 @@ class EntryListScreen(Screen):
                 else:
                     item.add_class("collapsed")
 
-    def action_collapse_feed(self):
-        """Collapse the highlighted feed (h or left arrow)."""
-        if not self.list_view or not self.group_by_feed:
+    def _update_category_visibility(self, category_title: str) -> None:
+        """Update CSS visibility for all entries of a category based on fold state.
+
+        If category is collapsed, adds 'collapsed' class to hide entries.
+        If category is expanded, removes 'collapsed' class to show entries.
+        """
+        is_expanded = self.category_fold_state.get(category_title, True)
+
+        # Find all entries for this category and update their CSS class
+        for item in self.list_view.children:
+            if isinstance(item, EntryListItem) and self._get_category_title(item.entry.feed.category_id) == category_title:
+                if is_expanded:
+                    item.remove_class("collapsed")
+                else:
+                    item.add_class("collapsed")
+
+    def action_collapse_fold(self):
+        """Collapse the highlighted feed or category (h or left arrow)."""
+        if not self.list_view or (not self.group_by_feed and not self.group_by_category):
             return
 
-        feed_title = self._get_highlighted_feed_title()
-        if not feed_title:
+        highlighted = self.list_view.highlighted_child
+
+        # Handle feed grouping mode
+        if self.group_by_feed and isinstance(highlighted, FeedHeaderItem):
+            feed_title = highlighted.feed_title
+            self.last_highlighted_feed = feed_title
+            is_currently_expanded = self.feed_fold_state.get(feed_title, not self.group_collapsed)
+            if is_currently_expanded:
+                self._set_feed_fold_state(feed_title, False)
+
+        # Handle category grouping mode
+        elif self.group_by_category and isinstance(highlighted, CategoryHeaderItem):
+            category_title = highlighted.category_title
+            self.last_highlighted_category = category_title
+            is_currently_expanded = self.category_fold_state.get(category_title, not self.group_collapsed)
+            if is_currently_expanded:
+                self._set_category_fold_state(category_title, False)
+
+        # Fallback for entry items: collapse their parent feed/category
+        elif isinstance(highlighted, EntryListItem):
+            if self.group_by_feed:
+                feed_title = highlighted.entry.feed.title
+                self.last_highlighted_feed = feed_title
+                is_currently_expanded = self.feed_fold_state.get(feed_title, not self.group_collapsed)
+                if is_currently_expanded:
+                    self._set_feed_fold_state(feed_title, False)
+            elif self.group_by_category:
+                category_title = self._get_category_title(highlighted.entry.feed.category_id)
+                self.last_highlighted_category = category_title
+                is_currently_expanded = self.category_fold_state.get(category_title, not self.group_collapsed)
+                if is_currently_expanded:
+                    self._set_category_fold_state(category_title, False)
+
+    def action_expand_fold(self):
+        """Expand the highlighted feed or category (l or right arrow)."""
+        if not self.list_view or (not self.group_by_feed and not self.group_by_category):
             return
 
-        # Save position for return from entry reader
-        self.last_highlighted_feed = feed_title
+        highlighted = self.list_view.highlighted_child
 
-        # Only collapse if currently expanded
-        is_currently_expanded = self.feed_fold_state.get(feed_title, not self.group_collapsed)
-        if is_currently_expanded:
-            self._set_feed_fold_state(feed_title, False)
+        # Handle feed grouping mode
+        if self.group_by_feed and isinstance(highlighted, FeedHeaderItem):
+            feed_title = highlighted.feed_title
+            self.last_highlighted_feed = feed_title
+            is_currently_collapsed = not self.feed_fold_state.get(feed_title, not self.group_collapsed)
+            if is_currently_collapsed:
+                self._set_feed_fold_state(feed_title, True)
 
-    def action_expand_feed(self):
-        """Expand the highlighted feed (l or right arrow)."""
-        if not self.list_view or not self.group_by_feed:
-            return
+        # Handle category grouping mode
+        elif self.group_by_category and isinstance(highlighted, CategoryHeaderItem):
+            category_title = highlighted.category_title
+            self.last_highlighted_category = category_title
+            is_currently_collapsed = not self.category_fold_state.get(category_title, not self.group_collapsed)
+            if is_currently_collapsed:
+                self._set_category_fold_state(category_title, True)
 
-        feed_title = self._get_highlighted_feed_title()
-        if not feed_title:
-            return
-
-        # Save position for return from entry reader
-        self.last_highlighted_feed = feed_title
-
-        # Only expand if currently collapsed
-        is_currently_collapsed = not self.feed_fold_state.get(feed_title, not self.group_collapsed)
-        if is_currently_collapsed:
-            self._set_feed_fold_state(feed_title, True)
+        # Fallback for entry items: expand their parent feed/category
+        elif isinstance(highlighted, EntryListItem):
+            if self.group_by_feed:
+                feed_title = highlighted.entry.feed.title
+                self.last_highlighted_feed = feed_title
+                is_currently_collapsed = not self.feed_fold_state.get(feed_title, not self.group_collapsed)
+                if is_currently_collapsed:
+                    self._set_feed_fold_state(feed_title, True)
+            elif self.group_by_category:
+                category_title = self._get_category_title(highlighted.entry.feed.category_id)
+                self.last_highlighted_category = category_title
+                is_currently_collapsed = not self.category_fold_state.get(category_title, not self.group_collapsed)
+                if is_currently_collapsed:
+                    self._set_category_fold_state(category_title, True)
 
     def action_expand_all(self):
-        """Expand all feeds (Shift+G).
+        """Expand all feeds or categories (Shift+G).
 
-        If not in grouped mode, enable grouped mode first.
-        Then expand all collapsed feeds.
+        If not in grouped mode, enable feed grouping first.
+        Then expand all collapsed items.
         """
         if not self.list_view:
             return
 
-        # If not in grouped mode, enable it first
-        if not self.group_by_feed:
-            self.action_toggle_group()
+        # If not in grouped mode, enable feed grouping first
+        if not self.group_by_feed and not self.group_by_category:
+            self.action_toggle_group_feed()
             return
 
         # Expand all feeds that are currently collapsed
-        for feed_title in self.feed_fold_state:
-            if not self.feed_fold_state[feed_title]:
-                self._set_feed_fold_state(feed_title, True)
+        if self.group_by_feed:
+            for feed_title in self.feed_fold_state:
+                if not self.feed_fold_state[feed_title]:
+                    self._set_feed_fold_state(feed_title, True)
+            self.notify("All feeds expanded")
 
-        self.notify("All feeds expanded")
+        # Expand all categories that are currently collapsed
+        elif self.group_by_category:
+            for category_title in self.category_fold_state:
+                if not self.category_fold_state[category_title]:
+                    self._set_category_fold_state(category_title, True)
+            self.notify("All categories expanded")
 
     def action_collapse_all(self):
-        """Collapse all feeds (Shift+Z)."""
-        if not self.list_view or not self.group_by_feed:
+        """Collapse all feeds or categories (Shift+Z)."""
+        if not self.list_view or (not self.group_by_feed and not self.group_by_category):
             return
 
         # Collapse all feeds that are currently expanded
-        for feed_title in self.feed_fold_state:
-            if self.feed_fold_state[feed_title]:
-                self._set_feed_fold_state(feed_title, False)
+        if self.group_by_feed:
+            for feed_title in self.feed_fold_state:
+                if self.feed_fold_state[feed_title]:
+                    self._set_feed_fold_state(feed_title, False)
+            self.notify("All feeds collapsed")
 
-        self.notify("All feeds collapsed")
+        # Collapse all categories that are currently expanded
+        elif self.group_by_category:
+            for category_title in self.category_fold_state:
+                if self.category_fold_state[category_title]:
+                    self._set_category_fold_state(category_title, False)
+            self.notify("All categories collapsed")
 
     async def action_refresh(self):
         """Refresh the current feed on the server (Issue #55 - Feed operations)."""
