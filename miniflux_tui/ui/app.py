@@ -207,15 +207,25 @@ class MinifluxTUI(App):
         Returns:
             List of entries with category information populated
         """
+        # Debug logging
+        self.log(f"Enriching {len(entries)} entries with category info")
+        self.log(f"Available feeds: {len(self.feeds)}")
+
         # Create a feed_id -> category_id lookup from loaded feeds
         feed_category_map: dict[int, int | None] = {}
         for feed in self.feeds:
             feed_category_map[feed.id] = feed.category_id
+            # Debug: show what categories are available
+            self.log(f"Feed {feed.id} ({feed.title}): category_id={feed.category_id}")
 
         # Enrich each entry's feed with category information
+        enriched_count = 0
         for entry in entries:
             if entry.feed_id in feed_category_map:
                 entry.feed.category_id = feed_category_map[entry.feed_id]
+                enriched_count += 1
+
+        self.log(f"Enriched {enriched_count}/{len(entries)} entries with category info")
 
         return entries
 
