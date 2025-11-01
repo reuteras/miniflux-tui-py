@@ -78,6 +78,9 @@ jobs:
             tags="${REGISTRY}/${IMAGE_NAME}:${branch}"
           fi
 
+          # Always add commit SHA as secondary tag for traceability
+          tags+=$'\n'"${REGISTRY}/${IMAGE_NAME}:${GITHUB_SHA:0:7}"
+
           {
             printf 'tags<<EOF\n'
             printf '%s\n' "$tags"
