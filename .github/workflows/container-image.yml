@@ -61,20 +61,25 @@ jobs:
           DEFAULT_BRANCH: ${{ github.event.repository.default_branch }}
         run: |
           set -euo pipefail
-          tags="${REGISTRY}/${IMAGE_NAME}:${GITHUB_SHA}"
+          tags=""
 
-          if [[ "${GITHUB_REF}" == "refs/heads/${DEFAULT_BRANCH}" ]]; then
-            tags+=$'\n'"${REGISTRY}/${IMAGE_NAME}:latest"
-          fi
-
+          # Priority 1: Version tags (v0.5.0, v1.0.0, etc)
           if [[ "${GITHUB_REF}" == refs/tags/* ]]; then
             ref_name="${GITHUB_REF#refs/tags/}"
-            tags+=$'\n'"${REGISTRY}/${IMAGE_NAME}:${ref_name}"
+            tags="${REGISTRY}/${IMAGE_NAME}:${ref_name}"
+            tags+=$'\n'"${REGISTRY}/${IMAGE_NAME}:latest"
+          # Priority 2: Main branch
+          elif [[ "${GITHUB_REF}" == "refs/heads/${DEFAULT_BRANCH}" ]]; then
+            tags="${REGISTRY}/${IMAGE_NAME}:latest"
+          # Priority 3: Feature branches
           elif [[ "${GITHUB_REF}" == refs/heads/* ]]; then
             branch="${GITHUB_REF#refs/heads/}"
             branch=${branch//\//-}
-            tags+=$'\n'"${REGISTRY}/${IMAGE_NAME}:${branch}"
+            tags="${REGISTRY}/${IMAGE_NAME}:${branch}"
           fi
+
+          # Always add commit SHA as secondary tag for traceability
+          tags+=$'\n'"${REGISTRY}/${IMAGE_NAME}:${GITHUB_SHA:0:7}"
 
           {
             printf 'tags<<EOF\n'
