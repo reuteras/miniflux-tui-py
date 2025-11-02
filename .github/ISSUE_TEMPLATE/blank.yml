@@ -1,7 +1,7 @@
 name: Blank Issue
 description: Open a blank issue for any purpose
-title: ""
-labels: []
+title: "[Your Issue Title]"
+labels: ["question"]
 body:
   - type: markdown
     attributes:

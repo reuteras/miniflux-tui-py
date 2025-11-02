@@ -9,6 +9,3 @@ contact_links:
   - name: Miniflux Community
     url: https://miniflux.app/
     about: For issues with the Miniflux server itself, visit the Miniflux project
-  - name: Report Security Issues
-    url: mailto:peter@reuteras.net
-    about: For security vulnerabilities, please email peter@reuteras.net with responsible disclosure details
