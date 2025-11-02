@@ -13,7 +13,6 @@
     },
     "prConcurrentLimit": 10,
     "ignoreDeps": [],
-    "recreateClosed": true,
     "recreateWhen": "always",
     "packageRules": [
         {
