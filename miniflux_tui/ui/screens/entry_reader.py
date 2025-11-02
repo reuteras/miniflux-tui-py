@@ -2,6 +2,8 @@
 
 import traceback
 import webbrowser
+from contextlib import suppress
+from urllib.parse import urlparse
 
 import html2text
 from textual.app import ComposeResult
@@ -208,11 +210,36 @@ class EntryReaderScreen(Screen):
             except Exception as e:
                 self.notify(f"Failed to save entry: {e}", severity="error")
 
+    @staticmethod
+    def _is_safe_external_url(url: str) -> bool:
+        """Return True if the URL uses an allowed scheme and has a hostname."""
+        if not url:
+            return False
+
+        parsed = urlparse(url.strip())
+        if parsed.scheme not in {"http", "https"}:
+            return False
+        if not parsed.netloc:
+            return False
+
+        return not any(ord(char) < 32 for char in url)
+
     def action_open_browser(self):
         """Open entry URL in web browser."""
+        url = (self.entry.url or "").strip()
+        if not url:
+            self.notify("Entry does not contain a URL to open", severity="warning")
+            return
+        if not self._is_safe_external_url(url):
+            self.notify("Refused to open unsafe entry URL", severity="error")
+            if url:
+                with suppress(Exception):
+                    self.log(f"Blocked attempt to open unsafe URL: {url!r}")
+            return
+
         try:
-            webbrowser.open(self.entry.url)
-            self.notify(f"Opened in browser: {self.entry.url}")
+            webbrowser.open(url)
+            self.notify(f"Opened in browser: {url}")
         except Exception as e:
             self.notify(f"Error opening browser: {e}", severity="error")
 
