@@ -6,7 +6,7 @@ from unittest.mock import AsyncMock, patch
 import pytest
 
 from miniflux_tui.config import Config
-from miniflux_tui.ui.app import MinifluxTUI
+from miniflux_tui.ui.app import MinifluxTuiApp
 from miniflux_tui.ui.screens.entry_list import EntryListScreen
 
 TEST_TOKEN = "token-for-tests"  # noqa: S105 - static fixture value
@@ -53,7 +53,7 @@ async def test_app_initializes_in_headless_mode(sample_entries, sample_categorie
     fake_client = _FakeClient(sample_entries, sample_categories)
 
     with patch("miniflux_tui.ui.app.MinifluxClient", return_value=fake_client):
-        app = MinifluxTUI(config)
+        app = MinifluxTuiApp(config)
         async with app.run_test(headless=True) as pilot:
             await pilot.pause()
             assert app.is_screen_installed("entry_list")
