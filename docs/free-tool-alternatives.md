@@ -448,10 +448,10 @@ A: Coverage migration: 1-2 hours. Full stack migration: 1-2 weeks testing everyt
 
 ## Support
 
-- Coveralls: https://coveralls.io
-- MegaLinter: https://megalinter.io
-- Semgrep: https://semgrep.dev
-- GitHub Pages: https://pages.github.com
+- Coveralls: <https://coveralls.io>
+- MegaLinter: <https://megalinter.io>
+- Semgrep: <https://semgrep.dev>
+- GitHub Pages: <https://pages.github.com>
 
 ## Conclusion
 

@@ -211,9 +211,9 @@ Everything recommended: **$0 forever**
 
 - **Full Guide:** `docs/free-tool-alternatives.md`
 - **All Recommendations:** `WORKFLOW_IMPROVEMENTS.md`
-- **Coveralls:** https://coveralls.io
-- **MegaLinter:** https://megalinter.io
-- **Semgrep:** https://semgrep.dev
+- **Coveralls:** <https://coveralls.io>
+- **MegaLinter:** <https://megalinter.io>
+- **Semgrep:** <https://semgrep.dev>
 
 ## Support
 
