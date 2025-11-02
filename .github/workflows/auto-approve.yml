@@ -17,11 +17,17 @@ jobs:
   auto-approve:
     name: Auto-Approve PR
     runs-on: ubuntu-latest
-    # Only approve PRs from reuteras (solo developer)
-    # Only run on pull_request events (skip check_suite)
+    # Approve PRs from:
+    # 1. reuteras (solo developer)
+    # 2. renovatebot (dependency updates)
+    # 3. github-actions (automated workflows)
+    # Skip draft PRs and check_suite events
     if: >-
       github.event_name == 'pull_request' &&
-      github.actor == 'reuteras' &&
+      (github.actor == 'reuteras' ||
+        github.actor == 'renovate[bot]' ||
+        github.actor == 'renovatebot' ||
+        github.actor == 'github-actions[bot]') &&
       github.event.pull_request.draft == false
     steps:
       - name: Harden the runner (Audit all outbound calls)
@@ -83,10 +89,23 @@ jobs:
           steps.check-approval.outputs.already_approved == 'false' &&
           steps.check-status.outcome == 'success'
         run: |
+          # Determine PR source for approval message
+          PR_SOURCE="${{ github.actor }}"
+          case "$PR_SOURCE" in
+            "renovate[bot]"|"renovatebot")
+              APPROVAL_REASON="Automated dependency update"
+              ;;
+            "github-actions[bot]")
+              APPROVAL_REASON="Automated GitHub Actions workflow"
+              ;;
+            *)
+              APPROVAL_REASON="Solo developer workflow"
+              ;;
+          esac
+
           gh pr review "${{ github.event.pull_request.number }}" \
             --repo "${{ github.repository }}" \
             --approve \
-            --body "✅ All automated checks passed. Auto-approved for \
-              solo developer workflow."
+            --body "✅ All automated checks passed. Approval reason: $APPROVAL_REASON"
         env:
           GH_TOKEN: ${{ secrets.BOT_TOKEN }}
