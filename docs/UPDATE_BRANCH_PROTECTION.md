@@ -20,24 +20,24 @@ You need to change the required status check from "build" to "MegaLinter" (the d
 #### Option 1: Via GitHub Web UI (Recommended)
 
 1. **Go to branch protection settings:**
-   ```
-   https://github.com/reuteras/miniflux-tui-py/settings/branch_protection_rules
-   ```
+    ```
+    https://github.com/reuteras/miniflux-tui-py/settings/branch_protection_rules
+    ```
 
 2. **Find the rule for `main` branch**
-   - Click on the existing rule (should show `main` or a pattern matching it)
+    - Click on the existing rule (should show `main` or a pattern matching it)
 
 3. **Update required status checks:**
-   - Scroll to "Require status checks to pass before merging"
-   - In the "Status checks that are required" section:
-     - **Remove**: `build` (uncheck or remove it)
-     - **Add**: `MegaLinter` (type it in the search box and select it)
-   
-   Note: The check must have run at least once for it to appear in the dropdown. Since PR #242 is running, "MegaLinter" should be available.
+    - Scroll to "Require status checks to pass before merging"
+    - In the "Status checks that are required" section:
+      - **Remove**: `build` (uncheck or remove it)
+      - **Add**: `MegaLinter` (type it in the search box and select it)
+
+    Note: The check must have run at least once for it to appear in the dropdown. Since PR #242 is running, "MegaLinter" should be available.
 
 4. **Save changes:**
-   - Scroll to bottom
-   - Click "Save changes"
+    - Scroll to bottom
+    - Click "Save changes"
 
 #### Option 2: Create New Branch Protection Rule (If needed)
 
@@ -48,21 +48,21 @@ If you need to create a fresh rule:
 2. Click "Add branch protection rule"
 
 3. Configure:
-   - **Branch name pattern**: `main`
-   
-   - **Protect matching branches**:
-     - ✅ Require a pull request before merging
-       - Required approvals: 0 (or your preference)
-       - ✅ Dismiss stale pull request approvals when new commits are pushed
-     
-     - ✅ Require status checks to pass before merging
-       - ✅ Require branches to be up to date before merging
-       - **Status checks that are required**: 
-         - Add: `MegaLinter` (search and select)
-         - Do NOT add: `build`
-     
-     - ✅ Include administrators (optional, for consistency)
-     - ✅ Restrict who can push to matching branches (optional)
+    - **Branch name pattern**: `main`
+
+    - **Protect matching branches**:
+      - ✅ Require a pull request before merging
+        - Required approvals: 0 (or your preference)
+        - ✅ Dismiss stale pull request approvals when new commits are pushed
+
+      - ✅ Require status checks to pass before merging
+        - ✅ Require branches to be up to date before merging
+        - **Status checks that are required**:
+          - Add: `MegaLinter` (search and select)
+          - Do NOT add: `build`
+
+      - ✅ Include administrators (optional, for consistency)
+      - ✅ Restrict who can push to matching branches (optional)
 
 4. Click "Create" or "Save changes"
 
@@ -138,18 +138,18 @@ By changing the requirement to "MegaLinter", it will match the display name.
 Once you update the branch protection:
 
 1. **PR #242 will update:**
-   - The "build" check will disappear (or show as optional)
-   - The "MegaLinter" check will appear as required
-   - Status should show correctly
+    - The "build" check will disappear (or show as optional)
+    - The "MegaLinter" check will appear as required
+    - Status should show correctly
 
 2. **Future PRs will:**
-   - Require "MegaLinter" to pass
-   - No longer look for "build"
+    - Require "MegaLinter" to pass
+    - No longer look for "build"
 
 3. **Other jobs remain unchanged:**
-   - `bandit` job still runs independently
-   - `gitleaks` job still runs independently
-   - All other workflows unaffected
+    - `bandit` job still runs independently
+    - `gitleaks` job still runs independently
+    - All other workflows unaffected
 
 ## Let Me Know
 

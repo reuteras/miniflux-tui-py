@@ -2,9 +2,9 @@
 
 Complete step-by-step guide to migrate miniflux-tui-py from Mend.io hosted Renovate to your self-hosted Renovate instance.
 
-**Date**: November 1, 2025  
-**Repository**: reuteras/miniflux-tui-py  
-**Current Setup**: Mend.io hosted Renovate  
+**Date**: November 1, 2025
+**Repository**: reuteras/miniflux-tui-py
+**Current Setup**: Mend.io hosted Renovate
 **Target Setup**: Self-hosted Renovate (same as your Forgejo setup)
 
 ---
@@ -24,15 +24,15 @@ Before starting, ensure you have:
 ### Step 1.1: Check Current Installation
 
 1. Go to your GitHub repository settings:
-   ```
-   https://github.com/reuteras/miniflux-tui-py/settings/installations
-   ```
+    ```
+    https://github.com/reuteras/miniflux-tui-py/settings/installations
+    ```
 
 2. Look for these possible names:
-   - "Renovate"
-   - "Mend Renovate"
-   - "WhiteSource Renovate"
-   - "Renovate Bot"
+    - "Renovate"
+    - "Mend Renovate"
+    - "WhiteSource Renovate"
+    - "Renovate Bot"
 
 ### Step 1.2: Remove Repository Access
 
@@ -42,8 +42,8 @@ Before starting, ensure you have:
 2. Click "Configure" button
 3. Scroll to "Repository access"
 4. Either:
-   - Select "Only select repositories" and remove `miniflux-tui-py`
-   - Or uninstall completely if this is the only repo using it
+    - Select "Only select repositories" and remove `miniflux-tui-py`
+    - Or uninstall completely if this is the only repo using it
 5. Click "Save"
 
 **Option B: If it's an organization/user-level installation:**
@@ -110,7 +110,7 @@ Consider these additions (optional):
     "commitMessagePrefix": "chore(deps):",
     "prCreation": "auto",
     "prConcurrentLimit": 2,
-    
+
     "github-actions": {
         "enabled": true,
         "automerge": false,
@@ -119,11 +119,11 @@ Consider these additions (optional):
             "enabled": true
         }
     },
-    
+
     "schedule": [
         "after 10pm on monday"
     ],
-    
+
     "packageRules": [
         {
             "description": "Security patches: immediate updates",
@@ -153,7 +153,7 @@ Consider these additions (optional):
             "matchPackageNames": ["/slsa-framework/slsa-github-generator/"]
         }
     ],
-    
+
     "npm": {
         "enabled": false
     }
@@ -191,18 +191,18 @@ Your self-hosted Renovate likely has a configuration file. Common locations:
 module.exports = {
   platform: 'github',
   token: process.env.RENOVATE_TOKEN,
-  
+
   // Add your repository here
   repositories: [
     'reuteras/miniflux-tui-py',
     // ... your other repositories
   ],
-  
+
   // Optional: Global defaults (can be overridden by .renovaterc.json)
   gitAuthor: 'Renovate Bot <bot@renovateapp.com>',
   onboarding: false, // Disable onboarding since you already have .renovaterc.json
   requireConfig: 'required',
-  
+
   // Your other configuration...
 }
 ```
@@ -247,8 +247,8 @@ curl -H "Authorization: token YOUR_GITHUB_TOKEN" \
 2. Click "Generate new token (classic)"
 3. Name: "Renovate Bot - miniflux-tui-py"
 4. Select scopes:
-   - [x] `repo` (all)
-   - [x] `workflow`
+    - [x] `repo` (all)
+    - [x] `workflow`
 5. Click "Generate token"
 6. Copy token and store securely
 7. Add to your Renovate configuration
@@ -411,25 +411,25 @@ uses: py-cov-action/python-coverage-comment-action@a1b2c3d4e5f6... # v3
 When Renovate PR arrives:
 
 1. **Review the PR carefully**
-   - Check all SHA hashes are valid
-   - Verify version tags match (# v3, # v5, etc.)
-   - Ensure CI passes
+    - Check all SHA hashes are valid
+    - Verify version tags match (# v3, # v5, etc.)
+    - Ensure CI passes
 
 2. **Test locally (optional)**
-   ```bash
-   gh pr checkout <renovate-pr-number>
-   # Verify YAML is valid
-   yamllint .github/workflows/*.yml
-   ```
+    ```bash
+    gh pr checkout <renovate-pr-number>
+    # Verify YAML is valid
+    yamllint .github/workflows/*.yml
+    ```
 
 3. **Merge the Renovate PR**
-   ```bash
-   gh pr merge <pr-number> --squash
-   ```
+    ```bash
+    gh pr merge <pr-number> --squash
+    ```
 
 4. **Our PRs will automatically update**
-   - GitHub will show conflicts or need rebase
-   - Either rebase or close/recreate with updated actions
+    - GitHub will show conflicts or need rebase
+    - Either rebase or close/recreate with updated actions
 
 ---
 
@@ -440,26 +440,26 @@ When Renovate PR arrives:
 **Possible causes:**
 
 1. **Token permissions insufficient**
-   ```bash
-   # Verify token scopes
-   gh auth status
-   ```
+    ```bash
+    # Verify token scopes
+    gh auth status
+    ```
 
 2. **Repository not in config**
-   ```bash
-   # Check Renovate config
-   cat ~/renovate/config.js | grep miniflux-tui-py
-   ```
+    ```bash
+    # Check Renovate config
+    cat ~/renovate/config.js | grep miniflux-tui-py
+    ```
 
 3. **Renovate cache issue**
-   ```bash
-   # Clear Renovate cache
-   docker run --rm \
-     -e RENOVATE_TOKEN=token \
-     -e RENOVATE_REPOSITORIES=reuteras/miniflux-tui-py \
-     renovate/renovate:latest \
-     --recreate-closed=true
-   ```
+    ```bash
+    # Clear Renovate cache
+    docker run --rm \
+      -e RENOVATE_TOKEN=token \
+      -e RENOVATE_REPOSITORIES=reuteras/miniflux-tui-py \
+      renovate/renovate:latest \
+      --recreate-closed=true
+    ```
 
 ### Issue: Wrong SHA Hashes
 
@@ -541,8 +541,8 @@ If you encounter issues:
 
 ---
 
-**Status**: Ready to execute  
-**Risk**: Low (non-destructive, can revert)  
+**Status**: Ready to execute
+**Risk**: Low (non-destructive, can revert)
 **Benefit**: Full control, SHA hashes, no rate limits
 
 Would you like me to help with any specific step?
