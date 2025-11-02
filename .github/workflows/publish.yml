@@ -242,11 +242,22 @@ jobs:
         run: |
           set -euo pipefail
 
+          sign_with_cosign() {
+            local file="$1"
+            local signature="${file}.sig"
+            local bundle="${file}.sig.bundle"
+
+            cosign sign-blob --yes \
+              --bundle "${bundle}" \
+              --output-signature "${signature}" \
+              "${file}"
+            echo "Signed: ${file}"
+          }
+
           echo "Signing distribution packages..."
           for file in dist/*.whl dist/*.tar.gz; do
             if [ -f "$file" ]; then
-              cosign sign-blob --yes "$file" > "$file.sig"
-              echo "Signed: $file"
+              sign_with_cosign "$file"
             fi
           done
 
@@ -254,8 +265,7 @@ jobs:
           if [ -d binaries ]; then
             for file in binaries/*; do
               if [ -f "$file" ]; then
-                cosign sign-blob --yes "$file" > "$file.sig"
-                echo "Signed: $file"
+                sign_with_cosign "$file"
               fi
             done
           fi
@@ -263,8 +273,7 @@ jobs:
           echo "Signing SBOM artifacts..."
           for file in sbom/*.json; do
             if [ -f "$file" ]; then
-              cosign sign-blob --yes "$file" > "$file.sig"
-              echo "Signed: $file"
+              sign_with_cosign "$file"
             fi
           done
 
