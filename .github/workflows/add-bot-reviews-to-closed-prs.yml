@@ -64,6 +64,7 @@ jobs:
             PR_LIST="$PR_NUMBERS"
           else
             # Automatic trigger: use the merged PR number
+            # shellcheck disable=SC2153
             PR_LIST="$PR_NUMBER"
           fi
 
