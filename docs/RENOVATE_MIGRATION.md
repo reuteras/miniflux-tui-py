@@ -523,7 +523,7 @@ After completing all steps:
 ## Support Resources
 
 - **Renovate Docs**: https://docs.renovatebot.com/
-- **Self-hosted guide**: https://docs.renovatebot.com/self-hosting/
+- **Self-hosted guide**: https://docs.renovatebot.com/getting-started/running/#self-hosting-renovate
 - **GitHub Platform**: https://docs.renovatebot.com/modules/platform/github/
 - **Your setup**: Same as Forgejo setup (refer to your Forgejo Renovate config)
 
