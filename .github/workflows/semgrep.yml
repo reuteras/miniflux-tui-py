@@ -24,6 +24,7 @@ permissions:
 jobs:
   semgrep:
     name: Semgrep Security Analysis
+    if: ${{ false }}  # Disabled: semgrep-action fails with pinned digest (executes '--json'); tracked via PR #309
     runs-on: ubuntu-latest
     permissions:
       contents: read
