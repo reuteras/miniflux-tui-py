@@ -104,6 +104,8 @@ jobs:
       - name: Coverage differential for PRs
         if: github.event_name == 'pull_request' && matrix.os == 'ubuntu-latest' && matrix.python-version == '3.11'
         continue-on-error: true
+        env:
+          BASE_REF: ${{ github.base_ref }}
         run: |
           uv pip install diff-cover
           {
@@ -114,7 +116,7 @@ jobs:
           } >> "$GITHUB_STEP_SUMMARY"
           # Run diff-cover to show coverage of changes
           uv run diff-cover coverage.xml \
-            --compare-branch="origin/${{ github.base_ref }}" \
+            --compare-branch="origin/${BASE_REF}" \
             --fail-under=70 \
             --markdown-report=diff-coverage.md || true
           # Add results to step summary

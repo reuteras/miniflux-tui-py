@@ -148,10 +148,10 @@ jobs:
     needs: [build, binaries]
     runs-on: ubuntu-latest
     permissions:
-      contents: write
-      actions: read
-      id-token: write
-      attestations: write
+      contents: write  # Required to publish release notes
+      actions: read  # Required to access artifacts from build jobs
+      id-token: write  # Required for OpenID Connect trusted publishing to PyPI
+      attestations: write  # Required to generate SLSA provenance
     steps:
       - name: Harden the runner (Audit all outbound calls)
         uses: step-security/harden-runner@f4a75cfd619ee5ce8d5b864b0d183aff3c69b55a # v2.13.1

@@ -13,8 +13,8 @@ jobs:
   autoupdate:
     runs-on: ubuntu-latest
     permissions:
-      contents: write
-      pull-requests: write
+      contents: write  # Required to push pre-commit hook updates
+      pull-requests: write  # Required to create PR with autoupdate results
 
     steps:
       - name: Harden the runner (Audit all outbound calls)

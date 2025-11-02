@@ -38,7 +38,7 @@ jobs:
       # REQUIRED: Read repository files for scanning
       contents: read
       # EXPLICITLY DENIED: No pull request or issue access needed
-      pull-requests: none
-      issues: none
+      pull-requests: none  # Minimal permissions - no PR access needed
+      issues: none  # Minimal permissions - no issues access needed
     # v2.2.3
     uses: google/osv-scanner-action/.github/workflows/osv-scanner-reusable.yml@e92b5d07338d4f0ba0981dffed17c48976ca4730
