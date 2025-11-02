@@ -1,0 +1,9 @@
+---
+# CodeQL configuration for miniflux-tui-py
+# Excludes known false positives and non-issues
+
+query-filters:
+  - exclude:
+      id: py/possible-timing-attack-sensitive-info
+      paths:
+        - scripts/build_binary.py
