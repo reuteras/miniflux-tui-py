@@ -216,7 +216,7 @@ class Config:
         if not is_valid:
             hint_messages: list[str] = []
 
-            if "Missing required field: password" in error_msg:
+            if "Missing required field: password" in error_msg:  # nosec: CWE-208 - Non-cryptographic string comparison
                 hint_messages.append(
                     dedent(
                         """

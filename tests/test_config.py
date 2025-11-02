@@ -26,7 +26,7 @@ class TestValidateConfig:
         """Test validation of valid configuration."""
         is_valid, msg = validate_config(valid_config_dict)
         assert is_valid
-        assert msg == "Configuration valid"
+        assert msg == "Configuration valid"  # nosec: CWE-208 - Test assertion, not cryptographic comparison
 
     def test_missing_server_url(self, valid_config_dict):
         """Test validation fails when server_url is missing."""
@@ -47,7 +47,7 @@ class TestValidateConfig:
         valid_config_dict["server_url"] = ""
         is_valid, msg = validate_config(valid_config_dict)
         assert not is_valid
-        assert "non-empty" in msg.lower() or "empty" in msg.lower()
+        assert "non-empty" in msg.lower() or "empty" in msg.lower()  # nosec: CWE-208 - Test assertion
 
     def test_invalid_server_url_protocol(self, valid_config_dict):
         """Test validation fails with non-http(s) server_url."""
@@ -60,49 +60,49 @@ class TestValidateConfig:
         """Test validation passes with http:// server_url."""
         valid_config_dict["server_url"] = "http://miniflux.local"
         is_valid, _ = validate_config(valid_config_dict)
-        assert is_valid
+        assert is_valid  # nosec: CWE-208 - Test assertion
 
     def test_password_command_empty_string(self, valid_config_dict):
         """Test validation fails when password command is empty string."""
         valid_config_dict["password"] = ""
         is_valid, msg = validate_config(valid_config_dict)
         assert not is_valid
-        assert "command" in msg.lower()
+        assert "command" in msg.lower()  # nosec: CWE-208 - Test assertion
 
     def test_password_command_empty_list(self, valid_config_dict):
         """Test validation fails when password command list is empty."""
         valid_config_dict["password"] = []
         is_valid, msg = validate_config(valid_config_dict)
         assert not is_valid
-        assert "command" in msg.lower()
+        assert "command" in msg.lower()  # nosec: CWE-208 - Test assertion
 
     def test_password_command_invalid_argument(self, valid_config_dict):
         """Test validation fails when command arguments are not strings."""
         valid_config_dict["password"] = ["cmd", 123]  # type: ignore[list-item]
         is_valid, msg = validate_config(valid_config_dict)
         assert not is_valid
-        assert "command" in msg.lower()
+        assert "command" in msg.lower()  # nosec: CWE-208 - Test assertion
 
     def test_api_key_rejected(self, valid_config_dict):
         """Test validation rejects legacy api_key field."""
         valid_config_dict["api_key"] = "legacy"
         is_valid, msg = validate_config(valid_config_dict)
         assert not is_valid
-        assert "no longer supported" in msg.lower()
+        assert "no longer supported" in msg.lower()  # nosec: CWE-208 - Test assertion
 
     def test_invalid_sort_mode(self, valid_config_dict):
         """Test validation fails with invalid default_sort."""
         valid_config_dict["sorting"]["default_sort"] = "invalid"
         is_valid, msg = validate_config(valid_config_dict)
         assert not is_valid
-        assert "default_sort" in msg
+        assert "default_sort" in msg  # nosec: CWE-208 - Test assertion
 
     def test_valid_sort_modes(self, valid_config_dict):
         """Test validation passes with all valid sort modes."""
         for sort_mode in ["date", "feed", "status"]:
             valid_config_dict["sorting"]["default_sort"] = sort_mode
             is_valid, _ = validate_config(valid_config_dict)
-            assert is_valid, f"Failed for sort mode: {sort_mode}"
+            assert is_valid, f"Failed for sort mode: {sort_mode}"  # nosec: CWE-208 - Test assertion
 
     def test_config_without_optional_fields(self):
         """Test validation of minimal valid config."""
@@ -131,9 +131,9 @@ class TestConfigClass:
         )
         config._api_key_cache = TEST_TOKEN
 
-        assert config.server_url == "http://localhost:8080"
-        assert config.api_key == TEST_TOKEN
-        assert config.password_command == ("command",)
+        assert config.server_url == "http://localhost:8080"  # nosec: CWE-208 - Test assertion
+        assert config.api_key == TEST_TOKEN  # nosec: CWE-208 - Test assertion
+        assert config.password_command == ("command",)  # nosec: CWE-208 - Test assertion
         assert config.allow_invalid_certs is True
         assert config.unread_color == "blue"
         assert config.read_color == "white"
@@ -149,9 +149,9 @@ class TestConfigClass:
         )
         config._api_key_cache = TEST_TOKEN
 
-        assert config.server_url == "http://localhost:8080"
-        assert config.api_key == TEST_TOKEN
-        assert config.password_command == ("command",)
+        assert config.server_url == "http://localhost:8080"  # nosec: CWE-208 - Test assertion
+        assert config.api_key == TEST_TOKEN  # nosec: CWE-208 - Test assertion
+        assert config.password_command == ("command",)  # nosec: CWE-208 - Test assertion
         assert config.allow_invalid_certs is False
         assert config.unread_color == "cyan"
         assert config.read_color == "gray"
@@ -178,8 +178,8 @@ class TestConfigSecretCommand:
             token_first = config.get_api_key()
             token_second = config.get_api_key()
 
-        assert token_first == TEST_TOKEN
-        assert token_second == TEST_TOKEN
+        assert token_first == TEST_TOKEN  # nosec: CWE-208 - Test assertion
+        assert token_second == TEST_TOKEN  # nosec: CWE-208 - Test assertion
         mock_run.assert_called_once_with(("command",), capture_output=True, text=True, check=True)
 
     def test_get_api_key_refresh_executes_again(self):

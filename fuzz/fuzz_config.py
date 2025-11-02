@@ -32,7 +32,16 @@ def _cleanup_temp_file(path: Path | None) -> None:
 
 
 def TestOneInput(data: bytes) -> None:  # noqa: N802 - required by atheris
-    """Exercise ``Config.from_file`` using arbitrary input data."""
+    """
+    Atheris fuzzing entry point.
+
+    Exercise ``Config.from_file`` using arbitrary input data.
+
+    Note: Function name is PascalCase (not snake_case per PEP 8) because
+    Atheris requires this exact naming convention. This is not a security issue.
+
+    See: https://github.com/google/atheris#usage
+    """
 
     if not data:
         return
