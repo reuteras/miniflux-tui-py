@@ -1,7 +1,8 @@
 {
     "$schema": "https://docs.renovatebot.com/renovate-schema.json",
     "extends": [
-        "config:recommended"
+        "config:recommended",
+        "group:allNonMajor"
     ],
     "semanticCommits": "enabled",
     "commitMessagePrefix": "chore(deps):",
@@ -14,6 +15,11 @@
     "prConcurrentLimit": 10,
     "ignoreDeps": [],
     "recreateWhen": "always",
+    "groupName": "Renovate Dependency Updates",
+    "groupSlug": "dependency-updates",
+    "labels": ["dependencies", "renovate"],
+    "addManagePrLabel": true,
+    "createPrWhenEmpty": false,
     "packageRules": [
         {
             "description": "Disable npm updates (not used in this project)",
