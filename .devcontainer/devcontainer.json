@@ -1,6 +1,6 @@
 {
     "name": "miniflux-tui-py",
-    "image": "mcr.microsoft.com/devcontainers/python:3.11-bookworm",
+    "image": "mcr.microsoft.com/devcontainers/python:3.14-bookworm",
     "postCreateCommand": "bash .devcontainer/postCreate.sh",
     "remoteEnv": {
         "PATH": "${containerEnv:PATH}:/home/vscode/.local/bin"
