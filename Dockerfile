@@ -15,8 +15,8 @@ RUN python -m venv "${UV_PROJECT_ENV}"
 
 ENV PATH=${UV_PROJECT_ENV}/bin:$PATH
 
-COPY --from=ghcr.io/astral-sh/uv:latest@sha256:f459f6f73a8c4ef5d69f4e6fbbdb8af751d6fa40ec34b39a1ab469acd6e289b7 /uv /bin/
-COPY --from=ghcr.io/astral-sh/uv:latest@sha256:f459f6f73a8c4ef5d69f4e6fbbdb8af751d6fa40ec34b39a1ab469acd6e289b7 /uvx /bin/
+COPY --from=ghcr.io/astral-sh/uv:latest@sha256:ba4857bf2a068e9bc0e64eed8563b065908a4cd6bfb66b531a9c424c8e25e142 /uv /bin/
+COPY --from=ghcr.io/astral-sh/uv:latest@sha256:ba4857bf2a068e9bc0e64eed8563b065908a4cd6bfb66b531a9c424c8e25e142 /uvx /bin/
 
 COPY pyproject.toml uv.lock README.md LICENSE /src/
 COPY miniflux_tui /src/miniflux_tui
