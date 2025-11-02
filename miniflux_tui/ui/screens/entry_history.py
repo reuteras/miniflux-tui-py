@@ -1,5 +1,7 @@
 """Entry history screen showing previously read entries."""
 
+from typing import TYPE_CHECKING
+
 from textual.app import ComposeResult
 from textual.binding import Binding
 from textual.containers import VerticalScroll
@@ -7,6 +9,9 @@ from textual.screen import Screen
 from textual.widgets import Footer, Header, ListItem, ListView, Static
 
 from miniflux_tui.api.models import Entry
+
+if TYPE_CHECKING:
+    from miniflux_tui.ui.app import MinifluxTUI
 
 
 class EntryHistoryItem(ListItem):
@@ -59,6 +64,13 @@ class EntryHistoryScreen(Screen):
         self._scroll_container: VerticalScroll | None = None
         self._list_view: ListView | None = None
         self._footer_widget: Footer | None = None
+
+    if TYPE_CHECKING:
+
+        @property
+        def app(self) -> "MinifluxTUI":  # type: ignore[override]
+            """Get the app instance with proper typing."""
+            return super().app  # type: ignore[return-value]
 
     def compose(self) -> ComposeResult:
         """Create child widgets."""
@@ -119,7 +131,8 @@ class EntryHistoryScreen(Screen):
             filter_info.update(f"[red]{error_message}[/red]")
 
             if self._list_view:
-                self._list_view.children.clear()
+                # Clear existing items using ListView's clear method
+                self._list_view.clear()
         except Exception as e:
             self.app.log(f"Could not update error state: {e}")
 
@@ -150,21 +163,21 @@ class EntryHistoryScreen(Screen):
             if not self._list_view:
                 return
 
-            # Clear existing items
-            self._list_view.children.clear()
+            # Clear existing items using ListView's clear method
+            self._list_view.clear()
 
             # Filter entries if needed
             display_entries = self.history_entries
             if self.current_feed_filter:
                 display_entries = [e for e in self.history_entries if e.feed and e.feed.title == self.current_feed_filter]
 
-            # Add entries to list
+            # Add entries to list using ListView's append method
             if not display_entries:
-                self._list_view.children.append(ListItem(Static("[dim]No entries found[/dim]")))
+                self._list_view.append(ListItem(Static("[dim]No entries found[/dim]")))
             else:
                 for entry in display_entries:
                     item = EntryHistoryItem(entry)
-                    self._list_view.children.append(item)
+                    self._list_view.append(item)
 
         except Exception as e:
             self.app.log(f"Could not populate history list: {e}")
