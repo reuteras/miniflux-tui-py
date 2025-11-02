@@ -39,9 +39,9 @@ jobs:
 
           # Check if already approved by GitHub Actions
           if echo "$reviews" | grep -q "APPROVED"; then
-            echo "already_approved=true" >> $GITHUB_OUTPUT
+            echo "already_approved=true" >> "$GITHUB_OUTPUT"
           else
-            echo "already_approved=false" >> $GITHUB_OUTPUT
+            echo "already_approved=false" >> "$GITHUB_OUTPUT"
           fi
         env:
           GH_TOKEN: ${{ secrets.BOT_TOKEN }}
