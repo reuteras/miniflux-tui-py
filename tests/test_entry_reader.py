@@ -450,6 +450,54 @@ class TestEntryReaderScreenEntryActions:
             # Verify error notification was shown
             screen.notify.assert_called()
 
+    def test_action_open_browser_rejects_unsafe_scheme(self, sample_feed):
+        """Unsafe URL schemes should not be opened."""
+        malicious_entry = Entry(
+            id=99,
+            feed_id=sample_feed.id,
+            title="Malicious Entry",
+            content="<p>Attack</p>",
+            url="javascript:alert(1)",
+            published_at=datetime(2023, 1, 1, 12, 0, 0, tzinfo=UTC),
+            starred=False,
+            status="unread",
+            feed=sample_feed,
+        )
+        screen = EntryReaderScreen(entry=malicious_entry)
+        screen.notify = MagicMock()
+
+        with mock.patch("miniflux_tui.ui.screens.entry_reader.webbrowser.open") as mock_open:
+            screen.action_open_browser()
+
+        mock_open.assert_not_called()
+        assert screen.notify.called
+        notified_message = screen.notify.call_args[0][0]
+        assert "unsafe" in notified_message.lower()
+
+    def test_action_open_browser_missing_url(self, sample_entry):
+        """Entries without URLs should warn and not open a browser."""
+        entry_without_url = Entry(
+            id=sample_entry.id,
+            feed_id=sample_entry.feed_id,
+            title=sample_entry.title,
+            content=sample_entry.content,
+            url="",
+            published_at=sample_entry.published_at,
+            starred=sample_entry.starred,
+            status=sample_entry.status,
+            feed=sample_entry.feed,
+        )
+        screen = EntryReaderScreen(entry=entry_without_url)
+        screen.notify = MagicMock()
+
+        with mock.patch("miniflux_tui.ui.screens.entry_reader.webbrowser.open") as mock_open:
+            screen.action_open_browser()
+
+        mock_open.assert_not_called()
+        assert screen.notify.called
+        notified_message = screen.notify.call_args[0][0]
+        assert "does not contain a url" in notified_message.lower()
+
     @pytest.mark.asyncio
     async def test_action_fetch_original_behavior(self, sample_entry):
         """Test fetch_original action exists and is callable."""
