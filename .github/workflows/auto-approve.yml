@@ -83,8 +83,8 @@ jobs:
           steps.check-approval.outputs.already_approved == 'false' &&
           steps.check-status.outcome == 'success'
         run: |
-          gh pr review ${{ github.event.pull_request.number }} \
-            --repo ${{ github.repository }} \
+          gh pr review "${{ github.event.pull_request.number }}" \
+            --repo "${{ github.repository }}" \
             --approve \
             --body "✅ All automated checks passed. Auto-approved for \
               solo developer workflow."
