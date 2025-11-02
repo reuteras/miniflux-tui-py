@@ -16,7 +16,7 @@ Your GitHub Actions setup is **already excellent** with comprehensive security p
 
 ### 1. Replace Codecov with Free Alternatives
 
-**Problem:** Codecov has rate limits on free tier  
+**Problem:** Codecov has rate limits on free tier
 **Solution:** Use Coveralls + Self-hosted GitHub Pages + PR Comments
 
 #### Option A: Coveralls (Recommended - No Rate Limits)
@@ -190,7 +190,7 @@ Verify that your tests actually catch bugs by adding mutation testing on PRs:
           uv run mutmut run --paths-to-mutate miniflux_tui --tests-dir tests || true
           uv run mutmut results
           uv run mutmut html
-          
+
       - name: Upload mutation report
         uses: actions/upload-artifact@330a01c490aca151604b8cf639adc76d48f6c5d4
         with:
@@ -202,7 +202,7 @@ Verify that your tests actually catch bugs by adding mutation testing on PRs:
 
 ### 4. Replace Super-Linter with MegaLinter
 
-**Problem:** Super-Linter is slower and less configurable  
+**Problem:** Super-Linter is slower and less configurable
 **Solution:** MegaLinter - better performance and actively maintained
 
 ```yaml
@@ -308,7 +308,7 @@ jobs:
           uv pip install pip-licenses
           uv run pip-licenses --format=markdown --output-file=licenses.md
           uv run pip-licenses --fail-on="GPL;AGPL;LGPL"
-          
+
       - name: Upload license report
         uses: actions/upload-artifact@330a01c490aca151604b8cf639adc76d48f6c5d4
         with:
@@ -408,7 +408,7 @@ jobs:
   run: |
     uv pip install pip-audit
     uv run pip-audit --desc --format json --output audit.json
-    
+
 - name: Upload audit results
   uses: actions/upload-artifact@330a01c490aca151604b8cf639adc76d48f6c5d4
   with:
