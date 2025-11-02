@@ -2,7 +2,6 @@ name: Bug Report
 description: Report a bug or issue with miniflux-tui-py
 title: "[Bug]: "
 labels: ["bug"]
-assignees: []
 body:
   - type: markdown
     attributes:
