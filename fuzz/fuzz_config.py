@@ -31,16 +31,11 @@ def _cleanup_temp_file(path: Path | None) -> None:
         pass
 
 
-def TestOneInput(data: bytes) -> None:  # noqa: N802 - required by atheris
+def _test_one_input(data: bytes) -> None:
     """
     Atheris fuzzing entry point.
 
     Exercise ``Config.from_file`` using arbitrary input data.
-
-    Note: Function name is PascalCase (not snake_case per PEP 8) because
-    Atheris requires this exact naming convention. This is not a security issue.
-
-    See: https://github.com/google/atheris#usage
     """
 
     if not data:
@@ -64,6 +59,11 @@ def TestOneInput(data: bytes) -> None:  # noqa: N802 - required by atheris
             pass
     finally:
         _cleanup_temp_file(temp_path)
+
+
+# Atheris requires the fuzz target function to be named ``TestOneInput``; alias the
+# snake_case implementation to satisfy both Atheris and static analysis tools.
+TestOneInput = _test_one_input
 
 
 def main() -> None:
