@@ -1,5 +1,5 @@
 # syntax=docker/dockerfile:1.7
-ARG PYTHON_IMAGE=python:3.13.9-slim@sha256:0222b795db95bf7412cede36ab46a266cfb31f632e64051aac9806dabf840a61
+ARG PYTHON_IMAGE=python:3.14.0-slim@sha256:4ed33101ee7ec299041cc41dd268dae17031184be94384b1ce7936dc4e5dead3
 
 # hadolint ignore=DL3006
 FROM ${PYTHON_IMAGE} AS builder
