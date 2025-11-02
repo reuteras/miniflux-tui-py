@@ -1,0 +1,60 @@
+---
+name: Create Signed Release Tag
+
+on:
+  workflow_dispatch:
+    inputs:
+      version:
+        description: Version to tag (e.g. 0.5.2)
+        required: true
+
+permissions:
+  contents: write
+
+jobs:
+  sign-and-push-tag:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Harden the runner (audit mode)
+        uses: step-security/harden-runner@f4a75cfd619ee5ce8d5b864b0d183aff3c69b55a # v2.13.1
+        with:
+          egress-policy: audit
+
+      - name: Checkout repository
+        uses: actions/checkout@08c6903cd8c0fde910a37f88322edcfb5dd907a8 # v5
+        with:
+          fetch-depth: 0
+
+      - name: Import GPG signing key
+        id: import-gpg
+        uses: crazy-max/ghaction-import-gpg@c9e9e3bd127b8456d2ce2dc9f67c0d9c431f55f0 # v6
+        with:
+          gpg-private-key: ${{ secrets.GPG_PRIVATE_KEY }}
+          passphrase: ${{ secrets.GPG_PASSPHRASE }}
+
+      - name: Configure git identity
+        run: |
+          set -euo pipefail
+          git config user.name "${GPG_SIGNING_NAME:-Miniflux Release Bot}"
+          git config user.email "${GPG_SIGNING_EMAIL:-release@reuteras.net}"
+          git config user.signingkey "${{ steps.import-gpg.outputs.gpg_fingerprint }}"
+
+      - name: Create signed tag
+        env:
+          VERSION: ${{ github.event.inputs.version }}
+        run: |
+          set -euo pipefail
+          TAG="v${VERSION}"
+
+          if git rev-parse "${TAG}" >/dev/null 2>&1; then
+            echo "Tag ${TAG} already exists locally; refusing to overwrite." >&2
+            exit 1
+          fi
+
+          if git ls-remote --tags origin "${TAG}" | grep -q "${TAG}$"; then
+            echo "Tag ${TAG} already exists on origin; aborting." >&2
+            exit 1
+          fi
+
+          git tag -s "${TAG}" -m "${TAG}"
+          git push origin "${TAG}"

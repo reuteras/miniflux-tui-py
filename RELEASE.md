@@ -3,7 +3,7 @@
 Releases are now driven entirely from Git tags. The process happens in two stages:
 
 1. Prepare a release branch that updates the version and changelog.
-2. Merge the branch, tag `main`, and push the tag to trigger the publish workflow.
+2. Merge the branch, then run the GitHub workflow that creates a GPG-signed tag. Pushing that tag triggers the publish pipeline.
 
 GitHub Actions handles packaging, publishing, and creating the GitHub release once the tag is pushed.
 
@@ -13,8 +13,8 @@ GitHub Actions handles packaging, publishing, and creating the GitHub release on
 # 1. Prepare the release branch with version + changelog updates
 uv run python scripts/release.py
 
-# 2. After the PR merges, tag the merged commit on main
-uv run python scripts/release.py tag
+# 2. After the PR merges (on main), trigger the signed-tag workflow
+gh workflow run create-signed-tag.yml --ref main --field version=0.5.2
 ```
 
 ## Stage 1 - Prepare the Release Branch
@@ -37,26 +37,43 @@ The default command (`uv run python scripts/release.py`) performs the following:
 2. Get the PR reviewed and merged.
 3. Confirm that `main` now contains the release commit.
 
-> Tip: The script prints the exact `uv run python scripts/release.py tag --version X.Y.Z` command to run once the PR merges.
+> Tip: The script prints the computed version number—use that value when you trigger the signed-tag workflow.
 
-## Stage 2 - Create and Push the Tag
+## Stage 2 - Create and Push the Signed Tag
 
-After the release branch merges:
+Once the release branch is merged into `main`:
 
 ```bash
+# Optional: confirm you are on the tip of main
 git checkout main
 git pull --ff-only
-uv run python scripts/release.py tag
+
+# Trigger the signed tag workflow (replace 0.5.2 with your version)
+gh workflow run create-signed-tag.yml --ref main --field version=0.5.2
 ```
 
-The `tag` sub-command:
+That workflow:
 
-1. Confirms `main` is clean and matches `origin/main`.
-2. Reads the version from `pyproject.toml` (or use `--version` to override).
-3. Creates an annotated tag `vX.Y.Z`.
-4. Pushes the tag to GitHub.
+1. Imports the release GPG key (from repository secrets).
+2. Creates a `vX.Y.Z` signed tag on the current `main`.
+3. Pushes the tag to `origin`.
 
-Pushing the tag triggers the `Publish to PyPI` workflow (`.github/workflows/publish.yml`).
+The pushed tag triggers the `Publish to PyPI` workflow (`.github/workflows/publish.yml`).
+
+> Tip: the workflow aborts if the tag is already present locally or on the remote, preventing accidental overwrites.
+
+## Tag Signing Secrets (One-Time)
+
+1. Generate a dedicated signing key (rotate annually or as needed):
+    ```bash
+    gpg --quick-gen-key "Miniflux TUI Release <release@reuteras.net>" rsa4096 sign 1y
+    gpg --armor --export-secret-keys "Miniflux TUI Release" > release-key.asc
+    ```
+2. Add the following repository secrets (ideally scoped to the `pypi` environment):
+    - `GPG_PRIVATE_KEY`: contents of `release-key.asc`
+    - `GPG_PASSPHRASE`: the key passphrase
+    - Optional overrides: `GPG_SIGNING_NAME`, `GPG_SIGNING_EMAIL`
+3. When rotating the key, update the secrets and delete the old key from GitHub.
 
 ## What GitHub Actions Handles
 
@@ -93,18 +110,17 @@ Ensure PyPI trusts the workflow before your first tag-triggered release:
 
 ## Fallback / Manual Steps
 
-If the tag push fails (network issues, etc.), rerun:
+- If the signed-tag workflow fails in GitHub Actions, press “Re-run all jobs” or:
+  ```bash
+  gh run rerun <run-id>
+  ```
+- To create a tag locally in an emergency, use the release key and a signed tag:
+  ```bash
+  git checkout main
+  git pull --ff-only
+  git tag -s vX.Y.Z -m "vX.Y.Z"
+  git push origin vX.Y.Z
+  ```
+  (Avoid this path unless absolutely necessary—automation keeps the provenance consistent.)
 
-```bash
-git tag -d vX.Y.Z          # only if the tag was created locally
-git pull --ff-only
-uv run python scripts/release.py tag --version X.Y.Z
-```
-
-Or push manually:
-
-```bash
-git push origin vX.Y.Z
-```
-
-The CI workflow can be re-run from the GitHub Actions UI if needed.
+The publish workflow can be re-run from the GitHub Actions UI if needed.
