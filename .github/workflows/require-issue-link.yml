@@ -42,6 +42,14 @@ jobs:
             python -c "import urllib.parse, os; repo=os.environ['REPO']; pr_number=os.environ['PR_NUMBER']; query=f'repo:{repo} type:issue \"#{pr_number}\"'; print(urllib.parse.quote_plus(query))"
           )
           issue_count=$(gh api -X GET "search/issues?q=${encoded_query}" --jq '.total_count')
+
+          if [ "${issue_count:-0}" -le 0 ]; then
+            encoded_query=$(
+              python -c "import urllib.parse, os; repo=os.environ['REPO']; pr_number=os.environ['PR_NUMBER']; query=f'repo:{repo} type:issue \"https://github.com/{repo}/pull/{pr_number}\"'; print(urllib.parse.quote_plus(query))"
+            )
+            issue_count=$(gh api -X GET "search/issues?q=${encoded_query}" --jq '.total_count')
+          fi
+
           if [ "${issue_count:-0}" -gt 0 ]; then
             echo "✅ Found issue referencing PR #$PR_NUMBER"
             exit 0
