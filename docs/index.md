@@ -49,20 +49,21 @@ See the [Installation Guide](installation.md) for more options including pip and
 
 ## Key Bindings
 
-| Key | Action |
-|-----|--------|
-| `j` / `k` | Navigate down/up |
-| `Enter` | Open entry |
-| `m` | Mark as read/unread |
-| `*` | Toggle star |
-| `s` | Cycle sort mode |
-| `g` | Toggle group by feed |
+| Key       | Action               |
+| -----     | --------             |
+| --------- | -------------------- |
+| `j` / `k` | Navigate down/up     |
+| `Enter`   | Open entry           |
+| `m`       | Mark as read/unread  |
+| `*`       | Toggle star          |
+| `s`       | Cycle sort mode      |
+| `g`       | Toggle group by feed |
 | `l` / `h` | Expand/collapse feed |
-| `r` | Refresh entries |
-| `u` | Show unread entries |
-| `t` | Show starred entries |
-| `?` | Show help |
-| `q` | Quit |
+| `r`       | Refresh entries      |
+| `u`       | Show unread entries  |
+| `t`       | Show starred entries |
+| `?`       | Show help            |
+| `q`       | Quit                 |
 
 ## Documentation
 

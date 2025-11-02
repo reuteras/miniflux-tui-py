@@ -14,48 +14,80 @@
     "packageRules": [
         {
             "description": "Disable npm updates (not used in this project)",
-            "matchManagers": ["npm"],
+            "matchManagers": [
+                "npm"
+            ],
             "enabled": false
         },
         {
             "description": "Security updates for github-actions: run immediately/daily",
-            "matchManagers": ["github-actions"],
-            "matchUpdateTypes": ["patch"],
-            "schedule": ["at any time"],
+            "matchManagers": [
+                "github-actions"
+            ],
+            "matchUpdateTypes": [
+                "patch"
+            ],
+            "schedule": [
+                "at any time"
+            ],
             "groupName": "security-updates-github-actions"
         },
         {
             "description": "Major version updates for github-actions: weekly review",
-            "matchManagers": ["github-actions"],
-            "matchUpdateTypes": ["major"],
+            "matchManagers": [
+                "github-actions"
+            ],
+            "matchUpdateTypes": [
+                "major"
+            ],
             "automerge": false,
-            "schedule": ["after 10pm on sunday"],
+            "schedule": [
+                "after 10pm on sunday"
+            ],
             "groupName": "major-version-updates-github-actions"
         },
         {
             "description": "Security updates for docker: run immediately/daily",
-            "matchDatasources": ["docker"],
-            "matchUpdateTypes": ["patch"],
-            "schedule": ["at any time"],
+            "matchDatasources": [
+                "docker"
+            ],
+            "matchUpdateTypes": [
+                "patch"
+            ],
+            "schedule": [
+                "at any time"
+            ],
             "groupName": "security-updates-docker"
         },
         {
             "description": "Major version updates for docker: weekly review",
-            "matchDatasources": ["docker"],
-            "matchUpdateTypes": ["major"],
+            "matchDatasources": [
+                "docker"
+            ],
+            "matchUpdateTypes": [
+                "major"
+            ],
             "automerge": false,
-            "schedule": ["after 10pm on sunday"],
+            "schedule": [
+                "after 10pm on sunday"
+            ],
             "groupName": "major-version-updates-docker"
         },
         {
             "description": "Restrict slsa-github-generator to v1.x only",
-            "matchDatasources": ["github-tags"],
+            "matchDatasources": [
+                "github-tags"
+            ],
             "allowedVersions": "<=2.0.0",
-            "matchPackageNames": ["/slsa-framework/slsa-github-generator/"]
+            "matchPackageNames": [
+                "/slsa-framework/slsa-github-generator/"
+            ]
         },
         {
             "description": "Skip trivy-action updates due to lookup failures",
-            "matchPackageNames": ["aquasecurity/trivy-action"],
+            "matchPackageNames": [
+                "aquasecurity/trivy-action"
+            ],
             "enabled": false
         }
     ]

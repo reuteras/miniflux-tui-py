@@ -1,7 +1,7 @@
 # syntax=docker/dockerfile:1.7
-
 ARG PYTHON_IMAGE=python:3.13.9-slim@sha256:0222b795db95bf7412cede36ab46a266cfb31f632e64051aac9806dabf840a61
 
+# hadolint ignore=DL3006
 FROM ${PYTHON_IMAGE} AS builder
 
 ENV PIP_NO_CACHE_DIR=1 \
@@ -34,7 +34,7 @@ RUN uv export \
     && rm -rf requirements.txt dist \
     && find "${UV_PROJECT_ENV}" -type d -name "__pycache__" -prune -exec rm -rf {} +
 
-
+# hadolint ignore=DL3006
 FROM ${PYTHON_IMAGE} AS runtime
 
 ENV PYTHONDONTWRITEBYTECODE=1 \

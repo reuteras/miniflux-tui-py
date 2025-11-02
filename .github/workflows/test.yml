@@ -316,8 +316,8 @@ jobs:
         run: |
           # Run mutmut on the main codebase
           # Note: Mutation testing can be slow. We run with a timeout to prevent excessive CI time.
-          echo "## Mutation Testing Results" >> $GITHUB_STEP_SUMMARY
-          echo "Running mutation testing (limited to 30 minutes)..." >> $GITHUB_STEP_SUMMARY
+          echo "## Mutation Testing Results" >> "$GITHUB_STEP_SUMMARY"
+          echo "Running mutation testing (limited to 30 minutes)..." >> "$GITHUB_STEP_SUMMARY"
 
           # Run with pytest runner
           uv run mutmut run --paths-to-mutate=miniflux_tui --runner="pytest -x -q" --tests-dir=tests || true
@@ -327,11 +327,11 @@ jobs:
           uv run mutmut html || true
 
           # Show summary
-          echo "" >> $GITHUB_STEP_SUMMARY
-          echo "### Summary" >> $GITHUB_STEP_SUMMARY
-          uv run mutmut results | head -30 >> $GITHUB_STEP_SUMMARY || true
-          echo "" >> $GITHUB_STEP_SUMMARY
-          echo "📝 Full report available in artifacts" >> $GITHUB_STEP_SUMMARY
+          echo "" >> "$GITHUB_STEP_SUMMARY"
+          echo "### Summary" >> "$GITHUB_STEP_SUMMARY"
+          uv run mutmut results | head -30 >> "$GITHUB_STEP_SUMMARY" || true
+          echo "" >> "$GITHUB_STEP_SUMMARY"
+          echo "📝 Full report available in artifacts" >> "$GITHUB_STEP_SUMMARY"
 
       - name: Upload mutation report
         if: always()
