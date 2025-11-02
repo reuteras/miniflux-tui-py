@@ -1,13 +1,15 @@
 ---
 name: Add Bot Reviews to Closed PRs
 
-# Manual trigger to add reviews from bot account to merged PRs
+# Trigger on PR merge and manual workflow dispatch
 on:
+  pull_request:
+    types: [closed]
   workflow_dispatch:
     inputs:
       pr_numbers:
         description: "PR numbers to review (comma-separated, e.g., '225,226')"
-        required: true
+        required: false
         type: string
 
 permissions:
@@ -17,6 +19,11 @@ permissions:
 jobs:
   add-reviews:
     runs-on: ubuntu-latest
+    # Automatic: run when PRs are merged (merged == true)
+    # Manual: always run (user provides PR numbers)
+    if: >-
+      (github.event_name == 'pull_request' && github.event.pull_request.merged == true) ||
+      github.event_name == 'workflow_dispatch'
     steps:
       - name: Harden the runner (Audit all outbound calls)
         uses: step-security/harden-runner@f4a75cfd619ee5ce8d5b864b0d183aff3c69b55a # v2.13.1
@@ -27,6 +34,8 @@ jobs:
         env:
           GH_TOKEN: ${{ secrets.BOT_TOKEN }}
           PR_NUMBERS: ${{ github.event.inputs.pr_numbers }}
+          PR_NUMBER: ${{ github.event.pull_request.number }}
+          EVENT_NAME: ${{ github.event_name }}
         run: |
           set -euo pipefail
 
@@ -45,11 +54,36 @@ jobs:
           APPROVAL_EOF
           )
 
+          # Determine which PRs to review
+          if [ "$EVENT_NAME" == "workflow_dispatch" ]; then
+            # Manual trigger: use provided PR numbers
+            if [ -z "$PR_NUMBERS" ]; then
+              echo "❌ Error: PR numbers required for manual trigger"
+              exit 1
+            fi
+            PR_LIST="$PR_NUMBERS"
+          else
+            # Automatic trigger: use the merged PR number
+            # shellcheck disable=SC2153
+            PR_LIST="$PR_NUMBER"
+          fi
+
           # Convert comma-separated PR numbers to array
-          IFS=',' read -ra PR_ARRAY <<< "$PR_NUMBERS"
+          IFS=',' read -ra PR_ARRAY <<< "$PR_LIST"
 
           for pr in "${PR_ARRAY[@]}"; do
             pr=$(echo "$pr" | xargs)  # Trim whitespace
+
+            # Check if PR already has a bot review
+            existing_reviews=$(gh pr view "$pr" \
+              --repo "${{ github.repository }}" \
+              --json reviews --jq '.reviews[] | select(.author.login | contains("[bot]")) | .state' || true)
+
+            if echo "$existing_reviews" | grep -q "APPROVED"; then
+              echo "ℹ️  PR #$pr already has bot approval, skipping"
+              continue
+            fi
+
             echo "Adding review to PR #$pr..."
 
             gh pr review "$pr" \
@@ -57,7 +91,7 @@ jobs:
               --approve \
               --body "$APPROVAL_MSG" \
               && echo "✅ Reviewed PR #$pr" \
-              || echo "⚠️  Could not review PR #$pr (may already have bot review)"
+              || echo "⚠️  Could not review PR #$pr"
           done
 
           echo "Done!"
