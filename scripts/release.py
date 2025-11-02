@@ -387,6 +387,7 @@ def edit_changelog(new_version: str) -> bool:  # noqa: PLR0911
 
     editor = os.environ.get("EDITOR", "nano").strip()
     try:
+        # nosec: B603 - Editor from EDITOR env var is intentional and expected to be safe
         subprocess.run([editor, str(changelog_path)], check=True)
     except FileNotFoundError:
         print_error(f"Editor '{editor}' not found. Set $EDITOR environment variable.")

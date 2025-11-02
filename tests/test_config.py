@@ -148,9 +148,9 @@ class TestConfigClass:
         )
         config._api_key_cache = TEST_TOKEN
 
-        assert config.server_url == "http://localhost:8080"  # nosec: CWE-208 - Test assertion
-        assert config.api_key == TEST_TOKEN  # nosec: CWE-208 - Test assertion
-        assert config.password_command == ("command",)  # nosec: CWE-208 - Test assertion
+        assert config.server_url == "http://localhost:8080"  # nosec: B105 - Test data, not sensitive
+        assert config.api_key == TEST_TOKEN  # nosec: B105 - Test data, not sensitive
+        assert config.password_command == ("command",)  # nosec: B105 - Test data, not sensitive
         assert config.allow_invalid_certs is True
         assert config.unread_color == "blue"
         assert config.read_color == "white"
@@ -166,9 +166,9 @@ class TestConfigClass:
         )
         config._api_key_cache = TEST_TOKEN
 
-        assert config.server_url == "http://localhost:8080"  # nosec: CWE-208 - Test assertion
-        assert config.api_key == TEST_TOKEN  # nosec: CWE-208 - Test assertion
-        assert config.password_command == ("command",)  # nosec: CWE-208 - Test assertion
+        assert config.server_url == "http://localhost:8080"  # nosec: B105 - Test data, not sensitive
+        assert config.api_key == TEST_TOKEN  # nosec: B105 - Test data, not sensitive
+        assert config.password_command == ("command",)  # nosec: B105 - Test data, not sensitive
         assert config.allow_invalid_certs is False
         assert config.unread_color == "cyan"
         assert config.read_color == "gray"
