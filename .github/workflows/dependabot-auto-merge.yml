@@ -3,9 +3,6 @@ name: Dependabot Auto-Merge
 
 on:
   pull_request:
-    paths:
-      - "pyproject.toml"
-      - ".github/workflows/**"
 
 permissions:
   contents: read

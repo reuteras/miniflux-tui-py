@@ -13,7 +13,8 @@ from textual.widgets import Footer, Header, ListItem, ListView, Static
 from miniflux_tui.api.models import Entry
 
 if TYPE_CHECKING:
-    from miniflux_tui.ui.app import MinifluxTUI
+    # Type-only import, no runtime circular dependency (lazy loading in app.py)
+    from miniflux_tui.ui.app import MinifluxTUI  # nosec: CWE-1047 - Type checking only
 
 
 class EntryHistoryItem(ListItem):
