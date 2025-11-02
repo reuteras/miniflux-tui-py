@@ -23,16 +23,19 @@ All changes to the main branch require at least one code review and approval bef
 - Code owner reviews: No
 
 #### ✅ Signed Releases
-All releases are cryptographically signed with SSH signatures, providing:
-- **Authenticity verification** - confirms releases come from authorized maintainers
+All releases are cryptographically signed with **Sigstore Gitsign** (keyless signing), providing:
+- **Authenticity verification** - confirms releases come from authorized maintainers via OIDC
 - **Integrity assurance** - detects tampering with release artifacts
-- **Non-repudiation** - signers cannot deny signing releases
+- **Non-repudiation** - signatures logged in public transparency log (Rekor)
+- **No long-lived secrets** - uses short-lived OIDC tokens instead of stored keys
 
 **Verify a signed release**:
 ```bash
-git verify-tag v0.4.1
-# Output: tagger Peter Reuterås <peter@reuteras.com> ... with SSH signature
+git verify-tag v0.5.2
+# Output shows signature from Gitsign with Sigstore certificate chain
 ```
+
+All release signatures are publicly logged in the [Sigstore Rekor transparency log](https://rekor.sigstore.dev/).
 
 #### ✅ Branch Protection
 The main branch is protected with the following rules:

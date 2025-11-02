@@ -10,6 +10,7 @@ on:
 
 permissions:
   contents: write
+  id-token: write
 
 jobs:
   sign-and-push-tag:
@@ -25,19 +26,14 @@ jobs:
         with:
           fetch-depth: 0
 
-      - name: Import GPG signing key
-        id: import-gpg
-        uses: crazy-max/ghaction-import-gpg@c9e9e3bd127b8456d2ce2dc9f67c0d9c431f55f0 # v6
-        with:
-          gpg-private-key: ${{ secrets.GPG_PRIVATE_KEY }}
-          passphrase: ${{ secrets.GPG_PASSPHRASE }}
+      - name: Setup Gitsign for keyless signing
+        uses: chainguard-dev/actions/setup-gitsign@e82b4e5ae10182af72972addcb3fedf7454621c8 # main
 
       - name: Configure git identity
         run: |
           set -euo pipefail
-          git config user.name "${GPG_SIGNING_NAME:-Miniflux Release Bot}"
-          git config user.email "${GPG_SIGNING_EMAIL:-release@reuteras.net}"
-          git config user.signingkey "${{ steps.import-gpg.outputs.gpg_fingerprint }}"
+          git config user.name "Miniflux Release Bot"
+          git config user.email "release@reuteras.net"
 
       - name: Create signed tag
         env:

@@ -3,7 +3,7 @@
 Releases are now driven entirely from Git tags. The process happens in two stages:
 
 1. Prepare a release branch that updates the version and changelog.
-2. Merge the branch, then run the GitHub workflow that creates a GPG-signed tag. Pushing that tag triggers the publish pipeline.
+2. Merge the branch, then run the GitHub workflow that creates a Sigstore-signed tag. Pushing that tag triggers the publish pipeline.
 
 GitHub Actions handles packaging, publishing, and creating the GitHub release once the tag is pushed.
 
@@ -54,26 +54,42 @@ gh workflow run create-signed-tag.yml --ref main --field version=0.5.2
 
 That workflow:
 
-1. Imports the release GPG key (from repository secrets).
-2. Creates a `vX.Y.Z` signed tag on the current `main`.
+1. Sets up Gitsign for keyless signing using Sigstore.
+2. Creates a `vX.Y.Z` cryptographically signed tag on the current `main`.
 3. Pushes the tag to `origin`.
 
 The pushed tag triggers the `Publish to PyPI` workflow (`.github/workflows/publish.yml`).
 
 > Tip: the workflow aborts if the tag is already present locally or on the remote, preventing accidental overwrites.
 
-## Tag Signing Secrets (One-Time)
+## Keyless Signing with Sigstore
 
-1. Generate a dedicated signing key (rotate annually or as needed):
-    ```bash
-    gpg --quick-gen-key "Miniflux TUI Release <release@reuteras.net>" rsa4096 sign 1y
-    gpg --armor --export-secret-keys "Miniflux TUI Release" > release-key.asc
-    ```
-2. Add the following repository secrets (ideally scoped to the `pypi` environment):
-    - `GPG_PRIVATE_KEY`: contents of `release-key.asc`
-    - `GPG_PASSPHRASE`: the key passphrase
-    - Optional overrides: `GPG_SIGNING_NAME`, `GPG_SIGNING_EMAIL`
-3. When rotating the key, update the secrets and delete the old key from GitHub.
+The release workflow uses **Sigstore Gitsign** for keyless cryptographic signing. This provides:
+
+- ✅ **No long-lived secrets** - Uses short-lived OIDC tokens (valid only during workflow execution)
+- ✅ **Automatic transparency log** - All signatures are logged in Sigstore's public transparency log
+- ✅ **Consistent security** - Aligns with existing Cosign usage for artifact signing
+- ✅ **Reduced attack surface** - No private keys to rotate or store in secrets
+
+### Prerequisites
+
+1. The workflow requires `id-token: write` permission (already configured)
+2. GitHub automatically provides OIDC tokens to workflows
+3. Gitsign detects these tokens and generates signing certificates via Fulcio
+
+### Verifying Signed Tags
+
+To verify a Gitsign-signed tag:
+
+```bash
+# Verify tag signature
+git verify-tag v0.5.2
+
+# View signature details
+git show --show-signature v0.5.2
+```
+
+All signatures are publicly logged in the [Sigstore Rekor transparency log](https://rekor.sigstore.dev/).
 
 ## What GitHub Actions Handles
 
@@ -110,17 +126,17 @@ Ensure PyPI trusts the workflow before your first tag-triggered release:
 
 ## Fallback / Manual Steps
 
-- If the signed-tag workflow fails in GitHub Actions, press “Re-run all jobs” or:
+- If the signed-tag workflow fails in GitHub Actions, press "Re-run all jobs" or:
   ```bash
   gh run rerun <run-id>
   ```
-- To create a tag locally in an emergency, use the release key and a signed tag:
+- To create a tag locally in an emergency (only if the workflow is unavailable):
   ```bash
   git checkout main
   git pull --ff-only
   git tag -s vX.Y.Z -m "vX.Y.Z"
   git push origin vX.Y.Z
   ```
-  (Avoid this path unless absolutely necessary—automation keeps the provenance consistent.)
+  **Note:** Local tags will use your personal signing key (SSH or GPG) rather than Gitsign. This is acceptable for emergency releases, but prefer the automated workflow for consistent provenance.
 
 The publish workflow can be re-run from the GitHub Actions UI if needed.
