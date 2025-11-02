@@ -14,7 +14,6 @@
     },
     "prConcurrentLimit": 10,
     "ignoreDeps": [],
-    "recreateWhen": "always",
     "groupName": "Renovate Dependency Updates",
     "groupSlug": "dependency-updates",
     "labels": ["dependencies", "renovate"],
