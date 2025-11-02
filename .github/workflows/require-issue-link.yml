@@ -4,7 +4,7 @@ name: Require Linked Issue
 # Trigger on pull requests to ensure issue linking
 on:
   pull_request:
-    types: [opened, edited]
+    types: [opened, edited, synchronize, reopened]
 
 permissions:
   pull-requests: read
