@@ -1,5 +1,76 @@
 # Changelog
 
+## [0.5.1] - 2025-11-02
+
+### Features
+- Add Dependabot PR to Issue tracker workflow ([#304](https://github.com/reuteras/miniflux-tui-py/pull/304))
+- Configure Renovate to group all updates into single PR with labels ([#297](https://github.com/reuteras/miniflux-tui-py/pull/297))
+- Add mutation testing for test quality verification ([#252](https://github.com/reuteras/miniflux-tui-py/pull/252))
+- Enhance CodeQL and add pip-audit to dependency review ([#266](https://github.com/reuteras/miniflux-tui-py/pull/266))
+- Add Renovate workflow for automated dependency updates
+- Add coverage differential and parallel testing ([#258](https://github.com/reuteras/miniflux-tui-py/pull/258))
+- Add performance benchmarking with pytest-benchmark ([#257](https://github.com/reuteras/miniflux-tui-py/pull/257))
+- Add code complexity analysis to CI ([#251](https://github.com/reuteras/miniflux-tui-py/pull/251))
+- Implement entry history view screen (Issue #56) ([#253](https://github.com/reuteras/miniflux-tui-py/pull/253))
+- Add license compliance checking workflow ([#250](https://github.com/reuteras/miniflux-tui-py/pull/250))
+- Implement user settings management screen (Issue #57) ([#249](https://github.com/reuteras/miniflux-tui-py/pull/249))
+- Add Coveralls and GitHub Pages for coverage tracking ([#240](https://github.com/reuteras/miniflux-tui-py/pull/240))
+- Replace Super-Linter with MegaLinter ([#242](https://github.com/reuteras/miniflux-tui-py/pull/242))
+- Add Semgrep SAST security scanning ([#241](https://github.com/reuteras/miniflux-tui-py/pull/241))
+- Add cosign signing and SLSA provenance to release workflow ([#230](https://github.com/reuteras/miniflux-tui-py/pull/230))
+
+### Bug Fixes
+- address outstanding code scanning alerts ([#314](https://github.com/reuteras/miniflux-tui-py/pull/314))
+- guard entry browser launches against unsafe URLs ([#312](https://github.com/reuteras/miniflux-tui-py/pull/312))
+- Enable Dependabot auto-merge for all dependency updates ([#306](https://github.com/reuteras/miniflux-tui-py/pull/306))
+- Remove remaining invalid configuration options from Renovate and Dependabot ([#301](https://github.com/reuteras/miniflux-tui-py/pull/301))
+- Remove invalid Renovate configuration options ([#299](https://github.com/reuteras/miniflux-tui-py/pull/299))
+- Remove invalid configuration option blocking Renovate ([#291](https://github.com/reuteras/miniflux-tui-py/pull/291))
+- Enable Renovate PR recreation for merged PRs (#268) ([#289](https://github.com/reuteras/miniflux-tui-py/pull/289))
+- Fix Renovate PR creation with BOT_TOKEN and config fixes ([#287](https://github.com/reuteras/miniflux-tui-py/pull/287))
+- Remove external Renovate config override and use immediate schedules (#268) ([#286](https://github.com/reuteras/miniflux-tui-py/pull/286))
+- Enable all Renovate dependency updates without schedule delays ([#285](https://github.com/reuteras/miniflux-tui-py/pull/285))
+- Resolve Renovate dependency issues and code quality problems ([#283](https://github.com/reuteras/miniflux-tui-py/pull/283))
+- Resolve MegaLinter validation failures (#281) ([#282](https://github.com/reuteras/miniflux-tui-py/pull/282))
+- Add markdown-link-check ignore patterns for dead links ([#280](https://github.com/reuteras/miniflux-tui-py/pull/280))
+- Fix YAML and markdown linting violations across workflows and templates ([#279](https://github.com/reuteras/miniflux-tui-py/pull/279))
+- Wrap bare URLs in angle brackets for markdown linting compliance ([#277](https://github.com/reuteras/miniflux-tui-py/pull/277))
+- Add vulnerability alerts permission and configuration to Renovate ([#274](https://github.com/reuteras/miniflux-tui-py/pull/274))
+- Update GitHub Actions workflows for compatibility ([#273](https://github.com/reuteras/miniflux-tui-py/pull/273))
+- Add workflows permission to Renovate job ([#269](https://github.com/reuteras/miniflux-tui-py/pull/269))
+- Add pytest-benchmark to dev dependencies ([#272](https://github.com/reuteras/miniflux-tui-py/pull/272))
+- Resolve pyright type errors in entry_history.py ([#271](https://github.com/reuteras/miniflux-tui-py/pull/271))
+- Add RENOVATE_REPOSITORIES env var to explicitly specify repo ([#267](https://github.com/reuteras/miniflux-tui-py/pull/267))
+- Add RENOVATE_CONFIG_FILE environment variable to workflow
+- Remove configurationFile parameter from Renovate workflow
+- Correct datetime handling in entry_history.py (Issue #260) ([#261](https://github.com/reuteras/miniflux-tui-py/pull/261))
+- Use generateSarif parameter for Semgrep output ([#259](https://github.com/reuteras/miniflux-tui-py/pull/259))
+- Update Renovate config to extend shared preset and fix GitHub Actions hashing (#254) ([#255](https://github.com/reuteras/miniflux-tui-py/pull/255))
+- Update Renovate config to extend shared preset and add missing managers ([#254](https://github.com/reuteras/miniflux-tui-py/pull/254))
+- Add category header enter key support for consistent grouping behavior ([#244](https://github.com/reuteras/miniflux-tui-py/pull/244))
+- Fix grouping by category expand/collapse and improve keybinding UX ([#233](https://github.com/reuteras/miniflux-tui-py/pull/233))
+- Remove commit SHA tags from Docker container images ([#228](https://github.com/reuteras/miniflux-tui-py/pull/228))
+- Prioritize version tags over commit SHA in Docker container builds ([#225](https://github.com/reuteras/miniflux-tui-py/pull/225))
+
+### Documentation
+- Update roadmap to reflect v0.5.0 release completion ([#248](https://github.com/reuteras/miniflux-tui-py/pull/248))
+- Update roadmap to reflect v0.5.0 release completion
+
+### CI/CD
+- Add workflow to retroactively add bot reviews to closed PRs ([#231](https://github.com/reuteras/miniflux-tui-py/pull/231))
+
+### Maintenance
+- bump oxsecurity/megalinter from 8 to 9 ([#303](https://github.com/reuteras/miniflux-tui-py/pull/303))
+- Pin GitHub Actions to commit hashes with version comments ([#309](https://github.com/reuteras/miniflux-tui-py/pull/309))
+- bump coverallsapp/github-action from 2.3.0 to 2.3.6 ([#302](https://github.com/reuteras/miniflux-tui-py/pull/302))
+- Update ghcr.io/astral-sh/uv:latest Docker digest to ba4857b ([#292](https://github.com/reuteras/miniflux-tui-py/pull/292))
+- Update mcr.microsoft.com/devcontainers/python Docker tag to v3.14 ([#294](https://github.com/reuteras/miniflux-tui-py/pull/294))
+- migrate config .renovaterc.json ([#296](https://github.com/reuteras/miniflux-tui-py/pull/296))
+- Update docker/dockerfile Docker tag to v1.19 ([#293](https://github.com/reuteras/miniflux-tui-py/pull/293))
+- Remove Codecov and archive workflow improvements ([#270](https://github.com/reuteras/miniflux-tui-py/pull/270))
+- Improve Renovate configuration for better dependency management ([#246](https://github.com/reuteras/miniflux-tui-py/pull/246))
+
+
 ## [0.5.0] - 2025-11-01
 
 ### Features
