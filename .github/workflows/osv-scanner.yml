@@ -29,12 +29,16 @@ permissions:
 jobs:
   scan-scheduled:
     permissions:
-      # Required to upload SARIF file to CodeQL.
-      # See: https://github.com/github/codeql-action/issues/2117
+      # REQUIRED: Read workflow metadata for reusable workflow
       actions: read
-      # Require writing security events to upload SARIF file to security tab
+      # REQUIRED: Write SARIF results to Security tab
+      # Scoped to this job only (not workflow-level)
+      # See: https://github.com/github/codeql-action/issues/2117
       security-events: write
-      # Only need to read contents
+      # REQUIRED: Read repository files for scanning
       contents: read
+      # EXPLICITLY DENIED: No pull request or issue access needed
+      pull-requests: none
+      issues: none
     # v2.2.3
     uses: google/osv-scanner-action/.github/workflows/osv-scanner-reusable.yml@e92b5d07338d4f0ba0981dffed17c48976ca4730

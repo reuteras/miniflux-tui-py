@@ -18,17 +18,21 @@ jobs:
     name: Auto-Approve PR
     runs-on: ubuntu-latest
     # Approve PRs from:
-    # 1. reuteras (solo developer)
-    # 2. renovatebot (dependency updates)
-    # 3. github-actions (automated workflows)
+    # 1. reuteras (solo developer) - must be User type
+    # 2. renovate[bot] (dependency updates) - must be Bot type
+    # 3. github-actions[bot] (automated workflows) - must be Bot type
     # Skip draft PRs and check_suite events
     if: >-
       github.event_name == 'pull_request' &&
-      (github.actor == 'reuteras' ||
-        github.actor == 'renovate[bot]' ||
-        github.actor == 'renovatebot' ||
-        github.actor == 'github-actions[bot]') &&
-      github.event.pull_request.draft == false
+      github.event.pull_request.draft == false &&
+      (
+        (github.event.pull_request.user.login == 'reuteras' &&
+          github.event.pull_request.user.type == 'User') ||
+        (github.event.pull_request.user.login == 'renovate[bot]' &&
+          github.event.pull_request.user.type == 'Bot') ||
+        (github.event.pull_request.user.login == 'github-actions[bot]' &&
+          github.event.pull_request.user.type == 'Bot')
+      )
     steps:
       - name: Harden the runner (Audit all outbound calls)
         uses: step-security/harden-runner@f4a75cfd619ee5ce8d5b864b0d183aff3c69b55a # v2.13.1
@@ -90,22 +94,28 @@ jobs:
           steps.check-status.outcome == 'success'
         run: |
           # Determine PR source for approval message
-          PR_SOURCE="${{ github.actor }}"
-          case "$PR_SOURCE" in
-            "renovate[bot]"|"renovatebot")
+          # Using environment variable to prevent template injection attacks
+          case "$PR_ACTOR" in
+            "renovate[bot]")
               APPROVAL_REASON="Automated dependency update"
               ;;
             "github-actions[bot]")
               APPROVAL_REASON="Automated GitHub Actions workflow"
               ;;
-            *)
+            "reuteras")
               APPROVAL_REASON="Solo developer workflow"
+              ;;
+            *)
+              APPROVAL_REASON="Unknown source"
               ;;
           esac
 
-          gh pr review "${{ github.event.pull_request.number }}" \
-            --repo "${{ github.repository }}" \
+          gh pr review "$PR_NUMBER" \
+            --repo "$GITHUB_REPOSITORY" \
             --approve \
             --body "✅ All automated checks passed. Approval reason: $APPROVAL_REASON"
         env:
           GH_TOKEN: ${{ secrets.BOT_TOKEN }}
+          PR_ACTOR: ${{ github.event.pull_request.user.login }}
+          PR_NUMBER: ${{ github.event.pull_request.number }}
+          GITHUB_REPOSITORY: ${{ github.repository }}
