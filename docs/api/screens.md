@@ -107,11 +107,11 @@ All category operations use the Miniflux API:
 
 All operations provide user feedback via notifications and handle errors gracefully.
 
-## MinifluxTUI (Main App)
+## MinifluxTuiApp (Main App)
 
 The main application container.
 
-::: miniflux_tui.ui.app.MinifluxTUI
+::: miniflux_tui.ui.app.MinifluxTuiApp
     options:
       docstring_style: google
 
@@ -123,7 +123,7 @@ The main application container.
 ## Navigation Flow
 
 ```text
-MinifluxTUI (App)
+MinifluxTuiApp (App)
 ├─ EntryListScreen (main view)
 │  ├─ navigate with j/k
 │  ├─ press Enter → EntryReaderScreen

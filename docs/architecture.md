@@ -10,7 +10,7 @@ This guide explains the overall structure and design patterns used in miniflux-t
 └────────────────────┬────────────────────────────────────┘
   │
 ┌────────────────────▼────────────────────────────────────┐
-│              MinifluxTUI (Textual App)                  │
+│              MinifluxTuiApp (Textual App)                  │
 │  - Screen Management (push/pop)                         │
 │  - Event Handling                                       │
 │  - Client Initialization                               │
@@ -129,7 +129,7 @@ Responsibilities:
 - Manage app state
 
 ```python
-class MinifluxTUI(App):
+class MinifluxTuiApp(App):
   async def on_mount() -> None:
   # Install screens and load initial data
 

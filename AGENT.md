@@ -79,7 +79,7 @@ miniflux-tui-py/
 | `config.py` | Config loading/saving with platform-specific paths (XDG, macOS, Windows) |
 | `api/client.py` | Async wrapper around official miniflux Python library with retry logic |
 | `api/models.py` | Dataclasses: `Category`, `Entry`, `Feed` with helper properties |
-| `ui/app.py` | Main `MinifluxTUI` Textual App; screen management; entry loading |
+| `ui/app.py` | Main `MinifluxTuiApp` Textual App; screen management; entry loading |
 | `ui/screens/entry_list.py` | Entry list screen with sorting, grouping, navigation |
 | `ui/screens/entry_reader.py` | Entry detail view with HTML→Markdown conversion |
 
@@ -130,7 +130,7 @@ miniflux-tui-py/
 ### Data Flow
 ```bash
 config.py (load/validate)
-  → app.py (create MinifluxTUI)
+  → app.py (create MinifluxTuiApp)
   → client.py (async API calls)
   → models.py (Entry/Feed objects)
   → screens (display & user interaction)

@@ -53,7 +53,7 @@ def _load_history_screen_cls() -> type[EntryHistoryScreen]:  # nosec: CWE-1047 -
     return cast("type[EntryHistoryScreen]", module.EntryHistoryScreen)
 
 
-class MinifluxTUI(App):
+class MinifluxTuiApp(App):
     """A Textual TUI application for Miniflux."""
 
     CSS = """
@@ -422,5 +422,5 @@ async def run_tui(config: Config) -> None:
     Args:
         config: Application configuration
     """
-    app = MinifluxTUI(config)
+    app = MinifluxTuiApp(config)
     await app.run_async()

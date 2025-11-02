@@ -2,19 +2,13 @@
 
 # pylint: disable=no-member
 
-from typing import TYPE_CHECKING
-
 from textual.app import ComposeResult
 from textual.binding import Binding
 from textual.containers import VerticalScroll
-from textual.screen import Screen
 from textual.widgets import Footer, Header, ListItem, ListView, Static
 
 from miniflux_tui.api.models import Entry
-
-if TYPE_CHECKING:
-    # Type-only import, no runtime circular dependency (lazy loading in app.py)
-    from miniflux_tui.ui.app import MinifluxTUI  # nosec: CWE-1047 - Type checking only
+from miniflux_tui.ui.base_screen import BaseScreen
 
 
 class EntryHistoryItem(ListItem):
@@ -46,7 +40,7 @@ class EntryHistoryItem(ListItem):
         return f"{status_indicator} {date_str} {title}{feed_info}"
 
 
-class EntryHistoryScreen(Screen):
+class EntryHistoryScreen(BaseScreen):
     """Screen displaying previously read entries."""
 
     BINDINGS: list[Binding] = [  # noqa: RUF012
@@ -67,13 +61,6 @@ class EntryHistoryScreen(Screen):
         self._scroll_container: VerticalScroll | None = None
         self._list_view: ListView | None = None
         self._footer_widget: Footer | None = None
-
-    if TYPE_CHECKING:
-
-        @property
-        def app(self) -> "MinifluxTUI":  # type: ignore[override]
-            """Get the app instance with proper typing."""
-            return super().app  # type: ignore[return-value]
 
     def compose(self) -> ComposeResult:
         """Create child widgets."""

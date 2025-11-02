@@ -1,4 +1,4 @@
-"""Tests for MinifluxTUI application."""
+"""Tests for MinifluxTuiApp application."""
 
 import sys
 from datetime import UTC, datetime
@@ -9,7 +9,7 @@ import pytest
 from miniflux_tui.api.client import MinifluxClient
 from miniflux_tui.api.models import Entry, Feed
 from miniflux_tui.config import Config
-from miniflux_tui.ui.app import MinifluxTUI, run_tui
+from miniflux_tui.ui.app import MinifluxTuiApp, run_tui
 
 TEST_TOKEN = "token-for-tests"  # noqa: S105 - static fixture value
 
@@ -58,12 +58,12 @@ def sample_entry(sample_feed):
     )
 
 
-class TestMinifluxTUIInitialization:
-    """Test MinifluxTUI app initialization."""
+class TestMinifluxTuiAppInitialization:
+    """Test MinifluxTuiApp app initialization."""
 
     def test_initialization_with_config(self, sample_config):
         """Test app initializes with config."""
-        app = MinifluxTUI(sample_config)
+        app = MinifluxTuiApp(sample_config)
 
         assert app.config == sample_config
         assert app.client is None
@@ -74,13 +74,13 @@ class TestMinifluxTUIInitialization:
         """Test app initializes with custom driver."""
         mock_driver = MagicMock()
 
-        app = MinifluxTUI(sample_config, driver_class=mock_driver)  # type: ignore[arg-type]
+        app = MinifluxTuiApp(sample_config, driver_class=mock_driver)  # type: ignore[arg-type]
 
         assert app.config == sample_config
 
     def test_initialization_css_is_defined(self, sample_config):
         """Test app CSS is defined."""
-        app = MinifluxTUI(sample_config)
+        app = MinifluxTuiApp(sample_config)
 
         assert app.CSS is not None
         assert isinstance(app.CSS, str)
@@ -88,8 +88,8 @@ class TestMinifluxTUIInitialization:
         assert "ListItem" in app.CSS
 
     def test_app_inherits_from_textual_app(self, sample_config):
-        """Test MinifluxTUI inherits from Textual App."""
-        app = MinifluxTUI(sample_config)
+        """Test MinifluxTuiApp inherits from Textual App."""
+        app = MinifluxTuiApp(sample_config)
 
         # Verify it has Textual App methods
         assert hasattr(app, "push_screen")
@@ -97,12 +97,12 @@ class TestMinifluxTUIInitialization:
         assert hasattr(app, "notify")
 
 
-class TestMinifluxTUIPushEntryReader:
+class TestMinifluxTuiAppPushEntryReader:
     """Test push_entry_reader method."""
 
     def test_push_entry_reader_with_entry(self, sample_config, sample_entry):
         """Test push_entry_reader creates and pushes reader screen."""
-        app = MinifluxTUI(sample_config)
+        app = MinifluxTuiApp(sample_config)
         app.push_screen = MagicMock()
 
         app.push_entry_reader(sample_entry)
@@ -127,7 +127,7 @@ class TestMinifluxTUIPushEntryReader:
             )
             entries.append(entry)
 
-        app = MinifluxTUI(sample_config)
+        app = MinifluxTuiApp(sample_config)
         app.push_screen = MagicMock()
 
         app.push_entry_reader(entries[0], entry_list=entries, current_index=0)
@@ -137,7 +137,7 @@ class TestMinifluxTUIPushEntryReader:
 
     def test_push_entry_reader_uses_app_entries_as_default(self, sample_config, sample_entry):
         """Test push_entry_reader uses app entries list by default."""
-        app = MinifluxTUI(sample_config)
+        app = MinifluxTuiApp(sample_config)
 
         # Add entries to app
         app.entries = [sample_entry]
@@ -151,13 +151,13 @@ class TestMinifluxTUIPushEntryReader:
         app.push_screen.assert_called_once()
 
 
-class TestMinifluxTUILoadEntries:
+class TestMinifluxTuiAppLoadEntries:
     """Test load_entries method."""
 
     @pytest.mark.asyncio
     async def test_load_entries_unread(self, sample_config, sample_entry, async_client_factory):
         """Test load_entries loads unread entries."""
-        app = MinifluxTUI(sample_config)
+        app = MinifluxTuiApp(sample_config)
 
         # Mock the client
         mock_client = async_client_factory(entries=[sample_entry])
@@ -181,7 +181,7 @@ class TestMinifluxTUILoadEntries:
     @pytest.mark.asyncio
     async def test_load_entries_starred(self, sample_config, sample_entry, async_client_factory):
         """Test load_entries loads starred entries."""
-        app = MinifluxTUI(sample_config)
+        app = MinifluxTuiApp(sample_config)
 
         # Mock the client
         mock_client = async_client_factory(starred=[sample_entry])
@@ -205,7 +205,7 @@ class TestMinifluxTUILoadEntries:
     @pytest.mark.asyncio
     async def test_load_entries_no_client(self, sample_config):
         """Test load_entries handles missing client."""
-        app = MinifluxTUI(sample_config)
+        app = MinifluxTuiApp(sample_config)
         app.client = None
 
         # Mock notify
@@ -221,7 +221,7 @@ class TestMinifluxTUILoadEntries:
     @pytest.mark.asyncio
     async def test_load_entries_updates_screen(self, sample_config, sample_entry, async_client_factory):
         """Test load_entries updates the entry list screen."""
-        app = MinifluxTUI(sample_config)
+        app = MinifluxTuiApp(sample_config)
 
         # Mock the client
         app.client = async_client_factory(entries=[sample_entry])
@@ -243,7 +243,7 @@ class TestMinifluxTUILoadEntries:
     @pytest.mark.asyncio
     async def test_load_entries_empty_result(self, sample_config, async_client_factory):
         """Test load_entries handles empty results."""
-        app = MinifluxTUI(sample_config)
+        app = MinifluxTuiApp(sample_config)
 
         # Mock the client to return empty list
         app.client = async_client_factory(entries=[])
@@ -263,7 +263,7 @@ class TestMinifluxTUILoadEntries:
     @pytest.mark.asyncio
     async def test_load_entries_api_error(self, sample_config, async_client_factory):
         """Test load_entries handles API errors."""
-        app = MinifluxTUI(sample_config)
+        app = MinifluxTuiApp(sample_config)
 
         # Mock the client to raise an error
         app.client = async_client_factory()
@@ -280,13 +280,13 @@ class TestMinifluxTUILoadEntries:
         assert "error" in app.notify.call_args[0][0].lower()
 
 
-class TestMinifluxTUIActions:
+class TestMinifluxTuiAppActions:
     """Test action methods."""
 
     @pytest.mark.asyncio
     async def test_action_refresh_entries(self, sample_config, sample_entry, async_client_factory):
         """Test refresh entries action."""
-        app = MinifluxTUI(sample_config)
+        app = MinifluxTuiApp(sample_config)
         app.client = async_client_factory(entries=[sample_entry])
         app.notify = MagicMock()
         app.is_screen_installed = MagicMock(return_value=False)
@@ -299,7 +299,7 @@ class TestMinifluxTUIActions:
     @pytest.mark.asyncio
     async def test_action_show_unread(self, sample_config, sample_entry, async_client_factory):
         """Test show unread action."""
-        app = MinifluxTUI(sample_config)
+        app = MinifluxTuiApp(sample_config)
         app.client = async_client_factory(entries=[sample_entry])
         app.notify = MagicMock()
         app.is_screen_installed = MagicMock(return_value=False)
@@ -312,7 +312,7 @@ class TestMinifluxTUIActions:
     @pytest.mark.asyncio
     async def test_action_show_starred(self, sample_config, sample_entry, async_client_factory):
         """Test show starred action."""
-        app = MinifluxTUI(sample_config)
+        app = MinifluxTuiApp(sample_config)
         app.client = async_client_factory(starred=[sample_entry])
         app.notify = MagicMock()
         app.is_screen_installed = MagicMock(return_value=False)
@@ -323,13 +323,13 @@ class TestMinifluxTUIActions:
         app.notify.assert_called()
 
 
-class TestMinifluxTUILifecycle:
+class TestMinifluxTuiAppLifecycle:
     """Test app lifecycle methods."""
 
     @pytest.mark.asyncio
     async def test_on_unmount_closes_client(self, sample_config):
         """Test on_unmount closes the client."""
-        app = MinifluxTUI(sample_config)
+        app = MinifluxTuiApp(sample_config)
         app.client = AsyncMock()
 
         await app.on_unmount()
@@ -339,7 +339,7 @@ class TestMinifluxTUILifecycle:
     @pytest.mark.asyncio
     async def test_on_unmount_no_client(self, sample_config):
         """Test on_unmount handles missing client."""
-        app = MinifluxTUI(sample_config)
+        app = MinifluxTuiApp(sample_config)
         app.client = None
 
         # Should not raise exception
@@ -351,21 +351,21 @@ class TestRunTUI:
 
     @pytest.mark.asyncio
     async def test_run_tui_creates_and_runs_app(self, sample_config):
-        """Test run_tui creates and runs MinifluxTUI app."""
-        with patch.object(MinifluxTUI, "run_async", new_callable=AsyncMock):
+        """Test run_tui creates and runs MinifluxTuiApp app."""
+        with patch.object(MinifluxTuiApp, "run_async", new_callable=AsyncMock):
             await run_tui(sample_config)
 
             # Verify run_async was called (implicitly by patching)
             # The patch ensures the method exists and can be called
 
 
-class TestMinifluxTUIOnMount:
+class TestMinifluxTuiAppOnMount:
     """Test on_mount lifecycle method."""
 
     @pytest.mark.asyncio
     async def test_on_mount_initializes_client(self, sample_config):
         """Test on_mount initializes the API client."""
-        app = MinifluxTUI(sample_config)
+        app = MinifluxTuiApp(sample_config)
 
         # Mock required methods to prevent actual screen installation
         with (
@@ -385,7 +385,7 @@ class TestMinifluxTUIOnMount:
     @pytest.mark.asyncio
     async def test_on_mount_installs_screens(self, sample_config):
         """Test on_mount installs entry list, help, and status screens."""
-        app = MinifluxTUI(sample_config)
+        app = MinifluxTuiApp(sample_config)
 
         # Mock required methods
         with (
@@ -404,7 +404,7 @@ class TestMinifluxTUIOnMount:
     @pytest.mark.asyncio
     async def test_on_mount_pushes_initial_screen(self, sample_config):
         """Test on_mount pushes entry_list as initial screen."""
-        app = MinifluxTUI(sample_config)
+        app = MinifluxTuiApp(sample_config)
 
         # Mock required methods
         with (
@@ -423,7 +423,7 @@ class TestMinifluxTUIOnMount:
     @pytest.mark.asyncio
     async def test_on_mount_notifies_loading(self, sample_config):
         """Test on_mount notifies user of loading."""
-        app = MinifluxTUI(sample_config)
+        app = MinifluxTuiApp(sample_config)
 
         # Mock required methods
         with (
@@ -443,7 +443,7 @@ class TestMinifluxTUIOnMount:
     @pytest.mark.asyncio
     async def test_on_mount_loads_entries(self, sample_config):
         """Test on_mount calls load_entries."""
-        app = MinifluxTUI(sample_config)
+        app = MinifluxTuiApp(sample_config)
 
         # Mock required methods
         with (
@@ -465,7 +465,7 @@ class TestLoadEntriesScreenUpdate:
     @pytest.mark.asyncio
     async def test_load_entries_screen_not_entry_list(self, sample_config, sample_entry):
         """Test load_entries handles non-EntryListScreen case."""
-        app = MinifluxTUI(sample_config)
+        app = MinifluxTuiApp(sample_config)
 
         # Mock the client
         app.client = AsyncMock()
@@ -486,31 +486,31 @@ class TestLoadEntriesScreenUpdate:
         assert len(app.entries) == 1
 
 
-class TestMinifluxTUIIntegration:
+class TestMinifluxTuiAppIntegration:
     """Integration tests for the app."""
 
     def test_app_config_colors(self, sample_config):
         """Test app correctly uses config colors."""
-        app = MinifluxTUI(sample_config)
+        app = MinifluxTuiApp(sample_config)
 
         assert app.config.unread_color == "cyan"
         assert app.config.read_color == "gray"
 
     def test_app_config_server_url(self, sample_config):
         """Test app correctly uses config server URL."""
-        app = MinifluxTUI(sample_config)
+        app = MinifluxTuiApp(sample_config)
 
         assert app.config.server_url == "http://localhost:8080"
 
     def test_app_current_view_defaults_to_unread(self, sample_config):
         """Test app defaults to unread view."""
-        app = MinifluxTUI(sample_config)
+        app = MinifluxTuiApp(sample_config)
 
         assert app.current_view == "unread"
 
     def test_app_entries_list_starts_empty(self, sample_config):
         """Test app starts with empty entries list."""
-        app = MinifluxTUI(sample_config)
+        app = MinifluxTuiApp(sample_config)
 
         assert app.entries == []
         assert len(app.entries) == 0
@@ -533,7 +533,7 @@ class TestMinifluxTUIIntegration:
             )
             entries.append(entry)
 
-        app = MinifluxTUI(sample_config)
+        app = MinifluxTuiApp(sample_config)
         app.client = AsyncMock()
         app.client.get_unread_entries = AsyncMock(return_value=entries)
         app.notify = MagicMock()
@@ -548,11 +548,11 @@ class TestMinifluxTUIIntegration:
 
 
 class TestThemeConfiguration:
-    """Test theme color configuration in MinifluxTUI."""
+    """Test theme color configuration in MinifluxTuiApp."""
 
     def test_app_initializes_with_config_colors(self, sample_config):
         """Test that app initializes with colors from config."""
-        app = MinifluxTUI(sample_config)
+        app = MinifluxTuiApp(sample_config)
 
         assert app.config.unread_color == "cyan"
         assert app.config.read_color == "gray"
@@ -569,7 +569,7 @@ class TestThemeConfiguration:
             default_group_by_feed=False,
         )
         custom_config._api_key_cache = TEST_TOKEN
-        app = MinifluxTUI(custom_config)
+        app = MinifluxTuiApp(custom_config)
 
         assert app.config.unread_color == "blue"
         assert app.config.read_color == "white"
@@ -586,7 +586,7 @@ class TestThemeConfiguration:
             default_group_by_feed=False,
         )
         custom_config._api_key_cache = TEST_TOKEN
-        app = MinifluxTUI(custom_config)
+        app = MinifluxTuiApp(custom_config)
 
         # Verify app config has the custom colors
         assert app.config.unread_color == "green"
@@ -636,7 +636,7 @@ default_sort = "date"
         assert loaded_config.read_color == "white"
 
         # Create app with loaded config
-        app = MinifluxTUI(loaded_config)
+        app = MinifluxTuiApp(loaded_config)
 
         # Verify app has the colors
         assert app.config.unread_color == "red"

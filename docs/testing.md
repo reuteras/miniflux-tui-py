@@ -122,7 +122,7 @@ from unittest.mock import AsyncMock
 @pytest.mark.asyncio
 async def test_load_entries_unread():
   """Test loading unread entries."""
-  app = MinifluxTUI(config)
+  app = MinifluxTuiApp(config)
   app.client = AsyncMock()
   app.client.get_unread_entries = AsyncMock(return_value=[entry])
   app.is_screen_installed = MagicMock(return_value=False)
@@ -356,7 +356,7 @@ Hooks run automatically before commit:
 ```python
 @pytest.mark.asyncio
 async def test_api_call(sample_entry):
-  app = MinifluxTUI(config)
+  app = MinifluxTuiApp(config)
   app.client = AsyncMock()
   app.client.mark_as_read = AsyncMock()
   app.notify = MagicMock()

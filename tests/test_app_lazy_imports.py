@@ -1,6 +1,6 @@
 from miniflux_tui.config import Config
 from miniflux_tui.ui.app import (
-    MinifluxTUI,
+    MinifluxTuiApp,
     _load_entry_list_screen_cls,
     _load_status_screen_cls,
 )
@@ -29,6 +29,6 @@ def test_lazy_status_import():
 
 
 def test_app_initializes_without_eager_screens():
-    app = MinifluxTUI(config=build_config())
+    app = MinifluxTuiApp(config=build_config())
     assert app._entry_list_screen_cls is None  # type: ignore[attr-defined]
     assert app._status_screen_cls is None  # type: ignore[attr-defined]

@@ -18,7 +18,7 @@ from miniflux_tui.performance import ScreenRefreshOptimizer
 from miniflux_tui.utils import api_call, get_star_icon, get_status_icon
 
 if TYPE_CHECKING:
-    MinifluxTUI = Any
+    MinifluxTuiApp = Any
 
 
 class EntryListItem(ListItem):
@@ -173,7 +173,7 @@ class EntryListScreen(Screen):
         Binding("q", "quit", "Quit"),
     ]
 
-    app: "MinifluxTUI"
+    app: "MinifluxTuiApp"
 
     def __init__(
         self,
