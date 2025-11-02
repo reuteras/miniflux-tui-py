@@ -27,17 +27,46 @@ jobs:
 
       - name: Import GPG signing key
         id: import-gpg
-        uses: crazy-max/ghaction-import-gpg@c9e9e3bd127b8456d2ce2dc9f67c0d9c431f55f0 # v6
-        with:
-          gpg-private-key: ${{ secrets.GPG_PRIVATE_KEY }}
-          passphrase: ${{ secrets.GPG_PASSPHRASE }}
-
-      - name: Configure git identity
+        env:
+          GPG_PRIVATE_KEY: ${{ secrets.GPG_PRIVATE_KEY }}
+          GPG_PASSPHRASE: ${{ secrets.GPG_PASSPHRASE }}
         run: |
           set -euo pipefail
-          git config user.name "${GPG_SIGNING_NAME:-Miniflux Release Bot}"
-          git config user.email "${GPG_SIGNING_EMAIL:-release@reuteras.net}"
-          git config user.signingkey "${{ steps.import-gpg.outputs.gpg_fingerprint }}"
+
+          if [ -z "${GPG_PRIVATE_KEY:-}" ] || [ -z "${GPG_PASSPHRASE:-}" ]; then
+            echo "GPG_PRIVATE_KEY and GPG_PASSPHRASE secrets must be defined." >&2
+            exit 1
+          fi
+
+          mkdir -p ~/.gnupg
+          chmod 700 ~/.gnupg
+          echo 'pinentry-mode loopback' >> ~/.gnupg/gpg.conf
+          echo 'no-tty' >> ~/.gnupg/gpg.conf
+
+          printf '%s' "$GPG_PRIVATE_KEY" | gpg --batch --import
+
+          FPR="$(gpg --batch --with-colons --list-secret-keys | awk -F: '$1 == \"fpr\" { print $10; exit }')"
+          if [ -z "$FPR" ]; then
+            echo "Failed to import GPG key: fingerprint not found." >&2
+            exit 1
+          fi
+
+          export GPG_TTY="$(tty)"
+          echo "$GPG_PASSPHRASE" | gpg --batch --yes --pinentry-mode loopback --passphrase-fd 0 --quick-set-primary-uid "$FPR"
+
+          echo "fingerprint=$FPR" >> "$GITHUB_OUTPUT"
+
+      - name: Configure git identity
+        env:
+          GPG_SIGNING_NAME: ${{ secrets.GPG_SIGNING_NAME }}
+          GPG_SIGNING_EMAIL: ${{ secrets.GPG_SIGNING_EMAIL }}
+        run: |
+          set -euo pipefail
+          DEFAULT_NAME="Miniflux Release Bot"
+          DEFAULT_EMAIL="release@reuteras.net"
+          git config user.name "${GPG_SIGNING_NAME:-$DEFAULT_NAME}"
+          git config user.email "${GPG_SIGNING_EMAIL:-$DEFAULT_EMAIL}"
+          git config user.signingkey "${{ steps.import-gpg.outputs.fingerprint }}"
 
       - name: Create signed tag
         env:
