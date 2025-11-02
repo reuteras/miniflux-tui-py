@@ -8,6 +8,9 @@
     "npm": {
         "enabled": false
     },
+    "vulnerabilityAlerts": {
+        "enabled": true
+    },
     "packageRules": [
         {
             "description": "Disable npm updates (not used in this project)",
@@ -49,6 +52,11 @@
             "matchDatasources": ["github-tags"],
             "allowedVersions": "<=2.0.0",
             "matchPackageNames": ["/slsa-framework/slsa-github-generator/"]
+        },
+        {
+            "description": "Skip trivy-action updates due to lookup failures",
+            "matchPackageNames": ["aquasecurity/trivy-action"],
+            "enabled": false
         }
     ]
 }
