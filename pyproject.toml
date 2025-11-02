@@ -44,6 +44,9 @@ dev = [
     "pytest-cov>=4.0.0",
     "ruff>=0.6.0",
     "pyright>=1.1.0",
+    "pylint>=4.0.2",
+    "pytest-benchmark>=4.0.0",
+    "bandit[toml]>=1.7.5",
 ]
 docs = [
     "mkdocs>=1.6.1",
@@ -52,6 +55,9 @@ docs = [
 ]
 fuzz = [
     "atheris>=2.3.0",
+]
+binary = [
+    "pyinstaller>=6.10.0",
 ]
 
 [project.scripts]
@@ -93,6 +99,9 @@ fuzz = [
 binary = [
     "pyinstaller>=6.10.0",
 ]
+
+[tool.uv]
+managed = true
 
 [tool.ruff]
 line-length = 140

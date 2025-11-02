@@ -1,5 +1,7 @@
 """Entry history screen showing previously read entries."""
 
+# pylint: disable=no-member
+
 from typing import TYPE_CHECKING
 
 from textual.app import ComposeResult
