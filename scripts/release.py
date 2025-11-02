@@ -14,6 +14,9 @@ This script now supports two complementary flows:
     - Validates that `main` is clean and in sync with `origin/main`.
     - Creates an annotated git tag (vX.Y.Z) for the current version.
     - Pushes the tag, which triggers the publish workflow.
+
+    This sub-command is retained as a manual fallback. The preferred path is to run
+    the `create-signed-tag` GitHub workflow so that the tag is GPG-signed in CI.
 """
 
 from __future__ import annotations
@@ -501,8 +504,9 @@ def print_release_next_steps(new_version: str) -> None:
     print(f"{Colors.GREEN}Next steps:{Colors.NC}")
     print("1. Open a pull request from the release branch to main.")
     print("2. Get the pull request approved and merged.")
-    print("3. After merge, return to an up-to-date main and run:")
-    print(f"   uv run python scripts/release.py tag --version {new_version}")
+    print("3. After merge, return to an up-to-date main and trigger the signed-tag workflow:")
+    print(f"   gh workflow run create-signed-tag.yml --ref main --field version={new_version}")
+    print(f"   (If automation is unavailable, you can fall back to 'uv run python scripts/release.py tag --version {new_version}'.)")
 
 
 def prepare_release() -> None:
@@ -544,8 +548,10 @@ def prepare_release() -> None:
 
 
 def create_release_tag(version_override: str | None) -> None:
-    """Create and push an annotated tag for the current release."""
+    """Create and push an annotated tag for the current release (manual fallback path)."""
     print_header("miniflux-tui-py Tag Creation")
+    print_info("Prefer running 'gh workflow run create-signed-tag.yml --ref main --field version=…' so the tag is signed in CI.")
+    print_info("Continuing with manual tag creation using local credentials.")
 
     ensure_current_branch("main")
     ensure_clean_working_tree()
@@ -607,7 +613,7 @@ def parse_args() -> argparse.Namespace:
 
     tag_parser = subparsers.add_parser(
         "tag",
-        help="Create and push the release tag after the PR merges.",
+        help="Fallback: manually create and push the release tag after the PR merges.",
     )
     tag_parser.add_argument(
         "--version",
