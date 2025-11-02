@@ -48,7 +48,7 @@ jobs:
         run: uv sync --locked
 
       - name: Install pip-licenses
-        run: uv pip install --system pip-licenses
+        run: uv pip install pip-licenses
 
       - name: Generate license report
         run: |
