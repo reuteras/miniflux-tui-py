@@ -11,6 +11,7 @@
     "vulnerabilityAlerts": {
         "enabled": true
     },
+    "prConcurrentLimit": 10,
     "packageRules": [
         {
             "description": "Disable npm updates (not used in this project)",
@@ -20,20 +21,19 @@
             "enabled": false
         },
         {
-            "description": "Security updates for github-actions: run immediately/daily",
-            "matchManagers": [
-                "github-actions"
-            ],
+            "description": "All updates: create PRs at any time without schedules",
             "matchUpdateTypes": [
-                "patch"
+                "patch",
+                "minor",
+                "digest",
+                "pinDigest"
             ],
             "schedule": [
                 "at any time"
-            ],
-            "groupName": "security-updates-github-actions"
+            ]
         },
         {
-            "description": "Major version updates for github-actions: weekly review",
+            "description": "Major version updates for github-actions: allow creation but automerge disabled",
             "matchManagers": [
                 "github-actions"
             ],
@@ -42,25 +42,11 @@
             ],
             "automerge": false,
             "schedule": [
-                "after 10pm on sunday"
-            ],
-            "groupName": "major-version-updates-github-actions"
-        },
-        {
-            "description": "Security updates for docker: run immediately/daily",
-            "matchDatasources": [
-                "docker"
-            ],
-            "matchUpdateTypes": [
-                "patch"
-            ],
-            "schedule": [
                 "at any time"
-            ],
-            "groupName": "security-updates-docker"
+            ]
         },
         {
-            "description": "Major version updates for docker: weekly review",
+            "description": "Major version updates for docker: allow creation but automerge disabled",
             "matchDatasources": [
                 "docker"
             ],
@@ -69,9 +55,8 @@
             ],
             "automerge": false,
             "schedule": [
-                "after 10pm on sunday"
-            ],
-            "groupName": "major-version-updates-docker"
+                "at any time"
+            ]
         },
         {
             "description": "Restrict slsa-github-generator to v1.x only",

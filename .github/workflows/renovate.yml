@@ -13,6 +13,8 @@ jobs:
       pull-requests: write
       issues: write
       security-events: read
+      repository-projects: write
+      workflows: write
     steps:
       - name: Checkout
         uses: actions/checkout@08c6903cd8c0fde910a37f88322edcfb5dd907a8 # v5
@@ -25,3 +27,5 @@ jobs:
         env:
           LOG_LEVEL: 'debug'
           RENOVATE_REPOSITORIES: 'reuteras/miniflux-tui-py'
+          # Note: Vulnerability alerts require additional permissions from Settings > Code security & analysis
+          # This runner has read access but may not have write access to modify alert settings
