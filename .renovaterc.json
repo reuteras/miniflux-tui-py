@@ -13,6 +13,9 @@
     },
     "prConcurrentLimit": 10,
     "ignoreDeps": [],
+    "recreateClosed": true,
+    "recreateWhen": "always",
+    "deleteBranchAfterMerge": true,
     "packageRules": [
         {
             "description": "Disable npm updates (not used in this project)",
