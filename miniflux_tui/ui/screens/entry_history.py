@@ -66,6 +66,7 @@ class EntryHistoryScreen(Screen):
         self._footer_widget: Footer | None = None
 
     if TYPE_CHECKING:
+
         @property
         def app(self) -> "MinifluxTUI":  # type: ignore[override]
             """Get the app instance with proper typing."""
