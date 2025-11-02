@@ -31,4 +31,3 @@ All 15 core roadmap items + 2 optional enhancements have been implemented:
 2. ✅ pip-audit integration in dependency-review (PR #266)
 
 ---
-
