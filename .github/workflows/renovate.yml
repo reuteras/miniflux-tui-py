@@ -5,6 +5,9 @@ on:
     - cron: '0 2 * * *'  # Run daily at 2 AM UTC
   workflow_dispatch:  # Allow manual triggering
 
+permissions:
+  contents: read
+
 jobs:
   renovate:
     runs-on: ubuntu-latest
@@ -14,6 +17,11 @@ jobs:
       issues: read  # Required to check issues
       security-events: read  # Required to read security alerts
     steps:
+      - name: Harden the runner (Audit all outbound calls)
+        uses: step-security/harden-runner@f4a75cfd619ee5ce8d5b864b0d183aff3c69b55a # v2.13.1
+        with:
+          egress-policy: audit
+
       - name: Checkout
         uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
         with:
