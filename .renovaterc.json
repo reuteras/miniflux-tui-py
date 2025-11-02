@@ -18,8 +18,6 @@
     "groupName": "Renovate Dependency Updates",
     "groupSlug": "dependency-updates",
     "labels": ["dependencies", "renovate"],
-    "addManagePrLabel": true,
-    "createPrWhenEmpty": false,
     "packageRules": [
         {
             "description": "Disable npm updates (not used in this project)",
