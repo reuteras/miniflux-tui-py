@@ -198,20 +198,21 @@ def diverse_entries(sample_feed):
 
 ### Current Coverage by Module
 
-| Module | Coverage | Status |
-|--------|----------|--------|
-| api/client.py | 100% | ✅ Perfect |
-| api/models.py | 100% | ✅ Perfect |
-| config.py | 100% | ✅ Perfect |
-| constants.py | 100% | ✅ Perfect |
-| performance.py | 100% | ✅ Perfect |
-| ui/app.py | 100% | ✅ Perfect |
-| ui/screens/help.py | 100% | ✅ Perfect |
-| utils.py | 100% | ✅ Perfect |
-| main.py | 98% | ⚠️ Module-level if `__name__` |
-| ui/screens/entry_list.py | 64% | 📈 Integration tests |
-| ui/screens/entry_reader.py | 56% | 📝 Needs integration tests |
-| **Overall** | **78%** | 🎯 Production-ready |
+| Module                     | Coverage   | Status                        |
+| --------                   | ---------- | --------                      |
+| -------------------------- | ---------- | ----------------------------- |
+| api/client.py              | 100%       | ✅ Perfect                     |
+| api/models.py              | 100%       | ✅ Perfect                     |
+| config.py                  | 100%       | ✅ Perfect                     |
+| constants.py               | 100%       | ✅ Perfect                     |
+| performance.py             | 100%       | ✅ Perfect                     |
+| ui/app.py                  | 100%       | ✅ Perfect                     |
+| ui/screens/help.py         | 100%       | ✅ Perfect                     |
+| utils.py                   | 100%       | ✅ Perfect                     |
+| main.py                    | 98%        | ⚠️ Module-level if `__name__` |
+| ui/screens/entry_list.py   | 64%        | 📈 Integration tests           |
+| ui/screens/entry_reader.py | 56%        | 📝 Needs integration tests     |
+| **Overall**                | **78%**    | 🎯 Production-ready            |
 
 ### Why 78% is Good
 

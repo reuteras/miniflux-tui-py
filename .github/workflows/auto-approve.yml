@@ -33,15 +33,15 @@ jobs:
         id: check-approval
         run: |
           # Get current reviews
-          reviews=$(gh pr view ${{ github.event.pull_request.number }} \
-            --repo ${{ github.repository }} \
+          reviews=$(gh pr view "${{ github.event.pull_request.number }}" \
+            --repo "${{ github.repository }}" \
             --json reviews --jq '.reviews[].state')
 
           # Check if already approved by GitHub Actions
           if echo "$reviews" | grep -q "APPROVED"; then
-            echo "already_approved=true" >> $GITHUB_OUTPUT
+            echo "already_approved=true" >> "$GITHUB_OUTPUT"
           else
-            echo "already_approved=false" >> $GITHUB_OUTPUT
+            echo "already_approved=false" >> "$GITHUB_OUTPUT"
           fi
         env:
           GH_TOKEN: ${{ secrets.BOT_TOKEN }}
@@ -60,8 +60,8 @@ jobs:
         id: check-status
         run: |
           # Get the PR's status check summary
-          pr_status=$(gh pr view ${{ github.event.pull_request.number }} \
-            --repo ${{ github.repository }} \
+          pr_status=$(gh pr view "${{ github.event.pull_request.number }}" \
+            --repo "${{ github.repository }}" \
             --json statusCheckRollup \
             --jq '.statusCheckRollup[].conclusion')
 
@@ -83,8 +83,8 @@ jobs:
           steps.check-approval.outputs.already_approved == 'false' &&
           steps.check-status.outcome == 'success'
         run: |
-          gh pr review ${{ github.event.pull_request.number }} \
-            --repo ${{ github.repository }} \
+          gh pr review "${{ github.event.pull_request.number }}" \
+            --repo "${{ github.repository }}" \
             --approve \
             --body "✅ All automated checks passed. Auto-approved for \
               solo developer workflow."

@@ -88,7 +88,7 @@ The project meets the criteria for the OpenSSF (formerly CII) Best Practices bad
 ## Dependency Management
 
 ### Renovate Bot
-The project uses [Renovate Bot](https://www.whitesourcesoftware.com/free-developer-tools/renovate/) for automated dependency updates:
+The project uses [Renovate Bot](https://docs.renovatebot.com/) for automated dependency updates:
 
 - **GitHub Actions**: Updates pinned to commit SHAs
 - **Schedule**: Monday after 10pm (off-peak hours)

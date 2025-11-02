@@ -114,17 +114,18 @@ jobs:
 
 ## Complete Free Security Stack
 
-| Category | Tool | Status |
-|----------|------|--------|
-| **SAST** | CodeQL | ✅ Have |
-| **SAST** | Semgrep | 🆕 Add |
-| **SAST** | Bandit | ✅ Have |
-| **Secrets** | Gitleaks | ✅ Have |
-| **Dependencies** | OSV-Scanner | ✅ Have |
-| **Containers** | Trivy | ✅ Have |
-| **Supply Chain** | Scorecard | ✅ Have |
-| **Workflows** | Zizmor | ✅ Have |
-| **Malware** | Malcontent | ✅ Have |
+| Category         | Tool        | Status   |
+| ----------       | ------      | -------- |
+| ---------------- | ----------- | -------- |
+| **SAST**         | CodeQL      | ✅ Have   |
+| **SAST**         | Semgrep     | 🆕 Add    |
+| **SAST**         | Bandit      | ✅ Have   |
+| **Secrets**      | Gitleaks    | ✅ Have   |
+| **Dependencies** | OSV-Scanner | ✅ Have   |
+| **Containers**   | Trivy       | ✅ Have   |
+| **Supply Chain** | Scorecard   | ✅ Have   |
+| **Workflows**    | Zizmor      | ✅ Have   |
+| **Malware**      | Malcontent  | ✅ Have   |
 
 ## Badge Updates
 
@@ -169,15 +170,16 @@ jobs:
 
 ## Time Estimates
 
-| Task | Time | Complexity |
-|------|------|------------|
-| Coveralls setup | 1 hour | Easy |
-| GitHub Pages setup | 30 min | Easy |
-| Remove Codecov | 15 min | Easy |
-| Add MegaLinter | 30 min | Easy |
-| Remove Super-Linter | 15 min | Easy |
-| Add Semgrep | 15 min | Easy |
-| **Total** | **~3 hours** | **Easy** |
+| Task                | Time         | Complexity   |
+| ------              | ------       | ------------ |
+| ------------------- | ------------ | ------------ |
+| Coveralls setup     | 1 hour       | Easy         |
+| GitHub Pages setup  | 30 min       | Easy         |
+| Remove Codecov      | 15 min       | Easy         |
+| Add MegaLinter      | 30 min       | Easy         |
+| Remove Super-Linter | 15 min       | Easy         |
+| Add Semgrep         | 15 min       | Easy         |
+| **Total**           | **~3 hours** | **Easy**     |
 
 ## Benefits Summary
 

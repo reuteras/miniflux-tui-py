@@ -436,16 +436,17 @@ This handles:
 
 ## Key Files Reference
 
-| File | Lines | Coverage | Purpose |
-|------|-------|----------|---------|
-| main.py | 60 | 98% | CLI entry point |
-| config.py | 76 | 100% | Configuration |
-| api/client.py | 58 | 100% | API wrapper |
-| api/models.py | 19 | 100% | Data models |
-| ui/app.py | 71 | 100% | Main app |
-| ui/screens/entry_list.py | 398 | 64% | Entry list |
-| ui/screens/entry_reader.py | 163 | 56% | Entry detail |
-| ui/screens/help.py | 49 | 100% | Help screen |
+| File                       | Lines   | Coverage   | Purpose         |
+| ------                     | ------- | ---------- | ---------       |
+| -------------------------- | ------- | ---------- | --------------- |
+| main.py                    | 60      | 98%        | CLI entry point |
+| config.py                  | 76      | 100%       | Configuration   |
+| api/client.py              | 58      | 100%       | API wrapper     |
+| api/models.py              | 19      | 100%       | Data models     |
+| ui/app.py                  | 71      | 100%       | Main app        |
+| ui/screens/entry_list.py   | 398     | 64%        | Entry list      |
+| ui/screens/entry_reader.py | 163     | 56%        | Entry detail    |
+| ui/screens/help.py         | 49      | 100%       | Help screen     |
 
 ## Future Improvements
 
