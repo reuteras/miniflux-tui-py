@@ -1,7 +1,7 @@
 {
     "$schema": "https://docs.renovatebot.com/renovate-schema.json",
     "extends": [
-        "github>reuteras/github-renovate-config"
+        "config:recommended"
     ],
     "semanticCommits": "enabled",
     "commitMessagePrefix": "chore(deps):",
@@ -12,6 +12,7 @@
         "enabled": true
     },
     "prConcurrentLimit": 10,
+    "ignoreDeps": [],
     "packageRules": [
         {
             "description": "Disable npm updates (not used in this project)",
@@ -21,42 +22,34 @@
             "enabled": false
         },
         {
-            "description": "All updates: create PRs at any time without schedules",
+            "description": "All patch updates: create PRs immediately without schedules",
             "matchUpdateTypes": [
-                "patch",
-                "minor",
+                "patch"
+            ],
+            "schedule": []
+        },
+        {
+            "description": "All minor updates: create PRs immediately without schedules",
+            "matchUpdateTypes": [
+                "minor"
+            ],
+            "schedule": []
+        },
+        {
+            "description": "All digest updates: create PRs immediately without schedules",
+            "matchUpdateTypes": [
                 "digest",
                 "pinDigest"
             ],
-            "schedule": [
-                "at any time"
-            ]
+            "schedule": []
         },
         {
-            "description": "Major version updates for github-actions: allow creation but automerge disabled",
-            "matchManagers": [
-                "github-actions"
-            ],
+            "description": "Major version updates: create PRs immediately but automerge disabled",
             "matchUpdateTypes": [
                 "major"
             ],
             "automerge": false,
-            "schedule": [
-                "at any time"
-            ]
-        },
-        {
-            "description": "Major version updates for docker: allow creation but automerge disabled",
-            "matchDatasources": [
-                "docker"
-            ],
-            "matchUpdateTypes": [
-                "major"
-            ],
-            "automerge": false,
-            "schedule": [
-                "at any time"
-            ]
+            "schedule": []
         },
         {
             "description": "Restrict slsa-github-generator to v1.x only",
