@@ -9,8 +9,6 @@ updates:
       day: "monday"
       time: "03:00"
     open-pull-requests-limit: 5
-    reviewers:
-      - "reuteras"
     pull-request-branch-name:
       separator: "/"
     # Auto-merge minor and patch updates, leave major for manual review
@@ -42,7 +40,5 @@ updates:
       day: "monday"
       time: "03:00"
     open-pull-requests-limit: 5
-    reviewers:
-      - "reuteras"
     cooldown:
       default-days: 7
