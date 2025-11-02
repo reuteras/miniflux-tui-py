@@ -20,8 +20,8 @@ jobs:
   update_release_draft:
     if: github.event_name == 'push'
     permissions:
-      contents: write
-      pull-requests: read
+      contents: write  # Required to write release draft
+      pull-requests: read  # Required to read PR information for release notes
     runs-on: ubuntu-latest
     steps:
       - name: Harden the runner (Audit all outbound calls)

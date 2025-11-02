@@ -10,8 +10,8 @@ permissions:
 jobs:
   dependabot:
     permissions:
-      contents: write
-      pull-requests: write
+      contents: write  # Required for auto-merge to commit code changes
+      pull-requests: write  # Required to approve and merge PRs
     runs-on: ubuntu-latest
     if: github.event.pull_request.user.login == 'dependabot[bot]'
 

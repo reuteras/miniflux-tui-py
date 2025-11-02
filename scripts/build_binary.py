@@ -26,9 +26,9 @@ PYINSTALLER_WORK_DIR = BUILD_ROOT / "pyinstaller"
 def normalize_arch(machine: str) -> str:
     """Normalize platform.machine() to common release labels."""
     normalized = machine.lower()
-    if normalized in {"x86_64", "amd64"}:
+    if normalized in {"x86_64", "amd64"}:  # nosec: B105 - Non-sensitive architecture comparison
         return "amd64"
-    if normalized in {"arm64", "aarch64"}:
+    if normalized in {"arm64", "aarch64"}:  # nosec: B105 - Non-sensitive architecture comparison
         return "arm64"
     return normalized
 
