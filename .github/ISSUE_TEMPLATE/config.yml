@@ -1,4 +1,4 @@
-blank_issues_enabled: false
+blank_issues_enabled: true
 contact_links:
   - name: Documentation
     url: https://reuteras.github.io/miniflux-tui-py/
@@ -9,3 +9,6 @@ contact_links:
   - name: Miniflux Community
     url: https://miniflux.app/
     about: For issues with the Miniflux server itself, visit the Miniflux project
+  - name: Report Security Issues
+    url: mailto:peter@reuteras.net
+    about: For security vulnerabilities, please email peter@reuteras.net with responsible disclosure details
