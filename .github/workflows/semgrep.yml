@@ -24,6 +24,7 @@ permissions:
 jobs:
   semgrep:
     name: Semgrep Security Analysis
+    if: ${{ false }}  # Disabled: semgrep-action fails with pinned digest (executes '--json'); tracked via PR #309
     runs-on: ubuntu-latest
     permissions:
       contents: read
@@ -42,6 +43,19 @@ jobs:
           persist-credentials: false
 
       - name: Run Semgrep
-        run: |
-          echo "Semgrep scan temporarily disabled: pinned semgrep-action digest fails when passing CLI args."
-          echo "See issue #310 and PR #309 for details. Step exits successfully to satisfy required check."
+        uses: semgrep/semgrep-action@713efdd345f3035192eaa63f56867b88e63e4e5d # v1
+        with:
+          config: >-
+            p/security-audit
+            p/python
+            p/owasp-top-ten
+            p/command-injection
+            p/secrets
+          args: --json --output=semgrep.sarif
+
+      - name: Upload SARIF file to GitHub Security
+        uses: github/codeql-action/upload-sarif@4e94bd11f71e507f7f87df81788dff88d1dacbfb # v3.31.0
+        if: always()
+        with:
+          sarif_file: semgrep.sarif
+          category: semgrep
