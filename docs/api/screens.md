@@ -20,18 +20,19 @@ The main screen showing the list of entries.
 
 ### Actions
 
-| Method | Binding | Description |
-|--------|---------|-------------|
-| `action_cursor_down` | `j` | Move cursor down |
-| `action_cursor_up` | `k` | Move cursor up |
-| `action_select_entry` | `Enter` | Open entry in reader |
-| `action_toggle_read` | `m` | Toggle read/unread |
-| `action_toggle_star` | `*` | Toggle star status |
-| `action_cycle_sort` | `s` | Cycle sort modes |
-| `action_toggle_group` | `g` | Toggle grouping |
-| `action_expand_feed` | `l` | Expand feed |
-| `action_collapse_feed` | `h` | Collapse feed |
-| `action_refresh` | `r` | Refresh entries |
+| Method                 | Binding   | Description          |
+| --------               | --------- | -------------        |
+| ---------------------- | --------- | -------------------- |
+| `action_cursor_down`   | `j`       | Move cursor down     |
+| `action_cursor_up`     | `k`       | Move cursor up       |
+| `action_select_entry`  | `Enter`   | Open entry in reader |
+| `action_toggle_read`   | `m`       | Toggle read/unread   |
+| `action_toggle_star`   | `*`       | Toggle star status   |
+| `action_cycle_sort`    | `s`       | Cycle sort modes     |
+| `action_toggle_group`  | `g`       | Toggle grouping      |
+| `action_expand_feed`   | `l`       | Expand feed          |
+| `action_collapse_feed` | `h`       | Collapse feed        |
+| `action_refresh`       | `r`       | Refresh entries      |
 
 ## EntryReaderScreen
 
@@ -50,14 +51,15 @@ The detailed view for reading a single entry.
 
 ### Available Actions
 
-| Method | Binding | Description |
-|--------|---------|-------------|
-| `action_next_entry` | `J` | Move to next entry |
-| `action_prev_entry` | `K` | Move to previous entry |
-| `action_toggle_read` | `m` | Toggle read/unread |
-| `action_toggle_star` | `*` | Toggle star |
-| `action_save_entry` | `e` | Save entry |
-| `action_open_in_browser` | `o` | Open URL in browser |
+| Method                   | Binding   | Description            |
+| --------                 | --------- | -------------          |
+| ------------------------ | --------- | ---------------------- |
+| `action_next_entry`      | `J`       | Move to next entry     |
+| `action_prev_entry`      | `K`       | Move to previous entry |
+| `action_toggle_read`     | `m`       | Toggle read/unread     |
+| `action_toggle_star`     | `*`       | Toggle star            |
+| `action_save_entry`      | `e`       | Save entry             |
+| `action_open_in_browser` | `o`       | Open URL in browser    |
 
 ## HelpScreen
 
@@ -85,14 +87,15 @@ Screen for managing categories (create, edit, delete, view).
 
 ### Category Management Actions
 
-| Method | Binding | Description |
-|--------|---------|-------------|
-| `action_cursor_down` | `j` | Move cursor down |
-| `action_cursor_up` | `k` | Move cursor up |
-| `action_create_category` | `n` | Create new category |
-| `action_edit_category` | `e` | Edit selected category |
-| `action_delete_category` | `d` | Delete selected category |
-| `action_back` | `Esc` | Return to entry list |
+| Method                   | Binding   | Description              |
+| --------                 | --------- | -------------            |
+| ------------------------ | --------- | ------------------------ |
+| `action_cursor_down`     | `j`       | Move cursor down         |
+| `action_cursor_up`       | `k`       | Move cursor up           |
+| `action_create_category` | `n`       | Create new category      |
+| `action_edit_category`   | `e`       | Edit selected category   |
+| `action_delete_category` | `d`       | Delete selected category |
+| `action_back`            | `Esc`     | Return to entry list     |
 
 ### Category Operations
 

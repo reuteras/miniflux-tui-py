@@ -419,15 +419,16 @@ jobs:
 
 ## Cost Comparison
 
-| Tool | Free Tier | Limits | Best For |
-|------|-----------|--------|----------|
-| **Coveralls** | Unlimited | None | OSS projects |
-| **Codecov** | Limited | Rate limits | May hit limits |
-| **MegaLinter** | Unlimited | None | All projects |
-| **Super-Linter** | Unlimited | Slower | Basic needs |
-| **Semgrep** | Generous | Some features paid | Security focus |
-| **Snyk** | OSS unlimited | Private repos limited | Vuln scanning |
-| **GitHub Pages** | Unlimited | None | Full control |
+| Tool             | Free Tier     | Limits                | Best For       |
+| ------           | -----------   | --------              | ----------     |
+| ---------------- | ------------- | --------------------- | -------------- |
+| **Coveralls**    | Unlimited     | None                  | OSS projects   |
+| **Codecov**      | Limited       | Rate limits           | May hit limits |
+| **MegaLinter**   | Unlimited     | None                  | All projects   |
+| **Super-Linter** | Unlimited     | Slower                | Basic needs    |
+| **Semgrep**      | Generous      | Some features paid    | Security focus |
+| **Snyk**         | OSS unlimited | Private repos limited | Vuln scanning  |
+| **GitHub Pages** | Unlimited     | None                  | Full control   |
 
 ## FAQ
 

@@ -5,16 +5,16 @@ if ! command -v uv >/dev/null 2>&1; then
     UV_VERSION="0.9.6"
     ARCH="$(uname -m)"
     case "${ARCH}" in
-        x86_64)
-            UV_ARCHIVE="uv-x86_64-unknown-linux-gnu"
-            ;;
-        aarch64)
-            UV_ARCHIVE="uv-aarch64-unknown-linux-gnu"
-            ;;
-        *)
-            echo "Unsupported architecture for uv installer: ${ARCH}" >&2
-            exit 1
-            ;;
+    x86_64)
+        UV_ARCHIVE="uv-x86_64-unknown-linux-gnu"
+        ;;
+    aarch64)
+        UV_ARCHIVE="uv-aarch64-unknown-linux-gnu"
+        ;;
+    *)
+        echo "Unsupported architecture for uv installer: ${ARCH}" >&2
+        exit 1
+        ;;
     esac
 
     UV_BASE_URL="https://github.com/astral-sh/uv/releases/download/${UV_VERSION}"
