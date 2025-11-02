@@ -97,7 +97,8 @@ jobs:
           echo "## Malcontent diff results" >> "${GITHUB_STEP_SUMMARY}"
 
           if [ ! -s "${OUTPUT}" ]; then
-            echo "No high-risk capability changes detected in workflows or composite actions." >> "${GITHUB_STEP_SUMMARY}"
+            echo "No high-risk capability changes detected in workflows or" >> "${GITHUB_STEP_SUMMARY}"
+            echo "composite actions." >> "${GITHUB_STEP_SUMMARY}"
             exit 0
           fi
 

@@ -2,12 +2,12 @@ name: Bug Report
 description: Report a bug or issue with miniflux-tui-py
 title: "[Bug]: "
 labels: ["bug"]
-assignees: []
 body:
   - type: markdown
     attributes:
       value: |
-        Thanks for taking the time to report a bug! Please fill out the sections below to help us identify and fix the issue.
+        Thanks for taking the time to report a bug! Please fill out the
+        sections below to help us identify and fix the issue.
 
   - type: textarea
     id: description
