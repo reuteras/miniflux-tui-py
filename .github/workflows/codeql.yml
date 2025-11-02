@@ -11,6 +11,7 @@ on:
       - 'pyproject.toml'
       - 'uv.lock'
       - '.github/workflows/**'
+      - '.github/codeql/**'
   pull_request:
     branches: [main]
     paths:
@@ -20,6 +21,7 @@ on:
       - 'pyproject.toml'
       - 'uv.lock'
       - '.github/workflows/**'
+      - '.github/codeql/**'
   schedule:
     - cron: '0 0 * * 0'  # Weekly on Sunday
 
@@ -56,6 +58,7 @@ jobs:
           languages: ${{ matrix.language }}
           queries: security-extended,security-and-quality
           packs: codeql/python-queries:experimental
+          config-file: .github/codeql/codeql-config.yml
 
       - name: Autobuild
         uses: github/codeql-action/autobuild@0f47cf5ea395a08f5ca3b81a506c66a63ecb648a # v3.31.0

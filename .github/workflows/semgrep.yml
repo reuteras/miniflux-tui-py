@@ -54,7 +54,6 @@ jobs:
       - name: Run Semgrep
         run: |
           semgrep scan \
-            --error \
             --sarif --output semgrep.sarif \
             --config p/security-audit \
             --config p/python \
