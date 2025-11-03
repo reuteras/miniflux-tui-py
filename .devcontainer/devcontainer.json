@@ -37,7 +37,6 @@
                 "python.testing.autoTestDiscoverOnSaveEnabled": true,
                 "python.analysis.typeCheckingMode": "strict",
                 "python.languageServer": "Pylance",
-                "[python.debugging.console]": "integratedTerminal",
                 "python.linting.enabled": false,
                 "python.formatting.provider": "none"
             },
@@ -47,10 +46,8 @@
                 "ms-python.debugpy",
                 "charliermarsh.ruff",
                 "donjayamanne.githistory",
-                "eamodio.gitlens",
                 "esbenp.prettier-vscode",
-                "redhat.vscode-yaml",
-                "ms-vscode.makefile-tools"
+                "redhat.vscode-yaml"
             ]
         }
     }
