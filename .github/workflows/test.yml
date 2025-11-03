@@ -78,8 +78,7 @@ jobs:
 
       - name: Run tests with coverage
         run: |
-          uv pip install pytest-xdist
-          uv run pytest tests --cov=miniflux_tui --cov-report=xml \
+          uv run --with pytest-xdist pytest tests --cov=miniflux_tui --cov-report=xml \
             --cov-report=term-missing --cov-report=html \
             -n auto --dist=loadscope
 
@@ -107,7 +106,6 @@ jobs:
         env:
           BASE_REF: ${{ github.base_ref }}
         run: |
-          uv pip install diff-cover
           {
             echo "## Coverage Differential"
             echo ""
@@ -115,7 +113,7 @@ jobs:
             echo ""
           } >> "$GITHUB_STEP_SUMMARY"
           # Run diff-cover to show coverage of changes
-          uv run diff-cover coverage.xml \
+          uvx diff-cover coverage.xml \
             --compare-branch="origin/${BASE_REF}" \
             --fail-under=70 \
             --markdown-report=diff-coverage.md || true
@@ -264,15 +262,12 @@ jobs:
         with:
           github-token: ${{ secrets.GITHUB_TOKEN }}
 
-      - name: Install coverage tools
-        run: uv pip install coverage
-
       - name: Combine coverage reports
         run: |
           cd coverage-data
-          uv run coverage combine --keep
-          uv run coverage xml -o ../coverage.xml
-          uv run coverage html --directory=../htmlcov
+          uvx coverage combine --keep
+          uvx coverage xml -o ../coverage.xml
+          uvx coverage html --directory=../htmlcov
 
       - name: Deploy coverage HTML to GitHub Pages
         uses: peaceiris/actions-gh-pages@4f9cc6602d3f66b9c108549d475ec49e8ef4d45e # v4.0.0
@@ -308,9 +303,6 @@ jobs:
       - name: Install dependencies
         run: uv sync --locked
 
-      - name: Install mutmut
-        run: uv pip install mutmut
-
       - name: Run mutation testing
         id: mutmut
         continue-on-error: true
@@ -322,16 +314,16 @@ jobs:
           echo "Running mutation testing (limited to 30 minutes)..." >> "$GITHUB_STEP_SUMMARY"
 
           # Run with pytest runner
-          uv run mutmut run --paths-to-mutate=miniflux_tui --runner="pytest -x -q" --tests-dir=tests || true
+          uvx mutmut run --paths-to-mutate=miniflux_tui --runner="pytest -x -q" --tests-dir=tests || true
 
           # Generate results
-          uv run mutmut results > mutation-results.txt || true
-          uv run mutmut html || true
+          uvx mutmut results > mutation-results.txt || true
+          uvx mutmut html || true
 
           # Show summary
           echo "" >> "$GITHUB_STEP_SUMMARY"
           echo "### Summary" >> "$GITHUB_STEP_SUMMARY"
-          uv run mutmut results | head -30 >> "$GITHUB_STEP_SUMMARY" || true
+          uvx mutmut results | head -30 >> "$GITHUB_STEP_SUMMARY" || true
           echo "" >> "$GITHUB_STEP_SUMMARY"
           echo "📝 Full report available in artifacts" >> "$GITHUB_STEP_SUMMARY"
 
