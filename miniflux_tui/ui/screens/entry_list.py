@@ -169,7 +169,7 @@ class EntryListScreen(Screen):
         Binding("question_mark", "show_help", "Help"),
         Binding("i", "show_status", "Status"),
         Binding("shift+s", "show_settings", "Settings"),
-        Binding("shift+h", "show_history", "History"),
+        Binding("H", "show_history", "History"),
         Binding("q", "quit", "Quit"),
     ]
 
