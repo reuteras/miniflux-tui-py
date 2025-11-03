@@ -43,6 +43,32 @@ class EntryHistoryItem(ListItem):
 class EntryHistoryScreen(BaseScreen):
     """Screen displaying previously read entries."""
 
+    CSS = """
+    EntryHistoryScreen {
+        background: $surface;
+    }
+    
+    #history-list {
+        height: 1fr;
+        border: solid $primary;
+        margin: 1;
+    }
+    
+    #filter-info {
+        height: auto;
+        margin-bottom: 1;
+    }
+    
+    #title {
+        height: auto;
+    }
+    
+    #help-text {
+        height: auto;
+        margin-top: 1;
+    }
+    """
+
     BINDINGS: list[Binding] = [  # noqa: RUF012
         Binding("escape", "close", "Close"),
         Binding("q", "close", "Close"),
