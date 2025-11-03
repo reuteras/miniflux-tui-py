@@ -28,6 +28,9 @@ jobs:
   test:
     name: "${{ matrix.os }} / Python ${{ matrix.python-version }}"
     runs-on: ${{ matrix.os }}
+    permissions:
+      contents: read  # For checking out code
+      pull-requests: write  # For posting coverage comments
     defaults:
       run:
         shell: bash
