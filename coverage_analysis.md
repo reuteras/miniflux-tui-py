@@ -45,26 +45,26 @@
   - Should test keyboard shortcuts, scrolling, actions
 
 10. **miniflux_tui/ui/protocols.py** - 64% (8/22 lines missing)
-   - Protocol definitions partially tested
+  - Protocol definitions partially tested
 
 11. **miniflux_tui/api/client.py** - 72% (31/110 lines missing)
-   - Missing tests for:
-   - get_read_entries() (our history feature!)
-   - get_categories()
-   - create_category()
-   - update_category()
-   - delete_category()
-   - get_category_entries()
-   - Error handling paths
+  - Missing tests for:
+    - get_read_entries() (our history feature!)
+    - get_categories()
+    - create_category()
+    - update_category()
+    - delete_category()
+    - get_category_entries()
+    - Error handling paths
 
 12. **miniflux_tui/ui/screens/entry_list.py** - 73% (198/726 lines missing)
-   - Large file with many untested paths
-   - Missing tests for:
-   - Search functionality
-   - Filter toggling
-   - Scroll position restoration
-   - Error states
-   - Edge cases in grouping/sorting
+  - Large file with many untested paths
+  - Missing tests for:
+    - Search functionality
+    - Filter toggling
+    - Scroll position restoration
+    - Error states
+    - Edge cases in grouping/sorting
 
 ### 🟢 Low Priority - Good Coverage (>75%)
 13. **miniflux_tui/ui/screens/help.py** - 80% (22/111 lines missing)

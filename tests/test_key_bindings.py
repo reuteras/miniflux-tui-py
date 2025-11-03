@@ -62,39 +62,39 @@ class TestEntryListKeyBindings:
         screen = EntryListScreen(sample_entries)
 
         # Check binding exists
-        binding_keys = [b.key for b in screen.BINDINGS]
+        binding_keys = [b.key for b in screen.BINDINGS]  # type: ignore[attr-defined]
         assert "g" in binding_keys
 
         # Check it maps to correct action
-        g_binding = next(b for b in screen.BINDINGS if b.key == "g")
-        assert g_binding.action == "toggle_group_feed"
-        assert "Group by Feed" in g_binding.description
+        g_binding = next(b for b in screen.BINDINGS if b.key == "g")  # type: ignore[attr-defined]
+        assert g_binding.action == "toggle_group_feed"  # type: ignore[attr-defined]
+        assert "Group by Feed" in g_binding.description  # type: ignore[attr-defined]
 
     def test_has_group_by_category_binding(self, sample_entries):
         """Test that 'c' key binding exists for group by category."""
         screen = EntryListScreen(sample_entries)
 
         # Check binding exists
-        binding_keys = [b.key for b in screen.BINDINGS]
+        binding_keys = [b.key for b in screen.BINDINGS]  # type: ignore[attr-defined]
         assert "c" in binding_keys
 
         # Check it maps to correct action
-        c_binding = next(b for b in screen.BINDINGS if b.key == "c")
-        assert c_binding.action == "toggle_group_category"
-        assert "Group by Category" in c_binding.description
+        c_binding = next(b for b in screen.BINDINGS if b.key == "c")  # type: ignore[attr-defined]
+        assert c_binding.action == "toggle_group_category"  # type: ignore[attr-defined]
+        assert "Group by Category" in c_binding.description  # type: ignore[attr-defined]
 
     def test_has_history_binding(self, sample_entries):
         """Test that 'H' (Shift+H) key binding exists for history."""
         screen = EntryListScreen(sample_entries)
 
         # Check binding exists (should be 'H' not 'shift+h')
-        binding_keys = [b.key for b in screen.BINDINGS]
+        binding_keys = [b.key for b in screen.BINDINGS]  # type: ignore[attr-defined]
         assert "H" in binding_keys
 
         # Check it maps to correct action
-        h_binding = next(b for b in screen.BINDINGS if b.key == "H")
-        assert h_binding.action == "show_history"
-        assert "History" in h_binding.description
+        h_binding = next(b for b in screen.BINDINGS if b.key == "H")  # type: ignore[attr-defined]
+        assert h_binding.action == "show_history"  # type: ignore[attr-defined]
+        assert "History" in h_binding.description  # type: ignore[attr-defined]
 
     def test_group_by_feed_starts_collapsed(self, sample_entries, sample_categories, monkeypatch):
         """Test that enabling group by feed starts with groups collapsed."""
@@ -199,7 +199,7 @@ class TestHistoryScreen:
         screen = EntryHistoryScreen()
 
         # Should have all the same bindings as EntryListScreen
-        binding_keys = [b.key for b in screen.BINDINGS]
+        binding_keys = [b.key for b in screen.BINDINGS]  # type: ignore[attr-defined]
 
         # Check key bindings exist
         assert "g" in binding_keys  # Group by feed
@@ -217,8 +217,8 @@ class TestKeyBindingNoConflicts:
         screen = EntryListScreen(sample_entries)
 
         # Get all visible bindings (show != False)
-        visible_bindings = [b for b in screen.BINDINGS if b.show]
-        visible_keys = [b.key for b in visible_bindings]
+        visible_bindings = [b for b in screen.BINDINGS if b.show]  # type: ignore[attr-defined]
+        visible_keys = [b.key for b in visible_bindings]  # type: ignore[attr-defined]
 
         # Check for duplicates
         seen = set()
@@ -234,17 +234,17 @@ class TestKeyBindingNoConflicts:
         """Test that 'h' and 'H' (Shift+H) don't conflict."""
         screen = EntryListScreen(sample_entries)
 
-        binding_keys = [b.key for b in screen.BINDINGS]
+        binding_keys = [b.key for b in screen.BINDINGS]  # type: ignore[attr-defined]
 
         # Should have 'h' for collapse
         assert "h" in binding_keys
-        h_binding = next(b for b in screen.BINDINGS if b.key == "h")
-        assert h_binding.action == "collapse_fold"
+        h_binding = next(b for b in screen.BINDINGS if b.key == "h")  # type: ignore[attr-defined]
+        assert h_binding.action == "collapse_fold"  # type: ignore[attr-defined]
 
         # Should have 'H' for history (NOT 'shift+h')
         assert "H" in binding_keys
-        shift_h_binding = next(b for b in screen.BINDINGS if b.key == "H")
-        assert shift_h_binding.action == "show_history"
+        shift_h_binding = next(b for b in screen.BINDINGS if b.key == "H")  # type: ignore[attr-defined]
+        assert shift_h_binding.action == "show_history"  # type: ignore[attr-defined]
 
         # Should NOT have 'shift+h' which would conflict
         assert "shift+h" not in binding_keys

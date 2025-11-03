@@ -10,10 +10,14 @@ class EntryHistoryScreen(EntryListScreen):
         """Initialize with empty entries list - will be populated on mount."""
         super().__init__(entries=[], **kwargs)
 
-    async def on_mount(self) -> None:
+    def on_mount(self) -> None:
         """Called when screen is mounted - load history instead of normal entries."""
+        super().on_mount()
         self.app.log("EntryHistoryScreen.on_mount called")
+        self.run_worker(self._load_history(), exclusive=True)
 
+    async def _load_history(self) -> None:
+        """Load history entries asynchronously."""
         if not hasattr(self.app, "client") or not self.app.client:
             self.app.notify("API client not available", severity="error")
             return
