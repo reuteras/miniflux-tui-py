@@ -31,7 +31,6 @@ class MinifluxAppProtocol(Protocol):
     # Logging and notifications
     def log(self, message: str, /) -> None:
         """Log a message."""
-        ...
 
     def notify(
         self,
@@ -43,20 +42,16 @@ class MinifluxAppProtocol(Protocol):
         timeout: float = ...,
     ) -> None:
         """Send a notification to the user."""
-        ...
 
     # Screen navigation
     def pop_screen(self) -> None:
         """Pop the current screen from the stack."""
-        ...
 
     def push_screen(self, screen: str | object, /) -> None:
         """Push a screen onto the stack."""
-        ...
 
     def exit(self, return_code: int = 0, /) -> None:
         """Exit the application."""
-        ...
 
     # Custom app methods
     def push_entry_reader(
@@ -66,16 +61,12 @@ class MinifluxAppProtocol(Protocol):
         current_index: int = 0,
     ) -> None:
         """Push entry reader screen for a specific entry."""
-        ...
 
     async def push_category_management_screen(self) -> None:
         """Push category management screen."""
-        ...
 
     async def load_entries(self, view: str = "unread") -> None:
         """Load entries from Miniflux API."""
-        ...
 
     async def _build_entry_category_mapping(self) -> dict[int, int]:
         """Build a mapping of entry_id → category_id."""
-        ...
