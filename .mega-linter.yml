@@ -1,3 +1,3 @@
 ---
 # Skip schema validation for configs without schemas in schemastore.org
-YAML_V8R_FILTER_REGEX_EXCLUDE: "(?i)(\\.github/dependabot\\.yml|\\.github/codeql/codeql-config\\.yml)"
+YAML_V8R_FILTER_REGEX_EXCLUDE: "(?i)(\\.github/dependabot\\.yml|\\.github/codeql/codeql-config\\.yml|\\.yaml-lint\\.yml)"
