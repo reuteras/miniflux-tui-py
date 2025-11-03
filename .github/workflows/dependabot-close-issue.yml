@@ -49,7 +49,7 @@ jobs:
             const trackingIssue = issues.data.find(issue => {
               // Match by title or by PR link in body
               return issue.title === issueTitle ||
-                     issue.body?.includes(`PR #${pr.number}`);
+                issue.body?.includes(`PR #${pr.number}`);
             });
 
             if (trackingIssue) {
