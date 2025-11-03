@@ -548,12 +548,41 @@ def push_release_branch(release_branch: str) -> None:
 def print_release_next_steps(new_version: str) -> None:
     """Display final instructions after preparing the release branch."""
     print_header("Release Branch Ready")
-    print(f"{Colors.GREEN}Next steps:{Colors.NC}")
-    print("1. Open a pull request from the release branch to main.")
-    print("2. Get the pull request approved and merged.")
-    print("3. After merge, return to an up-to-date main and trigger the signed-tag workflow:")
+
+    print(f"{Colors.GREEN}✅ Release PR prepared successfully!{Colors.NC}\n")
+
+    print(f"{Colors.RED}⚠️  CRITICAL: Follow ALL steps in order!{Colors.NC}\n")
+
+    print(f"{Colors.YELLOW}Step 1: Create and Merge PR{Colors.NC}")
+    print("   • Open a pull request from the release branch to main")
+    print("   • Wait for CI to pass")
+    print(f"   • {Colors.RED}MERGE THE PR{Colors.NC} (don't skip this!)")
+    print()
+
+    print(f"{Colors.YELLOW}Step 2: Update Local Main{Colors.NC}")
+    print("   git checkout main")
+    print("   git pull --ff-only")
+    print()
+
+    print(f"{Colors.YELLOW}Step 3: Verify Version on Main{Colors.NC}")
+    print("   grep '^version' pyproject.toml")
+    print(f'   # Should show: version = "{new_version}"')
+    print()
+
+    print(f"{Colors.YELLOW}Step 4: Push Tag to Trigger Publish{Colors.NC}")
+    print("   # Option A: Manual tag push (recommended)")
+    print(f'   git tag -s v{new_version} -m "v{new_version}"')
+    print(f"   git push origin v{new_version}")
+    print()
+    print("   # Option B: Workflow + manual push")
     print(f"   gh workflow run create-signed-tag.yml --ref main --field version={new_version}")
-    print(f"   (If automation is unavailable, you can fall back to 'uv run python scripts/release.py tag --version {new_version}'.)")
+    print(f"   sleep 30 && git fetch --tags && git push origin v{new_version}")
+    print()
+
+    print(f"{Colors.RED}⚠️  DO NOT create the tag before merging the PR!{Colors.NC}")
+    print(f"{Colors.RED}   The build will use the wrong version from main!{Colors.NC}\n")
+
+    print(f"{Colors.BLUE}📚 Full documentation: RELEASE.md{Colors.NC}")
 
 
 def prepare_release() -> None:
