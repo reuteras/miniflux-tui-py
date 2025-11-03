@@ -76,18 +76,15 @@ class EntryHistoryScreen(BaseScreen):
 
         with scroll:
             yield Static("[bold cyan]Reading History[/bold cyan]\n", id="title")
-
-            yield Static("[bold yellow]Your Previously Read Entries[/bold yellow]")
             yield Static(id="filter-info")
-            yield Static()
 
-            # History entries list
+            # History entries list - give it more prominence
             list_view = ListView(id="history-list")
             self._list_view = list_view
             yield list_view
 
             yield Static()
-            yield Static("[dim]Press u to restore entry, Enter to open, r to refresh, Esc or q to close[/dim]")
+            yield Static("[dim]Press Enter to open entry, r to refresh, Esc or q to close[/dim]", id="help-text")
 
         yield footer
 
@@ -149,12 +146,12 @@ class EntryHistoryScreen(BaseScreen):
         try:
             widget = self.query_one("#filter-info", Static)
 
-            # Show total entries and filter status
+            # Show total entries count
             total = len(self.history_entries)
             if self.current_feed_filter:
-                text = f"  Total read entries: {total}\n  [dim]Filtered by feed: {self.current_feed_filter}[/dim]"
+                text = f"[dim]Showing {total} entries from {self.current_feed_filter}[/dim]\n"
             else:
-                text = f"  Total read entries: {total}\n  [dim]Showing all feeds[/dim]"
+                text = f"[dim]Last {total} read entries[/dim]\n"
 
             widget.update(text)
         except Exception as e:
