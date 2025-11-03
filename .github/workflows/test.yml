@@ -78,8 +78,7 @@ jobs:
 
       - name: Run tests with coverage
         run: |
-          uv pip install pytest-xdist
-          uv run pytest tests --cov=miniflux_tui --cov-report=xml \
+          uv run --with pytest-xdist pytest tests --cov=miniflux_tui --cov-report=xml \
             --cov-report=term-missing --cov-report=html \
             -n auto --dist=loadscope
 
