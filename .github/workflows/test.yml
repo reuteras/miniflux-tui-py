@@ -242,51 +242,53 @@ jobs:
           github-token: ${{ secrets.GITHUB_TOKEN }}
           parallel-finished: true
 
-  coverage-report:
-    name: Generate Coverage Report
-    needs: test
-    runs-on: ubuntu-latest
-    if: github.ref == 'refs/heads/main'
-    permissions:
-      contents: write
-    steps:
-      - name: Harden the runner (Audit all outbound calls)
-        uses: step-security/harden-runner@f4a75cfd619ee5ce8d5b864b0d183aff3c69b55a # v2.13.1
-        with:
-          egress-policy: audit
-
-      - uses: actions/checkout@08c6903cd8c0fde910a37f88322edcfb5dd907a8 # v5
-        with:
-          persist-credentials: false
-
-      - name: Download coverage artifacts
-        uses: actions/download-artifact@018cc2cf5baa6db3ef3c5f8a56943fffe632ef53 # v6
-        with:
-          pattern: coverage-*
-          path: coverage-data
-
-      - name: Install uv
-        uses: astral-sh/setup-uv@85856786d1ce8acfbcc2f13a5f3fbd6b938f9f41 # v7
-        with:
-          github-token: ${{ secrets.GITHUB_TOKEN }}
-
-      - name: Combine coverage reports
-        run: |
-          # Find all .coverage.* files in subdirectories and move to coverage-data root
-          find coverage-data -type f -name '.coverage.*' -exec mv {} coverage-data/ \;
-          cd coverage-data
-          ls -la  # Debug: show what files we have
-          uvx coverage combine --keep .coverage.*
-          uvx coverage xml -o ../coverage.xml
-          uvx coverage html --directory=../htmlcov
-
-      - name: Deploy coverage HTML to GitHub Pages
-        uses: peaceiris/actions-gh-pages@4f9cc6602d3f66b9c108549d475ec49e8ef4d45e # v4.0.0
-        with:
-          github_token: ${{ secrets.GITHUB_TOKEN }}
-          publish_dir: ./htmlcov
-          destination_dir: coverage
-          enable_jekyll: false
+  # coverage-report job disabled - artifacts structure issue
+  # Coveralls already provides combined coverage reporting
+  # coverage-report:
+  #   name: Generate Coverage Report
+  #   needs: test
+  #   runs-on: ubuntu-latest
+  #   if: false  # Disabled
+  #   permissions:
+  #     contents: write
+  #   steps:
+  #     - name: Harden the runner (Audit all outbound calls)
+  #       uses: step-security/harden-runner@f4a75cfd619ee5ce8d5b864b0d183aff3c69b55a # v2.13.1
+  #       with:
+  #         egress-policy: audit
+  #
+  #     - uses: actions/checkout@08c6903cd8c0fde910a37f88322edcfb5dd907a8 # v5
+  #       with:
+  #         persist-credentials: false
+  #
+  #     - name: Download coverage artifacts
+  #       uses: actions/download-artifact@018cc2cf5baa6db3ef3c5f8a56943fffe632ef53 # v6
+  #       with:
+  #         pattern: coverage-*
+  #         path: coverage-data
+  #
+  #     - name: Install uv
+  #       uses: astral-sh/setup-uv@85856786d1ce8acfbcc2f13a5f3fbd6b938f9f41 # v7
+  #       with:
+  #         github-token: ${{ secrets.GITHUB_TOKEN }}
+  #
+  #     - name: Combine coverage reports
+  #       run: |
+  #         # Find all .coverage.* files in subdirectories and move to coverage-data root
+  #         find coverage-data -type f -name '.coverage.*' -exec mv {} coverage-data/ \;
+  #         cd coverage-data
+  #         ls -la  # Debug: show what files we have
+  #         uvx coverage combine --keep .coverage.*
+  #         uvx coverage xml -o ../coverage.xml
+  #         uvx coverage html --directory=../htmlcov
+  #
+  #     - name: Deploy coverage HTML to GitHub Pages
+  #       uses: peaceiris/actions-gh-pages@4f9cc6602d3f66b9c108549d475ec49e8ef4d45e # v4.0.0
+  #       with:
+  #         github_token: ${{ secrets.GITHUB_TOKEN }}
+  #         publish_dir: ./htmlcov
+  #         destination_dir: coverage
+  #         enable_jekyll: false
 
   mutation-testing:
     name: Mutation Testing
