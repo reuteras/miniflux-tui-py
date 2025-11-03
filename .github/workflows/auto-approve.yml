@@ -20,7 +20,8 @@ jobs:
     # Approve PRs from:
     # 1. reuteras (solo developer) - must be User type
     # 2. renovate[bot] (dependency updates) - must be Bot type
-    # 3. github-actions[bot] (automated workflows) - must be Bot type
+    # 3. dependabot[bot] (dependency updates) - must be Bot type
+    # 4. github-actions[bot] (automated workflows) - must be Bot type
     # Skip draft PRs and check_suite events
     if: >-
       github.event_name == 'pull_request' &&
@@ -29,6 +30,8 @@ jobs:
         (github.event.pull_request.user.login == 'reuteras' &&
           github.event.pull_request.user.type == 'User') ||
         (github.event.pull_request.user.login == 'renovate[bot]' &&
+          github.event.pull_request.user.type == 'Bot') ||
+        (github.event.pull_request.user.login == 'dependabot[bot]' &&
           github.event.pull_request.user.type == 'Bot') ||
         (github.event.pull_request.user.login == 'github-actions[bot]' &&
           github.event.pull_request.user.type == 'Bot')
@@ -97,6 +100,9 @@ jobs:
           # Using environment variable to prevent template injection attacks
           case "$PR_ACTOR" in
             "renovate[bot]")
+              APPROVAL_REASON="Automated dependency update"
+              ;;
+            "dependabot[bot]")
               APPROVAL_REASON="Automated dependency update"
               ;;
             "github-actions[bot]")
