@@ -52,7 +52,7 @@ jobs:
 
       - name: Generate license report
         run: |
-          uv run pip-licenses \
+          .venv/bin/pip-licenses \
             --format=json \
             --with-urls \
             --with-description \
@@ -125,7 +125,7 @@ jobs:
         if: always()
         run: |
           echo "## License Summary"
-          uv run pip-licenses --format=markdown --order=license
+          .venv/bin/pip-licenses --format=markdown --order=license
 
       - name: Upload license report
         if: always()
