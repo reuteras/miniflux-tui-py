@@ -259,7 +259,6 @@ jobs:
         uses: actions/download-artifact@018cc2cf5baa6db3ef3c5f8a56943fffe632ef53 # v6
         with:
           pattern: coverage-*
-          merge-multiple: true
           path: coverage-data
 
       - name: Install uv
@@ -269,6 +268,8 @@ jobs:
 
       - name: Combine coverage reports
         run: |
+          # Find all .coverage.* files in subdirectories and move to coverage-data root
+          find coverage-data -type f -name '.coverage.*' -exec mv {} coverage-data/ \;
           cd coverage-data
           ls -la  # Debug: show what files we have
           uvx coverage combine --keep .coverage.*
