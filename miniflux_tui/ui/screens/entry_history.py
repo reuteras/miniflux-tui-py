@@ -95,26 +95,24 @@ class EntryHistoryScreen(BaseScreen):
     def compose(self) -> ComposeResult:
         """Create child widgets."""
         header = Header()
-        scroll = VerticalScroll()
         footer = Footer()
 
         self._header_widget = header
-        self._scroll_container = scroll
         self._footer_widget = footer
 
         yield header
-
-        with scroll:
-            yield Static("[bold cyan]Reading History[/bold cyan]\n", id="title")
-            yield Static(id="filter-info")
-
-            # History entries list - give it more prominence
-            list_view = ListView(id="history-list")
-            self._list_view = list_view
-            yield list_view
-
-            yield Static()
-            yield Static("[dim]Press Enter to open entry, r to refresh, Esc or q to close[/dim]", id="help-text")
+        
+        # Title and info
+        yield Static("[bold cyan]Reading History[/bold cyan]", id="title")
+        yield Static(id="filter-info")
+        
+        # ListView directly (not in VerticalScroll!)
+        list_view = ListView(id="history-list")
+        self._list_view = list_view
+        yield list_view
+        
+        # Help text
+        yield Static("[dim]Press Enter to open entry, r to refresh, Esc or q to close[/dim]", id="help-text")
 
         yield footer
 
