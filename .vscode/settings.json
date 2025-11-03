@@ -15,7 +15,6 @@
         "tests"
     ],
     "python.testing.cwd": "${workspaceFolder}",
-    "python.analysis.typeCheckingMode": "standard",
     "python.languageServer": "Pylance",
     "python.testing.autoTestDiscoverOnSaveEnabled": true
 }
