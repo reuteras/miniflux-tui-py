@@ -102,17 +102,29 @@ class EntryHistoryScreen(BaseScreen):
             return
 
         try:
+            # Show loading indicator
+            self.app.notify("Loading history...")
+            
             client = getattr(self.app, "client", None)
 
             # Get read entries (limit to 200 for performance)
             self.history_entries = await client.get_read_entries(limit=200, offset=0)
 
+            # Log result for debugging
+            self.app.log(f"Loaded {len(self.history_entries)} history entries")
+            
             # Update the display
             self._update_display()
+            
+            # Notify user if history is empty
+            if not self.history_entries:
+                self.app.notify("No read entries found. Read some articles first!", severity="information")
 
         except Exception as e:
-            self.app.log(f"Error loading history: {e}")
-            self._update_error_state(f"Error: {type(e).__name__}: {e}")
+            error_msg = f"Error loading history: {type(e).__name__}: {e}"
+            self.app.log(error_msg)
+            self._update_error_state(error_msg)
+            self.app.notify("Failed to load history. Check logs for details.", severity="error")
 
     def _update_error_state(self, error_message: str) -> None:
         """Update display when an error occurs."""
@@ -163,7 +175,12 @@ class EntryHistoryScreen(BaseScreen):
 
             # Add entries to list using ListView's append method
             if not display_entries:
-                self._list_view.append(ListItem(Static("[dim]No entries found[/dim]")))
+                # Show friendly empty state message
+                if self.current_feed_filter:
+                    msg = f"[dim]No entries found for feed: {self.current_feed_filter}[/dim]"
+                else:
+                    msg = "[dim]No read entries found.\nRead some articles first by pressing Enter on entries![/dim]"
+                self._list_view.append(ListItem(Static(msg)))
             else:
                 for entry in display_entries:
                     item = EntryHistoryItem(entry)
@@ -171,6 +188,7 @@ class EntryHistoryScreen(BaseScreen):
 
         except Exception as e:
             self.app.log(f"Could not populate history list: {e}")
+            self.app.notify(f"Error displaying history: {e}", severity="error")
 
     def action_close(self):
         """Close the history screen."""
