@@ -315,19 +315,87 @@ def get_previous_tag() -> str | None:
         return None
 
 
+def check_git_cliff_installed() -> bool:
+    """Check if git-cliff is installed and available."""
+    try:
+        result = subprocess.run(
+            ["git-cliff", "--version"],
+            check=True,
+            capture_output=True,
+            text=True,
+        )
+        return result.returncode == 0
+    except (subprocess.CalledProcessError, FileNotFoundError):
+        return False
+
+
 def generate_changelog_entry(new_version: str) -> str:
-    """Generate changelog entry from commits since last tag."""
+    """Generate changelog entry using git-cliff."""
     previous_tag = get_previous_tag()
     release_date = datetime.now(UTC).strftime("%Y-%m-%d")
 
-    try:
-        script_dir = Path(__file__).parent
-        sys.path.insert(0, str(script_dir))
-        from changelog_generator import format_changelog_entry  # noqa: PLC0415
+    # Check if git-cliff is installed
+    if not check_git_cliff_installed():
+        print_error("git-cliff is not installed.")
+        print_info("Install git-cliff to automatically generate changelogs:")
+        print_info("  - Via cargo: cargo install git-cliff")
+        print_info("  - Via package manager: See https://git-cliff.org/docs/installation")
+        print_info("")
+        print_info("Alternatively, you can manually edit CHANGELOG.md")
+        return f"""## [{new_version}] - {release_date}
 
-        sys.path.pop(0)
-        return format_changelog_entry(new_version, from_tag=previous_tag)
-    except ImportError:
+### Added
+- Feature description
+
+### Changed
+- Improvement description
+
+### Fixed
+- Bug fix description
+"""
+
+    # Use git-cliff to generate the changelog
+    try:
+        # Determine the range to generate changelog for
+        git_range = f"{previous_tag}..HEAD" if previous_tag else "HEAD"
+
+        # Run git-cliff with our configuration
+        result = subprocess.run(
+            [
+                "git-cliff",
+                "--config",
+                "cliff.toml",
+                "--tag",
+                new_version,
+                git_range,
+                "--unreleased",
+            ],
+            capture_output=True,
+            text=True,
+            check=True,
+        )
+
+        # Extract just the new version section from the output
+        changelog_output = result.stdout
+        # Remove the header (everything before the first "##")
+        lines = changelog_output.split("\n")
+        version_lines = []
+        in_version_section = False
+
+        for line in lines:
+            if line.startswith((f"## [{new_version}]", f"## [v{new_version}]")):
+                in_version_section = True
+            elif line.startswith("## [") and in_version_section:
+                # Stop at the next version section
+                break
+
+            if in_version_section:
+                version_lines.append(line)
+
+        return "\n".join(version_lines).strip()
+
+    except subprocess.CalledProcessError as error:
+        print_error(f"git-cliff failed: {error.stderr}")
         return f"""## [{new_version}] - {release_date}
 
 ### Added
@@ -342,7 +410,7 @@ def generate_changelog_entry(new_version: str) -> str:
 
 
 def edit_changelog(new_version: str) -> bool:  # noqa: PLR0911
-    """Update CHANGELOG by auto-generating from commits."""
+    """Update CHANGELOG by auto-generating from commits using git-cliff."""
     changelog_path = Path("CHANGELOG.md")
     if not changelog_path.exists():
         print_error("CHANGELOG.md not found")
