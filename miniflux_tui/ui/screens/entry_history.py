@@ -16,28 +16,33 @@ class EntryHistoryItem(ListItem):
 
     def __init__(self, entry: Entry, **kwargs):
         """Initialize history item."""
-        super().__init__(**kwargs)
         self.entry = entry
-
-    def render(self) -> str:
-        """Render the history item."""
-        # Format the published date
+        
+        # Format the display text
         try:
-            # published_at is already a datetime object from the miniflux library
-            pub_date = self.entry.published_at
-            date_str = pub_date.strftime("%Y-%m-%d %H:%M")
-        except (ValueError, AttributeError, TypeError):
-            date_str = "Unknown date"
+            # Format the published date
+            try:
+                pub_date = entry.published_at
+                date_str = pub_date.strftime("%Y-%m-%d %H:%M")
+            except (ValueError, AttributeError, TypeError):
+                date_str = "Unknown date"
 
-        # Truncate title if too long
-        max_width = 100
-        title = self.entry.title[:max_width] if len(self.entry.title) > max_width else self.entry.title
+            # Truncate title if too long
+            max_width = 100
+            title = entry.title[:max_width] if len(entry.title) > max_width else entry.title
 
-        # Build display with feed info if available
-        feed_info = f" [{self.entry.feed.title}]" if self.entry.feed and self.entry.feed.title else ""
-        status_indicator = "[green]✓[/green]" if self.entry.is_read else "[yellow]○[/yellow]"
+            # Build display with feed info if available
+            feed_info = f" [{entry.feed.title}]" if entry.feed and entry.feed.title else ""
+            status_indicator = "[green]✓[/green]" if entry.is_read else "[yellow]○[/yellow]"
 
-        return f"{status_indicator} {date_str} {title}{feed_info}"
+            label_text = f"{status_indicator} {date_str} {title}{feed_info}"
+        except Exception as e:
+            # Fallback if formatting fails
+            label_text = f"[red]Error: {str(e)[:50]}[/red]"
+        
+        # Initialize with a Label widget
+        from textual.widgets import Label
+        super().__init__(Label(label_text), **kwargs)
 
 
 class EntryHistoryScreen(BaseScreen):
