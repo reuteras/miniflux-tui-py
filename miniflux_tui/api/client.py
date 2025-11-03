@@ -162,10 +162,10 @@ class MinifluxClient:
             offset: Offset for pagination
 
         Returns:
-            List of read Entry objects ordered by most recently read first
+            List of read Entry objects ordered by most recently read first (changed_at)
         """
         response = await self._call_with_retry(
-            self.client.get_entries, status=["read"], limit=limit, offset=offset, order="published_at", direction="desc"
+            self.client.get_entries, status=["read"], limit=limit, offset=offset, order="changed_at", direction="desc"
         )
 
         return [Entry.from_dict(entry) for entry in response.get("entries", [])]
