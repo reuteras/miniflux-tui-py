@@ -437,7 +437,6 @@ This handles:
 ## Key Files Reference
 
 | File                       | Lines   | Coverage   | Purpose         |
-| ------                     | ------- | ---------- | ---------       |
 | -------------------------- | ------- | ---------- | --------------- |
 | main.py                    | 60      | 98%        | CLI entry point |
 | config.py                  | 76      | 100%       | Configuration   |

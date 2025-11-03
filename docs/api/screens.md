@@ -22,7 +22,6 @@ The main screen showing the list of entries.
 
 | Method                 | Binding   | Description          |
 | --------               | --------- | -------------        |
-| ---------------------- | --------- | -------------------- |
 | `action_cursor_down`   | `j`       | Move cursor down     |
 | `action_cursor_up`     | `k`       | Move cursor up       |
 | `action_select_entry`  | `Enter`   | Open entry in reader |
@@ -53,7 +52,6 @@ The detailed view for reading a single entry.
 
 | Method                   | Binding   | Description            |
 | --------                 | --------- | -------------          |
-| ------------------------ | --------- | ---------------------- |
 | `action_next_entry`      | `J`       | Move to next entry     |
 | `action_prev_entry`      | `K`       | Move to previous entry |
 | `action_toggle_read`     | `m`       | Toggle read/unread     |
@@ -89,7 +87,6 @@ Screen for managing categories (create, edit, delete, view).
 
 | Method                   | Binding   | Description              |
 | --------                 | --------- | -------------            |
-| ------------------------ | --------- | ------------------------ |
 | `action_cursor_down`     | `j`       | Move cursor down         |
 | `action_cursor_up`       | `k`       | Move cursor up           |
 | `action_create_category` | `n`       | Create new category      |

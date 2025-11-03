@@ -434,7 +434,6 @@ jobs:
 
 | Tool             | Free Tier     | Limits                | Best For       |
 | ------           | -----------   | --------              | ----------     |
-| ---------------- | ------------- | --------------------- | -------------- |
 | **Coveralls**    | Unlimited     | None                  | OSS projects   |
 | **Codecov**      | Limited       | Rate limits           | May hit limits |
 | **MegaLinter**   | Unlimited     | None                  | All projects   |
