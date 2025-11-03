@@ -119,6 +119,18 @@ class EntryHistoryScreen(BaseScreen):
     async def on_mount(self) -> None:
         """Called when screen is mounted - load history."""
         self.app.log("EntryHistoryScreen.on_mount called")
+        
+        # Query the ListView after mount (like entry_list does)
+        try:
+            self._list_view = self.query_one("#history-list", ListView)
+            self.app.log(f"Successfully queried ListView: {self._list_view}")
+            
+            # Focus the list view
+            self._list_view.focus()
+            self.app.log("Focused ListView")
+        except Exception as e:
+            self.app.log(f"ERROR querying ListView: {e}")
+            
         await self._load_history()
 
     async def _load_history(self) -> None:
@@ -202,8 +214,13 @@ class EntryHistoryScreen(BaseScreen):
 
             # TEST: Add a simple static test item first
             test_item = ListItem(Static("TEST ITEM - If you see this, ListView works!"))
-            self._list_view.append(test_item)
-            self.app.log("Added test item")
+            self._list_view.mount(test_item)
+            self.app.log("Mounted test item")
+
+            # Another test with plain text
+            self._list_view.mount(ListItem(Static("Second test item")))
+            self._list_view.mount(ListItem(Static("Third test item")))
+            self.app.log("Mounted additional test items")
 
             # Filter entries if needed
             display_entries = self.history_entries
