@@ -145,9 +145,11 @@ class EntryHistoryScreen(BaseScreen):
             # Update the display
             self._update_display()
             
-            # Notify user if history is empty
+            # Notify user with result
             if not self.history_entries:
                 self.app.notify("No read entries found. Read some articles first!", severity="information")
+            else:
+                self.app.notify(f"Loaded {len(self.history_entries)} entries - check if they appear in the list below", severity="information")
 
         except Exception as e:
             error_msg = f"Error loading history: {type(e).__name__}: {e}"
