@@ -47,12 +47,9 @@ jobs:
       - name: Install dependencies
         run: uv sync --locked
 
-      - name: Install pip-licenses
-        run: uv pip install pip-licenses
-
       - name: Generate license report
         run: |
-          .venv/bin/pip-licenses \
+          uv run --with pip-licenses pip-licenses \
             --format=json \
             --with-urls \
             --with-description \
@@ -125,7 +122,7 @@ jobs:
         if: always()
         run: |
           echo "## License Summary"
-          .venv/bin/pip-licenses --format=markdown --order=license
+          uv run --with pip-licenses pip-licenses --format=markdown --order=license
 
       - name: Upload license report
         if: always()
