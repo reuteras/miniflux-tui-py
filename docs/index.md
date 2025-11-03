@@ -51,7 +51,6 @@ See the [Installation Guide](installation.md) for more options including pip and
 
 | Key       | Action               |
 | -----     | --------             |
-| --------- | -------------------- |
 | `j` / `k` | Navigate down/up     |
 | `Enter`   | Open entry           |
 | `m`       | Mark as read/unread  |
