@@ -7,6 +7,10 @@ from miniflux_tui.ui.screens.entry_list import EntryListScreen
 class EntryHistoryScreen(EntryListScreen):
     """Screen displaying previously read entries - extends EntryListScreen."""
 
+    def __init__(self, **kwargs):
+        """Initialize with empty entries list - will be populated on mount."""
+        super().__init__(entries=[], **kwargs)
+
     async def on_mount(self) -> None:
         """Called when screen is mounted - load history instead of normal entries."""
         self.app.log("EntryHistoryScreen.on_mount called")
