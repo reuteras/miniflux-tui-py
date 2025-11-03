@@ -1,6 +1,5 @@
 """Entry history screen showing previously read entries."""
 
-from miniflux_tui.api.models import Entry
 from miniflux_tui.ui.screens.entry_list import EntryListScreen
 
 
@@ -14,20 +13,20 @@ class EntryHistoryScreen(EntryListScreen):
     async def on_mount(self) -> None:
         """Called when screen is mounted - load history instead of normal entries."""
         self.app.log("EntryHistoryScreen.on_mount called")
-        
+
         if not hasattr(self.app, "client") or not self.app.client:
             self.app.notify("API client not available", severity="error")
             return
-        
+
         try:
             # Show loading indicator
             self.app.notify("Loading history...")
-            
+
             # Get read entries (limit to 200 for performance)
             history_entries = await self.app.client.get_read_entries(limit=200, offset=0)
-            
+
             self.app.log(f"Loaded {len(history_entries)} history entries")
-            
+
             if not history_entries:
                 self.app.notify("No read entries found. Read some articles first!", severity="information")
                 self.entries = []
@@ -37,7 +36,7 @@ class EntryHistoryScreen(EntryListScreen):
                 # Set the entries and populate the list (inherited from EntryListScreen)
                 self.entries = history_entries
                 self._populate_list()
-                
+
         except Exception as e:
             error_msg = f"Error loading history: {type(e).__name__}: {e}"
             self.app.log(error_msg)
