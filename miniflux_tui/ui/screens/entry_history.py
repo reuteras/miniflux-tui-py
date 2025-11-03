@@ -93,6 +93,7 @@ class EntryHistoryScreen(BaseScreen):
 
     async def on_mount(self) -> None:
         """Called when screen is mounted - load history."""
+        self.app.log("EntryHistoryScreen.on_mount called")
         await self._load_history()
 
     async def _load_history(self) -> None:
