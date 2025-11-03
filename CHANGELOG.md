@@ -1,5 +1,25 @@
 # Changelog
 
+## [0.5.4] - 2025-11-03
+
+### DOCUMENTATION
+
+- Comprehensively document release process (#397)
+
+### MAINTENANCE
+
+- Release v0.5.3 (#396)
+
+
+
+#### Contributors
+
+Thank you to everyone who contributed to this release!
+
+**Humans:** 👤 Peter Reuterås
+
+**AI & Automation:** 🤖 Claude (AI Assistant)
+
 ## [0.5.3] - 2025-11-03
 
 ### BUG FIXES
