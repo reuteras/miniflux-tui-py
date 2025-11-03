@@ -29,11 +29,11 @@ repos:
       - id: ruff
         args: ["--fix"]
       - id: ruff-format
-  # - repo: https://github.com/editorconfig-checker/editorconfig-checker.python
-  #   rev: 3.4.1
-  #   hooks:
-  #     - id: editorconfig-checker
-  #       alias: ec
+  - repo: https://github.com/editorconfig-checker/editorconfig-checker.python
+    rev: 3.4.1
+    hooks:
+      - id: editorconfig-checker
+        alias: ec
   - repo: https://github.com/owenlamont/uv-secure
     rev: 0.14.3
     hooks:
