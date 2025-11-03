@@ -30,7 +30,7 @@ updates:
           - "miniflux*"
           - "html2text*"
     cooldown:
-      default-days: 1
+      default-days: 4
 
   # Enable version updates for GitHub Actions
   - package-ecosystem: "github-actions"
@@ -42,11 +42,11 @@ updates:
     open-pull-requests-limit: 5
     pin-versions: true
     cooldown:
-      default-days: 1
+      default-days: 4
 
   - package-ecosystem: docker
     directory: /
     schedule:
       interval: daily
     cooldown:
-      default-days: 1
+      default-days: 4
