@@ -169,7 +169,7 @@ class EntryListScreen(Screen):
         Binding("question_mark", "show_help", "Help"),
         Binding("i", "show_status", "Status"),
         Binding("shift+s", "show_settings", "Settings"),
-        Binding("shift+h", "show_history", "History"),
+        Binding("H", "show_history", "History"),
         Binding("q", "quit", "Quit"),
     ]
 
@@ -1401,7 +1401,13 @@ class EntryListScreen(Screen):
 
     def action_show_history(self):
         """Show reading history."""
-        self.app.push_screen("history")
+        self.app.log("action_show_history called - pushing history screen")
+        try:
+            self.app.push_screen("history")
+            self.app.log("Successfully pushed history screen")
+        except Exception as e:
+            self.app.log(f"Error pushing history screen: {type(e).__name__}: {e}")
+            self.app.notify(f"Failed to show history: {e}", severity="error")
 
     def action_quit(self):
         """Quit the application."""
