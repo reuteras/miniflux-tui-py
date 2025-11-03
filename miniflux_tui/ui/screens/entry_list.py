@@ -1010,6 +1010,10 @@ class EntryListScreen(Screen):
         self.group_by_feed = not self.group_by_feed
 
         if self.group_by_feed:
+            # Start with groups collapsed when enabling
+            self.group_collapsed = True
+            # Clear existing fold states so new groups start collapsed
+            self.feed_fold_state.clear()
             self.notify("Grouping by feed (use h/l to collapse/expand)")
         else:
             self.notify("Feed grouping disabled")
@@ -1030,6 +1034,10 @@ class EntryListScreen(Screen):
         self.group_by_category = not self.group_by_category
 
         if self.group_by_category:
+            # Start with groups collapsed when enabling
+            self.group_collapsed = True
+            # Clear existing fold states so new groups start collapsed
+            self.category_fold_state.clear()
             self.notify("Grouping by category (use h/l to collapse/expand)")
         else:
             self.notify("Category grouping disabled")
