@@ -7,12 +7,11 @@ All screens inherit from this base to properly type-hint the app property.
 
 from __future__ import annotations
 
-from typing import TYPE_CHECKING, Any
+from typing import Any
 
 from textual.screen import Screen
 
-if TYPE_CHECKING:
-    from miniflux_tui.ui.app import MinifluxTuiApp
+from miniflux_tui.ui.app_protocol import MinifluxAppProtocol
 
 
 class BaseScreen(Screen[Any]):
@@ -25,10 +24,10 @@ class BaseScreen(Screen[Any]):
     """
 
     @property
-    def app(self) -> MinifluxTuiApp:  # type: ignore[override,return-value,reportReturnType]
+    def app(self) -> MinifluxAppProtocol:  # type: ignore[override,return-value,reportReturnType]
         """Get the app instance with proper typing.
 
         Returns:
-            MinifluxTuiApp: The application instance
+            MinifluxAppProtocol: The application instance following the protocol
         """
         return super().app  # type: ignore[return-value]
