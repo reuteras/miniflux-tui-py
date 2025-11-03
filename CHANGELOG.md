@@ -1,5 +1,74 @@
 # Changelog
 
+## [0.5.3] - 2025-11-03
+
+### BUG FIXES
+
+- Address remaining 10 code scanning security alerts (#329)
+- Resolve remaining code scanning security alerts to achieve zero alerts (#332)
+- Add dependabot[bot] to auto-approve workflow to fix auto-merge (#348)
+- Restrict auto-merge to verified dependabot[bot] account type (#349)
+- Resolve cyclic import warnings with Protocol-based app interface (#353)
+- Exclude CodeQL config from YAML v8r schema validation (#355)
+- Exclude .yaml-lint.yml from YAML v8r schema validation (#357)
+- Remove ellipsis statements from Protocol methods to resolve code scanning alerts (#359)
+- Clean up Codespaces configuration (#361)
+- Use raise NotImplementedError in Protocol methods (#363)
+- Configure VS Code to run pytest via uv in Codespaces (#364)
+- Exclude problematic YAML files from v8r schema validation (#368)
+- Add pytest path to workspace settings for reliable test discovery (#369)
+- Use unique coverage filenames to prevent overwriting during merge (#371)
+- Set VALIDATE_ALL_CODEBASE to true in MegaLinter (#374)
+- Add pull-requests write permission for coverage comments (#378)
+- Update VS Code test plugin configuration for proper pytest discovery
+- Set VALIDATE_ALL_CODEBASE to true in MegaLinter (#374)
+- Add pull-requests write permission for coverage comments (#378)
+- Enable editorconfig-checker in pre-commit hooks (#380)
+- Add final newline to .vscode/settings.json
+- Remove merge-multiple to preserve coverage data files (#381)
+- Start groups collapsed when toggling group by category/feed (#383)
+- Remove Python 3.14 from test matrix (#389)
+- Rewrite history screen to extend EntryListScreen and sort by read time (#390)
+- Copy .coverage file for python-coverage-comment-action (#393)
+- Run coverage-report job only on PRs, not main pushes (#394)
+- Require git-cliff and fix configuration (#395)
+
+### FEATURES
+
+- Auto-close Dependabot tracking issues when PRs are merged (#347)
+- Add comprehensive GitHub labels configuration (#372)
+- Enhance pre-commit checks to catch more errors before CI (#377)
+- Enhance pre-commit checks to catch more errors before CI (#377)
+- Replace custom changelog generator with git-cliff (#385)
+
+### MAINTENANCE
+
+- bump actions/setup-python from 5.1.0 to 6.0.0 (#338) 🤖
+- bump actions/github-script from 7.0.1 to 8.0.0 (#339) 🤖
+- bump actions/checkout from 4.2.2 to 5.0.0 (#344) 🤖
+- bump chainguard-dev/actions (#342) 🤖
+- Increase dependabot cooldown from 1 to 4 days (#351)
+- Use "explicit" instead of true for VS Code code actions (#373)
+
+### REFACTORING
+
+- Rename MinifluxTUI class to MinifluxTuiApp for clarity (#336)
+- Use uvx for tool execution instead of pip install + run (#346)
+
+### TESTING
+
+- Add key binding tests and coverage analysis (#392)
+
+
+
+#### Contributors
+
+Thank you to everyone who contributed to this release!
+
+**Humans:** 👤 Peter Reuterås
+
+**AI & Automation:** 🤖 Claude (AI Assistant), dependabot[bot] (Dependencies)
+
 ## [0.5.2] - 2025-11-02
 
 ### Added
