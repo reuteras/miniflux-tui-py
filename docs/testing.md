@@ -200,7 +200,6 @@ def diverse_entries(sample_feed):
 
 | Module                     | Coverage   | Status                        |
 | --------                   | ---------- | --------                      |
-| -------------------------- | ---------- | ----------------------------- |
 | api/client.py              | 100%       | ✅ Perfect                     |
 | api/models.py              | 100%       | ✅ Perfect                     |
 | config.py                  | 100%       | ✅ Perfect                     |

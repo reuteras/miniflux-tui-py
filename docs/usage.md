@@ -31,7 +31,6 @@ The main screen is divided into three sections:
 ### Basic Movement
 
 | Key   | Action           |
-| ----- | --------         |
 | ----- | ---------------- |
 | `j`   | Move cursor down |
 | `k`   | Move cursor up   |
@@ -41,7 +40,6 @@ The main screen is divided into three sections:
 ### Opening and Reading Entries
 
 | Key     | Action                                                                         |
-| -----   | --------                                                                       |
 | ------- | ------------------------------------------------------------------------------ |
 | `Enter` | Open the selected entry for reading (or first entry in feed if on feed header) |
 | `J`     | Next entry (when reading)                                                      |
@@ -53,7 +51,6 @@ The main screen is divided into three sections:
 
 | Key   | Action                                         |
 | ----- | --------                                       |
-| ----- | ---------------------------------------------- |
 | `m`   | Toggle read/unread status of the current entry |
 
 When you read an entry, it's automatically marked as read when you navigate away.
@@ -62,14 +59,12 @@ When you read an entry, it's automatically marked as read when you navigate away
 
 | Key   | Action                                  |
 | ----- | --------                                |
-| ----- | --------------------------------------- |
 | `*`   | Toggle star status of the current entry |
 
 ### Save Entries
 
 | Key   | Action                                                       |
 | ----- | --------                                                     |
-| ----- | ------------------------------------------------------------ |
 | `e`   | Save entry to a third-party service (configured in Miniflux) |
 
 ## Viewing Modes
@@ -95,7 +90,6 @@ Press `g` to toggle grouping by feed. When enabled:
 
 | Key   | Action                    |
 | ----- | --------                  |
-| ----- | ------------------------- |
 | `u`   | Show only unread entries  |
 | `t`   | Show only starred entries |
 
@@ -109,7 +103,6 @@ When in grouped mode (`g` to toggle):
 
 | Key       | Action                                       |
 | -----     | --------                                     |
-| --------- | -------------------------------------------- |
 | `l`       | Expand the highlighted feed                  |
 | `h`       | Collapse the highlighted feed                |
 | `o`       | Toggle expansion of the highlighted feed     |
@@ -135,7 +128,6 @@ In the category management screen:
 
 | Key       | Action                                           |
 | -----     | --------                                         |
-| --------- | ------------------------------------------------ |
 | `j` / `↓` | Move cursor down                                 |
 | `k` / `↑` | Move cursor up                                   |
 | `n`       | Create new category                              |
@@ -175,7 +167,6 @@ For detailed feed health information and error messages:
 
 | Key   | Action                                       |
 | ----- | --------                                     |
-| ----- | -------------------------------------------- |
 | `i`   | Show system status with detailed feed health |
 
 The status screen displays:
@@ -187,7 +178,6 @@ The status screen displays:
 
 | Key   | Action                                    |
 | ----- | --------                                  |
-| ----- | ----------------------------------------- |
 | `r`   | Refresh entries from your Miniflux server |
 | `,`   | Refresh entries (alternative)             |
 
@@ -200,14 +190,12 @@ The refresh will:
 
 | Key   | Action                       |
 | ----- | --------                     |
-| ----- | ---------------------------- |
 | `?`   | Show keyboard shortcuts help |
 
 ## Quitting
 
 | Key   | Action               |
 | ----- | --------             |
-| ----- | -------------------- |
 | `q`   | Quit the application |
 
 ## Entry Reader
@@ -225,7 +213,6 @@ In the entry reader, you can also:
 
 | Key   | Action                             |
 | ----- | --------                           |
-| ----- | ---------------------------------- |
 | `m`   | Mark the entry as read/unread      |
 | `*`   | Toggle star status                 |
 | `e`   | Save the entry                     |

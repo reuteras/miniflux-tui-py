@@ -116,7 +116,6 @@ jobs:
 
 | Category         | Tool        | Status   |
 | ----------       | ------      | -------- |
-| ---------------- | ----------- | -------- |
 | **SAST**         | CodeQL      | ✅ Have   |
 | **SAST**         | Semgrep     | 🆕 Add    |
 | **SAST**         | Bandit      | ✅ Have   |
@@ -172,7 +171,6 @@ jobs:
 
 | Task                | Time         | Complexity   |
 | ------              | ------       | ------------ |
-| ------------------- | ------------ | ------------ |
 | Coveralls setup     | 1 hour       | Easy         |
 | GitHub Pages setup  | 30 min       | Easy         |
 | Remove Codecov      | 15 min       | Easy         |
