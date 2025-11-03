@@ -176,3 +176,7 @@ reportMissingTypeStubs = false
 reportPrivateUsage = false
 reportOptionalMemberAccess = false
 reportOptionalSubscript = false
+
+[tool.bandit]
+exclude_dirs = ["tests", "fuzz"]
+skips = ["B101"]  # Skip assert_used check (used in tests)
