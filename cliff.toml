@@ -22,7 +22,7 @@ body = """
 {% for group, commits in commits | group_by(attribute="group") %}
     ### {{ group | upper }}
     {% for commit in commits %}
-    - {% if commit.breaking %}[BREAKING] {% endif %}{{ commit.message }}{% if commit.links %} ([#{{ commit.links[0].number }}]({{ commit.links[0].href }})){% endif %}
+    - {% if commit.breaking %}[BREAKING] {% endif %}{{ commit.message }}
     {%- endfor %}
 {% endfor %}
 """
@@ -77,8 +77,6 @@ message = "^[Rr]evert"
 skip = true
 
 # GitHub-specific commit link format
-[git.link_parsers]
-text_key = "message"
-links = [
-    { pattern = "#(\\d+)", href = "https://github.com/reuteras/miniflux-tui-py/pull/$1" }
-]
+[[git.link_parsers]]
+pattern = "#(\\d+)"
+href = "https://github.com/reuteras/miniflux-tui-py/pull/$1"
