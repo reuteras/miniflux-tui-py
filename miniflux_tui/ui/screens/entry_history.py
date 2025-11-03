@@ -5,7 +5,7 @@
 from textual.app import ComposeResult
 from textual.binding import Binding
 from textual.containers import VerticalScroll
-from textual.widgets import Footer, Header, ListItem, ListView, Static
+from textual.widgets import Footer, Header, Label, ListItem, ListView, Static
 
 from miniflux_tui.api.models import Entry
 from miniflux_tui.ui.base_screen import BaseScreen
@@ -28,21 +28,20 @@ class EntryHistoryItem(ListItem):
                 date_str = "Unknown date"
 
             # Truncate title if too long
-            max_width = 100
+            max_width = 80
             title = entry.title[:max_width] if len(entry.title) > max_width else entry.title
 
             # Build display with feed info if available
-            feed_info = f" [{entry.feed.title}]" if entry.feed and entry.feed.title else ""
-            status_indicator = "[green]✓[/green]" if entry.is_read else "[yellow]○[/yellow]"
+            feed_info = f" [{entry.feed.title[:30]}]" if entry.feed and entry.feed.title else ""
+            status_indicator = "✓" if entry.is_read else "○"
 
             label_text = f"{status_indicator} {date_str} {title}{feed_info}"
         except Exception as e:
             # Fallback if formatting fails
-            label_text = f"[red]Error: {str(e)[:50]}[/red]"
+            label_text = f"Error: {str(e)[:50]}"
         
-        # Initialize with a Label widget
-        from textual.widgets import Label
-        super().__init__(Label(label_text), **kwargs)
+        # Initialize with a Static widget (simpler than Label)
+        super().__init__(Static(label_text), **kwargs)
 
 
 class EntryHistoryScreen(BaseScreen):
@@ -220,12 +219,17 @@ class EntryHistoryScreen(BaseScreen):
                 self._list_view.append(ListItem(Static(msg)))
                 self.app.log("Added empty state message")
             else:
+                self.app.log(f"About to add {len(display_entries)} items to ListView")
                 for i, entry in enumerate(display_entries):
                     item = EntryHistoryItem(entry)
                     self._list_view.append(item)
                     if i < 3:  # Log first 3 for debugging
                         self.app.log(f"Added entry {i}: {entry.title[:50]}")
                 self.app.log(f"Successfully added {len(display_entries)} entries to list")
+                
+                # Force a refresh
+                self._list_view.refresh()
+                self.app.log("Called refresh on ListView")
 
         except Exception as e:
             self.app.log(f"ERROR in _populate_history_list: {type(e).__name__}: {e}")
