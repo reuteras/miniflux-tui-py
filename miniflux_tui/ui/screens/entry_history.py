@@ -202,6 +202,11 @@ class EntryHistoryScreen(BaseScreen):
             self._list_view.clear()
             self.app.log("Cleared list view")
 
+            # TEST: Add a simple static test item first
+            test_item = ListItem(Static("TEST ITEM - If you see this, ListView works!"))
+            self._list_view.append(test_item)
+            self.app.log("Added test item")
+
             # Filter entries if needed
             display_entries = self.history_entries
             if self.current_feed_filter:
@@ -220,12 +225,24 @@ class EntryHistoryScreen(BaseScreen):
                 self.app.log("Added empty state message")
             else:
                 self.app.log(f"About to add {len(display_entries)} items to ListView")
+                
+                # Add a separator
+                self._list_view.append(ListItem(Static("--- History Entries Below ---")))
+                
                 for i, entry in enumerate(display_entries):
-                    item = EntryHistoryItem(entry)
-                    self._list_view.append(item)
+                    # Create simple text without any Entry object complexity
+                    simple_text = f"{i+1}. {entry.title[:60]}"
+                    simple_item = ListItem(Static(simple_text))
+                    self._list_view.append(simple_item)
+                    
                     if i < 3:  # Log first 3 for debugging
                         self.app.log(f"Added entry {i}: {entry.title[:50]}")
-                self.app.log(f"Successfully added {len(display_entries)} entries to list")
+                        
+                    # Stop after 10 for testing
+                    if i >= 9:
+                        break
+                        
+                self.app.log(f"Successfully added test items to list")
                 
                 # Force a refresh
                 self._list_view.refresh()
