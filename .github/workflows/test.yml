@@ -246,7 +246,7 @@ jobs:
     name: Generate Coverage Report
     needs: test
     runs-on: ubuntu-latest
-    if: github.ref == 'refs/heads/main'
+    if: github.event_name == 'pull_request'
     permissions:
       contents: write
     steps:
