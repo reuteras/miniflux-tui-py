@@ -650,7 +650,7 @@ test: Add integration tests for feed refresh
 - [CHANGELOG.md](CHANGELOG.md) - Release history
 - [ROADMAP.md](ROADMAP.md) - Planned features by version
 - [scripts/release.py](scripts/release.py) - Automated release script
-- [scripts/changelog_generator.py](scripts/changelog_generator.py) - Changelog automation
+- [cliff.toml](cliff.toml) - git-cliff configuration for changelog generation
 
 ## Troubleshooting
 

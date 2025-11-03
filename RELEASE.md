@@ -7,6 +7,21 @@ Releases are now driven entirely from Git tags. The process happens in two stage
 
 GitHub Actions handles packaging, publishing, and creating the GitHub release once the tag is pushed.
 
+## Prerequisites
+
+Before creating a release, ensure you have **git-cliff** installed for automatic changelog generation:
+
+```bash
+# Install via cargo
+cargo install git-cliff
+
+# Or via package manager (macOS)
+brew install git-cliff
+
+# Or via package manager (Linux)
+# See https://git-cliff.org/docs/installation for your distro
+```
+
 ## Quick Start
 
 ```bash
@@ -26,7 +41,7 @@ The default command (`uv run python scripts/release.py`) performs the following:
 3. Prompts for the new semantic version (suggests the next patch).
 4. Updates `pyproject.toml`.
 5. Regenerates `uv.lock` so dependencies stay in sync.
-6. Pre-populates `CHANGELOG.md` with the commits since the previous tag and lets you edit.
+6. Uses `git-cliff` to auto-generate `CHANGELOG.md` entries from conventional commits and lets you edit.
 7. Creates a branch named `release/vX.Y.Z`.
 8. Commits the version + changelog changes.
 9. Pushes the release branch to `origin`.
