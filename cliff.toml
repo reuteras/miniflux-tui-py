@@ -22,13 +22,27 @@ body = """
 {% for group, commits in commits | group_by(attribute="group") %}
     ### {{ group | upper }}
     {% for commit in commits %}
-    - {% if commit.breaking %}[BREAKING] {% endif %}{{ commit.message }}
+    - {% if commit.breaking %}**[BREAKING]** {% endif %}{{ commit.message }}{% if commit.author.name == "Claude" %} 🤖{% elif commit.author.name == "dependabot[bot]" %} 🤖{% elif commit.author.name == "renovate[bot]" %} 🤖{% elif commit.author.name == "StepSecurity Bot" %} 🤖{% endif %}
     {%- endfor %}
 {% endfor %}
+
+{% if version %}
+    #### Contributors
+
+    Thank you to everyone who contributed to this release!
+
+    **Humans:** 👤 Peter Reuterås
+
+    **AI & Automation:** 🤖 Claude (AI Assistant){% if commits | filter(attribute="author.name", value="dependabot[bot]") %}, dependabot[bot] (Dependencies){% endif %}{% if commits | filter(attribute="author.name", value="renovate[bot]") %}, renovate[bot] (Dependencies){% endif %}{% if commits | filter(attribute="author.name", value="StepSecurity Bot") %}, StepSecurity Bot (Security){% endif %}
+{% endif %}
 """
 
-# Footer template
+# Footer template with statistics
 footer = """
+{% if version %}
+---
+**Full Changelog**: https://github.com/reuteras/miniflux-tui-py/compare/{{ previous.version }}...{{ version }}
+{% endif %}
 """
 
 # Remove prefix from commit messages (e.g., "fix: " -> "")
