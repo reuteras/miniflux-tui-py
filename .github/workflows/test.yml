@@ -77,6 +77,8 @@ jobs:
         run: uv run pyright miniflux_tui tests
 
       - name: Run tests with coverage
+        env:
+          COVERAGE_FILE: .coverage.${{ matrix.os }}-py${{ matrix.python-version }}
         run: |
           uv run --with pytest-xdist pytest tests --cov=miniflux_tui --cov-report=xml \
             --cov-report=term-missing --cov-report=html \
@@ -88,7 +90,7 @@ jobs:
           name: coverage-${{ matrix.os }}-py${{ matrix.python-version }}
           path: |
             coverage.xml
-            .coverage
+            .coverage.${{ matrix.os }}-py${{ matrix.python-version }}
           retention-days: 7
 
       - name: Upload coverage to Coveralls
@@ -265,7 +267,8 @@ jobs:
       - name: Combine coverage reports
         run: |
           cd coverage-data
-          uvx coverage combine --keep
+          ls -la  # Debug: show what files we have
+          uvx coverage combine --keep .coverage.*
           uvx coverage xml -o ../coverage.xml
           uvx coverage html --directory=../htmlcov
 
