@@ -160,16 +160,22 @@ class EntryHistoryScreen(BaseScreen):
     def _populate_history_list(self) -> None:
         """Populate the history list with entries."""
         try:
+            self.app.log(f"_populate_history_list called with {len(self.history_entries)} entries")
+            
             if not self._list_view:
+                self.app.log("ERROR: _list_view is None!")
                 return
 
             # Clear existing items using ListView's clear method
             self._list_view.clear()
+            self.app.log("Cleared list view")
 
             # Filter entries if needed
             display_entries = self.history_entries
             if self.current_feed_filter:
                 display_entries = [e for e in self.history_entries if e.feed and e.feed.title == self.current_feed_filter]
+
+            self.app.log(f"Display entries count: {len(display_entries)}")
 
             # Add entries to list using ListView's append method
             if not display_entries:
@@ -179,13 +185,19 @@ class EntryHistoryScreen(BaseScreen):
                 else:
                     msg = "[dim]No read entries found.\nRead some articles first by pressing Enter on entries![/dim]"
                 self._list_view.append(ListItem(Static(msg)))
+                self.app.log("Added empty state message")
             else:
-                for entry in display_entries:
+                for i, entry in enumerate(display_entries):
                     item = EntryHistoryItem(entry)
                     self._list_view.append(item)
+                    if i < 3:  # Log first 3 for debugging
+                        self.app.log(f"Added entry {i}: {entry.title[:50]}")
+                self.app.log(f"Successfully added {len(display_entries)} entries to list")
 
         except Exception as e:
-            self.app.log(f"Could not populate history list: {e}")
+            self.app.log(f"ERROR in _populate_history_list: {type(e).__name__}: {e}")
+            import traceback
+            self.app.log(f"Traceback: {traceback.format_exc()}")
             self.app.notify(f"Error displaying history: {e}", severity="error")
 
     def action_close(self):
