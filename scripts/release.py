@@ -332,27 +332,15 @@ def check_git_cliff_installed() -> bool:
 def generate_changelog_entry(new_version: str) -> str:
     """Generate changelog entry using git-cliff."""
     previous_tag = get_previous_tag()
-    release_date = datetime.now(UTC).strftime("%Y-%m-%d")
 
     # Check if git-cliff is installed
     if not check_git_cliff_installed():
-        print_error("git-cliff is not installed.")
-        print_info("Install git-cliff to automatically generate changelogs:")
+        print_error("git-cliff is not installed and is required for releases.")
+        print_info("Install git-cliff before running the release script:")
         print_info("  - Via cargo: cargo install git-cliff")
+        print_info("  - Via Homebrew (macOS): brew install git-cliff")
         print_info("  - Via package manager: See https://git-cliff.org/docs/installation")
-        print_info("")
-        print_info("Alternatively, you can manually edit CHANGELOG.md")
-        return f"""## [{new_version}] - {release_date}
-
-### Added
-- Feature description
-
-### Changed
-- Improvement description
-
-### Fixed
-- Bug fix description
-"""
+        sys.exit(1)
 
     # Use git-cliff to generate the changelog
     try:
@@ -396,17 +384,7 @@ def generate_changelog_entry(new_version: str) -> str:
 
     except subprocess.CalledProcessError as error:
         print_error(f"git-cliff failed: {error.stderr}")
-        return f"""## [{new_version}] - {release_date}
-
-### Added
-- Feature description
-
-### Changed
-- Improvement description
-
-### Fixed
-- Bug fix description
-"""
+        sys.exit(1)
 
 
 def edit_changelog(new_version: str) -> bool:  # noqa: PLR0911
