@@ -2,7 +2,6 @@
 
 from __future__ import annotations
 
-import asyncio
 import traceback
 from importlib import import_module
 from typing import TYPE_CHECKING, cast
@@ -141,13 +140,15 @@ class MinifluxTuiApp(App):
 
     async def on_mount(self) -> None:
         """Called when app is mounted."""
-        # Show loading screen immediately and give UI a chance to render
+        # Show loading screen immediately
         self.install_screen(LoadingScreen(), name="loading")
         self.push_screen("loading")
 
-        # Yield control to let the loading screen render before blocking operations
-        await asyncio.sleep(0)
+        # Schedule the data loading to happen after the screen is rendered
+        self.call_after_refresh(self._load_data)
 
+    async def _load_data(self) -> None:
+        """Load data after loading screen is displayed."""
         # Initialize API client - this may block on password command
         self.client = MinifluxClient(
             base_url=self.config.server_url,

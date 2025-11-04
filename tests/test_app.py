@@ -378,6 +378,7 @@ class TestMinifluxTuiAppOnMount:
             patch.object(app, "load_entries", new_callable=AsyncMock),
         ):
             await app.on_mount()
+            await app._load_data()
 
         # Verify client was initialized
         assert app.client is not None
@@ -399,6 +400,7 @@ class TestMinifluxTuiAppOnMount:
             patch.object(app, "load_entries", new_callable=AsyncMock),
         ):
             await app.on_mount()
+            await app._load_data()
 
             # Verify install_screen was called six times (for loading, entry_list, help, status, settings, and history)
             assert mock_install.call_count == 6
@@ -419,6 +421,7 @@ class TestMinifluxTuiAppOnMount:
             patch.object(app, "load_entries", new_callable=AsyncMock),
         ):
             await app.on_mount()
+            await app._load_data()
 
             # Verify push_screen was called twice (loading, then entry_list)
             assert mock_push.call_count == 2
@@ -441,6 +444,7 @@ class TestMinifluxTuiAppOnMount:
             patch.object(app, "load_entries", new_callable=AsyncMock),
         ):
             await app.on_mount()
+            await app._load_data()
 
             # Verify loading screen was pushed first
             assert mock_push.call_args_list[0][0][0] == "loading"
@@ -460,6 +464,7 @@ class TestMinifluxTuiAppOnMount:
             patch.object(app, "load_entries", new_callable=AsyncMock) as mock_load,
         ):
             await app.on_mount()
+            await app._load_data()
 
             # Verify load_entries was called
             mock_load.assert_called_once()
