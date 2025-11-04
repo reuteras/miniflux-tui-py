@@ -42,6 +42,11 @@ class ScrapingHelperScreen(Screen):
         padding: 1 2;
     }
 
+    #feed-display {
+        margin-bottom: 1;
+        color: $text;
+    }
+
     #url-display {
         margin-bottom: 1;
         color: $accent;
@@ -49,15 +54,12 @@ class ScrapingHelperScreen(Screen):
 
     #status-message {
         height: auto;
-        min-height: 3;
         margin-bottom: 1;
-        border: solid $primary;
-        padding: 1;
+        padding: 0 1;
     }
 
     #candidates-container {
         height: auto;
-        max-height: 15;
         border: solid $primary;
         margin-bottom: 1;
     }
@@ -70,12 +72,12 @@ class ScrapingHelperScreen(Screen):
     }
 
     #candidates-list {
-        height: 1fr;
+        height: auto;
+        max-height: 10;
     }
 
     #preview-container {
         height: 1fr;
-        min-height: 20;
         border: solid $secondary;
     }
 
