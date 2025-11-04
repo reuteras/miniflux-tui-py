@@ -55,6 +55,8 @@ async def test_app_initializes_in_headless_mode(sample_entries, sample_categorie
     with patch("miniflux_tui.ui.app.MinifluxClient", return_value=fake_client):
         app = MinifluxTuiApp(config)
         async with app.run_test(headless=True) as pilot:
+            # Wait for loading screen to complete and entry_list to be installed
+            await pilot.pause()
             await pilot.pause()
             assert app.is_screen_installed("entry_list")
             entry_screen = cast(EntryListScreen, app.get_screen("entry_list"))
