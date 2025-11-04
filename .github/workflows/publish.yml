@@ -385,34 +385,48 @@ jobs:
 
           upload_files=()
 
-          # Collect distribution artifacts and signatures
-          while IFS= read -r -d '' file; do
-            upload_files+=("${file}")
-            # Also upload signature if it exists
-            if [ -f "${file}.sig" ]; then
-              upload_files+=("${file}.sig")
+          declare -A seen=()
+
+          add_upload_file() {
+            local path="$1"
+
+            if [ -f "${path}" ] && [ -z "${seen["$path"]+x}" ]; then
+              upload_files+=("${path}")
+              seen["$path"]=1
             fi
-          done < <(find dist -maxdepth 1 -type f -print0)
+          }
+
+          add_signed_artifacts() {
+            local directory="$1"
+
+            while IFS= read -r -d '' file; do
+              case "${file}" in
+                *.sig|*.sig.bundle)
+                  # Signature bundles may occasionally exist without the primary artifact
+                  add_upload_file "${file}"
+                  continue
+                  ;;
+              esac
+
+              add_upload_file "${file}"
+
+              for extension in sig sig.bundle; do
+                local signed_file="${file}.${extension}"
+                add_upload_file "${signed_file}"
+              done
+            done < <(find "${directory}" -maxdepth 1 -type f -print0)
+          }
+
+          # Collect distribution artifacts and signatures
+          add_signed_artifacts "dist"
 
           # Collect binary artifacts and signatures
           if [ -d binaries ]; then
-            while IFS= read -r -d '' file; do
-              upload_files+=("${file}")
-              # Also upload signature if it exists
-              if [ -f "${file}.sig" ]; then
-                upload_files+=("${file}.sig")
-              fi
-            done < <(find binaries -maxdepth 1 -type f -print0)
+            add_signed_artifacts "binaries"
           fi
 
           # Collect SBOM artifacts and signatures
-          while IFS= read -r -d '' file; do
-            upload_files+=("${file}")
-            # Also upload signature if it exists
-            if [ -f "${file}.sig" ]; then
-              upload_files+=("${file}.sig")
-            fi
-          done < <(find sbom -maxdepth 1 -type f -print0)
+          add_signed_artifacts "sbom"
 
           # Collect provenance artifacts
           if [ -d provenance ]; then
