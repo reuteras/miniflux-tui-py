@@ -38,10 +38,24 @@
                 ],
                 "python.testing.cwd": "${workspaceFolder}",
                 "python.testing.autoTestDiscoverOnSaveEnabled": true,
+                "python.analysis.extraPaths": [
+                    "${workspaceFolder}"
+                ],
+                "python.analysis.autoSearchPaths": true,
+                "python.analysis.diagnosticMode": "workspace",
                 "python.analysis.typeCheckingMode": "strict",
                 "python.languageServer": "Pylance",
                 "python.linting.enabled": false,
-                "python.formatting.provider": "none"
+                "python.formatting.provider": "none",
+                "redhat.telemetry.enabled": false,
+                "files.associations": {
+                    "*.md": "markdown"
+                },
+                "markdownlint.config": {
+                    "MD013": false,
+                    "MD033": false,
+                    "MD041": false
+                }
             },
             "extensions": [
                 "ms-python.python",
@@ -50,7 +64,9 @@
                 "charliermarsh.ruff",
                 "donjayamanne.githistory",
                 "esbenp.prettier-vscode",
-                "redhat.vscode-yaml"
+                "redhat.vscode-yaml",
+                "editorconfig.editorconfig",
+                "davidanson.vscode-markdownlint"
             ]
         }
     }

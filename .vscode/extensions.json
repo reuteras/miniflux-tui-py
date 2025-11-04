@@ -1,0 +1,14 @@
+{
+    "recommendations": [
+        "charliermarsh.ruff",
+        "ms-python.python",
+        "ms-python.vscode-pylance",
+        "redhat.vscode-yaml",
+        "editorconfig.editorconfig",
+        "davidanson.vscode-markdownlint"
+    ],
+    "unwantedRecommendations": [
+        "ms-azuretools.vscode-docker",
+        "ms-vscode-remote.remote-containers"
+    ]
+}

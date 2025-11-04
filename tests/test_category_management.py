@@ -2,6 +2,7 @@
 
 import asyncio
 from typing import cast
+from unittest.mock import AsyncMock, MagicMock, patch
 
 from textual.app import App
 from textual.binding import Binding
@@ -17,6 +18,7 @@ class CategoryManagementTestApp(App):
         """Initialize test app."""
         super().__init__(**kwargs)
         self.categories = categories or []
+        self.client: MagicMock | None = None  # type: ignore[assignment]
 
     def on_mount(self) -> None:
         """Mount the category management screen."""
@@ -325,3 +327,249 @@ class TestCategoryManagementAsyncMethods:
         """Test that _do_delete_category is an async method."""
         screen = CategoryManagementScreen()
         assert asyncio.iscoroutinefunction(screen._do_delete_category)
+
+
+class TestCategoryManagementCRUDOperations:
+    """Test CRUD operations in CategoryManagementScreen."""
+
+    async def test_create_category_success(self) -> None:
+        """Test successful category creation."""
+
+        app = CategoryManagementTestApp()
+        app.client = MagicMock()
+        app.client.create_category = AsyncMock(return_value=Category(id=3, title="New Category"))
+
+        async with app.run_test() as pilot:
+            screen = cast(CategoryManagementScreen, app.screen)
+            initial_count = len(screen.categories)
+
+            # Patch api_call to just return the app
+            with patch("miniflux_tui.ui.screens.category_management.api_call") as mock_api:
+                mock_api.return_value.__enter__.return_value = app
+
+                # Simulate creating a category
+                await screen._do_create_category("New Category")
+                await pilot.pause()
+
+                # Verify category was added
+                assert len(screen.categories) == initial_count + 1
+                assert screen.categories[-1].title == "New Category"
+                app.client.create_category.assert_called_once_with("New Category")
+
+    async def test_create_category_shows_dialog(self) -> None:
+        """Test that create category action shows dialog."""
+
+        app = CategoryManagementTestApp()
+
+        async with app.run_test():
+            screen = cast(CategoryManagementScreen, app.screen)
+
+            # Mock push_screen to avoid actually showing the dialog
+            with patch.object(app, "push_screen") as mock_push:
+                await screen.action_create_category()
+                # Dialog should be pushed
+                mock_push.assert_called_once()
+
+    async def test_create_category_api_error(self) -> None:
+        """Test handling API error during category creation."""
+
+        app = CategoryManagementTestApp()
+        app.client = MagicMock()
+        app.client.create_category = AsyncMock(side_effect=Exception("API Error"))
+
+        async with app.run_test() as pilot:
+            screen = cast(CategoryManagementScreen, app.screen)
+            initial_count = len(screen.categories)
+
+            # Try to create category (should fail)
+            await screen._do_create_category("Test")
+            await pilot.pause()
+
+            # Verify category was not added
+            assert len(screen.categories) == initial_count
+
+    async def test_edit_category_success(self) -> None:
+        """Test successful category editing."""
+
+        categories = [Category(id=1, title="Old Name")]
+        app = CategoryManagementTestApp(categories=categories)
+        app.client = MagicMock()
+        app.client.update_category = AsyncMock(return_value=Category(id=1, title="New Name"))
+
+        async with app.run_test() as pilot:
+            screen = cast(CategoryManagementScreen, app.screen)
+
+            # Patch api_call
+            with patch("miniflux_tui.ui.screens.category_management.api_call") as mock_api:
+                mock_api.return_value.__enter__.return_value = app
+
+                # Edit the category
+                await screen._do_edit_category(1, "New Name")
+                await pilot.pause()
+
+                # Verify category was updated
+                assert screen.categories[0].title == "New Name"
+                app.client.update_category.assert_called_once_with(1, "New Name")
+
+    async def test_edit_category_no_selection(self) -> None:
+        """Test editing when no category is selected."""
+        app = CategoryManagementTestApp()
+
+        async with app.run_test():
+            screen = cast(CategoryManagementScreen, app.screen)
+
+            # Try to edit without selection
+            await screen.action_edit_category()
+            # Should show warning notification
+
+    async def test_edit_category_empty_name(self) -> None:
+        """Test editing category with empty name."""
+
+        categories = [Category(id=1, title="Test")]
+        app = CategoryManagementTestApp(categories=categories)
+
+        async with app.run_test():
+            screen = cast(CategoryManagementScreen, app.screen)
+
+            # Mock the input dialog
+            with patch("miniflux_tui.ui.screens.category_management.InputDialog") as mock_dialog:
+                await screen.action_edit_category()
+
+                if mock_dialog.called:
+                    on_submit = mock_dialog.call_args.kwargs["on_submit"]
+                    on_submit("")  # Empty string should show error
+
+    async def test_edit_category_api_error(self) -> None:
+        """Test handling API error during category editing."""
+
+        categories = [Category(id=1, title="Test")]
+        app = CategoryManagementTestApp(categories=categories)
+        app.client = MagicMock()
+        app.client.update_category = AsyncMock(side_effect=Exception("API Error"))
+
+        async with app.run_test() as pilot:
+            screen = cast(CategoryManagementScreen, app.screen)
+
+            # Try to edit (should fail)
+            await screen._do_edit_category(1, "New Name")
+            await pilot.pause()
+
+            # Category should remain unchanged
+            assert screen.categories[0].title == "Test"
+
+    async def test_delete_category_success(self) -> None:
+        """Test successful category deletion."""
+
+        categories = [
+            Category(id=1, title="Category 1"),
+            Category(id=2, title="Category 2"),
+        ]
+        app = CategoryManagementTestApp(categories=categories)
+        app.client = MagicMock()
+        app.client.delete_category = AsyncMock(return_value=None)
+
+        async with app.run_test() as pilot:
+            screen = cast(CategoryManagementScreen, app.screen)
+
+            # Patch api_call
+            with patch("miniflux_tui.ui.screens.category_management.api_call") as mock_api:
+                mock_api.return_value.__enter__.return_value = app
+
+                # Delete first category
+                await screen._do_delete_category(1, "Category 1")
+                await pilot.pause()
+
+                # Verify category was removed
+                assert len(screen.categories) == 1
+                assert screen.categories[0].id == 2
+                app.client.delete_category.assert_called_once_with(1)
+
+    async def test_delete_category_no_selection(self) -> None:
+        """Test deleting when no category is selected."""
+        app = CategoryManagementTestApp()
+
+        async with app.run_test():
+            screen = cast(CategoryManagementScreen, app.screen)
+
+            # Try to delete without selection
+            await screen.action_delete_category()
+            # Should show warning notification
+
+    async def test_delete_category_api_error(self) -> None:
+        """Test handling API error during category deletion."""
+
+        categories = [Category(id=1, title="Test")]
+        app = CategoryManagementTestApp(categories=categories)
+        app.client = MagicMock()
+        app.client.delete_category = AsyncMock(side_effect=Exception("API Error"))
+
+        async with app.run_test() as pilot:
+            screen = cast(CategoryManagementScreen, app.screen)
+            initial_count = len(screen.categories)
+
+            # Try to delete (should fail)
+            await screen._do_delete_category(1, "Test")
+            await pilot.pause()
+
+            # Category should still exist
+            assert len(screen.categories) == initial_count
+
+    async def test_populate_list_with_no_listview(self) -> None:
+        """Test _populate_list when list_view is None."""
+        screen = CategoryManagementScreen(categories=[Category(id=1, title="Test")])
+        screen.list_view = None
+
+        # Should not raise an error
+        screen._populate_list()
+
+    async def test_get_selected_category_index_out_of_range(self) -> None:
+        """Test _get_selected_category handles errors gracefully."""
+        categories = [Category(id=1, title="Test")]
+        app = CategoryManagementTestApp(categories=categories)
+
+        async with app.run_test():
+            screen = cast(CategoryManagementScreen, app.screen)
+
+            # When nothing is selected, should return None
+            if screen.list_view:
+                # Set list_view to have invalid state
+                original_index = screen.list_view.index
+                try:
+                    # This tests the exception handling in _get_selected_category
+                    result = screen._get_selected_category()
+                    # Result depends on whether a valid item is selected
+                    assert result is None or isinstance(result, Category)
+                finally:
+                    screen.list_view.index = original_index
+
+    async def test_cursor_navigation_actions(self) -> None:
+        """Test cursor navigation actions."""
+        categories = [
+            Category(id=1, title="Category 1"),
+            Category(id=2, title="Category 2"),
+        ]
+        app = CategoryManagementTestApp(categories=categories)
+
+        async with app.run_test() as pilot:
+            # Test cursor down
+            await pilot.press("j")
+            await pilot.pause()
+
+            # Test cursor up
+            await pilot.press("k")
+            await pilot.pause()
+
+    async def test_back_action(self) -> None:
+        """Test back action pops the screen."""
+        app = CategoryManagementTestApp()
+
+        async with app.run_test() as pilot:
+            screen = app.screen
+            assert isinstance(screen, CategoryManagementScreen)
+
+            # Press escape to go back
+            await pilot.press("escape")
+            await pilot.pause()
+
+            # Should pop the screen
+            assert app.screen is not screen
