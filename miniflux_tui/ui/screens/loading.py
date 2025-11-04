@@ -5,15 +5,18 @@ from textual.containers import Center, Middle
 from textual.screen import Screen
 from textual.widgets import Static
 
-ASCII_ART = r"""
-    ___  ________   ____      ________   ________   __     __  __  __
-   /   |/  /  _/  |/ /  /____/_  ____/  / ____/ /  / /    / / / / / /
-  / /| / // //    / /  /___  / / __/   / /_  / /  / /    / / / / / /
- / / |  // // /| / /  ___  / / /___   / __/ / /__/ /___ / /_/ / / /
-/_/  |_/___/_/ |_/_/  ____/  /_____/  /_/   /_____/_____/ \____/ /_/
-                    /____/
+from miniflux_tui.utils import get_app_version
 
-                   ~ Loading your feeds ~
+ASCII_ART_TEMPLATE = r"""
+    _       _  __ _                _         _
+    _ __ ___    (_)_ __ (_)/ _| |_   ___  __  | |_ _   _(_)
+    | '_ ` _ \   | | '_ \| | |_| | | | \ \/ /  | __| | | | |
+    | | | | | |  | | | | | |  _| | |_| |>  < _ | |_| |_| | |
+    |_| |_| |_|  |_|_| |_|_|_| |_|\__,_/_/\_(_) \__|\__,_|_|
+
+    version {version}
+
+    ~ Loading your feeds ~
 """
 
 
@@ -36,5 +39,7 @@ class LoadingScreen(Screen):
 
     def compose(self) -> ComposeResult:
         """Create the loading screen layout."""
+        version = get_app_version()
+        ascii_art = ASCII_ART_TEMPLATE.format(version=version)
         with Center(), Middle():
-            yield Static(ASCII_ART)
+            yield Static(ascii_art)
