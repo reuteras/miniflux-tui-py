@@ -1,13 +1,11 @@
 ---
 name: Auto-Approve Passing PRs
 
-# Trigger when a pull request is opened or when status checks complete
-# Uses bot account (via BOT_TOKEN secret) to approve PRs from reuteras
+# Trigger when a pull request is opened or updated
+# Uses bot account (via BOT_TOKEN secret) to approve PRs from authorized users
 on:
   pull_request:
     types: [opened, synchronize]
-  check_suite:
-    types: [completed]
 
 permissions:
   contents: read
@@ -25,9 +23,8 @@ jobs:
     # 2. renovate[bot] (dependency updates) - must be Bot type
     # 3. dependabot[bot] (dependency updates) - must be Bot type
     # 4. github-actions[bot] (automated workflows) - must be Bot type
-    # Skip draft PRs and check_suite events
+    # Skip draft PRs
     if: >-
-      github.event_name == 'pull_request' &&
       github.event.pull_request.draft == false &&
       (
         (github.event.pull_request.user.login == 'reuteras' &&
