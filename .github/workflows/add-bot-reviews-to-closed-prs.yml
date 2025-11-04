@@ -14,11 +14,14 @@ on:
 
 permissions:
   contents: read
-  pull-requests: write
+  pull-requests: read
 
 jobs:
   add-reviews:
     runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      pull-requests: write
     # Automatic: run when PRs are merged (merged == true)
     # Manual: always run (user provides PR numbers)
     if: >-

@@ -6,13 +6,15 @@ on:
     types: [opened]
 
 permissions:
+  contents: read
   pull-requests: read
-  issues: write
 
 jobs:
   create-issue-for-dependabot:
     name: Create Tracking Issue
     runs-on: ubuntu-latest
+    permissions:
+      issues: write
     if: |
       github.event.pull_request.user.login == 'dependabot[bot]' &&
       github.event.pull_request.user.type == 'Bot'
