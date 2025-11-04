@@ -19,6 +19,7 @@ ASCII_ART_TEMPLATE = r"""
     ~ Loading your feeds ~
 """
 
+
 class LoadingScreen(Screen):
     """A loading screen with ASCII art."""
 
