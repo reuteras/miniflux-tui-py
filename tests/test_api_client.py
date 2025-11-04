@@ -410,3 +410,169 @@ class TestMinifluxClientActions:
             # Verify we got empty list
             assert len(feeds) == 0
             assert isinstance(feeds, list)
+
+
+class TestMinifluxClientGetReadEntries:
+    """Test get_read_entries method for history functionality."""
+
+    @pytest.mark.asyncio
+    async def test_get_read_entries_success(self):
+        """Test getting read entries successfully."""
+        with patch("miniflux_tui.api.client.MinifluxClientBase") as mock_base_class:
+            mock_client = MagicMock()
+            mock_base_class.return_value = mock_client
+
+            # Mock the response with read entries
+            mock_client.get_entries.return_value = {
+                "entries": [
+                    {
+                        "id": 1,
+                        "feed_id": 10,
+                        "title": "Read Entry 1",
+                        "url": "https://example.com/1",
+                        "content": "Content 1",
+                        "published_at": "2024-01-01T12:00:00Z",
+                        "status": "read",
+                        "starred": False,
+                        "feed": {
+                            "id": 10,
+                            "title": "Test Feed 1",
+                            "site_url": "https://example.com",
+                            "feed_url": "https://example.com/feed",
+                        },
+                    },
+                    {
+                        "id": 2,
+                        "feed_id": 20,
+                        "title": "Read Entry 2",
+                        "url": "https://example.com/2",
+                        "content": "Content 2",
+                        "published_at": "2024-01-02T12:00:00Z",
+                        "status": "read",
+                        "starred": False,
+                        "feed": {
+                            "id": 20,
+                            "title": "Test Feed 2",
+                            "site_url": "https://example.com",
+                            "feed_url": "https://example.com/feed2",
+                        },
+                    },
+                ]
+            }
+
+            client = MinifluxClient("http://localhost:8080", "test-key")
+            entries = await client.get_read_entries(limit=100, offset=0)
+
+            # Verify API was called with correct parameters
+            mock_client.get_entries.assert_called_once_with(
+                status=["read"],
+                limit=100,
+                offset=0,
+                order="changed_at",
+                direction="desc",
+            )
+
+            # Verify we got Entry objects
+            assert len(entries) == 2
+            assert entries[0].id == 1
+            assert entries[0].title == "Read Entry 1"
+            assert entries[0].status == "read"
+            assert entries[1].id == 2
+            assert entries[1].title == "Read Entry 2"
+
+    @pytest.mark.asyncio
+    async def test_get_read_entries_with_custom_params(self):
+        """Test getting read entries with custom limit and offset."""
+        with patch("miniflux_tui.api.client.MinifluxClientBase") as mock_base_class:
+            mock_client = MagicMock()
+            mock_base_class.return_value = mock_client
+
+            mock_client.get_entries.return_value = {"entries": []}
+
+            client = MinifluxClient("http://localhost:8080", "test-key")
+            await client.get_read_entries(limit=200, offset=50)
+
+            # Verify API was called with custom parameters
+            mock_client.get_entries.assert_called_once_with(
+                status=["read"],
+                limit=200,
+                offset=50,
+                order="changed_at",
+                direction="desc",
+            )
+
+    @pytest.mark.asyncio
+    async def test_get_read_entries_empty_list(self):
+        """Test getting read entries when none exist."""
+        with patch("miniflux_tui.api.client.MinifluxClientBase") as mock_base_class:
+            mock_client = MagicMock()
+            mock_base_class.return_value = mock_client
+
+            # Mock empty response
+            mock_client.get_entries.return_value = {"entries": []}
+
+            client = MinifluxClient("http://localhost:8080", "test-key")
+            entries = await client.get_read_entries()
+
+            # Verify we got empty list
+            assert len(entries) == 0
+            assert isinstance(entries, list)
+
+    @pytest.mark.asyncio
+    async def test_get_read_entries_orders_by_changed_at_desc(self):
+        """Test that read entries are ordered by changed_at descending (most recent first)."""
+        with patch("miniflux_tui.api.client.MinifluxClientBase") as mock_base_class:
+            mock_client = MagicMock()
+            mock_base_class.return_value = mock_client
+
+            mock_client.get_entries.return_value = {
+                "entries": [
+                    {
+                        "id": 2,
+                        "feed_id": 20,
+                        "title": "Recently Read",
+                        "url": "https://example.com/2",
+                        "content": "Content 2",
+                        "published_at": "2024-01-01T12:00:00Z",
+                        "status": "read",
+                        "starred": False,
+                        "feed": {
+                            "id": 20,
+                            "title": "Test Feed 2",
+                            "site_url": "https://example.com",
+                            "feed_url": "https://example.com/feed2",
+                        },
+                    },
+                    {
+                        "id": 1,
+                        "feed_id": 10,
+                        "title": "Older Read",
+                        "url": "https://example.com/1",
+                        "content": "Content 1",
+                        "published_at": "2024-01-01T12:00:00Z",
+                        "status": "read",
+                        "starred": False,
+                        "feed": {
+                            "id": 10,
+                            "title": "Test Feed 1",
+                            "site_url": "https://example.com",
+                            "feed_url": "https://example.com/feed",
+                        },
+                    },
+                ]
+            }
+
+            client = MinifluxClient("http://localhost:8080", "test-key")
+            entries = await client.get_read_entries()
+
+            # Verify order parameter
+            mock_client.get_entries.assert_called_once()
+            call_kwargs = mock_client.get_entries.call_args.kwargs
+            assert call_kwargs["order"] == "changed_at"
+            assert call_kwargs["direction"] == "desc"
+
+            # Verify entries are in expected order (most recent first)
+            assert entries[0].id == 2
+            assert entries[0].title == "Recently Read"
+            assert entries[1].id == 1
+            assert entries[1].title == "Older Read"
