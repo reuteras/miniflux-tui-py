@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import asyncio
 import traceback
 from importlib import import_module
 from typing import TYPE_CHECKING, cast
@@ -140,11 +141,14 @@ class MinifluxTuiApp(App):
 
     async def on_mount(self) -> None:
         """Called when app is mounted."""
-        # Show loading screen immediately
+        # Show loading screen immediately and give UI a chance to render
         self.install_screen(LoadingScreen(), name="loading")
         self.push_screen("loading")
 
-        # Initialize API client
+        # Yield control to let the loading screen render before blocking operations
+        await asyncio.sleep(0)
+
+        # Initialize API client - this may block on password command
         self.client = MinifluxClient(
             base_url=self.config.server_url,
             api_key=self.config.api_key,
