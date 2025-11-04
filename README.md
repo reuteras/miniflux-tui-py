@@ -59,6 +59,8 @@ miniflux-tui --init
 miniflux-tui
 ```
 
+**Note:** After installation with `uv tool install` or `pip install`, you can run the application directly with `miniflux-tui` (no `uv run` needed). You can also run it as a Python module: `python -m miniflux_tui`.
+
 ### Prebuilt Binaries (GitHub Releases)
 
 If you do not want to manage a Python environment, each tagged release now attaches standalone binaries for Linux (x86_64), macOS (arm64), and Windows (x86_64):
@@ -118,9 +120,11 @@ uv sync --all-groups
 # Create default configuration
 uv run miniflux-tui --init
 
-# Run the application
+# Run the application (use 'uv run' when running from source without installing)
 uv run miniflux-tui
 ```
+
+**Note:** `uv run` is only needed when running from source without installing the package. After installing with `uv tool install` or `pip install`, use `miniflux-tui` directly.
 
 ## Documentation
 
