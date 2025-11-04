@@ -56,8 +56,8 @@ jobs:
         with:
           results_file: results.sarif
           results_format: sarif
-          # Use GITHUB_TOKEN for API calls
-          repo_token: ${{ secrets.GITHUB_TOKEN }}
+          # Use SCORECARD_TOKEN for API calls
+          repo_token: ${{ secrets.SCORECARD_TOKEN }}
           # Publish results to security tab
           publish_results: true
 
