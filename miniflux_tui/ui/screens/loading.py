@@ -7,6 +7,7 @@ from textual.widgets import Static
 
 from miniflux_tui.utils import get_app_version
 
+# editorconfig-checker-disable
 ASCII_ART_TEMPLATE = r"""
     _       _  __ _                _         _
     _ __ ___    (_)_ __ (_)/ _| |_   ___  __  | |_ _   _(_)
@@ -18,6 +19,7 @@ ASCII_ART_TEMPLATE = r"""
 
     ~ Loading your feeds ~
 """
+# editorconfig-checker-enable
 
 
 class LoadingScreen(Screen):
