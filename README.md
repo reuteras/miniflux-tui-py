@@ -229,7 +229,7 @@ To create a token:
 ### Entry List View
 
 | Key        | Action                                           |
-| ---------- | ------------------------------------------------ |
+|------------|--------------------------------------------------|
 | ↑/↓ or k/j | Navigate entries                                 |
 | Enter      | Open entry                                       |
 | m          | Toggle read/unread                               |
@@ -251,7 +251,7 @@ To create a token:
 ### Entry Reader View
 
 | Key             | Action                            |
-| --------------- | --------------------------------- |
+|-----------------|-----------------------------------|
 | ↑/↓ or k/j      | Scroll up/down                    |
 | PageUp/PageDown | Fast scroll                       |
 | J               | Next entry                        |

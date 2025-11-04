@@ -46,22 +46,22 @@ mkdir -p "${HOME}/.local/share/bash-completion/completions"
 
 # Generate and install completions for uv
 if command -v uv >/dev/null 2>&1; then
-    uv generate-shell-completion bash > "${HOME}/.local/share/bash-completion/completions/uv"
+    uv generate-shell-completion bash >"${HOME}/.local/share/bash-completion/completions/uv"
 fi
 
 # Generate completions for pytest, ruff, and other Python tools
 for tool in pytest ruff pyright; do
     if uv run which "$tool" >/dev/null 2>&1; then
         case "$tool" in
-            pytest)
-                # pytest doesn't have built-in completion, but we can use argcomplete if available
-                if uv run python -c "import argcomplete" 2>/dev/null; then
-                    eval "$(uv run register-python-argcomplete pytest)" > "${HOME}/.local/share/bash-completion/completions/pytest" 2>/dev/null || true
-                fi
-                ;;
-            ruff)
-                uv run ruff generate-shell-completion bash > "${HOME}/.local/share/bash-completion/completions/ruff" 2>/dev/null || true
-                ;;
+        pytest)
+            # pytest doesn't have built-in completion, but we can use argcomplete if available
+            if uv run python -c "import argcomplete" 2>/dev/null; then
+                eval "$(uv run register-python-argcomplete pytest)" >"${HOME}/.local/share/bash-completion/completions/pytest" 2>/dev/null || true
+            fi
+            ;;
+        ruff)
+            uv run ruff generate-shell-completion bash >"${HOME}/.local/share/bash-completion/completions/ruff" 2>/dev/null || true
+            ;;
         esac
     fi
 done
@@ -69,7 +69,7 @@ done
 # Add completion loading to bashrc if not already present
 BASHRC="${HOME}/.bashrc"
 if [ -f "$BASHRC" ] && ! grep -q "bash-completion/completions" "$BASHRC"; then
-    cat >> "$BASHRC" << 'EOF'
+    cat >>"$BASHRC" <<'EOF'
 
 # Load custom completions
 if [ -d "${HOME}/.local/share/bash-completion/completions" ]; then

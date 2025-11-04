@@ -5,7 +5,7 @@ This guide explains how to handle and recover from failures during the release p
 ## Quick Reference
 
 | Issue           | Command                                      | Docs                                        |
-| --------------- | -------------------------------------------- | ------------------------------------------- |
+|-----------------|----------------------------------------------|---------------------------------------------|
 | Tests failing   | `uv run pytest tests --cov=miniflux_tui -vv` | [Test Failures](#test-failures)             |
 | Linting errors  | `uv run ruff check miniflux_tui tests`       | [Linting Failures](#linting-failures)       |
 | Type errors     | `uv run pyright miniflux_tui tests`          | [Type Check Failures](#type-check-failures) |
