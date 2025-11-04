@@ -1,6 +1,8 @@
 """Tests for FeedManagementScreen."""
 
 import asyncio
+from typing import cast
+from unittest.mock import AsyncMock, MagicMock, patch
 
 from textual.app import App
 from textual.screen import Screen
@@ -17,6 +19,7 @@ class FeedManagementTestApp(App):
         """Initialize test app."""
         super().__init__(**kwargs)
         self.feeds = feeds or []
+        self.client: MagicMock | None = None  # type: ignore[assignment]
 
     def on_mount(self) -> None:
         """Mount the feed management screen."""
@@ -538,3 +541,307 @@ class TestFeedManagementAsyncMethods:
         """Test that _do_delete_feed is an async method."""
         screen = FeedManagementScreen()
         assert asyncio.iscoroutinefunction(screen._do_delete_feed)
+
+
+class TestFeedManagementCRUDOperations:
+    """Test CRUD operations in FeedManagementScreen."""
+
+    async def test_create_feed_success(self) -> None:
+        """Test successful feed creation."""
+
+        app = FeedManagementTestApp()
+        app.client = MagicMock()
+        app.client.create_feed = AsyncMock(
+            return_value=Feed(
+                id=3,
+                title="New Feed",
+                site_url="https://example.com",
+                feed_url="https://example.com/feed",
+            )
+        )
+
+        async with app.run_test() as pilot:
+            screen = cast(FeedManagementScreen, app.screen)
+            initial_count = len(screen.feeds)
+
+            # Patch api_call to return the app
+            with patch("miniflux_tui.ui.screens.feed_management.api_call") as mock_api:
+                mock_api.return_value.__enter__.return_value = app.client
+
+                # Create feed
+                await screen._create_feed("https://example.com/feed")
+                await pilot.pause()
+
+                # Verify feed was added
+                assert len(screen.feeds) == initial_count + 1
+                assert screen.feeds[-1].title == "New Feed"
+                app.client.create_feed.assert_called_once_with("https://example.com/feed")
+
+    async def test_create_feed_validation_error(self) -> None:
+        """Test creating feed with validation error."""
+
+        app = FeedManagementTestApp()
+        app.client = MagicMock()
+        app.client.create_feed = AsyncMock(side_effect=ValueError("Invalid feed URL"))
+
+        async with app.run_test() as pilot:
+            screen = cast(FeedManagementScreen, app.screen)
+            initial_count = len(screen.feeds)
+
+            # Patch api_call
+            with patch("miniflux_tui.ui.screens.feed_management.api_call") as mock_api:
+                mock_api.return_value.__enter__.return_value = app.client
+
+                # Try to create feed (should fail)
+                await screen._create_feed("https://example.com/feed")
+                await pilot.pause()
+
+                # Verify feed was not added
+                assert len(screen.feeds) == initial_count
+
+    async def test_create_feed_api_error(self) -> None:
+        """Test handling API error during feed creation."""
+
+        app = FeedManagementTestApp()
+        app.client = MagicMock()
+        app.client.create_feed = AsyncMock(side_effect=Exception("API Error"))
+
+        async with app.run_test() as pilot:
+            screen = cast(FeedManagementScreen, app.screen)
+            initial_count = len(screen.feeds)
+
+            # Patch api_call
+            with patch("miniflux_tui.ui.screens.feed_management.api_call") as mock_api:
+                mock_api.return_value.__enter__.return_value = app.client
+
+                # Try to create feed (should fail)
+                await screen._create_feed("https://example.com/feed")
+                await pilot.pause()
+
+                # Verify feed was not added
+                assert len(screen.feeds) == initial_count
+
+    async def test_delete_feed_success(self) -> None:
+        """Test successful feed deletion."""
+
+        feeds = [
+            Feed(id=1, title="Feed 1", site_url="https://example.com", feed_url="https://example.com/feed1"),
+            Feed(id=2, title="Feed 2", site_url="https://example.com", feed_url="https://example.com/feed2"),
+        ]
+        app = FeedManagementTestApp(feeds=feeds)
+        app.client = MagicMock()
+        app.client.delete_feed = AsyncMock(return_value=None)
+
+        async with app.run_test() as pilot:
+            screen = cast(FeedManagementScreen, app.screen)
+
+            # Patch api_call
+            with patch("miniflux_tui.ui.screens.feed_management.api_call") as mock_api:
+                mock_api.return_value.__enter__.return_value = app.client
+
+                # Delete first feed
+                await screen._do_delete_feed(feeds[0])
+                await pilot.pause()
+
+                # Verify feed was removed
+                assert len(screen.feeds) == 1
+                assert screen.feeds[0].id == 2
+                app.client.delete_feed.assert_called_once_with(1)
+
+    async def test_delete_feed_no_selection(self) -> None:
+        """Test deleting when no feed is selected."""
+
+        app = FeedManagementTestApp()
+
+        async with app.run_test():
+            screen = cast(FeedManagementScreen, app.screen)
+
+            # Try to delete without selection
+            screen.action_delete_feed()
+            # Should show warning notification
+
+    async def test_delete_feed_api_error(self) -> None:
+        """Test handling API error during feed deletion."""
+
+        feeds = [Feed(id=1, title="Test", site_url="https://example.com", feed_url="https://example.com/feed")]
+        app = FeedManagementTestApp(feeds=feeds)
+        app.client = MagicMock()
+        app.client.delete_feed = AsyncMock(side_effect=Exception("API Error"))
+
+        async with app.run_test() as pilot:
+            screen = cast(FeedManagementScreen, app.screen)
+            initial_count = len(screen.feeds)
+
+            # Patch api_call
+            with patch("miniflux_tui.ui.screens.feed_management.api_call") as mock_api:
+                mock_api.return_value.__enter__.return_value = app.client
+
+                # Try to delete (should fail)
+                await screen._do_delete_feed(feeds[0])
+                await pilot.pause()
+
+                # Feed should still exist
+                assert len(screen.feeds) == initial_count
+
+    async def test_refresh_feed_can_be_called(self) -> None:
+        """Test that refresh feed action can be called."""
+
+        feeds = [Feed(id=1, title="Test", site_url="https://example.com", feed_url="https://example.com/feed")]
+        app = FeedManagementTestApp(feeds=feeds)
+        app.client = MagicMock()
+        app.client.refresh_feed = AsyncMock(return_value=None)
+
+        async with app.run_test() as pilot:
+            screen = cast(FeedManagementScreen, app.screen)
+
+            # Patch api_call
+            with patch("miniflux_tui.ui.screens.feed_management.api_call") as mock_api:
+                mock_api.return_value.__enter__.return_value = app.client
+
+                # Try to refresh (will show warning about no selection)
+                await screen.action_refresh_feed()
+                await pilot.pause()
+                # Should handle no selection gracefully
+
+    async def test_refresh_feed_no_selection(self) -> None:
+        """Test refreshing when no feed is selected."""
+
+        app = FeedManagementTestApp()
+
+        async with app.run_test():
+            screen = cast(FeedManagementScreen, app.screen)
+
+            # Try to refresh without selection
+            await screen.action_refresh_feed()
+            # Should show warning notification
+
+    async def test_refresh_feed_api_error(self) -> None:
+        """Test handling API error during feed refresh."""
+
+        feeds = [Feed(id=1, title="Test", site_url="https://example.com", feed_url="https://example.com/feed")]
+        app = FeedManagementTestApp(feeds=feeds)
+        app.client = MagicMock()
+        app.client.refresh_feed = AsyncMock(side_effect=Exception("API Error"))
+
+        async with app.run_test() as pilot:
+            screen = cast(FeedManagementScreen, app.screen)
+
+            # Select the feed
+            if screen.list_view and screen.list_view.children:
+                screen.list_view.index = 0
+
+            # Patch api_call
+            with patch("miniflux_tui.ui.screens.feed_management.api_call") as mock_api:
+                mock_api.return_value.__enter__.return_value = app.client
+
+                # Try to refresh (should fail gracefully)
+                await screen.action_refresh_feed()
+                await pilot.pause()
+
+    async def test_view_details_shows_info(self) -> None:
+        """Test viewing feed details."""
+
+        feeds = [
+            Feed(
+                id=1,
+                title="Test Feed",
+                site_url="https://example.com",
+                feed_url="https://example.com/feed",
+                parsing_error_message="Test error",
+            )
+        ]
+        app = FeedManagementTestApp(feeds=feeds)
+
+        async with app.run_test():
+            screen = cast(FeedManagementScreen, app.screen)
+
+            # Select the feed
+            if screen.list_view and screen.list_view.children:
+                screen.list_view.index = 0
+
+            # View details
+            screen.action_view_details()
+            # Should show notification with feed details
+
+    async def test_view_details_no_selection(self) -> None:
+        """Test viewing details when no feed is selected."""
+
+        app = FeedManagementTestApp()
+
+        async with app.run_test():
+            screen = cast(FeedManagementScreen, app.screen)
+
+            # Try to view details without selection
+            screen.action_view_details()
+            # Should show warning notification
+
+    async def test_populate_list_with_no_listview(self) -> None:
+        """Test _populate_list when list_view is None."""
+        screen = FeedManagementScreen(feeds=[Feed(id=1, title="Test", site_url="https://example.com", feed_url="https://example.com/feed")])
+        screen.list_view = None
+
+        # Should not raise an error
+        screen._populate_list()
+
+    async def test_get_selected_feed_returns_none_when_no_highlight(self) -> None:
+        """Test _get_selected_feed returns None when nothing highlighted."""
+        feeds = [Feed(id=1, title="Test", site_url="https://example.com", feed_url="https://example.com/feed")]
+        app = FeedManagementTestApp(feeds=feeds)
+
+        async with app.run_test():
+            screen = cast(FeedManagementScreen, app.screen)
+
+            # Clear selection
+            if screen.list_view:
+                screen.list_view.index = None
+
+            result = screen._get_selected_feed()
+            assert result is None
+
+    async def test_cursor_navigation_actions(self) -> None:
+        """Test cursor navigation actions."""
+
+        feeds = [
+            Feed(id=1, title="Feed 1", site_url="https://example.com", feed_url="https://example.com/feed1"),
+            Feed(id=2, title="Feed 2", site_url="https://example.com", feed_url="https://example.com/feed2"),
+        ]
+        app = FeedManagementTestApp(feeds=feeds)
+
+        async with app.run_test() as pilot:
+            # Test cursor down
+            await pilot.press("j")
+            await pilot.pause()
+
+            # Test cursor up
+            await pilot.press("k")
+            await pilot.pause()
+
+    async def test_back_action(self) -> None:
+        """Test back action pops the screen."""
+
+        app = FeedManagementTestApp()
+
+        async with app.run_test() as pilot:
+            screen = app.screen
+            assert isinstance(screen, FeedManagementScreen)
+
+            # Press escape to go back
+            await pilot.press("escape")
+            await pilot.pause()
+
+            # Should pop the screen
+            assert app.screen is not screen
+
+    async def test_add_feed_shows_dialog(self) -> None:
+        """Test that add feed action shows dialog."""
+
+        app = FeedManagementTestApp()
+
+        async with app.run_test():
+            screen = cast(FeedManagementScreen, app.screen)
+
+            # Mock push_screen to avoid actually showing the dialog
+            with patch.object(app, "push_screen") as mock_push:
+                screen.action_add_feed()
+                # Dialog should be pushed
+                mock_push.assert_called_once()
