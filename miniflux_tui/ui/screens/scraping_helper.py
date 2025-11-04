@@ -7,7 +7,7 @@ from textual.app import ComposeResult
 from textual.binding import Binding
 from textual.containers import Container, Horizontal, Vertical, VerticalScroll
 from textual.screen import Screen
-from textual.widgets import Button, Footer, Header, Input, Label, ListItem, ListView, Static
+from textual.widgets import Button, Footer, Header, Input, Label, ListItem, ListView, RadioButton, RadioSet, Static
 
 from miniflux_tui.scraping import ContentAnalyzer, SecureFetcher
 
@@ -28,6 +28,7 @@ class ScrapingHelperScreen(Screen):
         Binding("escape", "dismiss", "Back", show=True),
         Binding("ctrl+s", "save_rule", "Save Rule", show=True),
         Binding("t", "test_custom", "Test Custom", show=False),
+        Binding("r", "view_raw", "View Raw", show=True),
     ]
 
     CSS = """  # noqa: RUF012
@@ -47,14 +48,16 @@ class ScrapingHelperScreen(Screen):
     }
 
     #status-message {
-        height: 3;
+        height: auto;
+        min-height: 3;
         margin-bottom: 1;
         border: solid $primary;
         padding: 1;
     }
 
     #candidates-container {
-        height: 40%;
+        height: auto;
+        max-height: 15;
         border: solid $primary;
         margin-bottom: 1;
     }
@@ -71,7 +74,8 @@ class ScrapingHelperScreen(Screen):
     }
 
     #preview-container {
-        height: 50%;
+        height: 1fr;
+        min-height: 20;
         border: solid $secondary;
     }
 
@@ -92,6 +96,12 @@ class ScrapingHelperScreen(Screen):
 
     #custom-selector-container {
         margin-bottom: 1;
+    }
+
+    #rule-type-container {
+        margin-bottom: 1;
+        border: solid $accent;
+        padding: 1;
     }
 
     .selector-item {
@@ -129,8 +139,10 @@ class ScrapingHelperScreen(Screen):
         self.on_save_callback = on_save_callback
         self.candidates = []
         self.selected_selector = None
+        self.rule_type = "add"
         self.analyzer = None
         self.fetcher = None
+        self.raw_html = None
 
     def compose(self) -> ComposeResult:
         """Compose the screen layout."""
@@ -141,8 +153,14 @@ class ScrapingHelperScreen(Screen):
             yield Label(f"URL: {self.entry_url}", id="url-display")
             yield Static("", id="status-message")
 
+            with Vertical(id="rule-type-container"):
+                yield Label("Rule Type:")
+                with RadioSet(id="rule-type-selector"):
+                    yield RadioButton("Add content selector (extract specific content)", value=True, id="rule-add")
+                    yield RadioButton("Remove elements (strip unwanted parts)", id="rule-remove")
+
             with Vertical(id="custom-selector-container"):
-                yield Label("Custom Selector (optional):")
+                yield Label("Custom Selector:")
                 with Horizontal():
                     yield Input(
                         placeholder="e.g., article.content, #main, .post",
@@ -151,11 +169,11 @@ class ScrapingHelperScreen(Screen):
                     yield Button("Test", id="test-custom-btn", variant="primary")
 
             with Container(id="candidates-container"):
-                yield Label("📋 Suggested Selectors", id="candidates-title")
+                yield Label("📋 Suggested Selectors (best match first)", id="candidates-title")
                 yield ListView(id="candidates-list")
 
             with Container(id="preview-container"):
-                yield Label("👁 Preview", id="preview-title")
+                yield Label("👁 Preview - Selected Content", id="preview-title")
                 with VerticalScroll(id="preview-scroll"):
                     yield Static("", id="preview-content")
 
@@ -173,12 +191,12 @@ class ScrapingHelperScreen(Screen):
         try:
             # Create fetcher and fetch content
             self.fetcher = SecureFetcher()
-            html = await self.fetcher.fetch(self.entry_url)
+            self.raw_html = await self.fetcher.fetch(self.entry_url)
 
             status.update("🔍 Analyzing content...")
 
             # Analyze HTML
-            self.analyzer = ContentAnalyzer(html)
+            self.analyzer = ContentAnalyzer(self.raw_html)
             self.candidates = self.analyzer.find_main_content()
 
             # Populate candidate list
@@ -218,6 +236,26 @@ class ScrapingHelperScreen(Screen):
         except Exception as e:
             status.update(f"❌ Unexpected error: {e}")
 
+    @on(RadioSet.Changed, "#rule-type-selector")
+    async def on_rule_type_changed(self, event: RadioSet.Changed) -> None:
+        """Handle rule type selection change."""
+        if event.pressed and event.pressed.id:
+            self.rule_type = "add" if event.pressed.id == "rule-add" else "remove"
+            # Update preview title
+            preview_title = self.query_one("#preview-title", Label)
+            if self.rule_type == "add":
+                preview_title.update("👁 Preview - Selected Content")
+            else:
+                preview_title.update("👁 Preview - Content After Removal")
+
+            # Refresh preview if we have a selected selector
+            if self.selected_selector and self.candidates:
+                # Find the candidate with current selector
+                for candidate in self.candidates:
+                    if candidate["selector"] == self.selected_selector:
+                        await self._preview_candidate(candidate)
+                        break
+
     @on(ListView.Selected, "#candidates-list")
     async def on_candidate_selected(self, event: ListView.Selected) -> None:
         """Handle candidate selection from list."""
@@ -235,30 +273,54 @@ class ScrapingHelperScreen(Screen):
 
         self.selected_selector = candidate["selector"]
 
-        # Extract content with selector
-        extracted_html = self.analyzer.extract_with_selector(self.selected_selector)
-
         # Get element stats
         stats = self.analyzer.get_element_stats(self.selected_selector)
 
-        # Update preview
+        # Update preview based on rule type
         preview = self.query_one("#preview-content", Static)
 
-        if not extracted_html:
-            preview.update("⚠️  No content matched this selector")
-            return
+        if self.rule_type == "add":
+            # Show extracted content
+            extracted_html = self.analyzer.extract_with_selector(self.selected_selector)
 
-        # Show stats header
-        stats_text = (
-            f"📊 Stats: {stats['count']} elements, {stats['paragraphs']} paragraphs, {stats['links']} links, {stats['images']} images\n\n"
-        )
+            if not extracted_html:
+                preview.update("⚠️  No content matched this selector")
+                return
 
-        # Truncate for preview (first 2000 chars)
-        preview_text = extracted_html[:2000]
-        if len(extracted_html) > 2000:
-            preview_text += "\n\n... (truncated)"
+            # Show stats header
+            stats_text = (
+                f"📊 Stats: {stats['count']} elements, "
+                f"{stats['paragraphs']} paragraphs, "
+                f"{stats['links']} links, {stats['images']} images\n\n"
+            )
 
-        preview.update(stats_text + preview_text)
+            # Truncate for preview (first 2000 chars)
+            preview_text = extracted_html[:2000]
+            if len(extracted_html) > 2000:
+                preview_text += "\n\n... (truncated)"
+
+            preview.update(stats_text + preview_text)
+        else:
+            # Show content after removal
+            remaining_html = self.analyzer.preview_removal(self.selected_selector)
+
+            if stats["count"] == 0:
+                preview.update("⚠️  No elements would be removed by this selector")
+                return
+
+            # Show stats header
+            stats_text = (
+                f"🗑️  Would remove: {stats['count']} elements, "
+                f"{stats['paragraphs']} paragraphs, "
+                f"{stats['links']} links, {stats['images']} images\n\n"
+            )
+
+            # Truncate for preview (first 2000 chars)
+            preview_text = remaining_html[:2000] if remaining_html else "(all content would be removed)"
+            if remaining_html and len(remaining_html) > 2000:
+                preview_text += "\n\n... (truncated)"
+
+            preview.update(stats_text + preview_text)
 
     @on(Button.Pressed, "#test-custom-btn")
     async def on_test_custom_button(self) -> None:
@@ -315,21 +377,45 @@ class ScrapingHelperScreen(Screen):
             status.update("⚠️  No selector selected")
             return
 
+        # Format rule based on type
+        rule = f'remove("{self.selected_selector}")' if self.rule_type == "remove" else self.selected_selector
+
         status = self.query_one("#status-message", Static)
-        status.update(f"💾 Saving rule: {self.selected_selector}")
+        status.update(f"💾 Saving rule: {rule}")
 
         # Call callback if provided
         if self.on_save_callback:
             try:
-                await self.on_save_callback(self.feed_id, self.selected_selector)
-                status.update(f"✅ Rule saved: {self.selected_selector}")
+                await self.on_save_callback(self.feed_id, rule)
+                status.update(f"✅ Rule saved: {rule}")
                 # Dismiss screen after short delay
                 self.set_timer(2.0, self.action_dismiss)
             except Exception as e:
                 status.update(f"❌ Failed to save: {e}")
         else:
             # No callback - just show the rule
-            status.update(f"Info: Scraping rule: {self.selected_selector} (no save callback configured)")
+            status.update(f"Info: Scraping rule: {rule} (no save callback configured)")
+
+    async def action_view_raw(self) -> None:
+        """View raw HTML content."""
+        if not self.raw_html:
+            status = self.query_one("#status-message", Static)
+            status.update("⚠️  No content loaded yet")
+            return
+
+        preview = self.query_one("#preview-content", Static)
+        preview_title = self.query_one("#preview-title", Label)
+        preview_title.update("👁 Preview - Raw HTML")
+
+        # Show first 3000 chars of raw HTML
+        preview_text = self.raw_html[:3000]
+        if len(self.raw_html) > 3000:
+            preview_text += "\n\n... (truncated, showing first 3000 chars)"
+
+        preview.update(f"📄 Raw HTML ({len(self.raw_html)} chars):\n\n{preview_text}")
+
+        status = self.query_one("#status-message", Static)
+        status.update("i  Showing raw HTML - select a selector to see extracted content")
 
     async def action_dismiss(self, result: None = None) -> None:
         """Close the screen and return to previous screen."""

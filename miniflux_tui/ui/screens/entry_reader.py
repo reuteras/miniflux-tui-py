@@ -34,7 +34,7 @@ class EntryReaderScreen(Screen):
         Binding("e", "save_entry", "Save Entry"),
         Binding("o", "open_browser", "Open in Browser"),
         Binding("f", "fetch_original", "Fetch Original"),
-        Binding("shift+x", "scraping_helper", "Scraping Helper"),
+        Binding("X", "scraping_helper", "Scraping Helper"),
         Binding("question_mark", "show_help", "Help"),
         Binding("i", "show_status", "Status"),
         Binding("shift+s", "show_settings", "Settings"),
