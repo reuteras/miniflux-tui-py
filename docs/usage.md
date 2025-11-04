@@ -30,17 +30,17 @@ The main screen is divided into three sections:
 
 ### Basic Movement
 
-| Key   | Action           |
-| ----- | ---------------- |
-| `j`   | Move cursor down |
-| `k`   | Move cursor up   |
-| `↓`   | Move cursor down |
-| `↑`   | Move cursor up   |
+| Key | Action           |
+|-----|------------------|
+| `j` | Move cursor down |
+| `k` | Move cursor up   |
+| `↓` | Move cursor down |
+| `↑` | Move cursor up   |
 
 ### Opening and Reading Entries
 
 | Key     | Action                                                                         |
-| ------- | ------------------------------------------------------------------------------ |
+|---------|--------------------------------------------------------------------------------|
 | `Enter` | Open the selected entry for reading (or first entry in feed if on feed header) |
 | `J`     | Next entry (when reading)                                                      |
 | `K`     | Previous entry (when reading)                                                  |
@@ -49,23 +49,23 @@ The main screen is divided into three sections:
 
 ### Mark as Read/Unread
 
-| Key   | Action                                         |
-| ----- | --------                                       |
-| `m`   | Toggle read/unread status of the current entry |
+| Key | Action                                         |
+|-----|------------------------------------------------|
+| `m` | Toggle read/unread status of the current entry |
 
 When you read an entry, it's automatically marked as read when you navigate away.
 
 ### Star/Unstar Entries
 
-| Key   | Action                                  |
-| ----- | --------                                |
-| `*`   | Toggle star status of the current entry |
+| Key | Action                                  |
+|-----|-----------------------------------------|
+| `*` | Toggle star status of the current entry |
 
 ### Save Entries
 
-| Key   | Action                                                       |
-| ----- | --------                                                     |
-| `e`   | Save entry to a third-party service (configured in Miniflux) |
+| Key | Action                                                       |
+|-----|--------------------------------------------------------------|
+| `e` | Save entry to a third-party service (configured in Miniflux) |
 
 ## Viewing Modes
 
@@ -88,10 +88,10 @@ Press `g` to toggle grouping by feed. When enabled:
 
 ### Filter Views
 
-| Key   | Action                    |
-| ----- | --------                  |
-| `u`   | Show only unread entries  |
-| `t`   | Show only starred entries |
+| Key | Action                    |
+|-----|---------------------------|
+| `u` | Show only unread entries  |
+| `t` | Show only starred entries |
 
 Press again to return to all entries in the current feed list.
 
@@ -102,7 +102,7 @@ Press again to return to all entries in the current feed list.
 When in grouped mode (`g` to toggle):
 
 | Key       | Action                                       |
-| -----     | --------                                     |
+|-----------|----------------------------------------------|
 | `l`       | Expand the highlighted feed                  |
 | `h`       | Collapse the highlighted feed                |
 | `o`       | Toggle expansion of the highlighted feed     |
@@ -127,7 +127,7 @@ Press `c` to open the category management screen where you can:
 In the category management screen:
 
 | Key       | Action                                           |
-| -----     | --------                                         |
+|-----------|--------------------------------------------------|
 | `j` / `↓` | Move cursor down                                 |
 | `k` / `↑` | Move cursor up                                   |
 | `n`       | Create new category                              |
@@ -165,9 +165,9 @@ This allows you to quickly identify problematic feeds without opening the status
 
 For detailed feed health information and error messages:
 
-| Key   | Action                                       |
-| ----- | --------                                     |
-| `i`   | Show system status with detailed feed health |
+| Key | Action                                       |
+|-----|----------------------------------------------|
+| `i` | Show system status with detailed feed health |
 
 The status screen displays:
 - Total feed count and health summary
@@ -176,10 +176,10 @@ The status screen displays:
 
 ## Refreshing
 
-| Key   | Action                                    |
-| ----- | --------                                  |
-| `r`   | Refresh entries from your Miniflux server |
-| `,`   | Refresh entries (alternative)             |
+| Key | Action                                    |
+|-----|-------------------------------------------|
+| `r` | Refresh entries from your Miniflux server |
+| `,` | Refresh entries (alternative)             |
 
 The refresh will:
 1. Fetch the latest entries from your server
@@ -188,15 +188,15 @@ The refresh will:
 
 ## Getting Help
 
-| Key   | Action                       |
-| ----- | --------                     |
-| `?`   | Show keyboard shortcuts help |
+| Key | Action                       |
+|-----|------------------------------|
+| `?` | Show keyboard shortcuts help |
 
 ## Quitting
 
-| Key   | Action               |
-| ----- | --------             |
-| `q`   | Quit the application |
+| Key | Action               |
+|-----|----------------------|
+| `q` | Quit the application |
 
 ## Entry Reader
 
@@ -211,13 +211,13 @@ When you open an entry with `Enter`:
 
 In the entry reader, you can also:
 
-| Key   | Action                             |
-| ----- | --------                           |
-| `m`   | Mark the entry as read/unread      |
-| `*`   | Toggle star status                 |
-| `e`   | Save the entry                     |
-| `o`   | Open in your default browser       |
-| `f`   | Fetch the original article content |
+| Key | Action                             |
+|-----|------------------------------------|
+| `m` | Mark the entry as read/unread      |
+| `*` | Toggle star status                 |
+| `e` | Save the entry                     |
+| `o` | Open in your default browser       |
+| `f` | Fetch the original article content |
 
 ## Tips and Tricks
 

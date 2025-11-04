@@ -31,16 +31,10 @@
                 "python.testing.pytestEnabled": true,
                 "python.testing.unittestEnabled": false,
                 "python.testing.pytestPath": "uv",
-                "python.testing.pytestArgs": [
-                    "run",
-                    "pytest",
-                    "tests"
-                ],
+                "python.testing.pytestArgs": ["run", "pytest", "tests"],
                 "python.testing.cwd": "${workspaceFolder}",
                 "python.testing.autoTestDiscoverOnSaveEnabled": true,
-                "python.analysis.extraPaths": [
-                    "${workspaceFolder}"
-                ],
+                "python.analysis.extraPaths": ["${workspaceFolder}"],
                 "python.analysis.autoSearchPaths": true,
                 "python.analysis.diagnosticMode": "workspace",
                 "python.analysis.typeCheckingMode": "strict",

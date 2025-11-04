@@ -19,9 +19,7 @@
             "module": "miniflux_tui.__main__",
             "console": "integratedTerminal",
             "justMyCode": true,
-            "args": [
-                "--help"
-            ],
+            "args": ["--help"],
             "env": {
                 "PYTHONPATH": "${workspaceFolder}"
             }
@@ -31,16 +29,10 @@
             "type": "debugpy",
             "request": "launch",
             "module": "pytest",
-            "args": [
-                "${file}",
-                "-v",
-                "-s"
-            ],
+            "args": ["${file}", "-v", "-s"],
             "console": "integratedTerminal",
             "justMyCode": false,
-            "purpose": [
-                "debug-test"
-            ],
+            "purpose": ["debug-test"],
             "env": {
                 "PYTHONPATH": "${workspaceFolder}"
             }
@@ -50,16 +42,10 @@
             "type": "debugpy",
             "request": "launch",
             "module": "pytest",
-            "args": [
-                "tests",
-                "-v",
-                "-s"
-            ],
+            "args": ["tests", "-v", "-s"],
             "console": "integratedTerminal",
             "justMyCode": false,
-            "purpose": [
-                "debug-test"
-            ],
+            "purpose": ["debug-test"],
             "env": {
                 "PYTHONPATH": "${workspaceFolder}"
             }
@@ -76,9 +62,7 @@
             ],
             "console": "integratedTerminal",
             "justMyCode": false,
-            "purpose": [
-                "debug-test"
-            ],
+            "purpose": ["debug-test"],
             "env": {
                 "PYTHONPATH": "${workspaceFolder}"
             }

@@ -42,14 +42,14 @@ See [PR #405](https://github.com/reuteras/miniflux-tui-py/pull/405) for full tec
 
 ### Keybindings
 
-| Key | Action |
-|-----|--------|
+| Key       | Action               |
+|-----------|----------------------|
 | `Shift+X` | Open from entry list |
-| `↑/↓` | Navigate suggestions |
-| `Enter` | Select suggestion |
-| `t` | Test custom selector |
-| `Ctrl+S` | Save rule |
-| `Esc` | Close |
+| `↑/↓`     | Navigate suggestions |
+| `Enter`   | Select suggestion    |
+| `t`       | Test custom selector |
+| `Ctrl+S`  | Save rule            |
+| `Esc`     | Close                |
 
 ## How It Works
 
@@ -130,11 +130,11 @@ score = (paragraphs × 5) + min(text_length / 10, 100) + tag_bonus - link_penalt
 
 ## Performance
 
-| Operation | Time |
-|-----------|------|
-| Fetch URL | 0.1-2s |
-| Analyze | <0.1s |
-| Preview | <0.01s |
+| Operation | Time      |
+|-----------|-----------|
+| Fetch URL | 0.1-2s    |
+| Analyze   | <0.1s     |
+| Preview   | <0.01s    |
 | **Total** | **~1-2s** |
 
 ## Future Enhancements
