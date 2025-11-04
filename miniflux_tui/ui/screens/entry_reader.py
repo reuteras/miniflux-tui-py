@@ -34,6 +34,7 @@ class EntryReaderScreen(Screen):
         Binding("e", "save_entry", "Save Entry"),
         Binding("o", "open_browser", "Open in Browser"),
         Binding("f", "fetch_original", "Fetch Original"),
+        Binding("shift+x", "scraping_helper", "Scraping Helper"),
         Binding("question_mark", "show_help", "Help"),
         Binding("i", "show_status", "Status"),
         Binding("shift+s", "show_settings", "Settings"),
@@ -359,6 +360,43 @@ class EntryReaderScreen(Screen):
         """Mount entry content widget (converted HTML to Markdown)."""
         content = self._html_to_markdown(self.entry.content)
         scroll.mount(Markdown(content, classes="entry-content"))
+
+    async def action_scraping_helper(self) -> None:
+        """Open scraping helper for current entry."""
+        # Import here to avoid circular dependency
+
+        from miniflux_tui.ui.screens.scraping_helper import (  # noqa: PLC0415
+            ScrapingHelperScreen,
+        )
+
+        # Create callback for saving scraper rules
+        async def save_scraper_rule(feed_id: int, selector: str) -> None:
+            """Save scraper rule to feed settings."""
+            if not self.app.client:
+                msg = "API client not available"
+                raise RuntimeError(msg)
+
+            # Update feed with scraper rules
+            # Type ignore because protocol doesn't include all methods
+            await self.app.client.update_feed(  # type: ignore[attr-defined]
+                feed_id,
+                scraper_rules=selector,
+            )
+
+            self.notify(
+                f"Scraper rule saved for feed: {self.entry.feed.title}",
+                severity="information",
+            )
+
+        # Push scraping helper screen
+        screen = ScrapingHelperScreen(
+            entry_url=self.entry.url,
+            feed_id=self.entry.feed.id,
+            feed_title=self.entry.feed.title,
+            on_save_callback=save_scraper_rule,
+        )
+        # Type ignore because protocol only expects string, but actual app accepts Screen
+        self.app.push_screen(screen)  # type: ignore[arg-type]
 
     def action_show_help(self):
         """Show keyboard help."""
