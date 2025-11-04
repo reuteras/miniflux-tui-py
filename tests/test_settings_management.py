@@ -4,6 +4,8 @@ from typing import cast
 from unittest.mock import AsyncMock, MagicMock, patch
 
 from textual.app import App
+from urllib.parse import urlparse
+import re
 
 from miniflux_tui.ui.screens.settings_management import SettingsScreen
 
@@ -162,8 +164,9 @@ class TestSettingsScreenDisplay:
             user_info = screen.query_one("#user-info")
             content = user_info.render().plain  # type: ignore[attr-defined]
             assert "john" in content
-            assert "https://miniflux.example.com" in content
-
+            # Extract and parse URL to ensure it's exactly "https://miniflux.example.com"
+            urls = re.findall(r'https?://[^\s,]+', content)
+            assert any(urlparse(url).netloc == "miniflux.example.com" and urlparse(url).scheme == "https" for url in urls)
     async def test_update_display_preferences(self) -> None:
         """Test updating display preferences."""
         app = SettingsTestApp()
