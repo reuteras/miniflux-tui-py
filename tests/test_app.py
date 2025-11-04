@@ -371,6 +371,7 @@ class TestMinifluxTuiAppOnMount:
         with (
             patch.object(app, "install_screen"),
             patch.object(app, "push_screen"),
+            patch.object(app, "pop_screen"),
             patch.object(app, "notify"),
             patch.object(app, "load_categories", new_callable=AsyncMock),
             patch.object(app, "load_feeds", new_callable=AsyncMock),
@@ -391,6 +392,7 @@ class TestMinifluxTuiAppOnMount:
         with (
             patch.object(app, "install_screen") as mock_install,
             patch.object(app, "push_screen"),
+            patch.object(app, "pop_screen"),
             patch.object(app, "notify"),
             patch.object(app, "load_categories", new_callable=AsyncMock),
             patch.object(app, "load_feeds", new_callable=AsyncMock),
@@ -398,18 +400,19 @@ class TestMinifluxTuiAppOnMount:
         ):
             await app.on_mount()
 
-            # Verify install_screen was called five times (for entry_list, help, status, settings, and history)
-            assert mock_install.call_count == 5
+            # Verify install_screen was called six times (for loading, entry_list, help, status, settings, and history)
+            assert mock_install.call_count == 6
 
     @pytest.mark.asyncio
     async def test_on_mount_pushes_initial_screen(self, sample_config):
-        """Test on_mount pushes entry_list as initial screen."""
+        """Test on_mount pushes loading screen then entry_list screen."""
         app = MinifluxTuiApp(sample_config)
 
         # Mock required methods
         with (
             patch.object(app, "install_screen"),
             patch.object(app, "push_screen") as mock_push,
+            patch.object(app, "pop_screen"),
             patch.object(app, "notify"),
             patch.object(app, "load_categories", new_callable=AsyncMock),
             patch.object(app, "load_feeds", new_callable=AsyncMock),
@@ -417,28 +420,30 @@ class TestMinifluxTuiAppOnMount:
         ):
             await app.on_mount()
 
-            # Verify push_screen was called with "entry_list"
-            mock_push.assert_called_once_with("entry_list")
+            # Verify push_screen was called twice (loading, then entry_list)
+            assert mock_push.call_count == 2
+            mock_push.assert_any_call("loading")
+            mock_push.assert_any_call("entry_list")
 
     @pytest.mark.asyncio
     async def test_on_mount_notifies_loading(self, sample_config):
-        """Test on_mount notifies user of loading."""
+        """Test on_mount shows loading screen."""
         app = MinifluxTuiApp(sample_config)
 
         # Mock required methods
         with (
             patch.object(app, "install_screen"),
-            patch.object(app, "push_screen"),
-            patch.object(app, "notify") as mock_notify,
+            patch.object(app, "push_screen") as mock_push,
+            patch.object(app, "pop_screen"),
+            patch.object(app, "notify"),
             patch.object(app, "load_categories", new_callable=AsyncMock),
             patch.object(app, "load_feeds", new_callable=AsyncMock),
             patch.object(app, "load_entries", new_callable=AsyncMock),
         ):
             await app.on_mount()
 
-            # Verify notify was called with loading message
-            # Check first call contains "Loading data"
-            assert any("Loading data" in str(call) for call in mock_notify.call_args_list)
+            # Verify loading screen was pushed first
+            assert mock_push.call_args_list[0][0][0] == "loading"
 
     @pytest.mark.asyncio
     async def test_on_mount_loads_entries(self, sample_config):
@@ -449,6 +454,7 @@ class TestMinifluxTuiAppOnMount:
         with (
             patch.object(app, "install_screen"),
             patch.object(app, "push_screen"),
+            patch.object(app, "pop_screen"),
             patch.object(app, "notify"),
             patch.object(app, "load_categories", new_callable=AsyncMock),
             patch.object(app, "load_entries", new_callable=AsyncMock) as mock_load,
