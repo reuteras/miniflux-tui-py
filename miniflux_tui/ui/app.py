@@ -144,7 +144,12 @@ class MinifluxTuiApp(App):
         self.install_screen(LoadingScreen(), name="loading")
         self.push_screen("loading")
 
-        # Initialize API client
+        # Schedule the data loading to happen after the screen is rendered
+        self.call_after_refresh(self._load_data)
+
+    async def _load_data(self) -> None:
+        """Load data after loading screen is displayed."""
+        # Initialize API client - this may block on password command
         self.client = MinifluxClient(
             base_url=self.config.server_url,
             api_key=self.config.api_key,
