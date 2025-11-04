@@ -673,3 +673,223 @@ class TestMinifluxClientGetIntegrationsStatus:
 
             # Verify status
             assert status is False
+
+
+class TestMinifluxClientCategoryMethods:
+    """Test category-related API methods."""
+
+    @pytest.mark.asyncio
+    async def test_get_categories_list_response(self):
+        """Test get_categories with list response."""
+        with patch("miniflux_tui.api.client.MinifluxClientBase") as mock_base_class:
+            mock_client = MagicMock()
+            mock_base_class.return_value = mock_client
+
+            # Mock list response
+            mock_client.get_categories.return_value = [
+                {"id": 1, "title": "News"},
+                {"id": 2, "title": "Tech"},
+            ]
+
+            client = MinifluxClient("http://localhost:8080", "test-key")
+            categories = await client.get_categories()
+
+            assert len(categories) == 2
+            assert categories[0].title == "News"
+            assert categories[1].title == "Tech"
+
+    @pytest.mark.asyncio
+    async def test_get_categories_dict_response(self):
+        """Test get_categories with dict response (fallback)."""
+        with patch("miniflux_tui.api.client.MinifluxClientBase") as mock_base_class:
+            mock_client = MagicMock()
+            mock_base_class.return_value = mock_client
+
+            # Mock dict response
+            mock_client.get_categories.return_value = {
+                "categories": [
+                    {"id": 1, "title": "News"},
+                ]
+            }
+
+            client = MinifluxClient("http://localhost:8080", "test-key")
+            categories = await client.get_categories()
+
+            assert len(categories) == 1
+            assert categories[0].title == "News"
+
+    @pytest.mark.asyncio
+    async def test_create_category(self):
+        """Test creating a category."""
+        with patch("miniflux_tui.api.client.MinifluxClientBase") as mock_base_class:
+            mock_client = MagicMock()
+            mock_base_class.return_value = mock_client
+
+            mock_client.create_category.return_value = {"id": 3, "title": "New Category"}
+
+            client = MinifluxClient("http://localhost:8080", "test-key")
+            category = await client.create_category("New Category")
+
+            assert category.id == 3
+            assert category.title == "New Category"
+            mock_client.create_category.assert_called_once_with("New Category")
+
+    @pytest.mark.asyncio
+    async def test_update_category(self):
+        """Test updating a category."""
+        with patch("miniflux_tui.api.client.MinifluxClientBase") as mock_base_class:
+            mock_client = MagicMock()
+            mock_base_class.return_value = mock_client
+
+            mock_client.update_category.return_value = {"id": 1, "title": "Updated"}
+
+            client = MinifluxClient("http://localhost:8080", "test-key")
+            category = await client.update_category(1, "Updated")
+
+            assert category.title == "Updated"
+            mock_client.update_category.assert_called_once_with(1, "Updated")
+
+    @pytest.mark.asyncio
+    async def test_delete_category(self):
+        """Test deleting a category."""
+        with patch("miniflux_tui.api.client.MinifluxClientBase") as mock_base_class:
+            mock_client = MagicMock()
+            mock_base_class.return_value = mock_client
+
+            mock_client.delete_category.return_value = None
+
+            client = MinifluxClient("http://localhost:8080", "test-key")
+            await client.delete_category(1)
+
+            mock_client.delete_category.assert_called_once_with(1)
+
+
+class TestMinifluxClientFeedMethods:
+    """Test feed-related API methods."""
+
+    @pytest.mark.asyncio
+    async def test_refresh_feed(self):
+        """Test refreshing a specific feed."""
+        with patch("miniflux_tui.api.client.MinifluxClientBase") as mock_base_class:
+            mock_client = MagicMock()
+            mock_base_class.return_value = mock_client
+
+            mock_client.refresh_feed.return_value = None
+
+            client = MinifluxClient("http://localhost:8080", "test-key")
+            await client.refresh_feed(123)
+
+            mock_client.refresh_feed.assert_called_once_with(123)
+
+    @pytest.mark.asyncio
+    async def test_create_feed_without_category(self):
+        """Test creating a feed without category."""
+        with patch("miniflux_tui.api.client.MinifluxClientBase") as mock_base_class:
+            mock_client = MagicMock()
+            mock_base_class.return_value = mock_client
+
+            mock_client.create_feed.return_value = {
+                "id": 1,
+                "title": "Test Feed",
+                "site_url": "https://example.com",
+                "feed_url": "https://example.com/feed",
+            }
+
+            client = MinifluxClient("http://localhost:8080", "test-key")
+            feed = await client.create_feed("https://example.com/feed")
+
+            assert feed.title == "Test Feed"
+            mock_client.create_feed.assert_called_once_with("https://example.com/feed")
+
+    @pytest.mark.asyncio
+    async def test_create_feed_with_category(self):
+        """Test creating a feed with category."""
+        with patch("miniflux_tui.api.client.MinifluxClientBase") as mock_base_class:
+            mock_client = MagicMock()
+            mock_base_class.return_value = mock_client
+
+            mock_client.create_feed.return_value = {
+                "id": 1,
+                "title": "Test Feed",
+                "site_url": "https://example.com",
+                "feed_url": "https://example.com/feed",
+            }
+
+            client = MinifluxClient("http://localhost:8080", "test-key")
+            feed = await client.create_feed("https://example.com/feed", category_id=5)
+
+            assert feed.title == "Test Feed"
+            mock_client.create_feed.assert_called_once_with("https://example.com/feed", category_id=5)
+
+    @pytest.mark.asyncio
+    async def test_update_feed(self):
+        """Test updating a feed."""
+        with patch("miniflux_tui.api.client.MinifluxClientBase") as mock_base_class:
+            mock_client = MagicMock()
+            mock_base_class.return_value = mock_client
+
+            mock_client.update_feed.return_value = {
+                "id": 1,
+                "title": "Updated Feed",
+                "site_url": "https://example.com",
+                "feed_url": "https://example.com/feed",
+            }
+
+            client = MinifluxClient("http://localhost:8080", "test-key")
+            feed = await client.update_feed(1, title="Updated Feed")
+
+            assert feed.title == "Updated Feed"
+            mock_client.update_feed.assert_called_once_with(1, title="Updated Feed")
+
+    @pytest.mark.asyncio
+    async def test_get_feed(self):
+        """Test getting a specific feed."""
+        with patch("miniflux_tui.api.client.MinifluxClientBase") as mock_base_class:
+            mock_client = MagicMock()
+            mock_base_class.return_value = mock_client
+
+            mock_client.get_feed.return_value = {
+                "id": 1,
+                "title": "Test Feed",
+                "site_url": "https://example.com",
+                "feed_url": "https://example.com/feed",
+            }
+
+            client = MinifluxClient("http://localhost:8080", "test-key")
+            feed = await client.get_feed(1)
+
+            assert feed.title == "Test Feed"
+            mock_client.get_feed.assert_called_once_with(1)
+
+    @pytest.mark.asyncio
+    async def test_delete_feed(self):
+        """Test deleting a feed."""
+        with patch("miniflux_tui.api.client.MinifluxClientBase") as mock_base_class:
+            mock_client = MagicMock()
+            mock_base_class.return_value = mock_client
+
+            mock_client.delete_feed.return_value = None
+
+            client = MinifluxClient("http://localhost:8080", "test-key")
+            await client.delete_feed(1)
+
+            mock_client.delete_feed.assert_called_once_with(1)
+
+
+class TestMinifluxClientContentMethods:
+    """Test content fetching methods."""
+
+    @pytest.mark.asyncio
+    async def test_fetch_original_content(self):
+        """Test fetching original content for an entry."""
+        with patch("miniflux_tui.api.client.MinifluxClientBase") as mock_base_class:
+            mock_client = MagicMock()
+            mock_base_class.return_value = mock_client
+
+            mock_client.fetch_entry_content.return_value = {"content": "<p>Original content</p>"}
+
+            client = MinifluxClient("http://localhost:8080", "test-key")
+            content = await client.fetch_original_content(123)
+
+            assert content == "<p>Original content</p>"
+            mock_client.fetch_entry_content.assert_called_once_with(123)
