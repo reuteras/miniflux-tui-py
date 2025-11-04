@@ -1,5 +1,7 @@
 """Scraping rule helper screen for discovering optimal content extraction rules."""
 
+from typing import Any
+
 from textual import on
 from textual.app import ComposeResult
 from textual.binding import Binding
@@ -8,6 +10,15 @@ from textual.screen import Screen
 from textual.widgets import Button, Footer, Header, Input, Label, ListItem, ListView, Static
 
 from miniflux_tui.scraping import ContentAnalyzer, SecureFetcher
+
+
+class SelectorListItem(ListItem):
+    """Custom ListItem that stores candidate data."""
+
+    def __init__(self, *args: Any, data: dict | None = None, **kwargs: Any) -> None:
+        """Initialize with candidate data."""
+        super().__init__(*args, **kwargs)
+        self.candidate_data = data
 
 
 class ScrapingHelperScreen(Screen):
@@ -184,11 +195,11 @@ class ScrapingHelperScreen(Screen):
                 elem_count = candidate.get("element_count", 1)
                 count_str = f" ({elem_count}x)" if elem_count > 1 else ""
 
-                item = ListItem(
+                item = SelectorListItem(
                     Label(f"{i}. ⭐{score:3d} - {selector}{count_str}"),
                     classes="selector-item",
+                    data=candidate,
                 )
-                item.data = candidate  # Store candidate data
                 candidates_list.append(item)
 
             # Auto-select first (best) candidate
@@ -210,8 +221,8 @@ class ScrapingHelperScreen(Screen):
     @on(ListView.Selected, "#candidates-list")
     async def on_candidate_selected(self, event: ListView.Selected) -> None:
         """Handle candidate selection from list."""
-        if event.item and hasattr(event.item, "data"):
-            await self._preview_candidate(event.item.data)
+        if event.item and isinstance(event.item, SelectorListItem) and event.item.candidate_data:
+            await self._preview_candidate(event.item.candidate_data)
 
     async def _preview_candidate(self, candidate: dict) -> None:
         """Preview selected candidate's extracted content.
@@ -320,10 +331,10 @@ class ScrapingHelperScreen(Screen):
             # No callback - just show the rule
             status.update(f"Info: Scraping rule: {self.selected_selector} (no save callback configured)")
 
-    async def action_dismiss(self) -> None:
+    async def action_dismiss(self, result: None = None) -> None:
         """Close the screen and return to previous screen."""
         # Clean up fetcher
         if self.fetcher:
             await self.fetcher.close()
 
-        self.dismiss()
+        self.dismiss(result)
