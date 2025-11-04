@@ -15,6 +15,7 @@ from miniflux_tui.config import Config
 from miniflux_tui.constants import DEFAULT_ENTRY_LIMIT
 
 from .screens.help import HelpScreen
+from .screens.loading import LoadingScreen
 
 if TYPE_CHECKING:
     from miniflux_tui.ui.screens.entry_history import EntryHistoryScreen
@@ -139,6 +140,10 @@ class MinifluxTuiApp(App):
 
     async def on_mount(self) -> None:
         """Called when app is mounted."""
+        # Show loading screen immediately
+        self.install_screen(LoadingScreen(), name="loading")
+        self.push_screen("loading")
+
         # Initialize API client
         self.client = MinifluxClient(
             base_url=self.config.server_url,
@@ -173,12 +178,8 @@ class MinifluxTuiApp(App):
         history_cls: type[EntryHistoryScreen] = _load_history_screen_cls()
         self.install_screen(history_cls(), name="history")
 
-        # Push initial screen
-        self.push_screen("entry_list")
-
-        # Load categories, feeds, and entries after screen is shown
+        # Load categories, feeds, and entries while loading screen is shown
         # Order matters: categories are needed to build entry→category mapping
-        self.notify("Loading data...")
         await self.load_categories()
         await self.load_feeds()
 
@@ -187,6 +188,10 @@ class MinifluxTuiApp(App):
         self.entry_category_map = await self._build_entry_category_mapping()
 
         await self.load_entries()
+
+        # Dismiss loading screen and show entry list
+        self.pop_screen()
+        self.push_screen("entry_list")
 
     def _get_entry_list_screen(self) -> EntryListScreen | None:
         """Return the entry list screen instance if available."""
