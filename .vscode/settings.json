@@ -24,7 +24,7 @@
     ],
     "python.testing.cwd": "${workspaceFolder}",
     "python.languageServer": "Pylance",
-    "python.testing.autoTestDiscoverOnSaveEnabled": true,
+    "python.testing.autoTestDiscoverOnSaveEnabled": false,
     "python.analysis.extraPaths": [
         "${workspaceFolder}"
     ],
