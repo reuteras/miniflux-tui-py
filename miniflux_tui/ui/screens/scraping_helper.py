@@ -55,7 +55,7 @@ class ScrapingHelperScreen(Screen):
     #status-message {
         height: auto;
         margin-bottom: 1;
-        padding: 0 1;
+        color: $text;
     }
 
     #candidates-container {
@@ -73,11 +73,12 @@ class ScrapingHelperScreen(Screen):
 
     #candidates-list {
         height: auto;
-        max-height: 10;
+        max-height: 5;
     }
 
     #preview-container {
-        height: 1fr;
+        height: auto;
+        max-height: 20;
         border: solid $secondary;
     }
 
@@ -102,7 +103,6 @@ class ScrapingHelperScreen(Screen):
 
     #rule-type-container {
         margin-bottom: 1;
-        border: solid $accent;
         padding: 1;
     }
 
