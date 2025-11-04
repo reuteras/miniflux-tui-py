@@ -9,6 +9,7 @@
 [![Downloads](https://static.pepy.tech/badge/miniflux-tui-py/month)](https://pepy.tech/project/miniflux-tui-py)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 [![Test Status](https://github.com/reuteras/miniflux-tui-py/workflows/Test/badge.svg)](https://github.com/reuteras/miniflux-tui-py/actions/workflows/test.yml)
+[![Last Commit](https://img.shields.io/github/last-commit/reuteras/miniflux-tui-py?logo=github)](https://github.com/reuteras/miniflux-tui-py/commits/main)
 [![Python 3.15 Preview](https://img.shields.io/badge/Python%203.15-preview-yellow)](https://github.com/reuteras/miniflux-tui-py/actions/workflows/test.yml)
 [![CIFuzz](https://github.com/reuteras/miniflux-tui-py/actions/workflows/cifuzz.yml/badge.svg)](https://github.com/reuteras/miniflux-tui-py/actions/workflows/cifuzz.yml)
 [![OSV Scanner](https://github.com/reuteras/miniflux-tui-py/actions/workflows/osv-scanner.yml/badge.svg)](https://github.com/reuteras/miniflux-tui-py/actions/workflows/osv-scanner.yml)
