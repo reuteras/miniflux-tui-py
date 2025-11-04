@@ -121,15 +121,49 @@ class MinifluxClient:
 
     async def get_unread_entries(self, limit: int = 100, offset: int = 0) -> list[Entry]:
         """
-        Get unread feed entries with retry logic.
+        Get unread feed entries with retry logic and automatic pagination.
+
+        Fetches all available entries if limit > 100 by making multiple API calls.
 
         Args:
-            limit: Maximum number of entries to retrieve
+            limit: Maximum number of entries to retrieve (if > 100, fetches all)
             offset: Offset for pagination
 
         Returns:
             List of unread Entry objects
         """
+        # If limit is exactly 100 (default), fetch all entries
+        if limit == 100:
+            all_entries = []
+            current_offset = offset
+            batch_size = 100
+
+            while True:
+                response = await self._call_with_retry(
+                    self.client.get_entries,
+                    status=["unread"],
+                    limit=batch_size,
+                    offset=current_offset,
+                    order="published_at",
+                    direction="desc",
+                )
+
+                entries = [Entry.from_dict(entry) for entry in response.get("entries", [])]
+
+                if not entries:
+                    break
+
+                all_entries.extend(entries)
+
+                # If we got fewer entries than requested, we've reached the end
+                if len(entries) < batch_size:
+                    break
+
+                current_offset += batch_size
+
+            return all_entries
+
+        # For explicit limits other than default, use single request
         response = await self._call_with_retry(
             self.client.get_entries, status=["unread"], limit=limit, offset=offset, order="published_at", direction="desc"
         )
@@ -138,15 +172,44 @@ class MinifluxClient:
 
     async def get_starred_entries(self, limit: int = 100, offset: int = 0) -> list[Entry]:
         """
-        Get starred feed entries with retry logic.
+        Get starred feed entries with retry logic and automatic pagination.
+
+        Fetches all available entries if limit > 100 by making multiple API calls.
 
         Args:
-            limit: Maximum number of entries to retrieve
+            limit: Maximum number of entries to retrieve (if > 100, fetches all)
             offset: Offset for pagination
 
         Returns:
             List of starred Entry objects
         """
+        # If limit is exactly 100 (default), fetch all entries
+        if limit == 100:
+            all_entries = []
+            current_offset = offset
+            batch_size = 100
+
+            while True:
+                response = await self._call_with_retry(
+                    self.client.get_entries, starred=True, limit=batch_size, offset=current_offset, order="published_at", direction="desc"
+                )
+
+                entries = [Entry.from_dict(entry) for entry in response.get("entries", [])]
+
+                if not entries:
+                    break
+
+                all_entries.extend(entries)
+
+                # If we got fewer entries than requested, we've reached the end
+                if len(entries) < batch_size:
+                    break
+
+                current_offset += batch_size
+
+            return all_entries
+
+        # For explicit limits other than default, use single request
         response = await self._call_with_retry(
             self.client.get_entries, starred=True, limit=limit, offset=offset, order="published_at", direction="desc"
         )

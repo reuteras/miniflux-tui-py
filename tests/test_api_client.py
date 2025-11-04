@@ -226,6 +226,123 @@ class TestMinifluxClientGetEntries:
             assert len(result) == 1
             assert result[0].title == "Test Entry"
 
+    @pytest.mark.asyncio
+    async def test_get_unread_entries_pagination(self):
+        """Test automatic pagination for unread entries with default limit."""
+        with patch("miniflux_tui.api.client.MinifluxClientBase") as mock_base_class:
+            mock_client = MagicMock()
+            mock_base_class.return_value = mock_client
+
+            # Mock responses: first call returns 100 entries, second returns 50
+            def mock_get_entries(*args, **kwargs):
+                offset = kwargs.get("offset", 0)
+                if offset == 0:
+                    # First page: 100 entries
+                    return {
+                        "entries": [
+                            {
+                                "id": i,
+                                "feed_id": 1,
+                                "title": f"Entry {i}",
+                                "content": "Test",
+                                "url": f"http://localhost:8080/entry/{i}",
+                                "author": "Test",
+                                "published_at": "2023-01-01T00:00:00Z",
+                                "starred": False,
+                                "status": "unread",
+                                "feed": {
+                                    "id": 1,
+                                    "title": "Test Feed",
+                                    "site_url": "http://localhost:8080",
+                                    "feed_url": "http://localhost:8080/feed",
+                                },
+                            }
+                            for i in range(100)
+                        ]
+                    }
+                if offset == 100:
+                    # Second page: 50 entries
+                    return {
+                        "entries": [
+                            {
+                                "id": i,
+                                "feed_id": 1,
+                                "title": f"Entry {i}",
+                                "content": "Test",
+                                "url": f"http://localhost:8080/entry/{i}",
+                                "author": "Test",
+                                "published_at": "2023-01-01T00:00:00Z",
+                                "starred": False,
+                                "status": "unread",
+                                "feed": {
+                                    "id": 1,
+                                    "title": "Test Feed",
+                                    "site_url": "http://localhost:8080",
+                                    "feed_url": "http://localhost:8080/feed",
+                                },
+                            }
+                            for i in range(100, 150)
+                        ]
+                    }
+                return {"entries": []}
+
+            mock_client.get_entries.side_effect = mock_get_entries
+
+            client = MinifluxClient("http://localhost:8080", "test-key")
+            result = await client.get_unread_entries()  # Uses default limit=100
+
+            # Should fetch all entries across multiple pages
+            assert len(result) == 150
+            assert result[0].id == 0
+            assert result[149].id == 149
+            # Should have made 2 API calls (100 + 50 entries)
+            assert mock_client.get_entries.call_count == 2
+
+    @pytest.mark.asyncio
+    async def test_get_starred_entries_pagination(self):
+        """Test automatic pagination for starred entries with default limit."""
+        with patch("miniflux_tui.api.client.MinifluxClientBase") as mock_base_class:
+            mock_client = MagicMock()
+            mock_base_class.return_value = mock_client
+
+            # Mock responses: first call returns 100 entries, second returns 0
+            def mock_get_entries(*args, **kwargs):
+                offset = kwargs.get("offset", 0)
+                if offset == 0:
+                    return {
+                        "entries": [
+                            {
+                                "id": i,
+                                "feed_id": 1,
+                                "title": f"Entry {i}",
+                                "content": "Test",
+                                "url": f"http://localhost:8080/entry/{i}",
+                                "author": "Test",
+                                "published_at": "2023-01-01T00:00:00Z",
+                                "starred": True,
+                                "status": "read",
+                                "feed": {
+                                    "id": 1,
+                                    "title": "Test Feed",
+                                    "site_url": "http://localhost:8080",
+                                    "feed_url": "http://localhost:8080/feed",
+                                },
+                            }
+                            for i in range(100)
+                        ]
+                    }
+                return {"entries": []}
+
+            mock_client.get_entries.side_effect = mock_get_entries
+
+            client = MinifluxClient("http://localhost:8080", "test-key")
+            result = await client.get_starred_entries()  # Uses default limit=100
+
+            # Should fetch all 100 entries in first page
+            assert len(result) == 100
+            # Should have made 2 API calls (100 entries + empty response)
+            assert mock_client.get_entries.call_count == 2
+
 
 class TestMinifluxClientActions:
     """Test entry action methods."""
