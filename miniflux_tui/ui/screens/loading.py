@@ -20,7 +20,7 @@ ASCII_ART_TEMPLATE = r"""
 """
 
 
-a    """A loading screen with ASCII art."""
+    """A loading screen with ASCII art."""
 
     CSS = """
     LoadingScreen {
