@@ -6,13 +6,16 @@ on:
     types: [closed]
 
 permissions:
-  issues: write
+  contents: read
+  issues: read
   pull-requests: read
 
 jobs:
   close-tracking-issue:
     name: Close Tracking Issue on PR Merge
     runs-on: ubuntu-latest
+    permissions:
+      issues: write
     if: |
       github.event.pull_request.merged == true &&
       github.event.pull_request.user.login == 'dependabot[bot]' &&

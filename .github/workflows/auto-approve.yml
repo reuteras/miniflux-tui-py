@@ -10,13 +10,16 @@ on:
     types: [completed]
 
 permissions:
-  pull-requests: write
   contents: read
+  pull-requests: read
 
 jobs:
   auto-approve:
     name: Auto-Approve PR
     runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      pull-requests: write
     # Approve PRs from:
     # 1. reuteras (solo developer) - must be User type
     # 2. renovate[bot] (dependency updates) - must be Bot type
