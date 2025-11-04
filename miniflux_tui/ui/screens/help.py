@@ -42,6 +42,7 @@ class HelpScreen(Screen):
             yield Static("  *               Toggle star")
             yield Static("  e               Save entry to third-party service")
             yield Static("  s               Cycle sort mode (date/feed/status)")
+            yield Static("  Shift+X         Open scraping rule helper")
             yield Static("  g               Toggle grouping by feed")
             yield Static("  Shift+C         Group by category")
             yield Static("  Shift+G         Enable grouping and expand all feeds")
