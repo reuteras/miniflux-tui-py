@@ -145,6 +145,8 @@ class EntryListScreen(Screen):
     BINDINGS = [  # noqa: RUF012
         Binding("j", "cursor_down", "Down", show=False),
         Binding("k", "cursor_up", "Up", show=False),
+        Binding("down", "cursor_down", "Down", show=False),
+        Binding("up", "cursor_up", "Up", show=False),
         Binding("enter", "select_entry", "Open Entry"),
         Binding("m", "toggle_read", "Mark Read/Unread"),
         Binding("asterisk", "toggle_star", "Toggle Star"),
