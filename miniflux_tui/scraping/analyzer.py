@@ -284,3 +284,38 @@ class ContentAnalyzer:
             }
         except Exception:
             return {"count": 0, "paragraphs": 0, "links": 0, "images": 0}
+
+    def preview_removal(self, selector: str) -> str:
+        """Preview content after removing elements matching selector.
+
+        Args:
+            selector: CSS selector for elements to remove
+
+        Returns:
+            HTML content after removing matched elements (sanitized)
+        """
+        try:
+            # Create a copy of the soup to work with
+            soup_copy = BeautifulSoup(str(self.soup), "html5lib")
+
+            # Find and remove all matching elements
+            elements = soup_copy.select(selector)
+            for element in elements:
+                element.decompose()
+
+            # Get remaining body content
+            body = soup_copy.find("body")
+            if not body:
+                return ""
+
+            html = str(body)
+
+            # Sanitize for safe display
+            return bleach.clean(
+                html,
+                tags=self.ALLOWED_TAGS,
+                attributes=self.ALLOWED_ATTRIBUTES,
+                strip=True,
+            )
+        except Exception:
+            return ""

@@ -433,3 +433,83 @@ class TestContentAnalyzer:
 
         # Images should be allowed
         assert "img" in extracted or "image.jpg" in extracted
+
+    def test_preview_removal_basic(self):
+        """Test removal preview with basic selector."""
+        html = """
+        <body>
+            <nav>Navigation</nav>
+            <article>
+                <p>Main content</p>
+            </article>
+            <aside>Sidebar</aside>
+        </body>
+        """
+        analyzer = ContentAnalyzer(html)
+
+        # Remove nav and aside
+        remaining = analyzer.preview_removal("nav, aside")
+
+        # Should contain article but not nav/aside
+        assert "Main content" in remaining
+        assert "Navigation" not in remaining
+        assert "Sidebar" not in remaining
+
+    def test_preview_removal_no_match(self):
+        """Test removal preview when selector matches nothing."""
+        html = """
+        <body>
+            <article>
+                <p>Content</p>
+            </article>
+        </body>
+        """
+        analyzer = ContentAnalyzer(html)
+
+        # Try to remove non-existent elements
+        remaining = analyzer.preview_removal(".nonexistent")
+
+        # Should still have the content
+        assert "Content" in remaining
+
+    def test_preview_removal_sanitizes(self):
+        """Test removal preview sanitizes output."""
+        html = """
+        <body>
+            <article>
+                <p>Safe content</p>
+                <script>alert('xss')</script>
+            </article>
+        </body>
+        """
+        analyzer = ContentAnalyzer(html)
+
+        # Remove nothing - just test sanitization
+        remaining = analyzer.preview_removal(".nonexistent")
+
+        # Script tag should be removed by sanitization
+        assert "Safe content" in remaining
+        assert "<script>" not in remaining.lower()
+        assert "</script>" not in remaining.lower()
+
+    def test_preview_removal_multiple_elements(self):
+        """Test removal of multiple matching elements."""
+        html = """
+        <body>
+            <div class="ad">Ad 1</div>
+            <p>Content 1</p>
+            <div class="ad">Ad 2</div>
+            <p>Content 2</p>
+            <div class="ad">Ad 3</div>
+        </body>
+        """
+        analyzer = ContentAnalyzer(html)
+
+        remaining = analyzer.preview_removal(".ad")
+
+        # Ads should be removed, content preserved
+        assert "Content 1" in remaining
+        assert "Content 2" in remaining
+        assert "Ad 1" not in remaining
+        assert "Ad 2" not in remaining
+        assert "Ad 3" not in remaining
