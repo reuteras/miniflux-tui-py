@@ -37,7 +37,7 @@ class EntryReaderScreen(Screen):
         Binding("X", "scraping_helper", "Scraping Helper"),
         Binding("question_mark", "show_help", "Help"),
         Binding("i", "show_status", "Status"),
-        Binding("shift+s", "show_settings", "Settings"),
+        Binding("S", "show_settings", "Settings"),
         Binding("q", "quit", "Quit"),
         Binding("escape", "back", "Back", show=False),
     ]
