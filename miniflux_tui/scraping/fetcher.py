@@ -59,6 +59,9 @@ class SecureFetcher:
                 raise ValueError(msg)
 
             return response.text
+        except ValueError:
+            # Re-raise ValueError (size limits) without catching
+            raise
         except httpx.TimeoutException as e:
             msg = f"Timeout fetching {url}"
             raise TimeoutError(msg) from e
