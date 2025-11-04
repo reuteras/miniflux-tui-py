@@ -66,11 +66,12 @@ Approved for merge.
 
 ### Branch Protection
 ```
-Required approving reviews: 0 (not enforced)
+Required approving reviews: 1 (ENFORCED via reuteras-review bot)
 Dismiss stale reviews: true
+Require last push approval: true
 ```
 
-**Note**: While reviews are not *required* by branch protection, the auto-approve workflow adds them automatically for tracking and audit purposes.
+**Critical**: Reviews ARE now *required* by branch protection. The auto-approve workflow ensures PRs get the necessary approval automatically after all checks pass.
 
 ### Recent Activity
 PR #431 was successfully auto-approved by `reuteras-review` after all checks passed.

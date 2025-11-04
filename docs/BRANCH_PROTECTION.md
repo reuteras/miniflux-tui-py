@@ -10,14 +10,16 @@ This document describes the branch protection rules for the `main` branch.
 
 ### Pull Request Requirements
 - ✅ Require pull request before merging
+- ✅ **Require 1 approving review** (automated via reuteras-review bot)
 - ✅ Dismiss stale reviews when new commits are pushed
+- ✅ **Require last push approval** (prevents self-approval)
 - ✅ Enforce restrictions for administrators
 - ✅ Require signed commits
 - ✅ Require linear history (no merge commits)
 
-### Not Currently Required
-- ❌ Code owner reviews (set to 0 approving reviews)
-- ❌ Last push approval
+### Security Score
+- **OpenSSF Scorecard Branch-Protection**: Addresses alert #293
+- All recommended protections enabled
 
 ## Branch Protection Rules
 
@@ -33,7 +35,8 @@ gh api -X PUT repos/reuteras/miniflux-tui-py/branches/main/protection \
   "required_pull_request_reviews": {
     "dismiss_stale_reviews": true,
     "require_code_owner_reviews": false,
-    "required_approving_review_count": 0
+    "require_last_push_approval": true,
+    "required_approving_review_count": 1
   },
   "restrictions": null,
   "enforce_admins": true,
