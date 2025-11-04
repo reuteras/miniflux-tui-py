@@ -1,0 +1,245 @@
+---
+name: Create Release
+
+on:
+  workflow_dispatch:
+    inputs:
+      version:
+        description: 'Version to release (e.g., 0.5.3)'
+        required: true
+        type: string
+      bump_type:
+        description: 'Version bump type (if version not specified)'
+        required: false
+        type: choice
+        options:
+          - patch
+          - minor
+          - major
+        default: patch
+
+permissions:
+  contents: read
+
+jobs:
+  prepare-release:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+      pull-requests: write
+      id-token: write
+    outputs:
+      version: ${{ steps.version.outputs.version }}
+      pr_number: ${{ steps.create-pr.outputs.pr_number }}
+    steps:
+      - name: Harden the runner
+        uses: step-security/harden-runner@f4a75cfd619ee5ce8d5b864b0d183aff3c69b55a # v2.13.1
+        with:
+          egress-policy: audit
+
+      - uses: actions/checkout@08c6903cd8c0fde910a37f88322edcfb5dd907a8 # v5
+        with:
+          fetch-depth: 0
+          token: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Install uv
+        uses: astral-sh/setup-uv@85856786d1ce8acfbcc2f13a5f3fbd6b938f9f41 # v7
+        with:
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          enable-cache: "false"
+
+      - name: Set up Python
+        run: uv python install 3.11
+
+      - name: Install dependencies
+        run: uv sync --locked
+
+      - name: Determine version
+        id: version
+        run: |
+          if [ -n "${{ inputs.version }}" ]; then
+            VERSION="${{ inputs.version }}"
+          else
+            # Auto-bump based on bump_type
+            CURRENT=$(grep '^version = ' pyproject.toml | cut -d'"' -f2)
+            IFS='.' read -r major minor patch <<< "$CURRENT"
+            
+            case "${{ inputs.bump_type }}" in
+              major) VERSION="$((major + 1)).0.0" ;;
+              minor) VERSION="${major}.$((minor + 1)).0" ;;
+              patch) VERSION="${major}.${minor}.$((patch + 1))" ;;
+            esac
+          fi
+          
+          echo "version=$VERSION" >> $GITHUB_OUTPUT
+          echo "::notice::Release version: $VERSION"
+
+      - name: Update version in pyproject.toml
+        run: |
+          VERSION="${{ steps.version.outputs.version }}"
+          sed -i.bak "s/^version = .*/version = \"$VERSION\"/" pyproject.toml
+          rm pyproject.toml.bak
+
+      - name: Regenerate uv.lock
+        run: uv lock
+
+      - name: Install git-cliff
+        run: |
+          CLIFF_VERSION="2.7.0"
+          wget -q "https://github.com/orhun/git-cliff/releases/download/v${CLIFF_VERSION}/git-cliff-${CLIFF_VERSION}-x86_64-unknown-linux-gnu.tar.gz"
+          tar -xzf "git-cliff-${CLIFF_VERSION}-x86_64-unknown-linux-gnu.tar.gz"
+          sudo mv "git-cliff-${CLIFF_VERSION}/git-cliff" /usr/local/bin/
+          rm -rf "git-cliff-${CLIFF_VERSION}" "git-cliff-${CLIFF_VERSION}-x86_64-unknown-linux-gnu.tar.gz"
+
+      - name: Update CHANGELOG.md
+        run: |
+          VERSION="${{ steps.version.outputs.version }}"
+          git-cliff --config cliff.toml --tag "$VERSION" --output CHANGELOG.md
+
+      - name: Create release branch and commit
+        run: |
+          VERSION="${{ steps.version.outputs.version }}"
+          BRANCH="release/v${VERSION}"
+          
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          
+          git checkout -b "$BRANCH"
+          git add pyproject.toml CHANGELOG.md uv.lock
+          git commit -m "chore: Release v${VERSION}"
+          git push origin "$BRANCH"
+          
+          echo "branch=$BRANCH" >> $GITHUB_OUTPUT
+
+      - name: Create Pull Request
+        id: create-pr
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          VERSION="${{ steps.version.outputs.version }}"
+          BRANCH="release/v${VERSION}"
+          
+          PR_BODY=$(cat << 'EOF'
+          ## Release v$VERSION
+
+          This PR prepares the release of version $VERSION.
+
+          ### Changes
+          - Updated version in pyproject.toml
+          - Regenerated uv.lock
+          - Updated CHANGELOG.md with git-cliff
+
+          ### Next Steps
+          After this PR is merged, the release workflow will automatically:
+          1. Create a signed tag
+          2. Trigger the publish workflow
+          3. Publish to PyPI
+          4. Create GitHub release with binaries and SBOMs
+          5. Publish the release (no longer a draft)
+
+          ---
+          *This PR was automatically created by the release workflow.*
+          EOF
+          )
+          
+          PR_NUMBER=$(gh pr create \
+            --title "chore: Release v${VERSION}" \
+            --body "$PR_BODY" \
+            --base main \
+            --head "$BRANCH" \
+            --label "release" | grep -oP '(?<=/pull/)\d+')
+          
+          echo "pr_number=$PR_NUMBER" >> $GITHUB_OUTPUT
+          echo "::notice::Created PR #$PR_NUMBER"
+
+  auto-merge:
+    needs: prepare-release
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+      pull-requests: write
+      checks: read
+    steps:
+      - name: Harden the runner
+        uses: step-security/harden-runner@f4a75cfd619ee5ce8d5b864b0d183aff3c69b55a # v2.13.1
+        with:
+          egress-policy: audit
+
+      - uses: actions/checkout@08c6903cd8c0fde910a37f88322edcfb5dd907a8 # v5
+
+      - name: Wait for CI checks
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          PR_NUMBER="${{ needs.prepare-release.outputs.pr_number }}"
+          MAX_WAIT=600  # 10 minutes
+          ELAPSED=0
+          
+          echo "Waiting for CI checks on PR #$PR_NUMBER..."
+          
+          while [ $ELAPSED -lt $MAX_WAIT ]; do
+            STATUS=$(gh pr checks "$PR_NUMBER" --json state --jq '.[].state' | sort -u)
+            
+            if echo "$STATUS" | grep -q "FAILURE\|ERROR"; then
+              echo "::error::CI checks failed on PR #$PR_NUMBER"
+              exit 1
+            fi
+            
+            if [ "$(echo "$STATUS" | grep -v "PENDING" | wc -l)" -eq "$(echo "$STATUS" | wc -l)" ]; then
+              echo "All checks passed!"
+              break
+            fi
+            
+            echo "Checks still pending... (${ELAPSED}s/${MAX_WAIT}s)"
+            sleep 10
+            ELAPSED=$((ELAPSED + 10))
+          done
+          
+          if [ $ELAPSED -ge $MAX_WAIT ]; then
+            echo "::error::Timeout waiting for CI checks"
+            exit 1
+          fi
+
+      - name: Merge PR
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          PR_NUMBER="${{ needs.prepare-release.outputs.pr_number }}"
+          gh pr merge "$PR_NUMBER" --squash --auto
+
+  create-tag:
+    needs: [prepare-release, auto-merge]
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+      id-token: write
+    steps:
+      - name: Harden the runner
+        uses: step-security/harden-runner@f4a75cfd619ee5ce8d5b864b0d183aff3c69b55a # v2.13.1
+        with:
+          egress-policy: audit
+
+      - uses: actions/checkout@08c6903cd8c0fde910a37f88322edcfb5dd907a8 # v5
+        with:
+          ref: main
+          fetch-depth: 0
+
+      - name: Setup Gitsign
+        uses: chainguard-dev/actions/setup-gitsign@1b32103f5aa389c31ab0be75a8edc38d7e4750d8 # main
+
+      - name: Create and push signed tag
+        run: |
+          VERSION="${{ needs.prepare-release.outputs.version }}"
+          TAG="v${VERSION}"
+          
+          git config user.name "Miniflux Release Bot"
+          git config user.email "release@reuteras.net"
+          
+          # Ensure we're on latest main
+          git pull --ff-only origin main
+          
+          # Create signed tag
+          git tag -s "$TAG" -m "$TAG"
+          git push origin "$TAG"
+          
+          echo "::notice::Created and pushed signed tag: $TAG"
