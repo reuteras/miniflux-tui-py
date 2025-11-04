@@ -1,3 +1,8 @@
+# This file is archived and no longer in use
+# Linting has been disabled for this archived file
+# ruff: noqa
+# type: ignore
+
 #!/usr/bin/env python3
 """
 miniflux-tui-py release utilities.
