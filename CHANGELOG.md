@@ -1,5 +1,53 @@
 # Changelog
 
+## [0.5.5] - 2025-11-04
+
+### BUG FIXES
+
+- Remove hash-based container tags and add release notes (#400)
+- Disable Red Hat YAML telemetry prompts in Codespaces (#402)
+- Improve Codespaces configuration for test discovery (#404)
+- Add scraping helper (Shift+X) to entry reader screen (#408)
+- Change scraping helper binding from shift+x to X (#409)
+- Change scraping helper binding from shift+x to X (#409) (#411)
+- improve content scraper UI layout (#421)
+- add extra pause in test to wait for loading screen (#422)
+- change shift+key bindings to uppercase keys (#424)
+- resolve MegaLinter formatting warnings (#425)
+
+### CI/CD
+
+- ensure detached signatures uploaded (#417)
+- restrict workflow token permissions (#416)
+- add Python 3.14 to test matrix (#420)
+
+### DOCUMENTATION
+
+- Add comprehensive scraping helper feature documentation
+- add last commit badge to README (#419)
+
+### FEATURES
+
+- Interactive scraping rule helper for content extraction (#405)
+- Integrate scraping helper into entry list (closes #391) (#406)
+- Add ASCII art loading screen on startup (#418)
+- add __main__.py module and clarify running methods (#426)
+- add automatic pagination for >100 entries and fix arrow key navigation (#427)
+
+### TESTING
+
+- Phase 2 - Comprehensive UI screen tests (#391) (#403)
+
+
+
+#### Contributors
+
+Thank you to everyone who contributed to this release!
+
+**Humans:** 👤 Peter Reuterås
+
+**AI & Automation:** 🤖 Claude (AI Assistant)
+
 ## [0.5.4] - 2025-11-03
 
 ### DOCUMENTATION
