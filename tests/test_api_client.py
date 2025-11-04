@@ -576,3 +576,100 @@ class TestMinifluxClientGetReadEntries:
             assert entries[0].title == "Recently Read"
             assert entries[1].id == 1
             assert entries[1].title == "Older Read"
+
+
+class TestMinifluxClientGetUserInfo:
+    """Test get_user_info method for settings functionality."""
+
+    @pytest.mark.asyncio
+    async def test_get_user_info_success(self):
+        """Test getting user information successfully."""
+        with patch("miniflux_tui.api.client.MinifluxClientBase") as mock_base_class:
+            mock_client = MagicMock()
+            mock_base_class.return_value = mock_client
+
+            # Mock the response with user info
+            mock_client.me.return_value = {
+                "id": 1,
+                "username": "john_doe",
+                "is_admin": False,
+                "theme": "system",
+                "language": "en_US",
+                "timezone": "America/New_York",
+                "entry_direction": "asc",
+                "entries_per_page": 100,
+            }
+
+            client = MinifluxClient("http://localhost:8080", "test-key")
+            user_info = await client.get_user_info()
+
+            # Verify API was called
+            mock_client.me.assert_called_once()
+
+            # Verify we got the user info
+            assert user_info["username"] == "john_doe"
+            assert user_info["timezone"] == "America/New_York"
+            assert user_info["language"] == "en_US"
+            assert user_info["is_admin"] is False
+
+    @pytest.mark.asyncio
+    async def test_get_user_info_minimal(self):
+        """Test getting minimal user information."""
+        with patch("miniflux_tui.api.client.MinifluxClientBase") as mock_base_class:
+            mock_client = MagicMock()
+            mock_base_class.return_value = mock_client
+
+            # Mock minimal response
+            mock_client.me.return_value = {
+                "id": 1,
+                "username": "user",
+            }
+
+            client = MinifluxClient("http://localhost:8080", "test-key")
+            user_info = await client.get_user_info()
+
+            # Verify we got the minimal info
+            assert user_info["id"] == 1
+            assert user_info["username"] == "user"
+
+
+class TestMinifluxClientGetIntegrationsStatus:
+    """Test get_integrations_status method for settings functionality."""
+
+    @pytest.mark.asyncio
+    async def test_get_integrations_status_enabled(self):
+        """Test checking integrations status when enabled."""
+        with patch("miniflux_tui.api.client.MinifluxClientBase") as mock_base_class:
+            mock_client = MagicMock()
+            mock_base_class.return_value = mock_client
+
+            # Mock response indicating integrations are enabled
+            mock_client.get_integrations_status.return_value = True
+
+            client = MinifluxClient("http://localhost:8080", "test-key")
+            status = await client.get_integrations_status()
+
+            # Verify API was called
+            mock_client.get_integrations_status.assert_called_once()
+
+            # Verify status
+            assert status is True
+
+    @pytest.mark.asyncio
+    async def test_get_integrations_status_disabled(self):
+        """Test checking integrations status when disabled."""
+        with patch("miniflux_tui.api.client.MinifluxClientBase") as mock_base_class:
+            mock_client = MagicMock()
+            mock_base_class.return_value = mock_client
+
+            # Mock response indicating integrations are disabled
+            mock_client.get_integrations_status.return_value = False
+
+            client = MinifluxClient("http://localhost:8080", "test-key")
+            status = await client.get_integrations_status()
+
+            # Verify API was called
+            mock_client.get_integrations_status.assert_called_once()
+
+            # Verify status
+            assert status is False
