@@ -1,6 +1,6 @@
 """HTML content analyzer for suggesting scraping rules."""
 
-from typing import ClassVar
+from typing import Any, ClassVar
 
 import bleach
 from bs4 import BeautifulSoup
@@ -47,7 +47,7 @@ class ContentAnalyzer:
         self.soup = BeautifulSoup(html, "html5lib")
         self.analyzed_selectors = set()
 
-    def find_main_content(self) -> list[dict[str, any]]:
+    def find_main_content(self) -> list[dict[str, Any]]:
         """Find likely content containers and suggest selectors.
 
         Returns:
