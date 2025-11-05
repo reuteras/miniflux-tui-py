@@ -20,14 +20,14 @@ When you trigger the release workflow, GitHub Actions will:
 4. ✅ Auto-merge the PR
 5. ✅ Create a signed git tag (using Sigstore Gitsign)
 6. ✅ Trigger the publish workflow:
-   - Build Python packages (wheel + sdist)
-   - Publish to PyPI with attestations
-   - Build binaries for Linux, macOS, Windows
-   - Generate SBOMs (CycloneDX + SPDX)
-   - Sign all artifacts with cosign
-   - Generate SLSA provenance
-   - **Publish GitHub release** (not a draft!)
-   - Mark as "latest" release
+  - Build Python packages (wheel + sdist)
+  - Publish to PyPI with attestations
+  - Build binaries for Linux, macOS, Windows
+  - Generate SBOMs (CycloneDX + SPDX)
+  - Sign all artifacts with cosign
+  - Generate SLSA provenance
+  - **Publish GitHub release** (not a draft!)
+  - Mark as "latest" release
 
 **Total time**: ~10-15 minutes from trigger to published release on PyPI and GitHub.
 
@@ -243,11 +243,11 @@ The first release requires PyPI trusted publisher configuration:
 
 1. Visit https://pypi.org/account/publishing/
 2. Add a trusted publisher with:
-   - **Project:** `miniflux-tui-py`
-   - **Repository owner:** `reuteras`
-   - **Repository name:** `miniflux-tui-py`
-   - **Workflow filename:** `publish.yml`
-   - **Environment:** `pypi`
+  - **Project:** `miniflux-tui-py`
+  - **Repository owner:** `reuteras`
+  - **Repository name:** `miniflux-tui-py`
+  - **Workflow filename:** `publish.yml`
+  - **Environment:** `pypi`
 
 This is already configured for this project.
 

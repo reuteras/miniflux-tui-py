@@ -74,7 +74,7 @@ jobs:
             esac
           fi
 
-          echo "version=$VERSION" >> $GITHUB_OUTPUT
+          echo "version=$VERSION" >> "$GITHUB_OUTPUT"
           echo "::notice::Release version: $VERSION"
 
       - name: Update version in pyproject.toml
@@ -149,7 +149,7 @@ jobs:
           )
 
           # Use VERSION variable substitution in the body
-          PR_BODY=$(echo "$PR_BODY" | sed "s/\$VERSION/$VERSION/g")
+          PR_BODY="${PR_BODY//\$VERSION/$VERSION}"
 
           PR_NUMBER=$(gh pr create \
             --title "chore: Release v${VERSION}" \
@@ -158,7 +158,7 @@ jobs:
             --head "$BRANCH" \
             --label "release" | grep -oP '(?<=/pull/)\d+')
 
-          echo "pr_number=$PR_NUMBER" >> $GITHUB_OUTPUT
+          echo "pr_number=$PR_NUMBER" >> "$GITHUB_OUTPUT"
           echo "::notice::Created PR #$PR_NUMBER"
 
   auto-merge:
@@ -194,7 +194,9 @@ jobs:
               exit 1
             fi
 
-            if [ "$(echo "$STATUS" | grep -v "PENDING" | wc -l)" -eq "$(echo "$STATUS" | wc -l)" ]; then
+            NON_PENDING=$(echo "$STATUS" | grep -vc "PENDING" || true)
+            TOTAL=$(echo "$STATUS" | grep -c . || true)
+            if [ "$NON_PENDING" -eq "$TOTAL" ]; then
               echo "All checks passed!"
               break
             fi
