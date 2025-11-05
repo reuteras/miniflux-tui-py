@@ -4,7 +4,27 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
-## [0.5.6] - 2025-11-05
+## [0.5.7] - 2025-11-05
+
+### BUG FIXES
+
+- enable manual triggering and automatic chaining of publish workflow (#447)
+
+### MAINTENANCE
+
+- migrate semgrep workflow from pip to uv (#448)
+- migrate semgrep workflow from pip to uv (#449)
+
+
+
+#### Contributors
+
+Thank you to everyone who contributed to this release!
+
+**Humans:** 👤 Peter Reuterås
+
+**AI & Automation:** 🤖 Claude (AI Assistant)
+## [v0.5.6] - 2025-11-05
 
 ### BUG FIXES
 
@@ -33,6 +53,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Release v0.5.9 (#437)
 - Release v0.5.6 (#440)
 - Release v0.5.6 (#443)
+- Release v0.5.6 (#446)
 
 
 
