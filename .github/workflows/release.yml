@@ -222,7 +222,12 @@ jobs:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           PR_NUMBER: ${{ needs.prepare-release.outputs.pr_number }}
         run: |
-          gh pr merge "$PR_NUMBER" --squash --auto
+          # Merge immediately (not --auto) since we already waited for CI checks
+          gh pr merge "$PR_NUMBER" --squash --delete-branch
+
+          # Wait for merge to fully propagate
+          echo "Waiting for merge to propagate..."
+          sleep 5
 
   create-tag:
     needs: [prepare-release, auto-merge]
@@ -256,8 +261,17 @@ jobs:
           # Ensure we're on latest main
           git pull --ff-only origin main
 
+          # Verify we're tagging a commit with the release message
+          COMMIT_MSG=$(git log -1 --pretty=%s)
+          if [[ ! "$COMMIT_MSG" =~ ^chore:\ Release\ v${VERSION}$ ]]; then
+            echo "::error::Latest commit message does not match release: got '$COMMIT_MSG', expected 'chore: Release v${VERSION}'"
+            echo "::error::This usually means the PR merge hasn't propagated yet. Current commit:"
+            git log -1 --oneline
+            exit 1
+          fi
+
           # Create signed tag
           git tag -s "$TAG" -m "$TAG"
           git push origin "$TAG"
 
-          echo "::notice::Created and pushed signed tag: $TAG"
+          echo "::notice::Created and pushed signed tag: $TAG on commit $(git rev-parse HEAD)"
