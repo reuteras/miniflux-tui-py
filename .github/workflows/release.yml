@@ -107,6 +107,7 @@ jobs:
       - name: Create release branch and commit
         env:
           VERSION: ${{ steps.version.outputs.version }}
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
           BRANCH="release/v${VERSION}"
 
@@ -116,6 +117,9 @@ jobs:
           git checkout -b "$BRANCH"
           git add pyproject.toml CHANGELOG.md uv.lock
           git commit -m "chore: Release v${VERSION}"
+
+          # Configure git to use token for push (avoids persisting credentials)
+          git remote set-url origin "https://x-access-token:${GH_TOKEN}@github.com/${GITHUB_REPOSITORY}.git"
           git push origin "$BRANCH"
 
           echo "branch=$BRANCH" >> "$GITHUB_OUTPUT"
@@ -302,11 +306,15 @@ jobs:
       - name: Create and push signed tag
         env:
           VERSION: ${{ needs.prepare-release.outputs.version }}
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
           TAG="v${VERSION}"
 
           git config user.name "Miniflux Release Bot"
           git config user.email "release@reuteras.net"
+
+          # Configure git to use token for pull/push (avoids persisting credentials)
+          git remote set-url origin "https://x-access-token:${GH_TOKEN}@github.com/${GITHUB_REPOSITORY}.git"
 
           # Ensure we're on latest main
           git pull --ff-only origin main
