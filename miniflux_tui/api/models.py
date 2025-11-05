@@ -22,6 +22,37 @@ class Category:
 
 
 @dataclass
+class Enclosure:
+    """Represents a media enclosure (image, audio, video) attached to an entry."""
+
+    id: int
+    user_id: int
+    entry_id: int
+    url: str
+    mime_type: str
+    size: int
+    media_progression: int = 0
+
+    @classmethod
+    def from_dict(cls, data: dict) -> "Enclosure":
+        """Create an Enclosure from API response data."""
+        return cls(
+            id=data["id"],
+            user_id=data["user_id"],
+            entry_id=data["entry_id"],
+            url=data["url"],
+            mime_type=data["mime_type"],
+            size=data["size"],
+            media_progression=data.get("media_progression", 0),
+        )
+
+    @property
+    def is_image(self) -> bool:
+        """Check if this enclosure is an image."""
+        return self.mime_type.startswith("image/")
+
+
+@dataclass
 class Feed:
     """Represents a Miniflux feed."""
 
@@ -70,10 +101,16 @@ class Entry:
     starred: bool
     published_at: datetime
     original_content: str | None = None
+    enclosures: list[Enclosure] | None = None
 
     @classmethod
     def from_dict(cls, data: dict) -> "Entry":
         """Create an Entry from API response data."""
+        # Parse enclosures if present
+        enclosures = None
+        if data.get("enclosures"):
+            enclosures = [Enclosure.from_dict(enc) for enc in data["enclosures"]]
+
         return cls(
             id=data["id"],
             feed_id=data["feed_id"],
@@ -85,6 +122,7 @@ class Entry:
             starred=data["starred"],
             published_at=datetime.fromisoformat(data["published_at"].replace("Z", "+00:00")),
             original_content=data.get("original_content"),
+            enclosures=enclosures,
         )
 
     @property
@@ -96,3 +134,10 @@ class Entry:
     def is_unread(self) -> bool:
         """Check if entry is marked as unread."""
         return self.status == "unread"
+
+    @property
+    def image_enclosures(self) -> list[Enclosure]:
+        """Get all image enclosures for this entry."""
+        if not self.enclosures:
+            return []
+        return [enc for enc in self.enclosures if enc.is_image]
