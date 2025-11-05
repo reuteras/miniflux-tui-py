@@ -1,3 +1,4 @@
+# SPDX-License-Identifier: MIT
 """Atheris-based fuzz target for configuration parsing."""
 
 from __future__ import annotations

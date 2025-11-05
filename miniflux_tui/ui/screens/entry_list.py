@@ -1,3 +1,4 @@
+# SPDX-License-Identifier: MIT
 """Entry list screen with feed sorting capabilities."""
 
 from contextlib import suppress

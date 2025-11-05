@@ -1,3 +1,4 @@
+# SPDX-License-Identifier: MIT
 """Help screen showing keyboard shortcuts and application information."""
 
 import platform

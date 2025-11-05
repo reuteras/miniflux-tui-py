@@ -1,3 +1,4 @@
+# SPDX-License-Identifier: MIT
 """Input dialog screen for requesting user input."""
 
 from collections.abc import Callable

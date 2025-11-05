@@ -1,3 +1,4 @@
+# SPDX-License-Identifier: MIT
 """Security utilities for input validation and sanitization."""
 
 import re

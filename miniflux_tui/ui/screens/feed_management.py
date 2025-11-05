@@ -1,3 +1,4 @@
+# SPDX-License-Identifier: MIT
 """Feed management screen for viewing and managing feeds."""
 
 import asyncio

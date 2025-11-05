@@ -1,3 +1,4 @@
+# SPDX-License-Identifier: MIT
 """Scraping rule helper module for finding optimal content extraction rules."""
 
 from miniflux_tui.scraping.analyzer import ContentAnalyzer

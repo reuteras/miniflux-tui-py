@@ -1,3 +1,4 @@
+# SPDX-License-Identifier: MIT
 """Security tests for input validation and sanitization."""
 
 import pytest
