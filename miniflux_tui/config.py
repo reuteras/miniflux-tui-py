@@ -330,7 +330,7 @@ def create_default_config() -> Path:
         Path to the created config file
     """
     config_dir = Path(get_config_dir())
-    config_dir.mkdir(parents=True, exist_ok=True)
+    config_dir.mkdir(parents=True, exist_ok=True, mode=0o700)  # Secure permissions for config directory
 
     config_path = config_dir / "config.toml"
 
