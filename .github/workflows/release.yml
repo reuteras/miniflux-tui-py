@@ -41,7 +41,6 @@ jobs:
         with:
           fetch-depth: 0
           token: ${{ secrets.GITHUB_TOKEN }}
-          persist-credentials: false
 
       - name: Install uv
         uses: astral-sh/setup-uv@85856786d1ce8acfbcc2f13a5f3fbd6b938f9f41 # v7
@@ -296,7 +295,6 @@ jobs:
           ref: main
           fetch-depth: 0
           token: ${{ secrets.GITHUB_TOKEN }}
-          persist-credentials: false
 
       - name: Setup Gitsign
         uses: chainguard-dev/actions/setup-gitsign@1b32103f5aa389c31ab0be75a8edc38d7e4750d8 # main
