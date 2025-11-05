@@ -217,17 +217,60 @@ jobs:
             exit 1
           fi
 
-      - name: Merge PR
+      - name: Enable auto-merge
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           PR_NUMBER: ${{ needs.prepare-release.outputs.pr_number }}
         run: |
-          # Merge immediately (not --auto) since we already waited for CI checks
-          gh pr merge "$PR_NUMBER" --squash --delete-branch
+          # Enable auto-merge - PR will be merged automatically after required approvals
+          # (auto-approve.yml provides 1 approval, need 1 more manual approval)
+          gh pr merge "$PR_NUMBER" --auto --squash --delete-branch
+          echo "::notice::Auto-merge enabled for PR #$PR_NUMBER - waiting for required approvals"
 
-          # Wait for merge to fully propagate
-          echo "Waiting for merge to propagate..."
-          sleep 5
+      - name: Wait for PR to be merged
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          PR_NUMBER: ${{ needs.prepare-release.outputs.pr_number }}
+        run: |
+          MAX_WAIT=1800  # 30 minutes - allows time for manual approval
+          ELAPSED=0
+          CHECK_INTERVAL=30  # Check every 30 seconds
+
+          echo "Waiting for PR #$PR_NUMBER to be merged (requires 2 approvals)..."
+          echo "- Auto-approve workflow provides 1 approval"
+          echo "- Requires 1 more manual approval from code owner"
+
+          while [ $ELAPSED -lt $MAX_WAIT ]; do
+            # Check if PR is merged
+            PR_STATE=$(gh pr view "$PR_NUMBER" --json state --jq '.state')
+
+            if [ "$PR_STATE" = "MERGED" ]; then
+              echo "✅ PR #$PR_NUMBER has been merged!"
+              # Wait a bit longer for merge to fully propagate to all systems
+              echo "Waiting 10 seconds for merge to propagate..."
+              sleep 10
+              exit 0
+            fi
+
+            # Check if PR was closed without merging
+            if [ "$PR_STATE" = "CLOSED" ]; then
+              echo "::error::PR #$PR_NUMBER was closed without merging"
+              exit 1
+            fi
+
+            # Show approval status
+            REVIEW_DECISION=$(gh pr view "$PR_NUMBER" --json reviewDecision --jq '.reviewDecision // "PENDING"')
+            APPROVALS=$(gh pr view "$PR_NUMBER" --json reviews --jq '[.reviews[] | select(.state == "APPROVED")] | length')
+
+            echo "Status: $PR_STATE | Approvals: $APPROVALS/2 | Review Decision: $REVIEW_DECISION (${ELAPSED}s/${MAX_WAIT}s)"
+
+            sleep "$CHECK_INTERVAL"
+            ELAPSED=$((ELAPSED + CHECK_INTERVAL))
+          done
+
+          echo "::error::Timeout waiting for PR #$PR_NUMBER to be merged after ${MAX_WAIT} seconds"
+          echo "::error::Manual approval may be required. Please approve the PR and the workflow will continue."
+          exit 1
 
   create-tag:
     needs: [prepare-release, auto-merge]
