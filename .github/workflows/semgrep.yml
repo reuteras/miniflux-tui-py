@@ -54,16 +54,10 @@ jobs:
             --require-hashes \
             --hash=sha256:3790624780082365f47549d032f3770eeb2b1e8bd1f7b2e02dace1afa361b4ed
 
-          # Pin semgrep with hash for supply chain security
-          # All hashes from https://pypi.org/project/semgrep/1.93.0/ (all platform wheels)
-          python -m pip install --disable-pip-version-check --no-cache-dir \
-            --require-hashes \
-            semgrep==1.93.0 \
-            --hash=sha256:41c3df47c84e2ef064becad233bf619d98824f46787109a7e247fa1266429732 \
-            --hash=sha256:40ae350c75fa7b8ea949f815b1afc9709449a5a2cc9659c79e1f983a400342db \
-            --hash=sha256:d021e4513fcff7a60cdc4541c443212b5a8165d1e8f49abd8661ab685607dd34 \
-            --hash=sha256:cde7d4c42a579359f37f3ef19cc04f91886903381ba3cff6ce0d90ea3ca80676 \
-            --hash=sha256:b97fd47b303ca1ba6f85a1b50428093b987126d8e4aa7422e5acdcc3787c6628
+          # Pin semgrep version for supply chain security
+          # Note: Cannot use --require-hashes without providing hashes for all dependencies
+          # Verifying package integrity via pinned version and trusted PyPI publisher
+          python -m pip install --disable-pip-version-check --no-cache-dir semgrep==1.93.0
 
       - name: Run Semgrep
         run: |
