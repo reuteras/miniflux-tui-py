@@ -4,14 +4,7 @@ name: CodeQL Analysis
 on:
   push:
     branches: [main]
-    paths:
-      - 'miniflux_tui/**'
-      - 'tests/**'
-      - 'fuzz/**'
-      - 'pyproject.toml'
-      - 'uv.lock'
-      - '.github/workflows/**'
-      - '.github/codeql/**'
+    # No paths filter - CodeQL must run on ALL commits for OpenSSF Scorecard 10/10
   pull_request:
     branches: [main]
     paths:
