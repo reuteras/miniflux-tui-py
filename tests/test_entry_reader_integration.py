@@ -1,3 +1,4 @@
+# SPDX-License-Identifier: MIT
 """Integration tests for EntryReaderScreen using Textual TestApp."""
 
 from datetime import UTC, datetime

@@ -1,3 +1,4 @@
+# SPDX-License-Identifier: MIT
 """HTML content analyzer for suggesting scraping rules."""
 
 from typing import Any, ClassVar

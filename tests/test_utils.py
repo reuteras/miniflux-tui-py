@@ -1,3 +1,4 @@
+# SPDX-License-Identifier: MIT
 """Tests for utility functions."""
 
 import tomllib

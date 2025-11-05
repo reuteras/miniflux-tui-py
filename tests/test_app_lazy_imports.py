@@ -1,3 +1,4 @@
+# SPDX-License-Identifier: MIT
 from miniflux_tui.config import Config
 from miniflux_tui.ui.app import (
     MinifluxTuiApp,

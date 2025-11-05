@@ -1,3 +1,4 @@
+# SPDX-License-Identifier: MIT
 """Settings screen showing user information and integrations."""
 
 from textual.app import ComposeResult

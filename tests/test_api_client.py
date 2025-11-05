@@ -1,3 +1,4 @@
+# SPDX-License-Identifier: MIT
 """Tests for Miniflux API client wrapper."""
 
 from unittest.mock import MagicMock, patch

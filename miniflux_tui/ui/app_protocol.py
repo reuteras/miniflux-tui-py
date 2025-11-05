@@ -1,3 +1,4 @@
+# SPDX-License-Identifier: MIT
 """Protocol definition for MinifluxTUI app interface.
 
 This module provides a Protocol that defines the interface screens expect from
