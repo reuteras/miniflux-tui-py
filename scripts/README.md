@@ -25,9 +25,9 @@ Multi-account PR approval and release monitoring script that automates the PR wo
 **Prerequisites:**
 1. GitHub CLI (`gh`) installed and authenticated
 2. Multiple GitHub accounts configured with `gh auth login`:
-   - `reuteras` (primary maintainer account)
-   - `reuteras-review` (review account)
-   - `reuteras-renovate` (automation account)
+    - `reuteras` (primary maintainer account)
+    - `reuteras-review` (review account)
+    - `reuteras-renovate` (automation account)
 3. Accounts must have write access to the repository
 4. Accounts must be configured in `.github/CODEOWNERS` if code owner review is required
 
@@ -66,10 +66,10 @@ chmod +x scripts/approve_pr.sh
 1. **Validation**: Checks if PR exists and is accessible
 2. **Convert to Ready**: Marks draft PR as ready for review (if needed)
 3. **Multi-Account Approval**: Switches between accounts and approves:
-   - Switches to `reuteras` → approves
-   - Switches to `reuteras-review` → approves
-   - Switches to `reuteras-renovate` → approves
-   - Skips accounts that are already approved or unavailable
+    - Switches to `reuteras` → approves
+    - Switches to `reuteras-review` → approves
+    - Switches to `reuteras-renovate` → approves
+    - Skips accounts that are already approved or unavailable
 4. **CI Monitoring**: Waits for all status checks to pass (max 30 min)
 5. **Merge Monitoring**: Waits for PR to be auto-merged (max 10 min)
 6. **Release Monitoring**: Waits for release workflow to complete (max 30 min, optional)
@@ -126,13 +126,13 @@ chmod +x scripts/approve_pr.sh
 
 **Troubleshooting:**
 
-| Issue | Solution |
-|-------|----------|
-| "Failed to switch to account" | Run `gh auth login` for the missing account |
-| "Failed to approve PR" | Check account has write permissions to repo |
-| "Timeout waiting for CI checks" | Check GitHub Actions for failing tests |
-| "PR was not auto-merged" | Verify branch protection rules allow auto-merge |
-| "Release workflow did not complete" | Check if version tag was created and workflow triggered |
+| Issue                                  | Solution                                                          |
+|----------------------------------------|-------------------------------------------------------------------|
+| "Failed to switch to account"          | Run `gh auth login` for the missing account                      |
+| "Failed to approve PR"                 | Check account has write permissions to repo                       |
+| "Timeout waiting for CI checks"        | Check GitHub Actions for failing tests                            |
+| "PR was not auto-merged"               | Verify branch protection rules allow auto-merge                   |
+| "Release workflow did not complete"    | Check if version tag was created and workflow triggered           |
 
 **Notes:**
 
@@ -212,10 +212,10 @@ uv run scripts/build_binary.py
 When adding new scripts:
 
 1. Follow bash best practices:
-   - Use `set -euo pipefail` for error handling
-   - Add clear comments and documentation
-   - Include usage examples
-   - Add colored output for better UX
+    - Use `set -euo pipefail` for error handling
+    - Add clear comments and documentation
+    - Include usage examples
+    - Add colored output for better UX
 2. Make scripts executable: `chmod +x scripts/your_script.sh`
 3. Update this README with script description and usage
 4. Test thoroughly before committing

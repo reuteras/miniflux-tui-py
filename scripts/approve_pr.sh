@@ -131,7 +131,7 @@ approve_pr() {
 # Function to wait for CI checks to pass
 wait_for_checks() {
     local pr_number=$1
-    local max_wait=1800  # 30 minutes
+    local max_wait=1800 # 30 minutes
     local elapsed=0
     local interval=30
 
@@ -171,7 +171,7 @@ wait_for_checks() {
 # Function to wait for PR to be merged
 wait_for_merge() {
     local pr_number=$1
-    local max_wait=600  # 10 minutes
+    local max_wait=600 # 10 minutes
     local elapsed=0
     local interval=10
 
@@ -198,7 +198,7 @@ wait_for_merge() {
 # Function to wait for release workflow
 wait_for_release() {
     local pr_number=$1
-    local max_wait=1800  # 30 minutes
+    local max_wait=1800 # 30 minutes
     local elapsed=0
     local interval=30
 
@@ -229,7 +229,7 @@ wait_for_release() {
             continue
         fi
 
-        IFS='|' read -r status conclusion <<< "$workflow_status"
+        IFS='|' read -r status conclusion <<<"$workflow_status"
 
         if [ "$status" = "completed" ]; then
             if [ "$conclusion" = "success" ]; then
