@@ -1,3 +1,4 @@
+# SPDX-License-Identifier: MIT
 """Headless smoke tests for the Textual application."""
 
 from typing import cast

@@ -1,3 +1,4 @@
+# SPDX-License-Identifier: MIT
 """Data models for Miniflux API."""
 
 from dataclasses import dataclass

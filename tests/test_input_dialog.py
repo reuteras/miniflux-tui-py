@@ -1,3 +1,4 @@
+# SPDX-License-Identifier: MIT
 """Tests for InputDialog screen."""
 
 from textual.app import App, ComposeResult
