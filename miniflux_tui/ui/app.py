@@ -109,9 +109,9 @@ class MinifluxTuiApp(App):
 
     /* Help screen logo styling */
     .help-logo {
-        height: 8;
-        width: 30;
-        margin: 0 0 1 0;
+        max-height: 15;
+        width: auto;
+        margin: 0;
         padding: 0;
         content-align: center middle;
     }
