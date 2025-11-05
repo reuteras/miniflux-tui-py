@@ -5,6 +5,7 @@ import re
 import traceback
 import webbrowser
 from contextlib import suppress
+from typing import TYPE_CHECKING
 from urllib.parse import urlparse
 
 import html2text
@@ -13,7 +14,6 @@ from textual.binding import Binding
 from textual.containers import VerticalScroll
 from textual.screen import Screen
 from textual.widgets import Footer, Header, Markdown, Static
-from textual_image.widget import Image
 
 from miniflux_tui.api.models import Entry
 from miniflux_tui.constants import CONTENT_SEPARATOR
@@ -23,6 +23,21 @@ from miniflux_tui.utils import (
     get_star_icon,
     is_valid_image_url,
 )
+
+# Optional image support - gracefully handle when textual-image is not available
+# Use TYPE_CHECKING to avoid import errors during static analysis when library is not installed
+if TYPE_CHECKING:
+    from textual_image.widget import Image
+
+    IMAGE_SUPPORT: bool
+else:
+    try:
+        from textual_image.widget import Image
+
+        IMAGE_SUPPORT = True
+    except ImportError:
+        IMAGE_SUPPORT = False
+        Image = None  # type: ignore[assignment]
 
 
 class EntryReaderScreen(Screen):
@@ -452,20 +467,37 @@ class EntryReaderScreen(Screen):
 
     def _mount_content(self, scroll: VerticalScroll):
         """Mount entry content widget (converted HTML to Markdown) and images."""
-        # Display images if enabled
-        if self.show_images:
+        # Display images if enabled and image support is available
+        if self.show_images and IMAGE_SUPPORT:
             image_urls = self._get_image_urls()
             if image_urls:
                 scroll.mount(Static("[bold]Images:[/bold]", classes="images-header"))
                 for url in image_urls:
                     try:
                         # Mount image widget with error handling
-                        scroll.mount(Image(url, classes="entry-image"))
+                        if Image is not None:
+                            scroll.mount(Image(url, classes="entry-image"))
                     except Exception as e:
                         self.log(f"Error loading image {url}: {e}")
                         # Show a text placeholder if image fails to load
                         scroll.mount(Static(f"[dim]Image: {url}[/dim]", classes="image-placeholder"))
 
+                scroll.mount(Static(CONTENT_SEPARATOR, classes="separator"))
+        elif self.show_images and not IMAGE_SUPPORT:
+            # Show helpful message if user tries to enable images but support isn't available
+            image_urls = self._get_image_urls()
+            if image_urls:
+                scroll.mount(
+                    Static(
+                        "[yellow]Image support not available. Install with: pip install miniflux-tui-py[images][/yellow]",
+                        classes="image-warning",
+                    )
+                )
+                scroll.mount(Static("[bold]Image URLs:[/bold]", classes="images-header"))
+                for url in image_urls[:5]:  # Limit to first 5 to avoid clutter
+                    scroll.mount(Static(f"[dim]• {url}[/dim]", classes="image-url"))
+                if len(image_urls) > 5:
+                    scroll.mount(Static(f"[dim]... and {len(image_urls) - 5} more[/dim]", classes="image-url"))
                 scroll.mount(Static(CONTENT_SEPARATOR, classes="separator"))
 
         # Mount text content

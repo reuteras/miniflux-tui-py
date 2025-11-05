@@ -37,10 +37,7 @@ def main() -> None:
 
     # Exclude virtual environments and build directories
     exclude_patterns = {"venv", ".venv", "env", ".env", "build", "dist", ".git", "__pycache__", "node_modules"}
-    python_files = [
-        f for f in python_files
-        if not any(part in exclude_patterns for part in f.parts)
-    ]
+    python_files = [f for f in python_files if not any(part in exclude_patterns for part in f.parts)]
 
     modified_count = 0
     for file_path in sorted(python_files):
