@@ -11,6 +11,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - use SCORECARD_TOKEN instead of GITHUB_TOKEN for scorecard action (#430)
 - make release workflow PR creation more robust (#436)
 - ensure release PR is fully merged before creating tag (#438)
+- enable auto-merge and poll for PR merge completion in release workflow (#441)
+- add Gitsign commit signing to release workflow (#442)
 
 ### DOCUMENTATION
 
@@ -27,6 +29,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - update all Python dependencies and pre-commit hooks (#428)
 - Release v0.5.9 (#437)
+- Release v0.5.6 (#440)
 
 
 
