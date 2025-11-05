@@ -285,27 +285,58 @@ This ensures all commits are verified and trusted.
 
 ### GitHub Branch Protection Rules (main branch)
 
-The main branch has protection rules enabled via GitHub Settings. These prevent direct pushes and enforce quality standards:
+The main branch has protection rules enabled via GitHub Settings. These prevent direct pushes and enforce quality standards.
 
-**To configure branch protection on main:**
+**⚠️ CRITICAL: For OpenSSF Scorecard Perfect Score (10/10)**
 
-1. Go to **Settings** → **Branches** → **Add rule**
+The project aims for a perfect 10/10 on OpenSSF Scorecard's Branch-Protection check. This requires specific settings that must ALL be enabled (tiered scoring - each tier must be fully satisfied).
+
+**To configure branch protection for 10/10 Scorecard score:**
+
+1. Go to **Settings** → **Branches** → **Add rule** (or edit existing rule)
 2. Apply to `main` branch
 3. Enable these settings:
-- ✅ **Require a pull request before merging**
-  - Require approvals: 0 (adjust if peer review needed)
-  - Dismiss stale pull request approvals when new commits are pushed: ✓
-- ✅ **Require status checks to pass before merging**
-  - Require branches to be up to date before merging: ✓
-  - Select required checks: All CI checks (test, docs-deploy)
-- ✅ **Include administrators** (optional, for consistency)
-- ✅ **Restrict who can push to matching branches** (optional, admin-only)
 
-These settings ensure:
-- No one can push directly to main (must use PRs)
-- All CI tests and checks must pass
-- PRs cannot be merged until branch is up-to-date
-- Stale reviews are dismissed when new commits are pushed
+#### Pull Request Requirements
+- ✅ **Require a pull request before merging**
+  - **Require approvals: 2** (minimum 2 reviewers for Tier 4)
+  - ✅ **Dismiss stale pull request approvals when new commits are pushed** (Tier 2 & 5)
+  - ✅ **Require review from Code Owners** (Tier 4 - requires .github/CODEOWNERS)
+  - ✅ **Require approval of the most recent reviewable push** (Tier 2)
+
+#### Status Check Requirements
+- ✅ **Require status checks to pass before merging** (Tier 3)
+  - ✅ **Require branches to be up to date before merging** (Tier 2)
+  - Select required checks: All CI checks (test, docs-deploy, scorecard, etc.)
+
+#### Branch Rules
+- ✅ **Do not allow bypassing the above settings** (Tier 5)
+  - ✅ **Include administrators** (Tier 5 - CRITICAL for 10/10)
+- ✅ **Allow force pushes: DISABLED** (Tier 1 - ensure unchecked)
+- ✅ **Allow deletions: DISABLED** (Tier 1 - ensure unchecked)
+
+#### Code Owners Configuration
+The `.github/CODEOWNERS` file must be configured with review accounts:
+- `@reuteras` - Primary maintainer
+- `@reuteras-review` - Review account (second reviewer)
+
+**OpenSSF Scorecard Tier Requirements:**
+- **Tier 1 (3 pts)**: Prevent force push + prevent branch deletion
+- **Tier 2 (6 pts)**: ≥1 reviewer, require PRs for admins, branch up-to-date, approve latest push
+- **Tier 3 (8 pts)**: ≥1 status check required
+- **Tier 4 (9 pts)**: ≥2 reviewers + code owner review
+- **Tier 5 (10 pts)**: Dismiss stale reviews + include administrators
+
+**These settings ensure:**
+- ✅ No one (including admins) can push directly to main - must use PRs
+- ✅ All CI tests and checks must pass before merge
+- ✅ Minimum 2 reviewers required for every PR
+- ✅ Code owners must review all changes
+- ✅ PRs cannot be merged until branch is up-to-date with main
+- ✅ Stale reviews are dismissed when new commits are pushed
+- ✅ Branch cannot be force-pushed or deleted
+- ✅ Administrators are subject to the same rules (no bypass)
+- ✅ Perfect 10/10 OpenSSF Scorecard Branch-Protection score
 
 ### Common Commands
 ```bash
