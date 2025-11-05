@@ -10,7 +10,7 @@ set -euo pipefail
 echo "Updating branch protection for main branch..."
 
 gh api -X PUT repos/reuteras/miniflux-tui-py/branches/main/protection \
-    --input - << 'EOF'
+    --input - <<'EOF'
 {
     "required_pull_request_reviews": {
         "dismiss_stale_reviews": true,
