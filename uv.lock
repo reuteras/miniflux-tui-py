@@ -613,7 +613,7 @@ wheels = [
 
 [[package]]
 name = "miniflux-tui-py"
-version = "0.5.6"
+version = "0.5.7"
 source = { editable = "." }
 dependencies = [
     { name = "beautifulsoup4" },
