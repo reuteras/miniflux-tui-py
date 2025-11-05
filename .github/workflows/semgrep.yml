@@ -48,15 +48,10 @@ jobs:
 
       - name: Install Semgrep CLI
         run: |
-          # Pin pip with hash for supply chain security
-          # Hash from https://pypi.org/project/pip/24.3.1/
-          python -m pip install --upgrade pip==24.3.1 \
-            --require-hashes \
-            --hash=sha256:3790624780082365f47549d032f3770eeb2b1e8bd1f7b2e02dace1afa361b4ed
+          # Upgrade pip first
+          python -m pip install --upgrade pip==24.3.1
 
           # Pin semgrep version for supply chain security
-          # Note: Cannot use --require-hashes without providing hashes for all dependencies
-          # Verifying package integrity via pinned version and trusted PyPI publisher
           python -m pip install --disable-pip-version-check --no-cache-dir semgrep==1.93.0
 
       - name: Run Semgrep
