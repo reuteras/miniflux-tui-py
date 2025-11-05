@@ -27,7 +27,7 @@ from miniflux_tui.utils import (
 # Optional image support - gracefully handle when textual-image is not available
 # Use TYPE_CHECKING to avoid import errors during static analysis when library is not installed
 if TYPE_CHECKING:
-    from textual_image.widget import Image
+    from textual_image.widget import Image  # type: ignore[import-not-found]
 
     IMAGE_SUPPORT: bool
 else:

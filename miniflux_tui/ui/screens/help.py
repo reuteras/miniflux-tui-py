@@ -18,7 +18,7 @@ from miniflux_tui.utils import get_app_version
 
 # Optional image support - same pattern as entry_reader.py
 if TYPE_CHECKING:
-    from textual_image.widget import Image
+    from textual_image.widget import Image  # type: ignore[import-not-found]
 
     IMAGE_SUPPORT: bool
 else:
