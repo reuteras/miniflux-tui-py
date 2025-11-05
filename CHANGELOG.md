@@ -13,6 +13,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - ensure release PR is fully merged before creating tag (#438)
 - enable auto-merge and poll for PR merge completion in release workflow (#441)
 - add Gitsign commit signing to release workflow (#442)
+- handle PR number suffix in release commit message validation (#444)
+- enable auto-merge and poll for PR merge completion in release workflow (#445)
 
 ### DOCUMENTATION
 
@@ -30,6 +32,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - update all Python dependencies and pre-commit hooks (#428)
 - Release v0.5.9 (#437)
 - Release v0.5.6 (#440)
+- Release v0.5.6 (#443)
 
 
 
