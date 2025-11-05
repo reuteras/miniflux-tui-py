@@ -1,3 +1,4 @@
+# SPDX-License-Identifier: MIT
 """Tests for main entry point and CLI argument handling."""
 
 import sys

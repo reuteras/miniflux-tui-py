@@ -1,3 +1,4 @@
+# SPDX-License-Identifier: MIT
 """Configuration management for Miniflux TUI."""
 
 from __future__ import annotations

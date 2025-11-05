@@ -1,3 +1,4 @@
+# SPDX-License-Identifier: MIT
 """Utility functions and helpers for miniflux-tui."""
 
 from __future__ import annotations

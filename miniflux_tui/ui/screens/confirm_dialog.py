@@ -1,3 +1,4 @@
+# SPDX-License-Identifier: MIT
 """Confirmation dialog screen for destructive operations."""
 
 from collections.abc import Callable

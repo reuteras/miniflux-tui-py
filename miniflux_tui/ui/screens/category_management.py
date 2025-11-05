@@ -1,3 +1,4 @@
+# SPDX-License-Identifier: MIT
 """Category management screen for viewing and managing categories."""
 
 # pylint: disable=no-value-for-parameter

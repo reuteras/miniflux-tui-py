@@ -1,3 +1,4 @@
+# SPDX-License-Identifier: MIT
 """Performance optimization utilities for screen refresh and caching."""
 
 import time

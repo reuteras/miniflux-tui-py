@@ -1,3 +1,4 @@
+# SPDX-License-Identifier: MIT
 """Tests for configuration management."""
 
 # pylint: disable=protected-access

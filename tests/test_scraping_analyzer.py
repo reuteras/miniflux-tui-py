@@ -1,3 +1,4 @@
+# SPDX-License-Identifier: MIT
 """Tests for HTML content analyzer."""
 
 from miniflux_tui.scraping.analyzer import ContentAnalyzer

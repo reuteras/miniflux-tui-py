@@ -1,3 +1,4 @@
+# SPDX-License-Identifier: MIT
 """Entry history screen showing previously read entries."""
 
 from miniflux_tui.ui.screens.entry_list import EntryListScreen

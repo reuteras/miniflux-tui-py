@@ -1,3 +1,4 @@
+# SPDX-License-Identifier: MIT
 """Type protocols shared across UI components."""
 
 from __future__ import annotations

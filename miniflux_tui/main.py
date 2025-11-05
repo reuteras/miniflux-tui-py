@@ -1,3 +1,4 @@
+# SPDX-License-Identifier: MIT
 """Main entry point for Miniflux TUI application."""
 
 import argparse
