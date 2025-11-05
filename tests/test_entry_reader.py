@@ -692,15 +692,15 @@ class TestEntryReaderScreenRefresh:
         mock_scroll.mount.assert_called_once()
 
     def test_mount_content_creates_markdown_widget(self, sample_entry):
-        """Test _mount_content creates Markdown widget."""
+        """Test _mount_content creates Markdown widget and link indicator."""
         screen = EntryReaderScreen(entry=sample_entry)
         mock_scroll = MagicMock()
 
         # Call method
         screen._mount_content(mock_scroll)
 
-        # Verify mount was called
-        mock_scroll.mount.assert_called_once()
+        # Verify mount was called twice (Markdown + link indicator)
+        assert mock_scroll.mount.call_count == 2
 
 
 class TestEntryReaderScreenOtherActions:
@@ -1268,3 +1268,207 @@ class TestEntryReaderHelperMethods:
         """Test _mount_entry_content method exists."""
         screen = EntryReaderScreen(entry=sample_entry)
         assert callable(screen._mount_entry_content)
+
+
+class TestEntryReaderLinkNavigation:
+    """Test link navigation functionality."""
+
+    def test_extract_links_from_markdown(self, sample_entry):
+        """Test _extract_links extracts markdown-style links."""
+        screen = EntryReaderScreen(entry=sample_entry)
+        markdown = "[Link 1](http://localhost:8080) and [Link 2](http://localhost:8081)"
+
+        links = screen._extract_links(markdown)
+
+        assert len(links) == 2
+        assert links[0]["text"] == "Link 1"
+        assert links[0]["url"] == "http://localhost:8080"
+        assert links[1]["text"] == "Link 2"
+        assert links[1]["url"] == "http://localhost:8081"
+
+    def test_extract_links_from_plain_urls(self, sample_entry):
+        """Test _extract_links extracts plain URLs."""
+        screen = EntryReaderScreen(entry=sample_entry)
+        markdown = "Visit http://localhost:8080 and https://localhost:8081"
+
+        links = screen._extract_links(markdown)
+
+        assert len(links) >= 2
+        # Should extract both URLs
+        urls = [link["url"] for link in links]
+        assert "http://localhost:8080" in urls
+        assert "https://localhost:8081" in urls
+
+    def test_extract_links_empty_content(self, sample_entry):
+        """Test _extract_links handles empty content."""
+        screen = EntryReaderScreen(entry=sample_entry)
+        markdown = ""
+
+        links = screen._extract_links(markdown)
+
+        assert len(links) == 0
+
+    def test_extract_links_no_links(self, sample_entry):
+        """Test _extract_links handles content with no links."""
+        screen = EntryReaderScreen(entry=sample_entry)
+        markdown = "This is plain text with no links."
+
+        links = screen._extract_links(markdown)
+
+        assert len(links) == 0
+
+    def test_action_next_link_exists(self, sample_entry):
+        """Test action_next_link method exists and is callable."""
+        screen = EntryReaderScreen(entry=sample_entry)
+        assert hasattr(screen, "action_next_link")
+        assert callable(screen.action_next_link)
+
+    def test_action_previous_link_exists(self, sample_entry):
+        """Test action_previous_link method exists and is callable."""
+        screen = EntryReaderScreen(entry=sample_entry)
+        assert hasattr(screen, "action_previous_link")
+        assert callable(screen.action_previous_link)
+
+    def test_action_open_focused_link_exists(self, sample_entry):
+        """Test action_open_focused_link method exists and is callable."""
+        screen = EntryReaderScreen(entry=sample_entry)
+        assert hasattr(screen, "action_open_focused_link")
+        assert callable(screen.action_open_focused_link)
+
+    def test_action_clear_link_focus_exists(self, sample_entry):
+        """Test action_clear_link_focus method exists and is callable."""
+        screen = EntryReaderScreen(entry=sample_entry)
+        assert hasattr(screen, "action_clear_link_focus")
+        assert callable(screen.action_clear_link_focus)
+
+    def test_next_link_no_links(self, sample_entry):
+        """Test next_link action when no links are available."""
+        screen = EntryReaderScreen(entry=sample_entry)
+        screen.links = []
+        screen.notify = MagicMock()
+
+        screen.action_next_link()
+
+        # Should notify user
+        screen.notify.assert_called_once()
+        assert "no links" in screen.notify.call_args[0][0].lower()
+
+    def test_next_link_navigation(self, sample_entry):
+        """Test next_link navigates through links."""
+        screen = EntryReaderScreen(entry=sample_entry)
+        screen.links = [
+            {"text": "Link 1", "url": "http://localhost:8080/1"},
+            {"text": "Link 2", "url": "http://localhost:8080/2"},
+        ]
+        screen.link_indicator = MagicMock()
+
+        # First call should set focus to first link
+        screen.action_next_link()
+        assert screen.focused_link_index == 0
+
+        # Second call should move to second link
+        screen.action_next_link()
+        assert screen.focused_link_index == 1
+
+        # Third call should wrap around to first link
+        screen.action_next_link()
+        assert screen.focused_link_index == 0
+
+    def test_previous_link_navigation(self, sample_entry):
+        """Test previous_link navigates backwards through links."""
+        screen = EntryReaderScreen(entry=sample_entry)
+        screen.links = [
+            {"text": "Link 1", "url": "http://localhost:8080/1"},
+            {"text": "Link 2", "url": "http://localhost:8080/2"},
+        ]
+        screen.link_indicator = MagicMock()
+
+        # First call should set focus to last link
+        screen.action_previous_link()
+        assert screen.focused_link_index == 1
+
+        # Second call should move to first link
+        screen.action_previous_link()
+        assert screen.focused_link_index == 0
+
+        # Third call should wrap around to last link
+        screen.action_previous_link()
+        assert screen.focused_link_index == 1
+
+    def test_open_focused_link_no_focus(self, sample_entry):
+        """Test open_focused_link when no link is focused."""
+        screen = EntryReaderScreen(entry=sample_entry)
+        screen.focused_link_index = None
+        screen.links = [{"text": "Link", "url": "http://localhost:8080"}]
+        screen.notify = MagicMock()
+
+        screen.action_open_focused_link()
+
+        # Should notify user
+        screen.notify.assert_called_once()
+        assert "no link focused" in screen.notify.call_args[0][0].lower()
+
+    def test_open_focused_link_success(self, sample_entry):
+        """Test open_focused_link opens the focused link."""
+        screen = EntryReaderScreen(entry=sample_entry)
+        screen.links = [{"text": "Test Link", "url": "http://localhost:8080"}]
+        screen.focused_link_index = 0
+        screen.notify = MagicMock()
+
+        with mock.patch("miniflux_tui.ui.screens.entry_reader.webbrowser.open") as mock_open:
+            screen.action_open_focused_link()
+
+            mock_open.assert_called_once_with("http://localhost:8080")
+            screen.notify.assert_called_once()
+
+    def test_clear_link_focus(self, sample_entry):
+        """Test clear_link_focus clears the focused link."""
+        screen = EntryReaderScreen(entry=sample_entry)
+        screen.focused_link_index = 0
+        screen.link_indicator = MagicMock()
+        screen.notify = MagicMock()
+
+        screen.action_clear_link_focus()
+
+        assert screen.focused_link_index is None
+        screen.notify.assert_called_once()
+
+    def test_update_link_indicator_with_focused_link(self, sample_entry):
+        """Test _update_link_indicator updates display with focused link."""
+        screen = EntryReaderScreen(entry=sample_entry)
+        screen.links = [{"text": "Test Link", "url": "http://localhost:8080"}]
+        screen.focused_link_index = 0
+        screen.link_indicator = MagicMock()
+
+        screen._update_link_indicator()
+
+        # Should update the indicator
+        screen.link_indicator.update.assert_called_once()
+        # The call should contain link information
+        call_args = screen.link_indicator.update.call_args[0][0]
+        assert "1/1" in call_args  # Link counter
+        assert "Test Link" in call_args
+
+    def test_update_link_indicator_no_focus(self, sample_entry):
+        """Test _update_link_indicator clears display when no focus."""
+        screen = EntryReaderScreen(entry=sample_entry)
+        screen.focused_link_index = None
+        screen.link_indicator = MagicMock()
+
+        screen._update_link_indicator()
+
+        # Should clear the indicator
+        screen.link_indicator.update.assert_called_once_with("")
+
+    def test_link_navigation_bindings_exist(self, sample_entry):
+        """Test link navigation key bindings are configured."""
+        screen = EntryReaderScreen(entry=sample_entry)
+        binding_keys = [b.key for b in screen.BINDINGS]  # type: ignore[attr-defined]
+
+        # Check for link navigation bindings
+        assert "tab" in binding_keys
+        assert "shift+tab" in binding_keys
+        assert "n" in binding_keys
+        assert "p" in binding_keys
+        assert "enter" in binding_keys
+        assert "c" in binding_keys

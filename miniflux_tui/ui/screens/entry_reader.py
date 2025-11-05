@@ -1,5 +1,6 @@
 """Entry reader screen for viewing feed entry content."""
 
+import re
 import traceback
 import webbrowser
 from contextlib import suppress
@@ -35,6 +36,12 @@ class EntryReaderScreen(Screen):
         Binding("o", "open_browser", "Open in Browser"),
         Binding("f", "fetch_original", "Fetch Original"),
         Binding("X", "scraping_helper", "Scraping Helper"),
+        Binding("tab", "next_link", "Next Link", show=True),
+        Binding("shift+tab", "previous_link", "Previous Link", show=True),
+        Binding("n", "next_link", "Next Link", show=False),
+        Binding("p", "previous_link", "Previous Link", show=False),
+        Binding("enter", "open_focused_link", "Open Link", show=True),
+        Binding("c", "clear_link_focus", "Clear Link", show=True),
         Binding("question_mark", "show_help", "Help"),
         Binding("i", "show_status", "Status"),
         Binding("S", "show_settings", "Settings"),
@@ -60,6 +67,9 @@ class EntryReaderScreen(Screen):
         self.unread_color = unread_color
         self.read_color = read_color
         self.scroll_container = None
+        self.links: list[dict[str, str]] = []  # List of {text: str, url: str}
+        self.focused_link_index: int | None = None  # Currently focused link index
+        self.link_indicator: Static | None = None  # Widget to show focused link
 
     def compose(self) -> ComposeResult:
         """Create child widgets."""
@@ -84,7 +94,16 @@ class EntryReaderScreen(Screen):
 
             # Convert HTML content to markdown for better display
             content = self._html_to_markdown(self.entry.content)
+
+            # Extract links from content
+            self.links = self._extract_links(content)
+
             yield Markdown(content, classes="entry-content")
+
+            # Link navigation indicator
+            link_indicator = Static("", id="link-indicator", classes="link-indicator")
+            self.link_indicator = link_indicator
+            yield link_indicator
 
         yield Footer()
 
@@ -138,6 +157,37 @@ class EntryReaderScreen(Screen):
         # Disable body width wrapping - let Textual handle terminal wrapping
         h.body_width = 0
         return h.handle(html_content)
+
+    @staticmethod
+    def _extract_links(markdown_content: str) -> list[dict[str, str]]:
+        """Extract all links from markdown content.
+
+        Finds both markdown-style links [text](url) and plain URLs in the content.
+
+        Args:
+            markdown_content: Markdown-formatted content
+
+        Returns:
+            List of dictionaries with 'text' and 'url' keys for each link found
+        """
+        links = []
+
+        # Extract markdown links: [text](url)
+        markdown_link_pattern = r"\[([^\]]+)\]\(([^)]+)\)"
+        for match in re.finditer(markdown_link_pattern, markdown_content):
+            text, url = match.groups()
+            links.append({"text": text.strip(), "url": url.strip()})
+
+        # Extract plain URLs (http/https) that aren't already in markdown links
+        # This is a simple pattern - doesn't catch all edge cases
+        plain_url_pattern = r"(?<!\()(https?://[^\s)\]]+)"
+        for match in re.finditer(plain_url_pattern, markdown_content):
+            url = match.group(1).strip()
+            # Only add if not already in our links list
+            if not any(link["url"] == url for link in links):
+                links.append({"text": url, "url": url})
+
+        return links
 
     def _ensure_scroll_container(self) -> VerticalScroll:
         """Ensure scroll container is initialized and return it.
@@ -359,7 +409,19 @@ class EntryReaderScreen(Screen):
     def _mount_content(self, scroll: VerticalScroll):
         """Mount entry content widget (converted HTML to Markdown)."""
         content = self._html_to_markdown(self.entry.content)
+
+        # Extract links from content
+        self.links = self._extract_links(content)
+        self.focused_link_index = None  # Reset link focus on new content
+
         scroll.mount(Markdown(content, classes="entry-content"))
+
+        # Mount or update link indicator
+        if not self.link_indicator:
+            self.link_indicator = Static("", id="link-indicator", classes="link-indicator")
+            scroll.mount(self.link_indicator)
+        else:
+            self._update_link_indicator()
 
     async def action_scraping_helper(self) -> None:
         """Open scraping helper for current entry."""
@@ -415,6 +477,91 @@ class EntryReaderScreen(Screen):
         app = self._resolve_app()
         if app:
             app.push_screen("settings")
+
+    def _update_link_indicator(self):
+        """Update the link indicator widget with current focused link info."""
+        if not self.link_indicator:
+            return
+
+        if self.focused_link_index is None or not self.links:
+            self.link_indicator.update("")
+            return
+
+        # Show focused link info
+        link = self.links[self.focused_link_index]
+        link_num = self.focused_link_index + 1
+        total_links = len(self.links)
+
+        # Truncate long URLs/text for display
+        display_text = link["text"]
+        if len(display_text) > 60:
+            display_text = display_text[:57] + "..."
+
+        display_url = link["url"]
+        if len(display_url) > 80:
+            display_url = display_url[:77] + "..."
+
+        indicator_text = f"[bold yellow]Link {link_num}/{total_links}:[/bold yellow] [cyan]{display_text}[/cyan]\n[dim]{display_url}[/dim]"
+
+        self.link_indicator.update(indicator_text)
+
+    def action_next_link(self):
+        """Navigate to the next link in the content."""
+        if not self.links:
+            self.notify("No links found in this entry", severity="warning")
+            return
+
+        if self.focused_link_index is None:
+            # Start at first link
+            self.focused_link_index = 0
+        else:
+            # Move to next link (wrap around)
+            self.focused_link_index = (self.focused_link_index + 1) % len(self.links)
+
+        self._update_link_indicator()
+
+    def action_previous_link(self):
+        """Navigate to the previous link in the content."""
+        if not self.links:
+            self.notify("No links found in this entry", severity="warning")
+            return
+
+        if self.focused_link_index is None:
+            # Start at last link
+            self.focused_link_index = len(self.links) - 1
+        else:
+            # Move to previous link (wrap around)
+            self.focused_link_index = (self.focused_link_index - 1) % len(self.links)
+
+        self._update_link_indicator()
+
+    def action_open_focused_link(self):
+        """Open the currently focused link in the browser."""
+        if self.focused_link_index is None or not self.links:
+            self.notify("No link focused. Use Tab to focus a link first.", severity="warning")
+            return
+
+        link = self.links[self.focused_link_index]
+        url = link["url"].strip()
+
+        if not self._is_safe_external_url(url):
+            self.notify("Refused to open unsafe URL", severity="error")
+            if url:
+                with suppress(Exception):
+                    self.log(f"Blocked attempt to open unsafe URL: {url!r}")
+            return
+
+        try:
+            webbrowser.open(url)
+            self.notify(f"Opened link: {link['text']}")
+        except Exception as e:
+            self.notify(f"Error opening link: {e}", severity="error")
+
+    def action_clear_link_focus(self):
+        """Clear the current link focus."""
+        self.focused_link_index = None
+        self._update_link_indicator()
+        self.notify("Link focus cleared")
 
     def action_quit(self):
         """Quit the application."""
