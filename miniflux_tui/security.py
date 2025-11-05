@@ -5,7 +5,7 @@ import re
 from urllib.parse import urlparse
 
 
-def validate_feed_url(url: str) -> tuple[bool, str]:  # noqa: PLR0911, PLR0912
+def validate_feed_url(url: str) -> tuple[bool, str]:  # noqa: PLR0911
     """Validate and sanitize feed URL for SSRF prevention.
 
     Args:
@@ -22,11 +22,8 @@ def validate_feed_url(url: str) -> tuple[bool, str]:  # noqa: PLR0911, PLR0912
     if not url.strip():
         return False, "URL cannot be empty"
 
-    # Parse URL
-    try:
-        parsed = urlparse(url)
-    except Exception:
-        return False, "Invalid URL format"  # pragma: no cover
+    # Parse URL (urlparse doesn't raise exceptions, just returns parsed components)
+    parsed = urlparse(url)
 
     # Protocol whitelist - only HTTP and HTTPS allowed
     if parsed.scheme not in ["http", "https"]:
