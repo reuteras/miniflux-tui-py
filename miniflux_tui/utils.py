@@ -84,7 +84,8 @@ def _iter_distribution_candidates() -> Iterator[str]:
 
     try:
         packages = metadata.packages_distributions()
-    except Exception:
+    except (AttributeError, TypeError, ValueError):
+        # packages_distributions() might not exist or might fail in some environments
         return
 
     for candidate in packages.get("miniflux_tui", []) or []:
@@ -182,7 +183,8 @@ def extract_images_from_html(html_content: str, base_url: str | None = None) -> 
                 image_urls.append(src)
 
         return image_urls
-    except Exception:
+    except (ValueError, TypeError, AttributeError):
+        # HTML parsing can fail with malformed content or invalid data types
         return []
 
 
