@@ -4,24 +4,16 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
-
-## [Unreleased]
-
-### REMOVED
-
-- Remove image support and textual-image dependency
-  - The textual-image package is not maintained by the Textual team
-  - Will revisit image support when official Textual support is available
-  - Removed image display keybinding (I key)
-  - Removed image-related utility functions
-  - Updated documentation to reflect removal
-
-## [0.5.8] - 2025-11-05
+## [v0.5.8] - 2025-11-05
 
 ### BUG FIXES
 
 - replace overly broad exception handlers with specific exception types (#452)
 - suppress pyright import errors for textual_image on Python 3.14+ (#454)
+
+### MAINTENANCE
+
+- Release v0.5.8 (#456)
 
 
 
