@@ -101,6 +101,9 @@ jobs:
         run: |
           git-cliff --config cliff.toml --tag "$VERSION" --output CHANGELOG.md
 
+      - name: Setup Gitsign for commit signing
+        uses: chainguard-dev/actions/setup-gitsign@1b32103f5aa389c31ab0be75a8edc38d7e4750d8 # main
+
       - name: Create release branch and commit
         env:
           VERSION: ${{ steps.version.outputs.version }}
@@ -305,9 +308,10 @@ jobs:
           git pull --ff-only origin main
 
           # Verify we're tagging a commit with the release message
+          # Note: GitHub appends PR number when merging, e.g. "chore: Release v0.5.6 (#443)"
           COMMIT_MSG=$(git log -1 --pretty=%s)
-          if [[ ! "$COMMIT_MSG" =~ ^chore:\ Release\ v${VERSION}$ ]]; then
-            echo "::error::Latest commit message does not match release: got '$COMMIT_MSG', expected 'chore: Release v${VERSION}'"
+          if [[ ! "$COMMIT_MSG" =~ ^chore:\ Release\ v${VERSION}(\ \(#[0-9]+\))?$ ]]; then
+            echo "::error::Latest commit message does not match release: got '$COMMIT_MSG', expected 'chore: Release v${VERSION}' (with optional PR number)"
             echo "::error::This usually means the PR merge hasn't propagated yet. Current commit:"
             git log -1 --oneline
             exit 1
