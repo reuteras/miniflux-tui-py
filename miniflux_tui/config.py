@@ -131,6 +131,7 @@ class Config:
         default_sort: str = "date",
         default_group_by_feed: bool = False,
         group_collapsed: bool = False,
+        show_images: bool = True,
     ):
         self.server_url = server_url
         self._password_command = _normalize_command(password)
@@ -141,6 +142,7 @@ class Config:
         self.default_sort = default_sort
         self.default_group_by_feed = default_group_by_feed
         self.group_collapsed = group_collapsed
+        self.show_images = show_images
 
     @property
     def password_command(self) -> tuple[str, ...]:
@@ -261,6 +263,10 @@ class Config:
         default_group_by_feed = sorting.get("default_group_by_feed", False)
         group_collapsed = sorting.get("group_collapsed", False)
 
+        # Display settings
+        display = data.get("display", {})
+        show_images = display.get("show_images", True)
+
         return cls(
             server_url=data["server_url"],
             password=data["password"],
@@ -270,6 +276,7 @@ class Config:
             default_sort=default_sort,
             default_group_by_feed=default_group_by_feed,
             group_collapsed=group_collapsed,
+            show_images=show_images,
         )
 
 

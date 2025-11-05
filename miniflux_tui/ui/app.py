@@ -357,6 +357,7 @@ class MinifluxTuiApp(App):
             current_index=current_index,
             unread_color=self.config.unread_color,
             read_color=self.config.read_color,
+            show_images=self.config.show_images,
         )
         self.push_screen(reader_screen)
 

@@ -13,11 +13,16 @@ from textual.binding import Binding
 from textual.containers import VerticalScroll
 from textual.screen import Screen
 from textual.widgets import Footer, Header, Markdown, Static
+from textual_image.widget import Image
 
 from miniflux_tui.api.models import Entry
 from miniflux_tui.constants import CONTENT_SEPARATOR
 from miniflux_tui.ui.protocols import EntryReaderAppProtocol
-from miniflux_tui.utils import get_star_icon
+from miniflux_tui.utils import (
+    extract_images_from_html,
+    get_star_icon,
+    is_valid_image_url,
+)
 
 
 class EntryReaderScreen(Screen):
@@ -36,6 +41,7 @@ class EntryReaderScreen(Screen):
         Binding("e", "save_entry", "Save Entry"),
         Binding("o", "open_browser", "Open in Browser"),
         Binding("f", "fetch_original", "Fetch Original"),
+        Binding("I", "toggle_images", "Toggle Images"),
         Binding("X", "scraping_helper", "Scraping Helper"),
         Binding("tab", "next_link", "Next Link", show=True),
         Binding("shift+tab", "previous_link", "Previous Link", show=True),
@@ -59,6 +65,7 @@ class EntryReaderScreen(Screen):
         current_index: int = 0,
         unread_color: str = "cyan",
         read_color: str = "gray",
+        show_images: bool = True,
         **kwargs,
     ):
         super().__init__(**kwargs)
@@ -71,6 +78,7 @@ class EntryReaderScreen(Screen):
         self.links: list[dict[str, str]] = []  # List of {text: str, url: str}
         self.focused_link_index: int | None = None  # Currently focused link index
         self.link_indicator: Static | None = None  # Widget to show focused link
+        self.show_images = show_images
 
     def compose(self) -> ComposeResult:
         """Create child widgets."""
@@ -116,6 +124,32 @@ class EntryReaderScreen(Screen):
         # Mark entry as read when opened
         if self.entry.is_unread:
             await self._mark_entry_as_read()
+
+    def _get_image_urls(self) -> list[str]:
+        """Get all image URLs from entry (enclosures and content).
+
+        Returns:
+            List of valid image URLs
+        """
+        image_urls = []
+
+        # Get images from enclosures
+        if self.entry.image_enclosures:
+            image_urls.extend([enc.url for enc in self.entry.image_enclosures])
+
+        # Get images from HTML content
+        content_images = extract_images_from_html(self.entry.content, self.entry.url)
+        image_urls.extend(content_images)
+
+        # Filter and deduplicate
+        seen = set()
+        unique_images = []
+        for url in image_urls:
+            if url not in seen and is_valid_image_url(url):
+                seen.add(url)
+                unique_images.append(url)
+
+        return unique_images
 
     def _resolve_app(self) -> EntryReaderAppProtocol | None:
         """Return the parent TUI app if it satisfies the expected protocol."""
@@ -320,6 +354,15 @@ class EntryReaderScreen(Screen):
                 self.log(traceback.format_exc())
                 self.notify(f"Error fetching content: {e}", severity="error")
 
+    async def action_toggle_images(self):
+        """Toggle image display on/off."""
+        self.show_images = not self.show_images
+        status = "enabled" if self.show_images else "disabled"
+        self.notify(f"Image display {status}")
+
+        # Refresh the screen to apply changes
+        await self.refresh_screen()
+
     async def action_next_entry(self):
         """Navigate to next entry."""
         if not self.entry_list or self.current_index >= len(self.entry_list) - 1:
@@ -408,7 +451,24 @@ class EntryReaderScreen(Screen):
         scroll.mount(Static(CONTENT_SEPARATOR, classes="separator"))
 
     def _mount_content(self, scroll: VerticalScroll):
-        """Mount entry content widget (converted HTML to Markdown)."""
+        """Mount entry content widget (converted HTML to Markdown) and images."""
+        # Display images if enabled
+        if self.show_images:
+            image_urls = self._get_image_urls()
+            if image_urls:
+                scroll.mount(Static("[bold]Images:[/bold]", classes="images-header"))
+                for url in image_urls:
+                    try:
+                        # Mount image widget with error handling
+                        scroll.mount(Image(url, classes="entry-image"))
+                    except Exception as e:
+                        self.log(f"Error loading image {url}: {e}")
+                        # Show a text placeholder if image fails to load
+                        scroll.mount(Static(f"[dim]Image: {url}[/dim]", classes="image-placeholder"))
+
+                scroll.mount(Static(CONTENT_SEPARATOR, classes="separator"))
+
+        # Mount text content
         content = self._html_to_markdown(self.entry.content)
 
         # Extract links from content
