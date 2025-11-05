@@ -3,16 +3,12 @@
 
 from __future__ import annotations
 
-import re
 import tomllib
 from collections.abc import Generator, Iterator
 from contextlib import contextmanager
 from importlib import metadata
 from pathlib import Path
 from typing import Any
-from urllib.parse import urljoin, urlparse
-
-from bs4 import BeautifulSoup
 
 PYPROJECT_PATH = Path(__file__).resolve().parent.parent / "pyproject.toml"
 
@@ -153,76 +149,3 @@ def api_call(screen: Any, operation_name: str = "Operation") -> Generator[Any, N
     except Exception as e:
         screen.log(f"Unexpected error during {operation_name}: {e}")
         screen.notify(f"Error during {operation_name}: {e}", severity="error")
-
-
-def extract_images_from_html(html_content: str, base_url: str | None = None) -> list[str]:
-    """Extract image URLs from HTML content.
-
-    Args:
-        html_content: HTML content to parse
-        base_url: Base URL for resolving relative image paths
-
-    Returns:
-        List of absolute image URLs found in the HTML
-    """
-    if not html_content:
-        return []
-
-    try:
-        soup = BeautifulSoup(html_content, "html.parser")
-        image_urls = []
-
-        # Find all img tags
-        for img in soup.find_all("img"):
-            src = img.get("src")
-            # Ensure src is a string (BeautifulSoup can return various types)
-            if src and isinstance(src, str):
-                # Resolve relative URLs if base_url is provided
-                if base_url and not bool(urlparse(src).netloc):
-                    src = urljoin(base_url, src)
-                image_urls.append(src)
-
-        return image_urls
-    except (ValueError, TypeError, AttributeError):
-        # HTML parsing can fail with malformed content or invalid data types
-        return []
-
-
-def extract_images_from_markdown(markdown_content: str) -> list[str]:
-    """Extract image URLs from Markdown content.
-
-    Args:
-        markdown_content: Markdown content to parse
-
-    Returns:
-        List of image URLs found in the markdown
-    """
-    if not markdown_content:
-        return []
-
-    # Match markdown image syntax: ![alt](url)
-    pattern = r"!\[.*?\]\((.*?)\)"
-    matches = re.findall(pattern, markdown_content)
-    return [url for url in matches if url]
-
-
-def is_valid_image_url(url: str) -> bool:
-    """Check if URL appears to be a valid image URL.
-
-    Args:
-        url: URL to validate
-
-    Returns:
-        True if URL looks like a valid image URL
-    """
-    if not url:
-        return False
-
-    parsed = urlparse(url.strip())
-
-    # Must have http/https scheme
-    if parsed.scheme not in {"http", "https"}:
-        return False
-
-    # Must have a hostname - some URLs don't have extensions but are still images (e.g., CDN URLs)
-    return bool(parsed.netloc)
