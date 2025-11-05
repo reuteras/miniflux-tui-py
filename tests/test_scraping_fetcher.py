@@ -1,3 +1,4 @@
+# SPDX-License-Identifier: MIT
 """Tests for secure content fetcher."""
 
 from unittest.mock import AsyncMock, Mock, patch

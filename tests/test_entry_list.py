@@ -1,3 +1,4 @@
+# SPDX-License-Identifier: MIT
 """Tests for entry list screen functionality."""
 
 from datetime import UTC, datetime

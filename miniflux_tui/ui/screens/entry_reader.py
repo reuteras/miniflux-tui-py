@@ -1,3 +1,4 @@
+# SPDX-License-Identifier: MIT
 """Entry reader screen for viewing feed entry content."""
 
 import traceback

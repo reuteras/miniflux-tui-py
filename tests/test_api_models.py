@@ -1,3 +1,4 @@
+# SPDX-License-Identifier: MIT
 """Tests for API data models."""
 
 from datetime import UTC, datetime

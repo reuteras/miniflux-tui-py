@@ -1,3 +1,4 @@
+# SPDX-License-Identifier: MIT
 """Scraping rule helper screen for discovering optimal content extraction rules."""
 
 from typing import Any

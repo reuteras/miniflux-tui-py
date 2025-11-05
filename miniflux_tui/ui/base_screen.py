@@ -1,3 +1,4 @@
+# SPDX-License-Identifier: MIT
 """Base screen class for Miniflux TUI application.
 
 This module provides a common base class for all screens in the application,

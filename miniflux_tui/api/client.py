@@ -1,3 +1,4 @@
+# SPDX-License-Identifier: MIT
 """Miniflux API client wrapper using official miniflux package."""
 
 import asyncio

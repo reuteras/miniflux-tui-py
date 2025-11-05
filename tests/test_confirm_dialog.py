@@ -1,3 +1,4 @@
+# SPDX-License-Identifier: MIT
 """Tests for ConfirmDialog screen."""
 
 from miniflux_tui.ui.screens.confirm_dialog import ConfirmDialog

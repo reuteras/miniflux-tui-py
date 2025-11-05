@@ -1,3 +1,4 @@
+# SPDX-License-Identifier: MIT
 """Allow running miniflux-tui as a module: python -m miniflux_tui."""
 
 import sys

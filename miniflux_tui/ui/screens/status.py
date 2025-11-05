@@ -1,3 +1,4 @@
+# SPDX-License-Identifier: MIT
 """Status screen showing server information and problematic feeds."""
 
 from textual.app import App, ComposeResult

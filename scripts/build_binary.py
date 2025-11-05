@@ -1,3 +1,4 @@
+# SPDX-License-Identifier: MIT
 """Build and package platform-specific executables for miniflux-tui.
 
 This script invokes PyInstaller to create a single-file executable for the

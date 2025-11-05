@@ -1,3 +1,4 @@
+# SPDX-License-Identifier: MIT
 """Secure web content fetcher with strict validation and safety measures."""
 
 from typing import ClassVar

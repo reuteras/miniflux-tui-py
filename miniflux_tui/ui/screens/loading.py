@@ -1,3 +1,4 @@
+# SPDX-License-Identifier: MIT
 """Loading screen with ASCII art."""
 
 from textual.app import ComposeResult

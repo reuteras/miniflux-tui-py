@@ -1,3 +1,4 @@
+# SPDX-License-Identifier: MIT
 """Tests for key bindings and UI behavior."""
 
 from datetime import UTC, datetime

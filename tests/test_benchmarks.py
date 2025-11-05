@@ -1,3 +1,4 @@
+# SPDX-License-Identifier: MIT
 """Performance benchmarks for miniflux-tui."""
 
 from miniflux_tui.utils import get_app_version, get_star_icon, get_status_icon
