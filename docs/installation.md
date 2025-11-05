@@ -31,6 +31,24 @@ pip install miniflux-tui-py
 miniflux-tui
 ```
 
+### Optional Image Support
+
+Image support is automatically included for Python 3.11-3.14. For Python 3.15 and later, image support is optional and can be installed using:
+
+```bash
+# With uv
+uv tool install miniflux-tui-py --with miniflux-tui-py[images]
+
+# With pip
+pip install miniflux-tui-py[images]
+```
+
+If image support is not installed, the TUI will gracefully display image URLs as text links instead. You can toggle image display on/off at any time using the `I` key in the entry reader screen.
+
+**Why is image support optional for Python 3.15+?**
+
+The `textual-image` library, which provides inline image rendering in the terminal, may not be available for the newest Python versions immediately after they are released. Making it optional ensures miniflux-tui-py can work on Python 3.15+ without waiting for dependency updates, while still providing full image support for Python 3.11-3.14.
+
 ## Prebuilt Binaries (GitHub Releases)
 
 Every tagged release includes standalone executables for Linux (x86_64), macOS (arm64), and Windows (x86_64). This is the easiest way to try miniflux-tui-py without installing Python.

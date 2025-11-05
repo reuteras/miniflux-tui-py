@@ -61,6 +61,20 @@ miniflux-tui
 
 **Note:** After installation with `uv tool install` or `pip install`, you can run the application directly with `miniflux-tui` (no `uv run` needed). You can also run it as a Python module: `python -m miniflux_tui`.
 
+### Optional Image Support
+
+Image support is automatically included for Python 3.11-3.14. For Python 3.15 and later, or if you want to explicitly install image support, use:
+
+```bash
+# With uv
+uv tool install miniflux-tui-py --with miniflux-tui-py[images]
+
+# With pip
+pip install miniflux-tui-py[images]
+```
+
+If image support is not installed, the TUI will display image URLs as text links instead. You can toggle image display on/off at any time using the `I` key in the entry reader.
+
 ### Prebuilt Binaries (GitHub Releases)
 
 If you do not want to manage a Python environment, each tagged release now attaches standalone binaries for Linux (x86_64), macOS (arm64), and Windows (x86_64):
