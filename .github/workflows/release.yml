@@ -115,7 +115,7 @@ jobs:
           git commit -m "chore: Release v${VERSION}"
           git push origin "$BRANCH"
 
-          echo "branch=$BRANCH" >> $GITHUB_OUTPUT
+          echo "branch=$BRANCH" >> "$GITHUB_OUTPUT"
 
       - name: Create Pull Request
         id: create-pr
