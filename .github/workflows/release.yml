@@ -101,6 +101,9 @@ jobs:
         run: |
           git-cliff --config cliff.toml --tag "$VERSION" --output CHANGELOG.md
 
+      - name: Setup Gitsign for commit signing
+        uses: chainguard-dev/actions/setup-gitsign@1b32103f5aa389c31ab0be75a8edc38d7e4750d8 # main
+
       - name: Create release branch and commit
         env:
           VERSION: ${{ steps.version.outputs.version }}
