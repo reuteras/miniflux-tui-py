@@ -106,6 +106,14 @@ class MinifluxTuiApp(App):
     ListItem.collapsed {
         display: none;
     }
+
+    /* Help screen logo styling */
+    .help-logo {
+        max-height: 10;
+        width: auto;
+        margin: 1 0;
+        content-align: center middle;
+    }
     """
 
     def __init__(
