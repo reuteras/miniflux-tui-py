@@ -48,7 +48,10 @@ jobs:
 
       - name: Install Semgrep CLI
         run: |
+          # Upgrade pip first
           python -m pip install --upgrade pip==24.3.1
+
+          # Pin semgrep version for supply chain security
           python -m pip install --disable-pip-version-check --no-cache-dir semgrep==1.93.0
 
       - name: Run Semgrep

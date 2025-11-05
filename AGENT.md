@@ -494,22 +494,24 @@ Major improvements in October 2025:
 
 ### When Releases Happen
 
-Releases are created by project maintainers using the automated release script:
-```bash
-# Prepare release branch with version + changelog updates
-uv run python scripts/release.py
+Releases are created by project maintainers using the fully automated GitHub Actions workflow:
 
-# After the PR merges, create and push the release tag
-uv run python scripts/release.py tag
+```bash
+# Via GitHub UI: Actions → Create Release → Run workflow
+# Or via CLI:
+gh workflow run release.yml --ref main --field version=0.5.6
+# Or auto-bump:
+gh workflow run release.yml --ref main --field bump_type=patch
 ```
 
-The script automates the workflow:
-1. Runs pre-release checks (tests, linting, type checking)
-2. Updates version in `pyproject.toml`
-3. Auto-generates and lets maintainers edit `CHANGELOG.md`
-4. Creates a release branch with the commit and pushes it for review
-5. After merge, the `tag` command creates the annotated git tag
-6. Pushing the tag triggers CI/CD, which publishes to PyPI and builds artifacts
+The workflow automates everything:
+1. Creates release branch with version + changelog updates (using git-cliff)
+2. Creates PR to main and waits for CI checks
+3. Auto-merges PR when tests pass
+4. Creates signed git tag (using Sigstore Gitsign)
+5. Triggers publish workflow which publishes to PyPI, creates GitHub release with all artifacts
+
+Total time: ~10 minutes, zero manual steps required.
 
 See [RELEASE.md](RELEASE.md) for complete documentation.
 
@@ -549,7 +551,7 @@ When asked about releases, help determine semantic version:
 ### What NOT to Do
 
 **NEVER:**
-- ❌ Run `scripts/release.py` directly
+- ❌ Trigger the release workflow
 - ❌ Manually edit version in `pyproject.toml` for release
 - ❌ Create or push git tags
 - ❌ Manually publish to PyPI
@@ -562,16 +564,18 @@ For reference, here's how the automated release process works:
 
 ```mermaid
 graph TD
-    A[Maintainer runs release.py] --> B[Pre-release checks]
+    A[Maintainer triggers release.yml workflow] --> B[Create release branch]
     B --> C[Update version in pyproject.toml]
-    C --> D[Auto-generate CHANGELOG from commits]
-    D --> E[Create commit and tag]
-    E --> F[Push to GitHub]
-    F --> G[GitHub Actions triggers]
-    G --> H[Run tests + build]
-    H --> I[Publish to PyPI via Trusted Publisher]
-    H --> J[Create GitHub Release]
-    H --> K[Generate SLSA provenance]
+    C --> D[Auto-generate CHANGELOG with git-cliff]
+    D --> E[Create PR to main]
+    E --> F[Wait for CI checks to pass]
+    F --> G[Auto-merge PR]
+    G --> H[Create signed git tag with Sigstore]
+    H --> I[Trigger publish workflow]
+    I --> J[Build & test]
+    J --> K[Publish to PyPI via Trusted Publisher]
+    J --> L[Create GitHub Release with artifacts]
+    J --> M[Generate SBOMs & sign with cosign]
 ```
 
 ### CI/CD Pipeline
@@ -649,7 +653,7 @@ test: Add integration tests for feed refresh
 - [RELEASE.md](RELEASE.md) - Complete release documentation
 - [CHANGELOG.md](CHANGELOG.md) - Release history
 - [ROADMAP.md](ROADMAP.md) - Planned features by version
-- [scripts/release.py](scripts/release.py) - Automated release script
+- [.github/workflows/release.yml](.github/workflows/release.yml) - Automated release workflow
 - [cliff.toml](cliff.toml) - git-cliff configuration for changelog generation
 
 ## Troubleshooting
