@@ -374,6 +374,7 @@ class EntryListScreen(Screen):
         """Safely set cursor to a specific index.
 
         Handles boundary checking and suppresses exceptions.
+        Scrolls the entry to center of viewport for better visibility.
 
         Args:
             index: Target index
@@ -387,6 +388,10 @@ class EntryListScreen(Screen):
 
         with suppress(Exception):
             self.list_view.index = index
+            # Scroll to center the entry in the viewport for better visibility
+            # This prevents the entry from appearing at the bottom of the screen
+            if self.list_view.highlighted_child:
+                self.list_view.scroll_to_center(self.list_view.highlighted_child, animate=False)
             return True
 
         return False
