@@ -46,13 +46,14 @@ jobs:
         with:
           python-version: "3.12"
 
-      - name: Install Semgrep CLI
-        run: |
-          # Upgrade pip first
-          python -m pip install --upgrade pip==24.3.1
+      - name: Install uv
+        uses: astral-sh/setup-uv@85856786d1ce8acfbcc2f13a5f3fbd6b938f9f41 # v7.1.2
+        with:
+          enable-cache: true
+          cache-dependency-glob: "uv.lock"
 
-          # Pin semgrep version for supply chain security
-          python -m pip install --disable-pip-version-check --no-cache-dir semgrep==1.93.0
+      - name: Install Semgrep CLI with uv tool install
+        run: uv tool install semgrep==1.142.0
 
       - name: Run Semgrep
         run: |
