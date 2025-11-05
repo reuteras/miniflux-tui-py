@@ -3,9 +3,6 @@
 
 import platform
 import sys
-from contextlib import suppress
-from pathlib import Path
-from typing import TYPE_CHECKING
 
 import textual
 from textual.app import ComposeResult
@@ -15,20 +12,6 @@ from textual.screen import Screen
 from textual.widgets import Footer, Header, Static
 
 from miniflux_tui.utils import get_app_version
-
-# Optional image support - same pattern as entry_reader.py
-if TYPE_CHECKING:
-    from textual_image.widget import Image  # type: ignore[import-not-found]
-
-    IMAGE_SUPPORT: bool
-else:
-    try:
-        from textual_image.widget import Image
-
-        IMAGE_SUPPORT = True
-    except ImportError:
-        IMAGE_SUPPORT = False
-        Image = None  # type: ignore[assignment]
 
 
 class HelpScreen(Screen):
@@ -51,14 +34,6 @@ class HelpScreen(Screen):
         yield Header()
 
         with VerticalScroll():
-            # Show logo if image support is available
-            if IMAGE_SUPPORT and Image is not None:
-                logo_path = Path(__file__).parent.parent.parent.parent / "assets" / "logo-64.png"
-                if logo_path.exists():
-                    # Attempt to load logo; silently fallback if it fails
-                    with suppress(Exception):
-                        yield Image(str(logo_path), classes="help-logo")
-
             yield Static("[bold cyan]Miniflux TUI - Keyboard Shortcuts[/bold cyan]\n")
 
             yield Static("[bold yellow]Entry List View[/bold yellow]")
@@ -104,7 +79,6 @@ class HelpScreen(Screen):
             yield Static("  e               Save entry to third-party service")
             yield Static("  o               Open in browser")
             yield Static("  f               Fetch original content")
-            yield Static("  Shift+I         Toggle image display")
             yield Static("  J               Next entry")
             yield Static("  K               Previous entry")
             yield Static("  ?               Show this help")
@@ -147,13 +121,11 @@ class HelpScreen(Screen):
         """
         python_version = f"{sys.version_info.major}.{sys.version_info.minor}.{sys.version_info.micro}"
         platform_name = platform.system()
-        image_status = "[green]Available[/green]" if IMAGE_SUPPORT else "[yellow]Not Available[/yellow]"
 
         return (
             f"  Python:          {python_version}\n"
             f"  Platform:        {platform_name}\n"
             f"  Textual:         {textual.__version__}\n"
-            f"  Image Support:   {image_status}\n"
             f"  Miniflux API:    {self.api_version}\n"
             f"  Miniflux Server: {self.server_version}\n"
             f"  Username:        {self.username}"
