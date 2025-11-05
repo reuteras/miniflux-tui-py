@@ -308,9 +308,10 @@ jobs:
           git pull --ff-only origin main
 
           # Verify we're tagging a commit with the release message
+          # Note: GitHub appends PR number when merging, e.g. "chore: Release v0.5.6 (#443)"
           COMMIT_MSG=$(git log -1 --pretty=%s)
-          if [[ ! "$COMMIT_MSG" =~ ^chore:\ Release\ v${VERSION}$ ]]; then
-            echo "::error::Latest commit message does not match release: got '$COMMIT_MSG', expected 'chore: Release v${VERSION}'"
+          if [[ ! "$COMMIT_MSG" =~ ^chore:\ Release\ v${VERSION}(\ \(#[0-9]+\))?$ ]]; then
+            echo "::error::Latest commit message does not match release: got '$COMMIT_MSG', expected 'chore: Release v${VERSION}' (with optional PR number)"
             echo "::error::This usually means the PR merge hasn't propagated yet. Current commit:"
             git log -1 --oneline
             exit 1
