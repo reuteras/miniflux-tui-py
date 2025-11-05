@@ -218,6 +218,7 @@ class EntryListScreen(Screen):
         self.last_highlighted_category: str | None = None  # Track last highlighted category for position persistence
         self.last_highlighted_entry_id: int | None = None  # Track last highlighted entry ID for position
         self.last_cursor_index: int = 0  # Track cursor position for non-grouped mode
+        self._is_initial_mount: bool = True  # Track if this is the first time mounting the screen
         self._header_widget: Header | None = None
         self._footer_widget: Footer | None = None
 
@@ -246,11 +247,13 @@ class EntryListScreen(Screen):
         if self.entries:
             self.log(f"on_mount: Populating with {len(self.entries)} entries")
             self._populate_list()
-            # Use call_later to defer focus and cursor restoration until ListView has updated
-            if self.group_by_feed:
-                self.call_later(self._restore_cursor_position_and_focus)
+            # On initial mount, start at the first item (index 0)
+            # On resume, restore to previous position
+            if self._is_initial_mount:
+                self.call_later(self._set_initial_position_and_focus)
+                self._is_initial_mount = False
             else:
-                self.call_later(self._ensure_focus)
+                self.call_later(self._restore_cursor_position_and_focus)
         else:
             self.log("on_mount: No entries yet, skipping initial population")
 
@@ -427,6 +430,16 @@ class EntryListScreen(Screen):
         cursor_index = min(self.last_cursor_index, max_index)
         if self._set_cursor_to_index(cursor_index):
             self.log(f"Restoring cursor to last index {cursor_index}")
+
+    def _set_initial_position_and_focus(self) -> None:
+        """Set cursor to first item on initial mount and ensure focus."""
+        if not self.list_view or len(self.list_view.children) == 0:
+            return
+
+        # Start at the first item (index 0)
+        self._set_cursor_to_index(0)
+        self._ensure_focus()
+        self.log("Initial mount: cursor set to first item (index 0)")
 
     def _restore_cursor_position_and_focus(self) -> None:
         """Restore cursor position and ensure focus (called after ListView update)."""
