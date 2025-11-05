@@ -4,20 +4,29 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
-## [0.5.9] - 2025-11-05
+## [0.5.6] - 2025-11-05
 
 ### BUG FIXES
 
 - use SCORECARD_TOKEN instead of GITHUB_TOKEN for scorecard action (#430)
 - make release workflow PR creation more robust (#436)
+- ensure release PR is fully merged before creating tag (#438)
+
+### DOCUMENTATION
+
+- improve license compliance for OpenSSF Scorecard 10/10 (#435)
+- update branch protection and CODEOWNERS for perfect Scorecard 10/10 (#434)
 
 ### FEATURES
 
 - fully automate release process (#431)
+- add keyboard navigation for links in entry reader (#439)
+- add image display support in entry reader (#433)
 
 ### MAINTENANCE
 
 - update all Python dependencies and pre-commit hooks (#428)
+- Release v0.5.9 (#437)
 
 
 
