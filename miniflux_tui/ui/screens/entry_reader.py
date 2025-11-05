@@ -5,6 +5,7 @@ import re
 import traceback
 import webbrowser
 from contextlib import suppress
+from typing import TYPE_CHECKING
 from urllib.parse import urlparse
 
 import html2text
@@ -24,13 +25,19 @@ from miniflux_tui.utils import (
 )
 
 # Optional image support - gracefully handle when textual-image is not available
-try:
+# Use TYPE_CHECKING to avoid import errors during static analysis when library is not installed
+if TYPE_CHECKING:
     from textual_image.widget import Image
 
-    IMAGE_SUPPORT = True
-except ImportError:
-    IMAGE_SUPPORT = False
-    Image = None  # type: ignore[misc, assignment]
+    IMAGE_SUPPORT: bool
+else:
+    try:
+        from textual_image.widget import Image
+
+        IMAGE_SUPPORT = True
+    except ImportError:
+        IMAGE_SUPPORT = False
+        Image = None  # type: ignore[assignment]
 
 
 class EntryReaderScreen(Screen):
