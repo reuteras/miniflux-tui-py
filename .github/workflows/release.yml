@@ -151,15 +151,21 @@ jobs:
           # Use VERSION variable substitution in the body
           PR_BODY="${PR_BODY//\$VERSION/$VERSION}"
 
-          PR_NUMBER=$(gh pr create \
+          # Create PR and extract number using gh's JSON output for reliability
+          PR_URL=$(gh pr create \
             --title "chore: Release v${VERSION}" \
             --body "$PR_BODY" \
             --base main \
-            --head "$BRANCH" \
-            --label "release" | grep -oP '(?<=/pull/)\d+')
+            --head "$BRANCH")
+
+          # Extract PR number from URL
+          PR_NUMBER=$(echo "$PR_URL" | grep -oE '[0-9]+$')
+
+          # Add label if it exists (non-critical, won't fail if label doesn't exist)
+          gh pr edit "$PR_NUMBER" --add-label "release" 2>/dev/null || echo "::warning::Could not add 'release' label (label may not exist)"
 
           echo "pr_number=$PR_NUMBER" >> "$GITHUB_OUTPUT"
-          echo "::notice::Created PR #$PR_NUMBER"
+          echo "::notice::Created PR #$PR_NUMBER at $PR_URL"
 
   auto-merge:
     needs: prepare-release
