@@ -39,6 +39,22 @@ fi
 echo "📦 Installing Python dependencies..."
 uv sync --locked --all-groups
 
+# Activate virtual environment in shell sessions
+echo "Setting up automatic virtual environment activation..."
+WORKSPACE_DIR="$(pwd)"
+BASHRC="${HOME}/.bashrc"
+
+# Add venv activation to .bashrc if not already present
+if [ -f "$BASHRC" ] && ! grep -q "Auto-activate Python virtual environment" "$BASHRC"; then
+    cat >>"$BASHRC" <<EOF
+
+# Auto-activate Python virtual environment for miniflux-tui-py
+if [ -f "${WORKSPACE_DIR}/.venv/bin/activate" ]; then
+    source "${WORKSPACE_DIR}/.venv/bin/activate"
+fi
+EOF
+fi
+
 # Set up shell completions
 echo "Setting up shell completions..."
 
