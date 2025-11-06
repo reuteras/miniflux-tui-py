@@ -126,13 +126,13 @@ chmod +x scripts/approve_pr.sh
 
 **Troubleshooting:**
 
-| Issue                                  | Solution                                                          |
-|----------------------------------------|-------------------------------------------------------------------|
-| "Failed to switch to account"          | Run `gh auth login` for the missing account                      |
-| "Failed to approve PR"                 | Check account has write permissions to repo                       |
-| "Timeout waiting for CI checks"        | Check GitHub Actions for failing tests                            |
-| "PR was not auto-merged"               | Verify branch protection rules allow auto-merge                   |
-| "Release workflow did not complete"    | Check if version tag was created and workflow triggered           |
+| Issue                               | Solution                                                |
+|-------------------------------------|---------------------------------------------------------|
+| "Failed to switch to account"       | Run `gh auth login` for the missing account             |
+| "Failed to approve PR"              | Check account has write permissions to repo             |
+| "Timeout waiting for CI checks"     | Check GitHub Actions for failing tests                  |
+| "PR was not auto-merged"            | Verify branch protection rules allow auto-merge         |
+| "Release workflow did not complete" | Check if version tag was created and workflow triggered |
 
 **Notes:**
 

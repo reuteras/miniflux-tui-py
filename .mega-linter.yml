@@ -1,3 +1,4 @@
 ---
-# Skip schema validation for configs without schemas in schemastore.org
-YAML_V8R_FILTER_REGEX_EXCLUDE: "(?i)(\\.github/dependabot\\.yml|\\.github/codeql/codeql-config\\.yml|\\.yaml-lint\\.yml|\\.github/ISSUE_TEMPLATE/feature_request\\.yml|mkdocs\\.yml)"
+# Disable YAML_V8R due to unreliable external schema store dependency
+# Schema validation fails when schemastore.org returns HTTP 503
+DISABLE_LINTERS: YAML_V8R
