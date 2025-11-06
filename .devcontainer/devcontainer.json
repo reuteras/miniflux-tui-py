@@ -2,13 +2,22 @@
     "name": "miniflux-tui-py",
     "image": "mcr.microsoft.com/devcontainers/python:3.14-bookworm",
     "postCreateCommand": "bash .devcontainer/postCreate.sh",
+    "postStartCommand": "bash .devcontainer/postStart.sh",
     "remoteEnv": {
-        "PATH": "${containerWorkspaceFolder}/.venv/bin:${containerEnv:PATH}:/home/vscode/.local/bin"
+        "PATH": "${containerWorkspaceFolder}/.venv/bin:${containerEnv:PATH}:/home/vscode/.local/bin",
+        "VIRTUAL_ENV": "${containerWorkspaceFolder}/.venv"
     },
     "customizations": {
         "vscode": {
             "settings": {
                 "terminal.integrated.defaultProfile.linux": "bash",
+                "terminal.integrated.profiles.linux": {
+                    "bash": {
+                        "path": "/bin/bash",
+                        "args": ["-l"],
+                        "icon": "terminal-bash"
+                    }
+                },
                 "editor.formatOnSave": true,
                 "editor.codeActionsOnSaveTimeout": 2000,
                 "[python]": {
