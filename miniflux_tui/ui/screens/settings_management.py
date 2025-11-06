@@ -1,11 +1,18 @@
 # SPDX-License-Identifier: MIT
 """Settings screen showing user information and integrations."""
 
+from __future__ import annotations
+
+from typing import TYPE_CHECKING
+
 from textual.app import ComposeResult
 from textual.binding import Binding
 from textual.containers import VerticalScroll
 from textual.screen import Screen
 from textual.widgets import Footer, Header, Static
+
+if TYPE_CHECKING:
+    pass
 
 
 class SettingsScreen(Screen):
@@ -16,6 +23,7 @@ class SettingsScreen(Screen):
         Binding("q", "close", "Close"),
         Binding("r", "refresh", "Refresh"),
         Binding("o", "open_web_settings", "Web Settings"),
+        Binding("e", "edit_settings", "Edit"),
     ]
 
     def __init__(self, **kwargs):
@@ -25,7 +33,16 @@ class SettingsScreen(Screen):
         self.username: str = "Loading..."
         self.timezone: str = "Loading..."
         self.language: str = "Loading..."
+        self.theme: str = "Loading..."
+        self.entries_per_page: int = 0
+        self.keyboard_shortcuts: bool = True
+        self.show_reading_time: bool = True
+        self.mark_read_on_view: bool = False
+        self.entry_sorting_order: str = "Loading..."
+        self.entry_sorting_direction: str = "Loading..."
         self.integrations_enabled: bool = False
+        self.user_id: int = 0
+        self._user_data: dict = {}
         self._header_widget: Header | None = None
         self._scroll_container: VerticalScroll | None = None
         self._footer_widget: Footer | None = None
@@ -53,11 +70,15 @@ class SettingsScreen(Screen):
             yield Static(id="display-prefs")
             yield Static()
 
+            yield Static("[bold yellow]Reading Preferences[/bold yellow]")
+            yield Static(id="reading-prefs")
+            yield Static()
+
             yield Static("[bold yellow]Integrations Status[/bold yellow]")
             yield Static(id="integrations-status")
             yield Static()
 
-            yield Static("[dim]Press o to open web settings, r to refresh, Esc or q to close[/dim]")
+            yield Static("[dim]Press e to edit, o for web settings, r to refresh, Esc or q to close[/dim]")
 
         yield footer
 
@@ -77,9 +98,18 @@ class SettingsScreen(Screen):
 
             # Get user info
             user_info = await client.get_user_info()
+            self._user_data = user_info
+            self.user_id = user_info.get("id", 0)
             self.username = user_info.get("username", "unknown")
-            self.timezone = user_info.get("timezone", "unknown")
-            self.language = user_info.get("language", "unknown")
+            self.timezone = user_info.get("timezone", "UTC")
+            self.language = user_info.get("language", "en_US")
+            self.theme = user_info.get("theme", "system_serif")
+            self.entries_per_page = user_info.get("entries_per_page", 100)
+            self.keyboard_shortcuts = user_info.get("keyboard_shortcuts", True)
+            self.show_reading_time = user_info.get("show_reading_time", True)
+            self.mark_read_on_view = user_info.get("mark_read_on_view", False)
+            self.entry_sorting_order = user_info.get("entry_sorting_order", "published_at")
+            self.entry_sorting_direction = user_info.get("entry_sorting_direction", "desc")
 
             # Get integrations status
             self.integrations_enabled = await client.get_integrations_status()
@@ -100,6 +130,9 @@ class SettingsScreen(Screen):
             display_prefs = self.query_one("#display-prefs", Static)
             display_prefs.update("[dim]Unable to load display preferences[/dim]")
 
+            reading_prefs = self.query_one("#reading-prefs", Static)
+            reading_prefs.update("[dim]Unable to load reading preferences[/dim]")
+
             integrations = self.query_one("#integrations-status", Static)
             integrations.update("[dim]Unable to load integrations[/dim]")
         except Exception as e:
@@ -109,6 +142,7 @@ class SettingsScreen(Screen):
         """Update all settings displays."""
         self._update_user_info()
         self._update_display_preferences()
+        self._update_reading_preferences()
         self._update_integrations()
 
     def _update_user_info(self) -> None:
@@ -128,13 +162,30 @@ class SettingsScreen(Screen):
         try:
             widget = self.query_one("#display-prefs", Static)
             lines = [
+                f"  Theme:           {self.theme}",
                 f"  Timezone:        {self.timezone}",
                 f"  Language:        {self.language}",
-                "  [dim]Additional settings available in web UI[/dim]",
+                f"  Entries/Page:    {self.entries_per_page}",
             ]
             widget.update("\n".join(lines))
         except Exception as e:
             self.app.log(f"Could not update display preferences: {e}")
+
+    def _update_reading_preferences(self) -> None:
+        """Update the reading preferences display."""
+        try:
+            widget = self.query_one("#reading-prefs", Static)
+            lines = [
+                f"  Sort Order:      {self.entry_sorting_order}",
+                f"  Sort Direction:  {self.entry_sorting_direction}",
+                f"  Keyboard Shortcuts: {'Enabled' if self.keyboard_shortcuts else 'Disabled'}",
+                f"  Show Reading Time:  {'Yes' if self.show_reading_time else 'No'}",
+                f"  Mark Read on View:  {'Yes' if self.mark_read_on_view else 'No'}",
+                "  [dim]Edit settings with 'e' key[/dim]",
+            ]
+            widget.update("\n".join(lines))
+        except Exception as e:
+            self.app.log(f"Could not update reading preferences: {e}")
 
     def _update_integrations(self) -> None:
         """Update the integrations display."""
@@ -180,3 +231,56 @@ class SettingsScreen(Screen):
             self.app.notify(f"To manage advanced settings, visit: {settings_url}")
         else:
             self.app.notify("Server URL not available")
+
+    def action_edit_settings(self):
+        """Open dialog to edit user settings."""
+        from miniflux_tui.ui.screens.settings_edit_dialog import (
+            SettingsEditDialog,
+        )
+
+        if not self.user_id:
+            self.app.notify("User information not loaded yet", severity="warning")
+            return
+
+        def handle_save(updated_settings: dict | None) -> None:
+            """Handle saved settings from dialog."""
+            if updated_settings:
+                self.run_worker(self._save_settings(updated_settings))
+
+        # Prepare current settings for the dialog
+        current_settings = {
+            "timezone": self.timezone,
+            "language": self.language,
+            "theme": self.theme,
+            "entries_per_page": self.entries_per_page,
+            "entry_sorting_order": self.entry_sorting_order,
+            "entry_sorting_direction": self.entry_sorting_direction,
+            "keyboard_shortcuts": self.keyboard_shortcuts,
+            "show_reading_time": self.show_reading_time,
+            "mark_read_on_view": self.mark_read_on_view,
+        }
+
+        self.app.push_screen(SettingsEditDialog(current_settings), handle_save)
+
+    async def _save_settings(self, updated_settings: dict) -> None:
+        """Save updated settings to the server."""
+        if not hasattr(self.app, "client") or not getattr(self.app, "client", None):
+            self.app.notify("API client not available", severity="error")
+            return
+
+        try:
+            client = getattr(self.app, "client", None)
+            self.app.notify("Saving settings...")
+
+            # Update user settings via API
+            await client.update_user_settings(self.user_id, **updated_settings)
+
+            self.app.notify("Settings saved successfully!", severity="information")
+
+            # Reload settings to reflect changes
+            await self._load_settings()
+
+        except Exception as e:
+            error_msg = f"Error saving settings: {type(e).__name__}: {e}"
+            self.app.log(error_msg)
+            self.app.notify("Failed to save settings. Check logs for details.", severity="error")

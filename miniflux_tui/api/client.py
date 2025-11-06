@@ -445,6 +445,18 @@ class MinifluxClient:
         """
         return await self._call_with_retry(self.client.get_integrations_status)
 
+    async def update_user_settings(self, user_id: int, **settings) -> dict:
+        """Update user settings.
+
+        Args:
+            user_id: User ID to update
+            **settings: Settings to update (language, timezone, theme, entries_per_page, etc.)
+
+        Returns:
+            Dictionary with updated user information
+        """
+        return await self._call_with_retry(self.client.update_user, user_id, **settings)
+
     async def get_feeds(self) -> list[Feed]:
         """Get all feeds with retry logic.
 

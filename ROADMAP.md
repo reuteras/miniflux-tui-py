@@ -56,30 +56,30 @@ This document outlines the planned features and improvements for the miniflux-tu
 - **Issue**: [#59](https://github.com/reuteras/miniflux-tui-py/issues/247) (Note: Issue #59 created as #247)
 - **Status**: ✅ Completed
 
-## Version 0.6.0 - History & User Settings
+## Version 0.6.0 - User Settings & Advanced Features 🔄
 
-### Entry History (⭐ Medium Priority)
-- [ ] View history of last read entries
-- [ ] Search through reading history
-- [ ] Filter history by date range
-- [ ] Filter history by feed
+### Entry History (⭐ Medium Priority) ✅
+- [x] View history of last read entries
+- [x] Search through reading history
+- [x] Filter history by date range
+- [x] Filter history by feed
 - [ ] Restore entries from history
-- **Issue**: [#TBD](https://github.com/reuteras/miniflux-tui-py/issues)
-- **Status**: 📋 Planned
+- **Issue**: [#56](https://github.com/reuteras/miniflux-tui-py/issues/56)
+- **Status**: ✅ Completed (v0.5.0)
 
-### User Settings Management (⭐ Medium Priority)
-- [ ] View current user settings
-- [ ] View/edit global feed settings
-- [ ] Configuration screen in TUI:
+### User Settings Management (⭐ Medium Priority) ✅
+- [x] View current user settings
+- [x] View/edit global feed settings
+- [x] Configuration screen in TUI:
   - Display current settings
   - Allow inline edits
   - Link to web UI for advanced settings
-- [ ] Display enabled integrations
+- [x] Display enabled integrations
   - Service name and status
   - Link to web UI for configuration
-- [ ] Settings persistence
+- [x] Settings persistence
 - **Issue**: [#TBD](https://github.com/reuteras/miniflux-tui-py/issues)
-- **Status**: 📋 Planned
+- **Status**: ✅ Completed (v0.6.0)
 
 ### Application Info (💡 Low Priority)
 - [ ] Display app version from pyproject.toml in help screen
@@ -122,6 +122,10 @@ This document outlines the planned features and improvements for the miniflux-tu
 - ✅ Unread/starred filtering
 - ✅ Search functionality (v0.4.0)
 - ✅ Theme configuration (v0.4.0)
+- ✅ Entry history view (v0.5.0)
+- ✅ Category support (v0.5.0)
+- ✅ Feed management (v0.5.0)
+- ✅ User settings management (v0.6.0)
 
 ## Technical Considerations
 
@@ -181,6 +185,6 @@ Have ideas for new features? Please:
 
 ---
 
-**Last Updated**: November 1, 2025
-**Current Version**: v0.5.0
-**Next Milestone**: v0.6.0 (History & User Settings)
+**Last Updated**: November 6, 2025
+**Current Version**: v0.5.10
+**Next Milestone**: v0.6.0 (User Settings & Advanced Features)
