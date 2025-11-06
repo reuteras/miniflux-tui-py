@@ -3,7 +3,7 @@
     "image": "mcr.microsoft.com/devcontainers/python:3.14-bookworm",
     "postCreateCommand": "bash .devcontainer/postCreate.sh",
     "remoteEnv": {
-        "PATH": "${containerEnv:PATH}:/home/vscode/.local/bin"
+        "PATH": "${containerWorkspaceFolder}/.venv/bin:${containerEnv:PATH}:/home/vscode/.local/bin"
     },
     "customizations": {
         "vscode": {
