@@ -59,6 +59,7 @@ class EntryReaderScreen(Screen):
         current_index: int = 0,
         unread_color: str = "cyan",
         read_color: str = "gray",
+        group_info: dict[str, str | int] | None = None,
         **kwargs,
     ):
         super().__init__(**kwargs)
@@ -67,6 +68,7 @@ class EntryReaderScreen(Screen):
         self.current_index = current_index
         self.unread_color = unread_color
         self.read_color = read_color
+        self.group_info = group_info  # Contains: mode, name, total, unread
         self.scroll_container = None
         self.links: list[dict[str, str]] = []  # List of {text: str, url: str}
         self.focused_link_index: int | None = None  # Currently focused link index
@@ -113,6 +115,9 @@ class EntryReaderScreen(Screen):
         # Get reference to the scroll container after mount
         self.scroll_container = self.query_one(VerticalScroll)
 
+        # Set sub_title with group info if available
+        self._update_sub_title()
+
         # Mark entry as read when opened
         if self.entry.is_unread:
             await self._mark_entry_as_read()
@@ -125,6 +130,94 @@ class EntryReaderScreen(Screen):
             return app
         return None
 
+    def _calculate_group_info(self) -> dict[str, str | int] | None:
+        """Calculate group statistics from current entry and entry list.
+
+        Returns:
+            Dictionary with keys: mode, name, total, unread
+            None if not in grouped mode
+        """
+        if not self.group_info:
+            return None
+
+        mode = self.group_info.get("mode")
+        if mode not in ("feed", "category"):
+            return None
+
+        # Determine group identifier based on mode
+        group_key = self.entry.feed.title if mode == "feed" else self._get_category_name()
+
+        # Count entries in the same group
+        total = 0
+        unread = 0
+        for entry in self.entry_list:
+            entry_group = entry.feed.title if mode == "feed" else self._get_entry_category_name(entry)
+            if entry_group == group_key:
+                total += 1
+                if entry.is_unread:
+                    unread += 1
+
+        return {
+            "mode": mode,
+            "name": group_key,
+            "total": total,
+            "unread": unread,
+        }
+
+    def _get_category_name(self) -> str:
+        """Get category name for current entry.
+
+        Returns:
+            Category name or "Uncategorized"
+        """
+        if not hasattr(self.entry.feed, "category_id") or self.entry.feed.category_id is None:
+            return "Uncategorized"
+
+        # Try to get category name from app's categories
+        app_obj = self.app
+        if hasattr(app_obj, "categories"):
+            # Type: ignore because protocol doesn't include categories
+            for category in app_obj.categories:  # type: ignore[attr-defined]
+                if category.id == self.entry.feed.category_id:
+                    return category.title
+
+        return f"Category {self.entry.feed.category_id}"
+
+    def _get_entry_category_name(self, entry: Entry) -> str:
+        """Get category name for a given entry.
+
+        Args:
+            entry: Entry to get category name for
+
+        Returns:
+            Category name or "Uncategorized"
+        """
+        if not hasattr(entry.feed, "category_id") or entry.feed.category_id is None:
+            return "Uncategorized"
+
+        # Try to get category name from app's categories
+        app_obj = self.app
+        if hasattr(app_obj, "categories"):
+            # Type: ignore because protocol doesn't include categories
+            for category in app_obj.categories:  # type: ignore[attr-defined]
+                if category.id == entry.feed.category_id:
+                    return category.title
+
+        return f"Category {entry.feed.category_id}"
+
+    def _update_sub_title(self) -> None:
+        """Update screen sub_title with group statistics."""
+        group_stats = self._calculate_group_info()
+        if group_stats:
+            mode = group_stats["mode"]
+            name = group_stats["name"]
+            unread = group_stats["unread"]
+            total = group_stats["total"]
+            mode_label = "Feed" if mode == "feed" else "Category"
+            self.sub_title = f"{mode_label}: {name} ({unread} unread / {total} total)"
+        else:
+            self.sub_title = ""
+
     async def _mark_entry_as_read(self):
         """Mark the current entry as read via API."""
         app = self._resolve_app()
@@ -132,6 +225,8 @@ class EntryReaderScreen(Screen):
             try:
                 await app.client.mark_as_read(self.entry.id)
                 self.entry.status = "read"
+                # Update sub_title to reflect new unread count
+                self._update_sub_title()
             except Exception as e:
                 self.log(f"Error marking as read: {e}")
                 self.log(traceback.format_exc())
@@ -234,6 +329,8 @@ class EntryReaderScreen(Screen):
                 await app.client.mark_as_unread(self.entry.id)
                 self.entry.status = "unread"
                 self.notify("Marked as unread")
+                # Update sub_title to reflect new unread count
+                self._update_sub_title()
             except Exception as e:
                 self.notify(f"Error marking as unread: {e}", severity="error")
 
@@ -333,6 +430,9 @@ class EntryReaderScreen(Screen):
         # Refresh the screen with new entry
         await self.refresh_screen()
 
+        # Update sub_title with new group stats
+        self._update_sub_title()
+
     async def action_previous_entry(self):
         """Navigate to previous entry."""
         if not self.entry_list or self.current_index <= 0:
@@ -345,6 +445,9 @@ class EntryReaderScreen(Screen):
 
         # Refresh the screen with new entry
         await self.refresh_screen()
+
+        # Update sub_title with new group stats
+        self._update_sub_title()
 
     async def refresh_screen(self):
         """Refresh the screen with current entry."""

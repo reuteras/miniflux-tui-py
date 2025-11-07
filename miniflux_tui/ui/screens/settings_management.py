@@ -11,6 +11,8 @@ from textual.containers import VerticalScroll
 from textual.screen import Screen
 from textual.widgets import Footer, Header, Static
 
+from miniflux_tui.ui.screens.settings_edit_dialog import SettingsEditDialog
+
 if TYPE_CHECKING:
     pass
 
@@ -234,10 +236,6 @@ class SettingsScreen(Screen):
 
     def action_edit_settings(self):
         """Open dialog to edit user settings."""
-        from miniflux_tui.ui.screens.settings_edit_dialog import (
-            SettingsEditDialog,
-        )
-
         if not self.user_id:
             self.app.notify("User information not loaded yet", severity="warning")
             return

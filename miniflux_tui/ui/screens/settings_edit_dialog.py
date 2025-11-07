@@ -1,6 +1,8 @@
 # SPDX-License-Identifier: MIT
 """Dialog for editing user settings."""
 
+from typing import ClassVar
+
 from textual.app import ComposeResult
 from textual.binding import Binding
 from textual.containers import Grid, VerticalScroll
@@ -58,7 +60,7 @@ class SettingsEditDialog(ModalScreen[dict | None]):
     """
 
     # Available options for dropdowns
-    TIMEZONES = [
+    TIMEZONES: ClassVar[list[str]] = [
         "UTC",
         "America/New_York",
         "America/Chicago",
@@ -72,7 +74,7 @@ class SettingsEditDialog(ModalScreen[dict | None]):
         "Australia/Sydney",
     ]
 
-    LANGUAGES = [
+    LANGUAGES: ClassVar[list[tuple[str, str]]] = [
         ("English", "en_US"),
         ("German", "de_DE"),
         ("Spanish", "es_ES"),
@@ -86,7 +88,7 @@ class SettingsEditDialog(ModalScreen[dict | None]):
         ("Chinese (Simplified)", "zh_CN"),
     ]
 
-    THEMES = [
+    THEMES: ClassVar[list[tuple[str, str]]] = [
         ("System Serif", "system_serif"),
         ("System Sans-Serif", "system_sans_serif"),
         ("Light Serif", "light_serif"),
@@ -97,9 +99,14 @@ class SettingsEditDialog(ModalScreen[dict | None]):
         ("Dark High Contrast", "dark_high_contrast"),
     ]
 
-    SORT_ORDERS = [("Published Date", "published_at"), ("Created Date", "created_at"), ("Status", "status"), ("Title", "title")]
+    SORT_ORDERS: ClassVar[list[tuple[str, str]]] = [
+        ("Published Date", "published_at"),
+        ("Created Date", "created_at"),
+        ("Status", "status"),
+        ("Title", "title"),
+    ]
 
-    SORT_DIRECTIONS = [("Descending (Newest First)", "desc"), ("Ascending (Oldest First)", "asc")]
+    SORT_DIRECTIONS: ClassVar[list[tuple[str, str]]] = [("Descending (Newest First)", "desc"), ("Ascending (Oldest First)", "asc")]
 
     def __init__(self, current_settings: dict, **kwargs):
         """Initialize the settings edit dialog.
