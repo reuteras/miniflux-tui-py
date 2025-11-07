@@ -9,6 +9,7 @@ import traceback
 from .config import (
     Config,
     ConfigurationError,
+    create_codespace_config,
     create_default_config,
     get_config_file_path,
     load_config,
@@ -42,6 +43,28 @@ def _handle_init() -> int:
     print(f"Created default configuration file at: {config_path}")
     print("\nPlease edit this file and add your Miniflux server URL and password command.")
     print("The password command should retrieve your API token from a password manager.")
+    return 0
+
+
+def _handle_init_codespace() -> int:
+    """Handle the --init-codespace CLI flag."""
+    config_path = create_codespace_config()
+    print(f"Created GitHub Codespaces configuration at: {config_path}")
+    print("\nThis configuration reads credentials from environment variables.")
+    print("\nTo use this configuration, set these secrets in GitHub:")
+    print("  1. Go to your repository Settings → Secrets and variables → Codespaces")
+    print("  2. Add the following secrets:")
+    print("     - MINIFLUX_SERVER_URL: Your Miniflux server URL (e.g., https://miniflux.example.com)")
+    print("     - MINIFLUX_API_KEY: Your Miniflux API token")
+    print("\nOptional: Using Tailscale for private server access")
+    print("  If your Miniflux server is on a private network:")
+    print("  1. Add a Codespace secret: TAILSCALE_AUTHKEY (get from https://login.tailscale.com/admin/settings/keys)")
+    print("  2. In your codespace, run:")
+    print("     curl -fsSL https://tailscale.com/install.sh | sh")
+    print("     sudo tailscale up --authkey=$TAILSCALE_AUTHKEY")
+    print("  3. Your server will be accessible via its Tailscale hostname")
+    print("  4. See https://tailscale.com/kb/1160/github-codespaces for details")
+    print("\nThe TUI will start in grouped mode by default for better organization.")
     return 0
 
 
@@ -116,6 +139,11 @@ def main() -> int:
         help="Create a default configuration file",
     )
     parser.add_argument(
+        "--init-codespace",
+        action="store_true",
+        help="Create a configuration file optimized for GitHub Codespaces with environment variable support",
+    )
+    parser.add_argument(
         "--check-config",
         action="store_true",
         help="Check configuration and display settings",
@@ -130,6 +158,8 @@ def main() -> int:
 
     if args.init:
         return _handle_init()
+    if args.init_codespace:
+        return _handle_init_codespace()
     if args.check_config:
         return _handle_check_config()
     return _run_application()

@@ -64,6 +64,22 @@ uv sync --all-groups
 uv run miniflux-tui
 ```
 
+## GitHub Codespaces
+
+miniflux-tui-py can run in GitHub Codespaces with secure credential management via GitHub Secrets:
+
+```bash
+# Install miniflux-tui-py
+pip install miniflux-tui-py
+
+# Create a Codespaces-optimized configuration
+miniflux-tui --init-codespace
+```
+
+This configuration reads credentials from environment variables (`MINIFLUX_SERVER_URL` and `MINIFLUX_API_KEY`) that you set as Codespaces secrets in your repository or user settings.
+
+For detailed setup instructions including Tailscale support for private networks, see the [GitHub Codespaces Guide](codespaces.md).
+
 ## Container Image (Docker or Podman)
 
 A signed container image is published to GitHub Container Registry on every push to `main` and for releases. To use it:
