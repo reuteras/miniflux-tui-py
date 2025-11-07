@@ -346,7 +346,13 @@ class MinifluxTuiApp(App):
             # Log full error for debugging
             self.log(f"Full error:\n{error_details}")
 
-    def push_entry_reader(self, entry: Entry, entry_list: list | None = None, current_index: int = 0) -> None:
+    def push_entry_reader(
+        self,
+        entry: Entry,
+        entry_list: list | None = None,
+        current_index: int = 0,
+        group_info: dict[str, str | int] | None = None,
+    ) -> None:
         """
         Push entry reader screen for a specific entry.
 
@@ -354,6 +360,7 @@ class MinifluxTuiApp(App):
             entry: Entry to display
             entry_list: Full list of entries for navigation
             current_index: Current position in the entry list
+            group_info: Group/category information for display (mode, name, total, unread)
         """
         entry_reader_module = import_module("miniflux_tui.ui.screens.entry_reader")
         entry_reader_cls: type[EntryReaderScreen]
@@ -365,6 +372,7 @@ class MinifluxTuiApp(App):
             current_index=current_index,
             unread_color=self.config.unread_color,
             read_color=self.config.read_color,
+            group_info=group_info,
         )
         self.push_screen(reader_screen)
 
