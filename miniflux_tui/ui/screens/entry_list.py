@@ -246,14 +246,10 @@ class EntryListScreen(Screen):
         # Only populate if we have entries
         if self.entries:
             self.log(f"on_mount: Populating with {len(self.entries)} entries")
+            # _populate_list() now handles cursor restoration via call_later
             self._populate_list()
-            # On initial mount, start at the first item (index 0)
-            # On resume, restore to previous position
-            if self._is_initial_mount:
-                self.call_later(self._set_initial_position_and_focus)
-                self._is_initial_mount = False
-            else:
-                self.call_later(self._restore_cursor_position_and_focus)
+            # Mark as no longer initial mount after first population
+            self._is_initial_mount = False
         else:
             self.log("on_mount: No entries yet, skipping initial population")
 
@@ -261,10 +257,8 @@ class EntryListScreen(Screen):
         """Called when screen is resumed (e.g., after returning from entry reader)."""
         # Refresh the list to reflect any status changes
         if self.entries and self.list_view:
+            # _populate_list() now handles cursor restoration and focus via call_later
             self._populate_list()
-            # Use call_later to defer focus and cursor restoration until ListView has updated
-            # Always restore cursor position to maintain user's navigation context
-            self.call_later(self._restore_cursor_position_and_focus)
         elif self.list_view and len(self.list_view.children) > 0:
             # If no entries, just ensure focus
             self.call_later(self._ensure_focus)
@@ -327,8 +321,10 @@ class EntryListScreen(Screen):
         self._display_entries(sorted_entries)
         self.refresh_optimizer.track_full_refresh()
 
-        # Don't set initial index here - let _restore_cursor_position handle it
-        # This prevents overwriting the cursor position when returning from entry reader
+        # Restore cursor position after list is updated
+        # This ensures cursor is initialized even when called directly (e.g., from tests)
+        # Uses call_later to defer until ListView has fully updated
+        self.call_later(self._restore_cursor_position_and_focus)
 
     def _find_entry_index_by_id(self, entry_id: int | None) -> int | None:
         """Find the index of an entry by its ID.

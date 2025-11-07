@@ -37,7 +37,9 @@ if ! command -v uv >/dev/null 2>&1; then
 fi
 
 echo "📦 Installing Python dependencies..."
-uv sync --locked --all-groups
+# Install dev and docs groups, but skip fuzz (requires clang/libFuzzer)
+# and binary (requires heavy PyInstaller) for faster setup
+uv sync --locked --group dev --group docs
 
 # Activate virtual environment in shell sessions
 echo "Setting up automatic virtual environment activation..."
