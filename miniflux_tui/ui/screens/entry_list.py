@@ -222,6 +222,14 @@ class EntryListScreen(Screen):
         self._header_widget: Header | None = None
         self._footer_widget: Footer | None = None
 
+    def _safe_log(self, message: str) -> None:
+        """Safely log a message, handling cases where app is not available."""
+        try:
+            self.log(message)
+        except Exception:
+            # Silently ignore logging errors (e.g., in tests without app context)
+            pass
+
     def compose(self) -> ComposeResult:
         """Create child widgets."""
         header = Header()
@@ -241,17 +249,17 @@ class EntryListScreen(Screen):
         """Called when screen is mounted."""
         # Get reference to the ListView after it's mounted
         self.list_view = self.query_one(ListView)
-        self.log(f"on_mount: list_view is now {self.list_view}")
+        self._safe_log(f"on_mount: list_view is now {self.list_view}")
 
         # Only populate if we have entries
         if self.entries:
-            self.log(f"on_mount: Populating with {len(self.entries)} entries")
+            self._safe_log(f"on_mount: Populating with {len(self.entries)} entries")
             # _populate_list() now handles cursor restoration via call_later
             self._populate_list()
             # Mark as no longer initial mount after first population
             self._is_initial_mount = False
         else:
-            self.log("on_mount: No entries yet, skipping initial population")
+            self._safe_log("on_mount: No entries yet, skipping initial population")
 
     def on_screen_resume(self) -> None:
         """Called when screen is resumed (e.g., after returning from entry reader)."""
@@ -335,10 +343,30 @@ class EntryListScreen(Screen):
         if not self._ensure_list_view():
             return
 
+        # Log the current index before clearing
+        self._safe_log(f"_populate_list: current index before clear = {self.list_view.index}")
+        self._safe_log(f"_populate_list: current children count before clear = {len(self.list_view.children)}")
+
         self.list_view.clear()
+
+        # Log after clearing
+        self._safe_log(f"_populate_list: current index after clear = {self.list_view.index}")
+        self._safe_log(f"_populate_list: current children count after clear = {len(self.list_view.children)}")
+
+        # CRITICAL: Reset index to None after clearing to ensure clean state
+        # This prevents issues where the old index persists after clearing
+        self.list_view.index = None
+        self._safe_log(f"_populate_list: reset index to None")
+
         sorted_entries = self._get_sorted_entries()
         self.sorted_entries = sorted_entries
         self._display_entries(sorted_entries)
+
+        # Log after adding entries
+        self._safe_log(f"_populate_list: current children count after display = {len(self.list_view.children)}")
+        self._safe_log(f"_populate_list: current index after display = {self.list_view.index}")
+        self._safe_log(f"_populate_list: highlighted_child = {self.list_view.highlighted_child}")
+
         self.refresh_optimizer.track_full_refresh()
 
         # Restore cursor position after list is updated
@@ -401,19 +429,28 @@ class EntryListScreen(Screen):
         Returns:
             True if successful, False otherwise
         """
+        self._safe_log(f"_set_cursor_to_index: Setting index to {index}")
         max_index = len(self.list_view.children) - 1
+        self._safe_log(f"  max_index = {max_index}, current index = {self.list_view.index}")
+
         if index > max_index:
+            self._safe_log(f"  Index {index} > max_index {max_index}, returning False")
             return False
 
-        with suppress(Exception):
+        try:
             self.list_view.index = index
+            self._safe_log(f"  After setting index: list_view.index = {self.list_view.index}")
             # Scroll to center the entry in the viewport for better visibility
             # This prevents the entry from appearing at the bottom of the screen
             if self.list_view.highlighted_child:
+                self._safe_log(f"  highlighted_child = {self.list_view.highlighted_child}")
                 self.list_view.scroll_to_center(self.list_view.highlighted_child, animate=False)
+            else:
+                self._safe_log("  No highlighted_child after setting index!")
             return True
-
-        return False
+        except Exception as e:
+            self._safe_log(f"  Exception caught while setting index: {type(e).__name__}: {e}")
+            return False
 
     def _restore_cursor_position(self) -> None:
         """Restore cursor position based on mode.
@@ -426,26 +463,50 @@ class EntryListScreen(Screen):
         Used after rebuilding the list to restore user's position.
         On initial mount, defaults to first item.
         """
+        self._safe_log(f"_restore_cursor_position: Starting restoration")
+        self._safe_log(f"  current index = {self.list_view.index if self.list_view else 'N/A'}")
+        self._safe_log(f"  children count = {len(self.list_view.children) if self.list_view else 0}")
+        self._safe_log(f"  last_highlighted_entry_id = {self.last_highlighted_entry_id}")
+        self._safe_log(f"  last_highlighted_feed = {self.last_highlighted_feed}")
+        self._safe_log(f"  last_cursor_index = {self.last_cursor_index}")
+        self._safe_log(f"  group_by_feed = {self.group_by_feed}")
+
         if not self.list_view or len(self.list_view.children) == 0:
+            self._safe_log("_restore_cursor_position: No list view or no children, returning")
             return
 
         # Try to restore to last highlighted entry by ID
         entry_index = self._find_entry_index_by_id(self.last_highlighted_entry_id)
+        self._safe_log(f"_restore_cursor_position: entry_index from ID = {entry_index}")
         if entry_index is not None and self._set_cursor_to_index(entry_index):
-            self.log(f"Restoring cursor to entry {self.last_highlighted_entry_id} at index {entry_index}")
+            self._safe_log(f"Restoring cursor to entry {self.last_highlighted_entry_id} at index {entry_index}")
+            self._safe_log(f"  After restore: index = {self.list_view.index}, highlighted = {self.list_view.highlighted_child}")
             return
 
         # In grouped mode, try to restore to feed header
         feed_index = self._find_feed_header_index(self.last_highlighted_feed)
+        self._safe_log(f"_restore_cursor_position: feed_index from header = {feed_index}")
         if feed_index is not None and self._set_cursor_to_index(feed_index):
-            self.log(f"Restoring cursor to feed header '{self.last_highlighted_feed}' at index {feed_index}")
+            self._safe_log(f"Restoring cursor to feed header '{self.last_highlighted_feed}' at index {feed_index}")
+            self._safe_log(f"  After restore: index = {self.list_view.index}, highlighted = {self.list_view.highlighted_child}")
             return
 
         # Fallback: restore to last cursor index
         max_index = len(self.list_view.children) - 1
         cursor_index = min(self.last_cursor_index, max_index)
+        self._safe_log(f"_restore_cursor_position: Fallback to cursor_index = {cursor_index} (max = {max_index})")
         if self._set_cursor_to_index(cursor_index):
-            self.log(f"Restoring cursor to last index {cursor_index}")
+            self._safe_log(f"Restoring cursor to last index {cursor_index}")
+            self._safe_log(f"  After restore: index = {self.list_view.index}, highlighted = {self.list_view.highlighted_child}")
+        else:
+            self._safe_log(f"_restore_cursor_position: Failed to set cursor to {cursor_index}")
+            # Final emergency fallback: if all else fails, force index to 0
+            self._safe_log("_restore_cursor_position: Emergency fallback - forcing index to 0")
+            try:
+                self.list_view.index = 0
+                self._safe_log(f"  Emergency fallback result: index = {self.list_view.index}")
+            except Exception as e:
+                self._safe_log(f"  Emergency fallback failed: {type(e).__name__}: {e}")
 
     def _set_initial_position_and_focus(self) -> None:
         """Set cursor to first item on initial mount and ensure focus."""
@@ -455,7 +516,7 @@ class EntryListScreen(Screen):
         # Start at the first item (index 0)
         self._set_cursor_to_index(0)
         self._ensure_focus()
-        self.log("Initial mount: cursor set to first item (index 0)")
+        self._safe_log("Initial mount: cursor set to first item (index 0)")
 
     def _restore_cursor_position_and_focus(self) -> None:
         """Restore cursor position and ensure focus (called after ListView update)."""
@@ -464,9 +525,13 @@ class EntryListScreen(Screen):
 
     def _ensure_focus(self) -> None:
         """Ensure ListView has focus for keyboard input."""
+        self._safe_log(f"_ensure_focus: list_view={self.list_view is not None}, children={len(self.list_view.children) if self.list_view else 0}")
         if self.list_view and len(self.list_view.children) > 0:
-            with suppress(Exception):
+            try:
                 self.list_view.focus()
+                self._safe_log(f"_ensure_focus: Focus set successfully, focused={self.app.focused}")
+            except Exception as e:
+                self._safe_log(f"_ensure_focus: Exception while setting focus: {type(e).__name__}: {e}")
 
     def _ensure_list_view(self) -> bool:
         """Ensure list_view is available. Returns False if unavailable."""
@@ -474,7 +539,7 @@ class EntryListScreen(Screen):
             try:
                 self.list_view = self.query_one(ListView)
             except Exception as e:
-                self.log(f"Failed to get list_view: {e}")
+                self._safe_log(f"Failed to get list_view: {e}")
                 return False
         return True
 
@@ -914,25 +979,36 @@ class EntryListScreen(Screen):
     def action_cursor_down(self):
         """Move cursor down to next visible entry item, skipping collapsed entries."""
         if not self.list_view or len(self.list_view.children) == 0:
+            self._safe_log("action_cursor_down: No list view or no children")
             return
 
         try:
             current_index = self.list_view.index
+            self._safe_log(f"action_cursor_down: current_index = {current_index}, children count = {len(self.list_view.children)}")
+
             # If index is None, start searching from -1 so range(0, ...) includes index 0
             if current_index is None:
                 current_index = -1
+                self._safe_log("action_cursor_down: index was None, starting from -1")
 
             # Move to next item and skip hidden ones
+            visible_found = False
             for i in range(current_index + 1, len(self.list_view.children)):
                 widget = self.list_view.children[i]
-                if isinstance(widget, ListItem) and self._is_item_visible(widget):
+                is_visible = self._is_item_visible(widget)
+                self._safe_log(f"  Checking index {i}: type={type(widget).__name__}, visible={is_visible}")
+                if isinstance(widget, ListItem) and is_visible:
+                    self._safe_log(f"action_cursor_down: Moving to visible item at index {i}")
                     self.list_view.index = i
+                    visible_found = True
                     return
 
             # If no visible item found below, stay at current position
-        except (IndexError, ValueError, TypeError):
+            if not visible_found:
+                self._safe_log("action_cursor_down: No visible item found below current position")
+        except (IndexError, ValueError, TypeError) as e:
             # Silently ignore index errors when navigating beyond list bounds
-            pass
+            self._safe_log(f"action_cursor_down: Exception: {type(e).__name__}: {e}")
 
     def action_cursor_up(self):
         """Move cursor up to previous visible entry item, skipping collapsed entries."""
