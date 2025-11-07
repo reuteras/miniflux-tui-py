@@ -297,6 +297,44 @@ To change test data distribution:
        # Verify error handling and recovery
    ```
 
+## Cursor Position Tests
+
+In addition to full integration tests, comprehensive cursor position tests were added in `tests/test_cursor_position.py`:
+
+### Test Coverage (11 tests total)
+
+#### Standard Mode (2 tests)
+- ✅ Cursor starts at position 0
+- ✅ j/k navigation moves cursor correctly
+
+#### Group by Feed Mode (3 tests)
+- ✅ Cursor starts at position 0 when grouped
+- ✅ Navigation through collapsed groups (documents j/k behavior)
+- ✅ Expand/collapse (l/h) maintains cursor position
+
+#### Group by Category Mode (3 tests)
+- ✅ Cursor starts at position 0 when grouped by category
+- ✅ Navigation through collapsed categories (documents j/k behavior)
+- ✅ Expand/collapse maintains cursor position
+
+#### Edge Cases (3 tests)
+- ✅ Cursor can navigate to last entry
+- ✅ Returning from entry reader maintains position (standard mode)
+- ✅ Returning from entry reader maintains position (grouped mode)
+
+### Key Findings
+
+**Navigation Behavior**: j/k keys move through ALL ListView items, including CSS-hidden (collapsed) entries. This is documented Textual ListView behavior - navigation doesn't skip hidden items.
+
+**Cursor Restoration**: When toggling between modes, the app intelligently tries to restore the user's position to keep them at the same entry, even when the list structure changes.
+
+**Test Results:**
+```bash
+$ uv run pytest tests/test_cursor_position.py -v
+
+============================== 11 passed in 5.89s ==============================
+```
+
 ## Related Documentation
 
 - [Test Proposal Analysis](TEST_PROPOSAL_ANALYSIS.md) - Detailed testing strategy
@@ -307,17 +345,20 @@ To change test data distribution:
 
 The new full integration tests provide **comprehensive coverage of real user workflows** with realistic data scenarios:
 
-- ✅ 16 tests covering complete workflows
-- ✅ 55 entries across 10 feeds in 4 categories
+- ✅ 16 full integration tests covering complete workflows
+- ✅ 11 cursor position tests covering all navigation scenarios
+- ✅ 55 entries across 10 feeds in 4 categories (realistic test data)
 - ✅ Tests verify app startup, sorting, grouping, filtering, navigation
-- ✅ All tests passing
-- ✅ Integrates with existing test suite (51 total passing)
+- ✅ All 27 tests passing
+- ✅ Integrates with existing test suite
 - ✅ Ready for CI/CD pipeline
+- ✅ Fixed cursor initialization bug in `_populate_list()`
 
-**Test coverage increased** while **maintaining fast execution** (5.5 seconds for 16 tests).
+**Test coverage increased** while **maintaining fast execution** (10 seconds for 27 tests).
 
 ---
 
 **Created:** 2025-11-06
+**Updated:** 2025-11-07
 **Author:** AI Assistant (Claude)
 **Status:** ✅ Complete & Passing
