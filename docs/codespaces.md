@@ -128,14 +128,14 @@ If you prefer not to use devcontainer.json, you can install Tailscale manually u
   - **Tags**: Optional (e.g., `tag:codespace`)
 4. Copy the generated key (starts with `tskey-auth-...`)
 
-#### 2. Add Auth Key as Codespace Secret
+#### Add Auth Key as Codespace Secret
 
 1. Go to your repository **Settings** → **Secrets and variables** → **Codespaces**
 2. Add a new secret:
   - Name: `TAILSCALE_AUTHKEY`
-  - Value: Your auth key from step 1
+  - Value: Your auth key from above
 
-#### 3. Install and Connect Tailscale in Codespace
+#### Install and Connect
 
 Run these commands in your codespace terminal:
 
@@ -147,9 +147,11 @@ curl -fsSL https://tailscale.com/install.sh | sh
 sudo tailscale up --authkey=$TAILSCALE_AUTHKEY
 ```
 
-#### 4. Verify Connection
+**Note:** The automated approach (using devcontainer.json) is recommended as it ensures Tailscale is configured correctly every time you create a codespace and doesn't require managing auth keys.
 
-Check your Tailscale status:
+### Verify Connection (Both Methods)
+
+After setup, check your Tailscale status:
 
 ```bash
 tailscale status
@@ -157,7 +159,7 @@ tailscale status
 
 You should see your codespace listed and your other Tailscale devices.
 
-#### 5. Update Server URL
+### Update Server URL
 
 Use your Miniflux server's Tailscale hostname in the `MINIFLUX_SERVER_URL` secret:
 
@@ -166,7 +168,7 @@ Use your Miniflux server's Tailscale hostname in the `MINIFLUX_SERVER_URL` secre
 
 You can find your server's Tailscale name/IP in the [Tailscale Admin Console → Machines](https://login.tailscale.com/admin/machines).
 
-#### 6. Allow Self-Signed Certificates (Optional)
+### Allow Self-Signed Certificates (Optional)
 
 If your Miniflux server uses a self-signed certificate over Tailscale:
 
