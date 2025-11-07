@@ -23,8 +23,8 @@ Add your Miniflux credentials as Codespace secrets:
 2. Navigate to **Settings** → **Secrets and variables** → **Codespaces**
 3. Click **New repository secret**
 4. Add these secrets:
-   - `MINIFLUX_SERVER_URL`: Your Miniflux server URL (e.g., `https://miniflux.example.com`)
-   - `MINIFLUX_API_KEY`: Your Miniflux API token
+  - `MINIFLUX_SERVER_URL`: Your Miniflux server URL (e.g., `https://miniflux.example.com`)
+  - `MINIFLUX_API_KEY`: Your Miniflux API token
 
 **User Secrets** (for personal use across all your codespaces):
 1. Go to [GitHub Settings](https://github.com/settings/codespaces)
@@ -78,17 +78,17 @@ If your Miniflux server is on a private network (not publicly accessible), you c
 1. Go to [Tailscale Admin Console → Settings → Keys](https://login.tailscale.com/admin/settings/keys)
 2. Click **Generate auth key**
 3. Configure the key:
-   - **Reusable**: Enable (allows multiple codespace instances)
-   - **Ephemeral**: Enable (automatically removes device when disconnected)
-   - **Tags**: Optional (e.g., `tag:codespace`)
+  - **Reusable**: Enable (allows multiple codespace instances)
+  - **Ephemeral**: Enable (automatically removes device when disconnected)
+  - **Tags**: Optional (e.g., `tag:codespace`)
 4. Copy the generated key (starts with `tskey-auth-...`)
 
 #### 2. Add Auth Key as Codespace Secret
 
 1. Go to your repository **Settings** → **Secrets and variables** → **Codespaces**
 2. Add a new secret:
-   - Name: `TAILSCALE_AUTHKEY`
-   - Value: Your auth key from step 1
+  - Name: `TAILSCALE_AUTHKEY`
+  - Value: Your auth key from step 1
 
 #### 3. Install and Connect Tailscale in Codespace
 
