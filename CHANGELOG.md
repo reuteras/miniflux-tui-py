@@ -4,11 +4,38 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
-## [0.5.13] - 2025-11-07
+## [0.5.14] - 2025-11-07
+
+### BUG FIXES
+
+- resolve ruff linting errors in settings screens (#476)
+
+### FEATURES
+
+- add group/category counter in entry reader header (#477)
+
+### MAINTENANCE
+
+- Release v0.5.13 (#478)
+
+
+
+#### Contributors
+
+Thank you to everyone who contributed to this release!
+
+**Humans:** 👤 Peter Reuterås
+
+**AI & Automation:** 🤖 Claude (AI Assistant)
+## [v0.5.13] - 2025-11-07
 
 ### FEATURES
 
 - implement user settings management with edit dialog (#471)
+
+### MAINTENANCE
+
+- Release v0.5.13 (#475)
 
 
 
