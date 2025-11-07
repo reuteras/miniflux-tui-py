@@ -57,6 +57,7 @@ nav:
   - Installation: installation.md
   - Configuration: configuration.md
   - Usage: usage.md
+  - GitHub Codespaces: codespaces.md
   - Keyboard Workflows: workflows.md
   - Contributing: contributing.md
   - API Reference:

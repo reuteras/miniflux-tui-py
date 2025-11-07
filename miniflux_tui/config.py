@@ -261,8 +261,23 @@ class Config:
         default_group_by_feed = sorting.get("default_group_by_feed", False)
         group_collapsed = sorting.get("group_collapsed", False)
 
+        # Check for environment variable overrides (useful for Codespaces)
+        server_url = data["server_url"]
+        env_server_url = os.environ.get("MINIFLUX_SERVER_URL")
+        if env_server_url:
+            # Environment variable takes precedence
+            server_url = env_server_url
+        elif "PLACEHOLDER" in server_url and not env_server_url:
+            # Config has placeholder and no env var set
+            msg = (
+                "Configuration contains placeholder for server_url. "
+                "Please set the MINIFLUX_SERVER_URL environment variable or "
+                "edit the config file with your actual server URL."
+            )
+            raise ConfigurationError(msg)
+
         return cls(
-            server_url=data["server_url"],
+            server_url=server_url,
             password=data["password"],
             allow_invalid_certs=data.get("allow_invalid_certs", False),
             unread_color=unread_color,
@@ -365,6 +380,90 @@ default_group_by_feed = false
     # Always write config using UTF-8 to avoid locale-dependent encoding issues
     with Path.open(config_path, "w", encoding="utf-8") as f:
         f.write(default_config)
+
+    return config_path
+
+
+def create_codespace_config() -> Path:
+    """
+    Create a configuration file optimized for GitHub Codespaces.
+
+    This config reads credentials from environment variables set via
+    GitHub Codespaces secrets, enabling secure credential management
+    without storing secrets in the repository.
+
+    Returns:
+        Path to the created config file
+
+    Environment Variables Required:
+        MINIFLUX_SERVER_URL: Your Miniflux server URL
+        MINIFLUX_API_KEY: Your Miniflux API token
+    """
+    config_dir = Path(get_config_dir())
+    config_dir.mkdir(parents=True, exist_ok=True, mode=0o700)
+
+    config_path = config_dir / "config.toml"
+
+    # Determine the appropriate command to read environment variables
+    if sys.platform == "win32":
+        # Windows command to echo environment variable
+        env_command = '["cmd", "/c", "echo %MINIFLUX_API_KEY%"]'
+    else:
+        # Unix/Linux command to echo environment variable
+        env_command = '["sh", "-c", "echo $MINIFLUX_API_KEY"]'
+
+    codespace_config = f"""# Miniflux TUI Configuration for GitHub Codespaces
+#
+# This configuration reads credentials from environment variables.
+# Set these secrets in your GitHub repository or user settings:
+#
+#   1. Go to: Settings → Secrets and variables → Codespaces
+#   2. Add repository or user secrets:
+#      - MINIFLUX_SERVER_URL (e.g., https://miniflux.example.com)
+#      - MINIFLUX_API_KEY (your Miniflux API token)
+#
+# Using Tailscale with Codespaces (optional):
+#   If your Miniflux server is on a private network, you can use Tailscale:
+#   1. Add a Tailscale authkey as a Codespace secret: TAILSCALE_AUTHKEY
+#   2. Install Tailscale in your codespace:
+#      curl -fsSL https://tailscale.com/install.sh | sh
+#   3. Authenticate with your authkey:
+#      sudo tailscale up --authkey=$TAILSCALE_AUTHKEY
+#   4. Your Miniflux server will be accessible via its Tailscale hostname
+#
+# For more info on Tailscale + Codespaces:
+# https://tailscale.com/kb/1160/github-codespaces
+
+# Server URL from environment variable
+# Note: TOML doesn't support env var expansion, so we use sh/cmd to read it
+server_url = "https://PLACEHOLDER_SET_MINIFLUX_SERVER_URL_SECRET"
+
+# Command to retrieve API token from environment variable
+password = {env_command}
+
+# Optional: Allow invalid SSL certificates (useful for self-signed certs via Tailscale)
+allow_invalid_certs = false
+
+[theme]
+# Color for unread entries
+unread_color = "cyan"
+
+# Color for read entries
+read_color = "gray"
+
+[sorting]
+# Default sort mode: "feed", "date", or "status"
+default_sort = "date"
+
+# Start in grouped mode (recommended for Codespaces)
+default_group_by_feed = true
+
+# Start with groups collapsed (optional)
+group_collapsed = false
+"""
+
+    with Path.open(config_path, "w", encoding="utf-8") as f:
+        f.write(codespace_config)
 
     return config_path
 
