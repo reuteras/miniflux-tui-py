@@ -992,7 +992,6 @@ class EntryListScreen(Screen):
                 self._safe_log("action_cursor_down: index was None, starting from -1")
 
             # Move to next item and skip hidden ones
-            visible_found = False
             for i in range(current_index + 1, len(self.list_view.children)):
                 widget = self.list_view.children[i]
                 is_visible = self._is_item_visible(widget)
@@ -1000,12 +999,10 @@ class EntryListScreen(Screen):
                 if isinstance(widget, ListItem) and is_visible:
                     self._safe_log(f"action_cursor_down: Moving to visible item at index {i}")
                     self.list_view.index = i
-                    visible_found = True
                     return
 
             # If no visible item found below, stay at current position
-            if not visible_found:
-                self._safe_log("action_cursor_down: No visible item found below current position")
+            self._safe_log("action_cursor_down: No visible item found below current position")
         except (IndexError, ValueError, TypeError) as e:
             # Silently ignore index errors when navigating beyond list bounds
             self._safe_log(f"action_cursor_down: Exception: {type(e).__name__}: {e}")
