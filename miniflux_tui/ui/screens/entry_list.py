@@ -994,12 +994,13 @@ class EntryListScreen(Screen):
             # Move to next item and skip hidden ones
             for i in range(current_index + 1, len(self.list_view.children)):
                 widget = self.list_view.children[i]
-                is_visible = self._is_item_visible(widget)
-                self._safe_log(f"  Checking index {i}: type={type(widget).__name__}, visible={is_visible}")
-                if isinstance(widget, ListItem) and is_visible:
-                    self._safe_log(f"action_cursor_down: Moving to visible item at index {i}")
-                    self.list_view.index = i
-                    return
+                if isinstance(widget, ListItem):
+                    is_visible = self._is_item_visible(widget)
+                    self._safe_log(f"  Checking index {i}: type={type(widget).__name__}, visible={is_visible}")
+                    if is_visible:
+                        self._safe_log(f"action_cursor_down: Moving to visible item at index {i}")
+                        self.list_view.index = i
+                        return
 
             # If no visible item found below, stay at current position
             self._safe_log("action_cursor_down: No visible item found below current position")
