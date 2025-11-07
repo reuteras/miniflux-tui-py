@@ -4,6 +4,74 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
+## [0.5.13] - 2025-11-07
+
+### FEATURES
+
+- implement user settings management with edit dialog (#471)
+
+
+
+#### Contributors
+
+Thank you to everyone who contributed to this release!
+
+**Humans:** 👤 Peter Reuterås
+
+**AI & Automation:** 🤖 Claude (AI Assistant)
+## [v0.5.12] - 2025-11-07
+
+### BUG FIXES
+
+- Enable git credentials persistence in release workflow (#466)
+- re-add persist-credentials false to all checkouts (#468)
+- configure Codespaces to auto-activate Python venv (#469)
+
+
+
+#### Contributors
+
+Thank you to everyone who contributed to this release!
+
+**Humans:** 👤 Peter Reuterås
+
+**AI & Automation:** 🤖 Claude (AI Assistant)
+## [v0.5.11] - 2025-11-05
+
+### BUG FIXES
+
+- Enable git credentials persistence in release workflow (#462)
+- Remove paths filter from CodeQL push trigger for 10/10 SAST score (#463)
+- prevent credential persistence in GitHub Actions (#465)
+
+### FEATURES
+
+- Add multi-account PR approval automation script (#461)
+
+
+
+#### Contributors
+
+Thank you to everyone who contributed to this release!
+
+**Humans:** 👤 Peter Reuterås
+
+**AI & Automation:** 🤖 Claude (AI Assistant)
+## [v0.5.10] - 2025-11-05
+
+### MAINTENANCE
+
+- Release v0.5.10 (#459)
+
+
+
+#### Contributors
+
+Thank you to everyone who contributed to this release!
+
+**Humans:** 👤 Peter Reuterås
+
+**AI & Automation:** 🤖 Claude (AI Assistant)
 ## [v0.5.8] - 2025-11-05
 
 ### BUG FIXES
