@@ -224,11 +224,9 @@ class EntryListScreen(Screen):
 
     def _safe_log(self, message: str) -> None:
         """Safely log a message, handling cases where app is not available."""
-        try:
+        # Silently ignore logging errors (e.g., in tests without app context)
+        with suppress(Exception):
             self.log(message)
-        except Exception:
-            # Silently ignore logging errors (e.g., in tests without app context)
-            pass
 
     def compose(self) -> ComposeResult:
         """Create child widgets."""
@@ -356,7 +354,7 @@ class EntryListScreen(Screen):
         # CRITICAL: Reset index to None after clearing to ensure clean state
         # This prevents issues where the old index persists after clearing
         self.list_view.index = None
-        self._safe_log(f"_populate_list: reset index to None")
+        self._safe_log("_populate_list: reset index to None")
 
         sorted_entries = self._get_sorted_entries()
         self.sorted_entries = sorted_entries
@@ -463,7 +461,7 @@ class EntryListScreen(Screen):
         Used after rebuilding the list to restore user's position.
         On initial mount, defaults to first item.
         """
-        self._safe_log(f"_restore_cursor_position: Starting restoration")
+        self._safe_log("_restore_cursor_position: Starting restoration")
         self._safe_log(f"  current index = {self.list_view.index if self.list_view else 'N/A'}")
         self._safe_log(f"  children count = {len(self.list_view.children) if self.list_view else 0}")
         self._safe_log(f"  last_highlighted_entry_id = {self.last_highlighted_entry_id}")
@@ -525,7 +523,9 @@ class EntryListScreen(Screen):
 
     def _ensure_focus(self) -> None:
         """Ensure ListView has focus for keyboard input."""
-        self._safe_log(f"_ensure_focus: list_view={self.list_view is not None}, children={len(self.list_view.children) if self.list_view else 0}")
+        list_view_exists = self.list_view is not None
+        children_count = len(self.list_view.children) if self.list_view else 0
+        self._safe_log(f"_ensure_focus: list_view={list_view_exists}, children={children_count}")
         if self.list_view and len(self.list_view.children) > 0:
             try:
                 self.list_view.focus()

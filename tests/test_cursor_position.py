@@ -184,32 +184,25 @@ class TestCursorPositionGroupByFeed:
             # CRITICAL: Verify cursor is automatically at position 0
             # This should happen WITHOUT manual intervention
             assert screen.list_view.index == 0, (
-                f"Cursor should auto-initialize at position 0 in grouped mode, "
-                f"but got index={screen.list_view.index}"
+                f"Cursor should auto-initialize at position 0 in grouped mode, but got index={screen.list_view.index}"
             )
 
             # Verify first item is a FeedHeaderItem
             first_child = screen.list_view.children[0]
             assert isinstance(first_child, FeedHeaderItem), (
-                f"First item should be FeedHeaderItem in grouped mode, "
-                f"but got {type(first_child).__name__}"
+                f"First item should be FeedHeaderItem in grouped mode, but got {type(first_child).__name__}"
             )
 
             # Verify cursor is on the first item (visual and actual match)
             highlighted = screen.list_view.highlighted_child
-            assert highlighted is first_child, (
-                "Highlighted child should match first child at index 0"
-            )
+            assert highlighted is first_child, "Highlighted child should match first child at index 0"
 
             # CRITICAL: Verify j key works immediately (no manual position setting)
             await pilot.press("j")
             await pilot.pause()
 
             # Cursor should have moved down from position 0
-            assert screen.list_view.index > 0, (
-                f"Pressing 'j' should move cursor down from 0, "
-                f"but index is still {screen.list_view.index}"
-            )
+            assert screen.list_view.index > 0, f"Pressing 'j' should move cursor down from 0, but index is still {screen.list_view.index}"
 
             # Reset to position 0 for k test
             screen.list_view.index = 0
@@ -220,10 +213,7 @@ class TestCursorPositionGroupByFeed:
             await pilot.pause()
 
             # Cursor should still be at or near position 0
-            assert screen.list_view.index == 0, (
-                f"Pressing 'k' at position 0 should stay at 0, "
-                f"but got index={screen.list_view.index}"
-            )
+            assert screen.list_view.index == 0, f"Pressing 'k' at position 0 should stay at 0, but got index={screen.list_view.index}"
 
     async def test_cursor_initializes_correctly_with_collapsed_groups(self, cursor_test_entries):
         """Test cursor initialization when starting with all groups collapsed.
@@ -265,8 +255,7 @@ class TestCursorPositionGroupByFeed:
 
             # CRITICAL: Verify cursor is at position 0
             assert screen.list_view.index == 0, (
-                f"Cursor should be at position 0 with collapsed groups, "
-                f"but got index={screen.list_view.index}"
+                f"Cursor should be at position 0 with collapsed groups, but got index={screen.list_view.index}"
             )
 
             # First item should be a FeedHeaderItem
@@ -284,17 +273,13 @@ class TestCursorPositionGroupByFeed:
             # Cursor should move to next visible item (next feed header)
             # With collapsed groups, this skips hidden entries
             new_index = screen.list_view.index
-            assert new_index > 0, (
-                f"Cursor should move down when pressing 'j', "
-                f"but stayed at {new_index}"
-            )
+            assert new_index > 0, f"Cursor should move down when pressing 'j', but stayed at {new_index}"
 
             # Verify the new highlighted item is also a FeedHeaderItem
             # (since all entries are collapsed)
             new_highlighted = screen.list_view.highlighted_child
             assert isinstance(new_highlighted, FeedHeaderItem), (
-                f"After pressing 'j' in collapsed mode, should be on another header, "
-                f"but got {type(new_highlighted).__name__}"
+                f"After pressing 'j' in collapsed mode, should be on another header, but got {type(new_highlighted).__name__}"
             )
 
     async def test_cursor_starts_at_position_0_grouped(self, cursor_test_entries):
