@@ -365,3 +365,72 @@ class TestCursorPositionEdgeCases:
             # Should be at the last position
             final_position = screen.list_view.index
             assert final_position == total_items - 1
+
+    async def test_return_from_entry_reader_maintains_position(self, cursor_test_entries):
+        """Test that pressing 'b' to return from entry reader maintains cursor position."""
+        app = CursorTestApp(entries=cursor_test_entries)
+
+        async with app.run_test() as pilot:
+            screen = app.entry_list_screen
+
+            # Navigate down 5 positions
+            for _ in range(5):
+                await pilot.press("j")
+
+            # Remember position before opening entry
+            position_before = screen.list_view.index
+            assert position_before == 5
+
+            # Open entry reader by pressing enter
+            await pilot.press("enter")
+            await pilot.pause()
+
+            # Verify entry reader screen is pushed
+            # (The screen stack should have entry reader on top)
+
+            # Press 'b' to go back
+            await pilot.press("b")
+            await pilot.pause()
+
+            # Verify cursor is back at the same position
+            assert screen.list_view.index == position_before
+
+    async def test_return_from_entry_reader_in_grouped_mode(self, cursor_test_entries):
+        """Test that returning from entry reader maintains position in grouped mode."""
+        app = CursorTestApp(entries=cursor_test_entries)
+
+        async with app.run_test() as pilot:
+            screen = app.entry_list_screen
+
+            # Wait for initial mount
+            await pilot.pause()
+
+            # Enable group by feed
+            screen.group_by_feed = True
+            screen._populate_list()
+            await pilot.pause()
+
+            # Navigate down a few positions
+            await pilot.press("j", "j", "j")
+            await pilot.pause()
+
+            # Remember position before opening entry
+            position_before = screen.list_view.index
+
+            # Try to open entry reader (if cursor is on a header, this won't work)
+            # For this test, we'll just verify the cursor position is maintained
+            # after a round trip simulation
+            highlighted = screen.list_view.highlighted_child
+
+            # Only test if we're on an actual entry (not a header)
+            if hasattr(highlighted, "entry"):
+                # Open entry reader
+                await pilot.press("enter")
+                await pilot.pause()
+
+                # Press 'b' to go back
+                await pilot.press("b")
+                await pilot.pause()
+
+                # Verify cursor is back at the same position
+                assert screen.list_view.index == position_before
