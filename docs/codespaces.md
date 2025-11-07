@@ -69,11 +69,49 @@ If your Miniflux server is on a private network (not publicly accessible), you c
 
 - A Tailscale account ([sign up free](https://login.tailscale.com/start))
 - Your Miniflux server connected to your Tailscale network
-- A Tailscale auth key
 
 ### Setup Steps
 
-#### 1. Generate Tailscale Auth Key
+Choose one of two methods:
+
+### Automating Tailscale Setup (Recommended)
+
+The easiest way to use Tailscale with Codespaces is to configure it in your `devcontainer.json`:
+
+**Create `.devcontainer/devcontainer.json`:**
+
+```json
+{
+  "name": "Miniflux TUI with Tailscale",
+  "image": "mcr.microsoft.com/devcontainers/python:3.11",
+  "runArgs": ["--device=/dev/net/tun"],
+  "features": {
+    "ghcr.io/tailscale/codespace/tailscale": {}
+  },
+  "postCreateCommand": "pip install miniflux-tui-py && miniflux-tui --init-codespace"
+}
+```
+
+**Key Configuration:**
+- `runArgs`: Enables the TUN device required by Tailscale
+- `features`: Installs and configures Tailscale automatically
+- `postCreateCommand`: Installs miniflux-tui-py and creates the config
+
+**Authentication:**
+
+When you first launch your codespace, authenticate Tailscale by running:
+
+```bash
+tailscale set --accept-routes
+```
+
+This will generate a URL to visit in your browser to authenticate and connect your codespace to your Tailscale network.
+
+### Manual Tailscale Setup (Alternative)
+
+If you prefer not to use devcontainer.json, you can install Tailscale manually using an auth key:
+
+#### Generate Tailscale Auth Key
 
 1. Go to [Tailscale Admin Console → Settings → Keys](https://login.tailscale.com/admin/settings/keys)
 2. Click **Generate auth key**
@@ -83,14 +121,14 @@ If your Miniflux server is on a private network (not publicly accessible), you c
   - **Tags**: Optional (e.g., `tag:codespace`)
 4. Copy the generated key (starts with `tskey-auth-...`)
 
-#### 2. Add Auth Key as Codespace Secret
+#### Add Auth Key as Codespace Secret
 
 1. Go to your repository **Settings** → **Secrets and variables** → **Codespaces**
 2. Add a new secret:
   - Name: `TAILSCALE_AUTHKEY`
-  - Value: Your auth key from step 1
+  - Value: Your auth key from above
 
-#### 3. Install and Connect Tailscale in Codespace
+#### Install and Connect
 
 Run these commands in your codespace terminal:
 
@@ -102,9 +140,11 @@ curl -fsSL https://tailscale.com/install.sh | sh
 sudo tailscale up --authkey=$TAILSCALE_AUTHKEY
 ```
 
-#### 4. Verify Connection
+**Note:** The automated approach (using devcontainer.json) is recommended as it ensures Tailscale is configured correctly every time you create a codespace and doesn't require managing auth keys.
 
-Check your Tailscale status:
+### Verify Connection (Both Methods)
+
+After setup, check your Tailscale status:
 
 ```bash
 tailscale status
@@ -112,7 +152,7 @@ tailscale status
 
 You should see your codespace listed and your other Tailscale devices.
 
-#### 5. Update Server URL
+### Update Server URL
 
 Use your Miniflux server's Tailscale hostname in the `MINIFLUX_SERVER_URL` secret:
 
@@ -121,7 +161,7 @@ Use your Miniflux server's Tailscale hostname in the `MINIFLUX_SERVER_URL` secre
 
 You can find your server's Tailscale name/IP in the [Tailscale Admin Console → Machines](https://login.tailscale.com/admin/machines).
 
-#### 6. Allow Self-Signed Certificates (Optional)
+### Allow Self-Signed Certificates (Optional)
 
 If your Miniflux server uses a self-signed certificate over Tailscale:
 
@@ -132,43 +172,6 @@ nano ~/.config/miniflux-tui/config.toml
 # Change this line:
 allow_invalid_certs = true
 ```
-
-### Automating Tailscale Setup
-
-To avoid running Tailscale commands manually each time, you can add a setup script:
-
-**Create `.devcontainer/devcontainer.json`:**
-
-```json
-{
-  "name": "Miniflux TUI Development",
-  "image": "mcr.microsoft.com/devcontainers/python:3.11",
-  "postCreateCommand": "pip install miniflux-tui-py && miniflux-tui --init-codespace",
-  "postStartCommand": ".devcontainer/setup-tailscale.sh"
-}
-```
-
-**Create `.devcontainer/setup-tailscale.sh`:**
-
-```bash
-#!/bin/bash
-# Install Tailscale if TAILSCALE_AUTHKEY is set
-if [ -n "$TAILSCALE_AUTHKEY" ]; then
-    echo "Setting up Tailscale..."
-    curl -fsSL https://tailscale.com/install.sh | sh
-    sudo tailscale up --authkey=$TAILSCALE_AUTHKEY --hostname=codespace-miniflux-tui
-    echo "Tailscale connected!"
-    tailscale status
-fi
-```
-
-Make it executable:
-
-```bash
-chmod +x .devcontainer/setup-tailscale.sh
-```
-
-Now Tailscale will automatically connect when your codespace starts!
 
 ## Troubleshooting
 
