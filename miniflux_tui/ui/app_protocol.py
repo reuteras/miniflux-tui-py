@@ -65,6 +65,7 @@ class MinifluxAppProtocol(Protocol):
         entry: Entry,
         entry_list: list | None = None,
         current_index: int = 0,
+        group_info: dict[str, str | int] | None = None,
     ) -> None:
         """Push entry reader screen for a specific entry."""
         raise NotImplementedError

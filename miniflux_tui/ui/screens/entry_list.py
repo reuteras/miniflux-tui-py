@@ -289,6 +289,18 @@ class EntryListScreen(Screen):
                 self._open_entry(entry)
                 return
 
+    def _build_group_info(self) -> dict[str, str | int] | None:
+        """Build group info dictionary based on current grouping mode.
+
+        Returns:
+            Dictionary with 'mode' key ('feed' or 'category'), or None if not grouped
+        """
+        if self.group_by_feed:
+            return {"mode": "feed"}
+        if self.group_by_category:
+            return {"mode": "category"}
+        return None
+
     def _open_entry(self, entry: Entry) -> None:
         """Open an entry in the entry reader screen."""
         # Save the entry for position restoration
@@ -306,9 +318,17 @@ class EntryListScreen(Screen):
                 entry_index = i
                 break
 
+        # Prepare group info if in grouped mode
+        group_info = self._build_group_info()
+
         # Open entry reader screen with navigation context
         if isinstance(self.app, self.app.__class__) and hasattr(self.app, "push_entry_reader"):
-            self.app.push_entry_reader(entry=entry, entry_list=self.sorted_entries, current_index=entry_index)
+            self.app.push_entry_reader(
+                entry=entry,
+                entry_list=self.sorted_entries,
+                current_index=entry_index,
+                group_info=group_info,
+            )
 
     def _populate_list(self):
         """Populate the list with sorted and filtered entries."""
