@@ -15,7 +15,7 @@ import pytest
 from textual.app import App, ComposeResult
 
 from miniflux_tui.api.models import Category, Entry, Feed
-from miniflux_tui.ui.screens.entry_list import EntryListScreen
+from miniflux_tui.ui.screens.entry_list import CategoryHeaderItem, EntryListScreen, FeedHeaderItem
 
 
 class CursorTestApp(App):
@@ -163,8 +163,6 @@ class TestCursorPositionGroupByFeed:
             assert screen.list_view.index == 0
 
             # First item should be a FeedHeaderItem
-            from miniflux_tui.ui.screens.entry_list import FeedHeaderItem
-
             first_child = screen.list_view.children[0]
             assert isinstance(first_child, FeedHeaderItem)
 
@@ -266,8 +264,6 @@ class TestCursorPositionGroupByCategory:
             assert screen.list_view.index == 0
 
             # First item should be a CategoryHeaderItem
-            from miniflux_tui.ui.screens.entry_list import CategoryHeaderItem
-
             first_child = screen.list_view.children[0]
             assert isinstance(first_child, CategoryHeaderItem)
 

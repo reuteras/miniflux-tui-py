@@ -42,7 +42,13 @@ def realistic_feeds(realistic_categories):
         Feed(id=6, title="The Guardian", site_url="https://theguardian.com", feed_url="https://theguardian.com/rss", category_id=2),
         # Entertainment category (2 feeds)
         Feed(id=7, title="Variety", site_url="https://variety.com", feed_url="https://variety.com/feed", category_id=3),
-        Feed(id=8, title="Hollywood Reporter", site_url="https://hollywoodreporter.com", feed_url="https://hollywoodreporter.com/feed", category_id=3),
+        Feed(
+            id=8,
+            title="Hollywood Reporter",
+            site_url="https://hollywoodreporter.com",
+            feed_url="https://hollywoodreporter.com/feed",
+            category_id=3,
+        ),
         # Science category (2 feeds)
         Feed(id=9, title="Science Daily", site_url="https://sciencedaily.com", feed_url="https://sciencedaily.com/rss", category_id=4),
         Feed(id=10, title="Nature", site_url="https://nature.com", feed_url="https://nature.com/rss", category_id=4),
@@ -389,7 +395,7 @@ class TestGroupModeWithRealisticData:
                     assert entry_list_screen.group_by_feed == initial_group_state
 
     @pytest.mark.asyncio
-    async def test_grouped_entries_maintain_feed_order(self, full_integration_config, full_integration_client, realistic_entries):
+    async def test_grouped_entries_maintain_feed_order(self, full_integration_config, full_integration_client):
         """Test that grouped entries maintain proper feed ordering."""
         app = MinifluxTuiApp(full_integration_config)
 
@@ -615,7 +621,7 @@ class TestFilteringWithRealisticData:
     """Test filtering with realistic data."""
 
     @pytest.mark.asyncio
-    async def test_filter_unread_only(self, full_integration_config, full_integration_client, realistic_entries):
+    async def test_filter_unread_only(self, full_integration_config, full_integration_client):
         """Test filtering to show only unread entries."""
         app = MinifluxTuiApp(full_integration_config)
 
@@ -731,7 +737,7 @@ class TestComplexScenarios:
                 assert feed_counts == expected
 
     @pytest.mark.asyncio
-    async def test_switching_between_unread_and_starred_views(self, full_integration_config, full_integration_client, realistic_entries):
+    async def test_switching_between_unread_and_starred_views(self, full_integration_config, full_integration_client):
         """Test switching between unread and starred views."""
         app = MinifluxTuiApp(full_integration_config)
 
