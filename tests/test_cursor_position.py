@@ -141,6 +141,162 @@ class TestCursorPositionStandardMode:
 class TestCursorPositionGroupByFeed:
     """Test cursor position in group by feed mode."""
 
+    async def test_cursor_initializes_at_position_0_on_startup(self, cursor_test_entries):
+        """Test cursor automatically initializes at position 0 when starting in grouped mode.
+
+        This test verifies the fix for the cursor initialization bug where:
+        - Starting with group_by_feed=True caused cursor to be at invalid position
+        - First feed appeared highlighted but j/k keys didn't work
+        - Root cause: list_view.index was not reset after clearing
+
+        This test ensures cursor is AUTOMATICALLY initialized without manual intervention.
+        """
+
+        # Create app with EntryListScreen starting in grouped mode
+        class GroupedStartupApp(App):
+            """Test app that starts with grouped mode enabled."""
+
+            def __init__(self, entries=None, **kwargs):
+                super().__init__(**kwargs)
+                self.entries = entries or []
+                self.entry_list_screen = None
+
+            def compose(self) -> ComposeResult:
+                """Compose with grouped mode enabled from start."""
+                self.entry_list_screen = EntryListScreen(
+                    entries=self.entries,
+                    unread_color="cyan",
+                    read_color="gray",
+                    default_sort="date",
+                    group_by_feed=True,  # Start in grouped mode
+                    group_collapsed=False,
+                )
+                yield self.entry_list_screen
+
+        app = GroupedStartupApp(entries=cursor_test_entries)
+
+        async with app.run_test() as pilot:
+            screen = app.entry_list_screen
+
+            # Wait for mount and population to complete
+            await pilot.pause()
+
+            # CRITICAL: Verify cursor is automatically at position 0
+            # This should happen WITHOUT manual intervention
+            assert screen.list_view.index == 0, (
+                f"Cursor should auto-initialize at position 0 in grouped mode, "
+                f"but got index={screen.list_view.index}"
+            )
+
+            # Verify first item is a FeedHeaderItem
+            first_child = screen.list_view.children[0]
+            assert isinstance(first_child, FeedHeaderItem), (
+                f"First item should be FeedHeaderItem in grouped mode, "
+                f"but got {type(first_child).__name__}"
+            )
+
+            # Verify cursor is on the first item (visual and actual match)
+            highlighted = screen.list_view.highlighted_child
+            assert highlighted is first_child, (
+                "Highlighted child should match first child at index 0"
+            )
+
+            # CRITICAL: Verify j key works immediately (no manual position setting)
+            await pilot.press("j")
+            await pilot.pause()
+
+            # Cursor should have moved down from position 0
+            assert screen.list_view.index > 0, (
+                f"Pressing 'j' should move cursor down from 0, "
+                f"but index is still {screen.list_view.index}"
+            )
+
+            # Reset to position 0 for k test
+            screen.list_view.index = 0
+            await pilot.pause()
+
+            # Verify k key doesn't crash (should stay at 0 or do nothing)
+            await pilot.press("k")
+            await pilot.pause()
+
+            # Cursor should still be at or near position 0
+            assert screen.list_view.index == 0, (
+                f"Pressing 'k' at position 0 should stay at 0, "
+                f"but got index={screen.list_view.index}"
+            )
+
+    async def test_cursor_initializes_correctly_with_collapsed_groups(self, cursor_test_entries):
+        """Test cursor initialization when starting with all groups collapsed.
+
+        This is the exact scenario the user reported:
+        - Start with group_by_feed=True and group_collapsed=True
+        - First feed header shows highlighted
+        - But cursor was at invalid position (j/k didn't work)
+        """
+
+        # Create app starting with collapsed groups
+        class CollapsedGroupApp(App):
+            """Test app that starts with collapsed grouped mode."""
+
+            def __init__(self, entries=None, **kwargs):
+                super().__init__(**kwargs)
+                self.entries = entries or []
+                self.entry_list_screen = None
+
+            def compose(self) -> ComposeResult:
+                """Compose with collapsed grouped mode from start."""
+                self.entry_list_screen = EntryListScreen(
+                    entries=self.entries,
+                    unread_color="cyan",
+                    read_color="gray",
+                    default_sort="date",
+                    group_by_feed=True,  # Grouped mode
+                    group_collapsed=True,  # All groups collapsed
+                )
+                yield self.entry_list_screen
+
+        app = CollapsedGroupApp(entries=cursor_test_entries)
+
+        async with app.run_test() as pilot:
+            screen = app.entry_list_screen
+
+            # Wait for mount and population to complete
+            await pilot.pause()
+
+            # CRITICAL: Verify cursor is at position 0
+            assert screen.list_view.index == 0, (
+                f"Cursor should be at position 0 with collapsed groups, "
+                f"but got index={screen.list_view.index}"
+            )
+
+            # First item should be a FeedHeaderItem
+            first_child = screen.list_view.children[0]
+            assert isinstance(first_child, FeedHeaderItem)
+
+            # Verify highlighted child matches first child
+            highlighted = screen.list_view.highlighted_child
+            assert highlighted is first_child
+
+            # CRITICAL: Test j key works (the bug made this not work)
+            await pilot.press("j")
+            await pilot.pause()
+
+            # Cursor should move to next visible item (next feed header)
+            # With collapsed groups, this skips hidden entries
+            new_index = screen.list_view.index
+            assert new_index > 0, (
+                f"Cursor should move down when pressing 'j', "
+                f"but stayed at {new_index}"
+            )
+
+            # Verify the new highlighted item is also a FeedHeaderItem
+            # (since all entries are collapsed)
+            new_highlighted = screen.list_view.highlighted_child
+            assert isinstance(new_highlighted, FeedHeaderItem), (
+                f"After pressing 'j' in collapsed mode, should be on another header, "
+                f"but got {type(new_highlighted).__name__}"
+            )
+
     async def test_cursor_starts_at_position_0_grouped(self, cursor_test_entries):
         """Test cursor starts at position 0 when grouped by feed."""
         app = CursorTestApp(entries=cursor_test_entries)
