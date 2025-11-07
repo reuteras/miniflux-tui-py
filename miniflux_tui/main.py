@@ -157,7 +157,7 @@ def _auto_setup_tailscale() -> None:
     try:
         # Run tailscale set --accept-routes (interactive authentication)
         # Using full path from shutil.which for security
-        subprocess.run(  # noqa: S603
+        subprocess.run(  # noqa: S603 # nosec B603
             [tailscale_path, "set", "--accept-routes"],
             check=True,
         )
