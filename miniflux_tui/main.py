@@ -129,7 +129,7 @@ def _auto_create_codespace_config() -> bool:
 
 def _auto_setup_tailscale() -> None:
     """
-    Automatically authenticate Tailscale on first startup if TAILSCALE_AUTHKEY is set.
+    Automatically install and authenticate Tailscale on first startup if TAILSCALE_AUTHKEY is set.
 
     This function checks for a marker file to ensure it only runs once per Codespace.
     """
@@ -146,12 +146,49 @@ def _auto_setup_tailscale() -> None:
 
     # Check if tailscale command is available
     tailscale_path = shutil.which("tailscale")
-    if not tailscale_path:
-        # Tailscale not installed, skip
-        return
 
-    print("\nDetected TAILSCALE_AUTHKEY environment variable.")
-    print("Authenticating Tailscale for first-time setup...")
+    if not tailscale_path:
+        # Tailscale not installed - install it
+        print("\nDetected TAILSCALE_AUTHKEY environment variable.")
+        print("Tailscale not found. Installing Tailscale...")
+
+        # Get full path to sh for security
+        sh_path = shutil.which("sh")
+        if not sh_path:
+            print("⚠ Shell (sh) not found. Cannot install Tailscale automatically.")
+            print("Please install Tailscale manually:")
+            print("  curl -fsSL https://tailscale.com/install.sh | sh")
+            return
+
+        try:
+            # Download and run the Tailscale install script
+            subprocess.run(  # noqa: S603 # nosec B603
+                [sh_path, "-c", "curl -fsSL https://tailscale.com/install.sh | sh"],
+                check=True,
+                capture_output=True,
+                text=True,
+            )
+            print("✓ Tailscale installed successfully!")
+
+            # Get the tailscale path after installation
+            tailscale_path = shutil.which("tailscale")
+            if not tailscale_path:
+                print("⚠ Tailscale installation completed but command not found in PATH.")
+                print("You may need to restart your shell or manually authenticate:")
+                print("  tailscale set --accept-routes")
+                return
+
+        except subprocess.CalledProcessError as exc:
+            print(f"\n⚠ Tailscale installation failed: {exc}")
+            print("You can manually install Tailscale by running:")
+            print("  curl -fsSL https://tailscale.com/install.sh | sh")
+            return
+        except FileNotFoundError:
+            print("\n⚠ Required commands not found.")
+            print("Please install Tailscale manually.")
+            return
+
+    print("\nAuthenticating Tailscale for first-time setup...")
     print("Please visit the URL that appears to complete authentication.\n")
 
     try:
