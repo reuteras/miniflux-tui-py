@@ -268,34 +268,34 @@ To change test data distribution:
 ### Potential Additions
 
 1. **Pilot-based navigation tests**
-   ```python
-   async with app.run_test() as pilot:
-       await pilot.press("j", "j", "j")  # Navigate down
-       await pilot.press("enter")        # Select entry
-       # Verify screen transition
-   ```
+  ```python
+  async with app.run_test() as pilot:
+      await pilot.press("j", "j", "j")  # Navigate down
+      await pilot.press("enter")        # Select entry
+      # Verify screen transition
+  ```
 
 2. **Snapshot tests** (with pytest-textual-snapshot)
-   ```python
-   def test_entry_list_snapshot(full_integration_client, snap_compare):
-       app = MinifluxTuiApp(config)
-       app.entries = realistic_entries
-       assert snap_compare(app, terminal_size=(100, 40))
-   ```
+  ```python
+  def test_entry_list_snapshot(full_integration_client, snap_compare):
+      app = MinifluxTuiApp(config)
+      app.entries = realistic_entries
+      assert snap_compare(app, terminal_size=(100, 40))
+  ```
 
 3. **Performance tests**
-   ```python
-   def test_large_dataset_performance(benchmark):
-       # Create 1000 entries
-       # Benchmark sorting, grouping, filtering
-   ```
+  ```python
+  def test_large_dataset_performance(benchmark):
+      # Create 1000 entries
+      # Benchmark sorting, grouping, filtering
+  ```
 
 4. **Error scenario tests**
-   ```python
-   async def test_network_failure_recovery():
-       # Simulate API timeout
-       # Verify error handling and recovery
-   ```
+  ```python
+  async def test_network_failure_recovery():
+      # Simulate API timeout
+      # Verify error handling and recovery
+  ```
 
 ## Cursor Position Tests
 
