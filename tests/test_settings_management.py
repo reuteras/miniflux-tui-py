@@ -138,8 +138,8 @@ class TestSettingsScreenLoadSettings:
 
             # Should handle missing fields with defaults
             assert screen.username == "unknown"
-            assert screen.timezone == "unknown"
-            assert screen.language == "unknown"
+            assert screen.timezone == "UTC"  # Default changed to UTC
+            assert screen.language == "en_US"  # Default changed to en_US
 
 
 class TestSettingsScreenDisplay:
