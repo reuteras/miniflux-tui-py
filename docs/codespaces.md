@@ -4,19 +4,9 @@ This guide explains how to use miniflux-tui-py in GitHub Codespaces with secure 
 
 ## Quick Start
 
-### 1. Create Codespace Configuration
+### 1. Set Up GitHub Secrets
 
-Run this command in your codespace terminal:
-
-```bash
-miniflux-tui --init-codespace
-```
-
-This creates a configuration file optimized for Codespaces that reads credentials from environment variables.
-
-### 2. Set Up GitHub Secrets
-
-Add your Miniflux credentials as Codespace secrets:
+Add your Miniflux credentials as Codespace secrets. If these are set before creating your codespace, the configuration will be created automatically on first run - no manual setup needed!
 
 **Repository Secrets** (recommended for project-specific setup):
 1. Go to your repository on GitHub
@@ -31,10 +21,18 @@ Add your Miniflux credentials as Codespace secrets:
 2. Scroll to **Codespaces secrets**
 3. Add the same secrets as above
 
-### 3. Start the Application
+### 2. Start the Application
 
 ```bash
 miniflux-tui
+```
+
+**Automatic Setup:** If both `MINIFLUX_SERVER_URL` and `MINIFLUX_API_KEY` environment variables are set and no configuration file exists, miniflux-tui will automatically create a Codespaces-optimized configuration on first run.
+
+**Manual Setup (optional):** If you prefer to manually create the configuration:
+
+```bash
+miniflux-tui --init-codespace
 ```
 
 The application will automatically read your credentials from the environment variables set by GitHub Codespaces secrets.
@@ -99,7 +97,9 @@ The easiest way to use Tailscale with Codespaces is to configure it in your `dev
 
 **Authentication:**
 
-When you first launch your codespace, authenticate Tailscale by running:
+**Automatic (if `TAILSCALE_AUTHKEY` is set):** miniflux-tui will automatically run `tailscale set --accept-routes` on first startup when the `TAILSCALE_AUTHKEY` environment variable is detected. You'll be prompted to visit a URL to complete authentication.
+
+**Manual:** If you prefer, you can manually authenticate by running:
 
 ```bash
 tailscale set --accept-routes
