@@ -10,12 +10,13 @@ Tests verify cursor behavior in:
 """
 
 from datetime import UTC, datetime, timedelta
+from typing import cast
 
 import pytest
 from textual.app import App, ComposeResult
 
 from miniflux_tui.api.models import Category, Entry, Feed
-from miniflux_tui.ui.screens.entry_list import CategoryHeaderItem, EntryListScreen, FeedHeaderItem
+from miniflux_tui.ui.screens.entry_list import CategoryHeaderItem, EntryListItem, EntryListScreen, FeedHeaderItem
 
 
 class CursorTestApp(App):
@@ -116,7 +117,7 @@ class TestCursorPositionStandardMode:
             assert screen.list_view.index == 0
 
             # Verify first item is the first entry (newest by date)
-            first_child = screen.list_view.children[0]
+            first_child = cast(EntryListItem, screen.list_view.children[0])
             assert hasattr(first_child, "entry")
             assert first_child.entry.title == "Feed A1 Entry 1"
 

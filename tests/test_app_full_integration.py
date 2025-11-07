@@ -6,6 +6,7 @@ These tests start the complete MinifluxTuiApp with realistic data structures
 """
 
 from datetime import UTC, datetime, timedelta
+from typing import cast
 from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
@@ -13,6 +14,7 @@ import pytest
 from miniflux_tui.api.models import Category, Entry, Feed
 from miniflux_tui.config import Config
 from miniflux_tui.ui.app import MinifluxTuiApp
+from miniflux_tui.ui.screens.entry_list import EntryListScreen
 
 TEST_TOKEN = "test-token-full-integration"  # noqa: S105
 
@@ -346,7 +348,7 @@ class TestGroupModeWithRealisticData:
 
             # Get the entry list screen and set entries
             if app.is_screen_installed("entry_list"):
-                entry_list_screen = app.get_screen("entry_list")
+                entry_list_screen = cast(EntryListScreen, app.get_screen("entry_list"))
                 entry_list_screen.entries = app.entries
 
                 # Enable grouping
@@ -375,7 +377,7 @@ class TestGroupModeWithRealisticData:
                 await pilot.pause()
 
                 if app.is_screen_installed("entry_list"):
-                    entry_list_screen = app.get_screen("entry_list")
+                    entry_list_screen = cast(EntryListScreen, app.get_screen("entry_list"))
 
                     # Initial state
                     initial_group_state = entry_list_screen.group_by_feed
@@ -412,7 +414,7 @@ class TestGroupModeWithRealisticData:
             await pilot.pause()
 
             if app.is_screen_installed("entry_list"):
-                entry_list_screen = app.get_screen("entry_list")
+                entry_list_screen = cast(EntryListScreen, app.get_screen("entry_list"))
                 entry_list_screen.entries = app.entries
 
                 # Enable grouping
@@ -444,7 +446,7 @@ class TestSortingModesWithRealisticData:
                 await pilot.pause()
 
                 if app.is_screen_installed("entry_list"):
-                    entry_list_screen = app.get_screen("entry_list")
+                    entry_list_screen = cast(EntryListScreen, app.get_screen("entry_list"))
 
                     # Set date sort
                     entry_list_screen.current_sort = "date"
@@ -475,7 +477,7 @@ class TestSortingModesWithRealisticData:
                 await pilot.pause()
 
                 if app.is_screen_installed("entry_list"):
-                    entry_list_screen = app.get_screen("entry_list")
+                    entry_list_screen = cast(EntryListScreen, app.get_screen("entry_list"))
 
                     # Set feed sort
                     entry_list_screen.current_sort = "feed"
@@ -508,7 +510,7 @@ class TestSortingModesWithRealisticData:
                 await pilot.pause()
 
                 if app.is_screen_installed("entry_list"):
-                    entry_list_screen = app.get_screen("entry_list")
+                    entry_list_screen = cast(EntryListScreen, app.get_screen("entry_list"))
 
                     # Set status sort
                     entry_list_screen.current_sort = "status"
@@ -533,7 +535,7 @@ class TestSortingModesWithRealisticData:
                 await pilot.pause()
 
                 if app.is_screen_installed("entry_list"):
-                    entry_list_screen = app.get_screen("entry_list")
+                    entry_list_screen = cast(EntryListScreen, app.get_screen("entry_list"))
 
                     # Start with date
                     assert entry_list_screen.current_sort == "date"
@@ -572,7 +574,7 @@ class TestNavigationWithRealisticData:
                 await pilot.pause()
 
                 if app.is_screen_installed("entry_list"):
-                    entry_list_screen = app.get_screen("entry_list")
+                    entry_list_screen = cast(EntryListScreen, app.get_screen("entry_list"))
 
                     # Move cursor down
                     entry_list_screen.action_cursor_down()
@@ -600,7 +602,7 @@ class TestNavigationWithRealisticData:
                 await pilot.pause()
 
                 if app.is_screen_installed("entry_list"):
-                    entry_list_screen = app.get_screen("entry_list")
+                    entry_list_screen = cast(EntryListScreen, app.get_screen("entry_list"))
 
                     # Enable grouping
                     entry_list_screen.group_by_feed = True
@@ -635,7 +637,7 @@ class TestFilteringWithRealisticData:
                 await pilot.pause()
 
                 if app.is_screen_installed("entry_list"):
-                    entry_list_screen = app.get_screen("entry_list")
+                    entry_list_screen = cast(EntryListScreen, app.get_screen("entry_list"))
 
                     # Enable unread filter
                     entry_list_screen.filter_unread_only = True
@@ -683,7 +685,7 @@ class TestComplexScenarios:
             await pilot.pause()
 
             if app.is_screen_installed("entry_list"):
-                entry_list_screen = app.get_screen("entry_list")
+                entry_list_screen = cast(EntryListScreen, app.get_screen("entry_list"))
                 entry_list_screen.entries = app.entries
 
                 # Enable grouping and feed sort
