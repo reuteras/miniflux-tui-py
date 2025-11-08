@@ -44,6 +44,52 @@ class TestMainInit:
             assert result == 0
 
 
+class TestMainInitCodespace:
+    """Test --init-codespace flag functionality."""
+
+    def test_init_codespace_creates_config(self, tmp_path):
+        """Test --init-codespace flag creates configuration file."""
+        config_path = tmp_path / "config.toml"
+
+        with patch("miniflux_tui.main.create_codespace_config") as mock_create:
+            mock_create.return_value = config_path
+            with patch.object(sys, "argv", ["miniflux-tui", "--init-codespace"]):
+                result = main()
+
+            assert result == 0
+            mock_create.assert_called_once()
+
+    def test_init_codespace_prints_help_message(self, tmp_path, capsys):
+        """Test --init-codespace flag prints helpful message."""
+        config_file = tmp_path / "config.toml"
+
+        with patch("miniflux_tui.main.create_codespace_config") as mock_create:
+            mock_create.return_value = config_file
+            with patch.object(sys, "argv", ["miniflux-tui", "--init-codespace"]):
+                result = main()
+
+            captured = capsys.readouterr()
+            assert "Created GitHub Codespaces configuration" in captured.out
+            assert "environment variables" in captured.out
+            assert "MINIFLUX_SERVER_URL" in captured.out
+            assert "MINIFLUX_API_KEY" in captured.out
+            assert result == 0
+
+    def test_init_codespace_mentions_tailscale(self, tmp_path, capsys):
+        """Test --init-codespace includes Tailscale setup instructions."""
+        config_file = tmp_path / "config.toml"
+
+        with patch("miniflux_tui.main.create_codespace_config") as mock_create:
+            mock_create.return_value = config_file
+            with patch.object(sys, "argv", ["miniflux-tui", "--init-codespace"]):
+                result = main()
+
+            captured = capsys.readouterr()
+            assert "Tailscale" in captured.out
+            assert "TAILSCALE_AUTHKEY" in captured.out
+            assert result == 0
+
+
 class TestMainCheckConfig:
     """Test --check-config flag functionality."""
 
@@ -289,6 +335,190 @@ class TestMainArgumentParsing:
             with patch.object(sys, "argv", ["miniflux-tui", "--check-config"]):
                 result = main()
                 assert result == 0
+
+
+class TestAutoCreateCodespaceConfig:
+    """Test automatic Codespace configuration creation."""
+
+    def test_auto_create_with_env_vars(self, tmp_path, monkeypatch, capsys):
+        """Test auto-creation when environment variables are present."""
+        # Set environment variables
+        monkeypatch.setenv("MINIFLUX_SERVER_URL", "https://example.com")
+        monkeypatch.setenv("MINIFLUX_API_KEY", TEST_TOKEN)
+
+        config_path = tmp_path / "config.toml"
+
+        mock_config = MagicMock()
+        with (
+            patch("miniflux_tui.main.get_config_file_path") as mock_path,
+            patch("miniflux_tui.main.create_codespace_config") as mock_create,
+            patch("miniflux_tui.main.load_config") as mock_load,
+            patch("miniflux_tui.main.run_tui", new=AsyncMock()),
+        ):
+            mock_path.return_value = config_path
+            mock_create.return_value = config_path
+            mock_load.return_value = mock_config
+            with patch.object(sys, "argv", ["miniflux-tui"]):
+                result = main()
+
+            captured = capsys.readouterr()
+            assert "Detected Codespace environment variables" in captured.out
+            assert "Automatically creating Codespace configuration" in captured.out
+            assert result == 0
+            mock_create.assert_called_once()
+
+    def test_auto_create_skipped_when_config_exists(self, tmp_path, monkeypatch):
+        """Test auto-creation is skipped if config already exists."""
+        # Set environment variables
+        monkeypatch.setenv("MINIFLUX_SERVER_URL", "https://example.com")
+        monkeypatch.setenv("MINIFLUX_API_KEY", TEST_TOKEN)
+
+        config_path = tmp_path / "config.toml"
+        config_path.write_text("existing config")
+
+        mock_config = MagicMock()
+        with (
+            patch("miniflux_tui.main.get_config_file_path") as mock_path,
+            patch("miniflux_tui.main.create_codespace_config") as mock_create,
+            patch("miniflux_tui.main.load_config") as mock_load,
+            patch("miniflux_tui.main.run_tui", new=AsyncMock()),
+        ):
+            mock_path.return_value = config_path
+            mock_load.return_value = mock_config
+            with patch.object(sys, "argv", ["miniflux-tui"]):
+                main()
+
+            # Should not create config since it exists
+            mock_create.assert_not_called()
+
+    def test_auto_create_skipped_without_env_vars(self, tmp_path, monkeypatch):
+        """Test auto-creation is skipped without environment variables."""
+        # Ensure env vars are NOT set
+        monkeypatch.delenv("MINIFLUX_SERVER_URL", raising=False)
+        monkeypatch.delenv("MINIFLUX_API_KEY", raising=False)
+
+        config_path = tmp_path / "config.toml"
+
+        with (
+            patch("miniflux_tui.main.get_config_file_path") as mock_path,
+            patch("miniflux_tui.main.create_codespace_config") as mock_create,
+            patch("miniflux_tui.main.load_config") as mock_load,
+        ):
+            mock_path.return_value = config_path
+            mock_load.return_value = None
+            with patch.object(sys, "argv", ["miniflux-tui"]):
+                main()
+
+            # Should not create config without env vars
+            mock_create.assert_not_called()
+
+
+class TestAutoSetupTailscale:
+    """Test automatic Tailscale setup."""
+
+    def test_tailscale_setup_with_authkey_and_installed(self, tmp_path, monkeypatch, capsys):
+        """Test Tailscale authentication when already installed."""
+        monkeypatch.setenv("TAILSCALE_AUTHKEY", "test-authkey")
+
+        config_dir = tmp_path / "miniflux-tui"
+        marker_file = config_dir / ".tailscale-initialized"
+
+        mock_config = MagicMock()
+        with (
+            patch("miniflux_tui.main.get_config_dir") as mock_dir,
+            patch("miniflux_tui.main.shutil.which") as mock_which,
+            patch("miniflux_tui.main.subprocess.run") as mock_run,
+            patch("miniflux_tui.main.load_config") as mock_load,
+            patch("miniflux_tui.main.run_tui", new=AsyncMock()),
+        ):
+            mock_dir.return_value = str(config_dir)
+            mock_which.return_value = "/usr/bin/tailscale"
+            mock_load.return_value = mock_config
+            with patch.object(sys, "argv", ["miniflux-tui"]):
+                main()
+
+            captured = capsys.readouterr()
+            assert "Authenticating Tailscale" in captured.out
+
+            # Verify marker file was created
+            assert marker_file.exists()
+
+            # Verify tailscale command was called
+            mock_run.assert_called_once()
+            call_args = mock_run.call_args[0][0]
+            assert call_args == ["/usr/bin/tailscale", "set", "--accept-routes"]
+
+    def test_tailscale_setup_skipped_without_authkey(self, monkeypatch, capsys):
+        """Test Tailscale setup is skipped without TAILSCALE_AUTHKEY."""
+        monkeypatch.delenv("TAILSCALE_AUTHKEY", raising=False)
+
+        mock_config = MagicMock()
+        with (
+            patch("miniflux_tui.main.shutil.which") as mock_which,
+            patch("miniflux_tui.main.load_config") as mock_load,
+            patch("miniflux_tui.main.run_tui", new=AsyncMock()),
+        ):
+            mock_load.return_value = mock_config
+            with patch.object(sys, "argv", ["miniflux-tui"]):
+                main()
+
+            captured = capsys.readouterr()
+            assert "Tailscale" not in captured.out
+            mock_which.assert_not_called()
+
+    def test_tailscale_setup_skipped_if_already_run(self, tmp_path, monkeypatch):
+        """Test Tailscale setup is skipped if marker file exists."""
+        monkeypatch.setenv("TAILSCALE_AUTHKEY", "test-authkey")
+
+        config_dir = tmp_path / "miniflux-tui"
+        config_dir.mkdir(parents=True, exist_ok=True)
+        marker_file = config_dir / ".tailscale-initialized"
+        marker_file.touch()
+
+        mock_config = MagicMock()
+        with (
+            patch("miniflux_tui.main.get_config_dir") as mock_dir,
+            patch("miniflux_tui.main.shutil.which") as mock_which,
+            patch("miniflux_tui.main.subprocess.run") as mock_run,
+            patch("miniflux_tui.main.load_config") as mock_load,
+            patch("miniflux_tui.main.run_tui", new=AsyncMock()),
+        ):
+            mock_dir.return_value = str(config_dir)
+            mock_load.return_value = mock_config
+            with patch.object(sys, "argv", ["miniflux-tui"]):
+                main()
+
+            # Should not attempt Tailscale setup
+            mock_which.assert_not_called()
+            mock_run.assert_not_called()
+
+    def test_tailscale_installation_when_not_found(self, tmp_path, monkeypatch, capsys):
+        """Test Tailscale installation when not installed."""
+        monkeypatch.setenv("TAILSCALE_AUTHKEY", "test-authkey")
+
+        config_dir = tmp_path / "miniflux-tui"
+
+        mock_config = MagicMock()
+        with (
+            patch("miniflux_tui.main.get_config_dir") as mock_dir,
+            patch("miniflux_tui.main.shutil.which") as mock_which,
+            patch("miniflux_tui.main.subprocess.run") as mock_run,
+            patch("miniflux_tui.main.load_config") as mock_load,
+            patch("miniflux_tui.main.run_tui", new=AsyncMock()),
+        ):
+            mock_dir.return_value = str(config_dir)
+            # First call returns None (tailscale not found), second returns sh path, third returns tailscale path
+            mock_which.side_effect = [None, "/bin/sh", "/usr/bin/tailscale"]
+            mock_load.return_value = mock_config
+            with patch.object(sys, "argv", ["miniflux-tui"]):
+                main()
+
+            captured = capsys.readouterr()
+            assert "Installing Tailscale" in captured.out
+            assert "Tailscale installed successfully" in captured.out
+
+            # Should call subprocess twice: once for install, once for auth
+            assert mock_run.call_count == 2
 
 
 class TestMainEntryPoint:

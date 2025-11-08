@@ -539,3 +539,165 @@ group_collapsed = true
             assert config.default_sort == "status"
             assert config.default_group_by_feed is True
             assert config.group_collapsed is True
+
+
+class TestCreateCodespaceConfig:
+    """Test Codespace configuration creation."""
+
+    def test_create_codespace_config_creates_file(self, tmp_path):
+        """Test create_codespace_config() creates configuration file."""
+        config_dir = tmp_path / "miniflux-tui"
+
+        with patch("miniflux_tui.config.get_config_dir") as mock_get_dir:
+            mock_get_dir.return_value = config_dir
+            config_path = config_module.create_codespace_config()
+
+            assert config_path.exists()
+            assert config_path == config_dir / "config.toml"
+
+    def test_create_codespace_config_content_unix(self, tmp_path):
+        """Test create_codespace_config() creates correct content on Unix."""
+        config_dir = tmp_path / "miniflux-tui"
+
+        with (
+            patch("miniflux_tui.config.get_config_dir") as mock_get_dir,
+            patch("miniflux_tui.config.sys.platform", "linux"),
+        ):
+            mock_get_dir.return_value = config_dir
+            config_path = config_module.create_codespace_config()
+
+            content = config_path.read_text()
+            assert "MINIFLUX_SERVER_URL" in content
+            assert "MINIFLUX_API_KEY" in content
+            assert '["sh", "-c", "echo $MINIFLUX_API_KEY"]' in content
+            assert "PLACEHOLDER_SET_MINIFLUX_SERVER_URL_SECRET" in content
+            assert "default_group_by_feed = true" in content
+
+    def test_create_codespace_config_content_windows(self, tmp_path):
+        """Test create_codespace_config() creates correct content on Windows."""
+        config_dir = tmp_path / "miniflux-tui"
+
+        with (
+            patch("miniflux_tui.config.get_config_dir") as mock_get_dir,
+            patch("miniflux_tui.config.sys.platform", "win32"),
+        ):
+            mock_get_dir.return_value = config_dir
+            config_path = config_module.create_codespace_config()
+
+            content = config_path.read_text()
+            assert '["cmd", "/c", "echo %MINIFLUX_API_KEY%"]' in content
+
+    def test_create_codespace_config_creates_directory(self, tmp_path):
+        """Test create_codespace_config() creates config directory if it doesn't exist."""
+        config_dir = tmp_path / "miniflux-tui"
+        assert not config_dir.exists()
+
+        with patch("miniflux_tui.config.get_config_dir") as mock_get_dir:
+            mock_get_dir.return_value = config_dir
+            config_path = config_module.create_codespace_config()
+
+            assert config_dir.exists()
+            assert config_path.exists()
+
+    def test_create_codespace_config_overwrites_existing(self, tmp_path):
+        """Test create_codespace_config() overwrites existing file."""
+        config_dir = tmp_path / "miniflux-tui"
+        config_dir.mkdir()
+        config_file = config_dir / "config.toml"
+        config_file.write_text("old config")
+
+        with patch("miniflux_tui.config.get_config_dir") as mock_get_dir:
+            mock_get_dir.return_value = config_dir
+            config_path = config_module.create_codespace_config()
+
+            content = config_path.read_text()
+            assert "old config" not in content
+            assert "MINIFLUX_SERVER_URL" in content
+
+
+class TestConfigEnvVarOverride:
+    """Test environment variable override functionality."""
+
+    def test_env_var_overrides_server_url(self, tmp_path, monkeypatch):
+        """Test MINIFLUX_SERVER_URL environment variable overrides config."""
+        monkeypatch.setenv("MINIFLUX_SERVER_URL", "https://env-server.com")
+
+        config_file = tmp_path / "config.toml"
+        config_file.write_text("""
+server_url = "https://config-server.com"
+password = ["echo", "test-token"]
+""")
+
+        config = Config.from_file(config_file)
+        assert config.server_url == "https://env-server.com"
+
+    def test_config_value_used_without_env_var(self, tmp_path, monkeypatch):
+        """Test config value is used when environment variable is not set."""
+        monkeypatch.delenv("MINIFLUX_SERVER_URL", raising=False)
+
+        config_file = tmp_path / "config.toml"
+        config_file.write_text("""
+server_url = "https://config-server.com"
+password = ["echo", "test-token"]
+""")
+
+        config = Config.from_file(config_file)
+        assert config.server_url == "https://config-server.com"
+
+    def test_placeholder_without_env_var_raises_error(self, tmp_path, monkeypatch):
+        """Test placeholder in config raises error without environment variable."""
+        monkeypatch.delenv("MINIFLUX_SERVER_URL", raising=False)
+
+        config_file = tmp_path / "config.toml"
+        config_file.write_text("""
+server_url = "https://PLACEHOLDER_SET_MINIFLUX_SERVER_URL_SECRET"
+password = ["echo", "test-token"]
+""")
+
+        with pytest.raises(ConfigurationError) as exc_info:
+            Config.from_file(config_file)
+
+        assert "placeholder" in str(exc_info.value).lower()
+        assert "MINIFLUX_SERVER_URL" in str(exc_info.value)
+
+    def test_placeholder_with_env_var_succeeds(self, tmp_path, monkeypatch):
+        """Test placeholder in config works with environment variable."""
+        monkeypatch.setenv("MINIFLUX_SERVER_URL", "https://env-server.com")
+
+        config_file = tmp_path / "config.toml"
+        config_file.write_text("""
+server_url = "https://PLACEHOLDER_SET_MINIFLUX_SERVER_URL_SECRET"
+password = ["echo", "test-token"]
+""")
+
+        config = Config.from_file(config_file)
+        assert config.server_url == "https://env-server.com"
+
+    def test_env_var_override_with_all_settings(self, tmp_path, monkeypatch):
+        """Test environment variable override preserves other settings."""
+        monkeypatch.setenv("MINIFLUX_SERVER_URL", "https://env-server.com")
+
+        config_file = tmp_path / "config.toml"
+        config_file.write_text("""
+server_url = "https://config-server.com"
+password = ["echo", "test-token"]
+allow_invalid_certs = true
+
+[theme]
+unread_color = "blue"
+read_color = "red"
+
+[sorting]
+default_sort = "feed"
+default_group_by_feed = true
+group_collapsed = true
+""")
+
+        config = Config.from_file(config_file)
+        assert config.server_url == "https://env-server.com"
+        assert config.allow_invalid_certs is True
+        assert config.unread_color == "blue"
+        assert config.read_color == "red"
+        assert config.default_sort == "feed"
+        assert config.default_group_by_feed is True
+        assert config.group_collapsed is True
