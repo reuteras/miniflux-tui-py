@@ -1,14 +1,10 @@
 {
     "name": "miniflux-tui-py",
     "image": "mcr.microsoft.com/devcontainers/python:3.14-bookworm",
-
-    // Enable Tailscale in Codespaces
     "runArgs": ["--device=/dev/net/tun"],
-
     "features": {
         "ghcr.io/tailscale/codespace/tailscale": {}
     },
-
     "postCreateCommand": "bash .devcontainer/postCreate.sh",
     "postStartCommand": "bash .devcontainer/postStart.sh",
     "remoteEnv": {
