@@ -110,7 +110,7 @@ class SettingsScreen(Screen):
                 config_path = get_config_file_path()
 
                 lines = [
-                    f"  Location:  {config_path}",
+                    f"  Location:  {config_path!s}",
                     f"  Server:    {config.server_url}",
                     "",
                     "  [dim]Edit config.toml to change colors, defaults, and API settings[/dim]",
