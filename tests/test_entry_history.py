@@ -145,7 +145,11 @@ async def test_load_history_api_error(mock_app):
     assert screen.entries == []
     screen._populate_list.assert_called_once()
     mock_app.log.assert_called()
-    mock_app.notify.assert_any_call("Failed to load history. Check logs for details.", severity="error")
+    # Check that error notification includes the actual error message
+    notify_calls = [call for call in mock_app.notify.call_args_list if call[1].get("severity") == "error"]
+    assert len(notify_calls) > 0
+    assert "Failed to load history:" in notify_calls[0][0][0]
+    assert "Network error" in notify_calls[0][0][0]
 
 
 @pytest.mark.asyncio

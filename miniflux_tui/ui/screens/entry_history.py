@@ -45,6 +45,8 @@ class EntryHistoryScreen(EntryListScreen):
         except Exception as e:
             error_msg = f"Error loading history: {type(e).__name__}: {e}"
             self.app.log(error_msg)
-            self.app.notify("Failed to load history. Check logs for details.", severity="error")
+            # Show actual error in notification so user knows what went wrong
+            short_error = str(e)[:100]  # Limit to 100 chars for notification
+            self.app.notify(f"Failed to load history: {short_error}", severity="error")
             self.entries = []
             self._populate_list()
