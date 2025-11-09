@@ -370,7 +370,11 @@ class EntryListScreen(Screen):
         # Restore cursor position after list is updated
         # This ensures cursor is initialized even when called directly (e.g., from tests)
         # Uses call_later to defer until ListView has fully updated
-        self.call_later(self._restore_cursor_position_and_focus)
+        # On initial mount, use simple positioning; otherwise restore previous position
+        if self._is_initial_mount:
+            self.call_later(self._set_initial_position_and_focus)
+        else:
+            self.call_later(self._restore_cursor_position_and_focus)
 
     def _find_entry_index_by_id(self, entry_id: int | None) -> int | None:
         """Find the index of an entry by its ID.
