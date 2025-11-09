@@ -4,6 +4,63 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
+## [0.6.0] - 2025-11-09
+
+### BUG FIXES
+
+- prevent cursor position mismatch on startup (#490)
+
+### FEATURES
+
+- add Tailscale support to GitHub Codespaces (#489)
+
+### MAINTENANCE
+
+- Update roadmap priorities for v0.7.0 features (#500)
+
+### TESTING
+
+- add comprehensive tests for codespace configuration (#488)
+
+
+
+#### Contributors
+
+Thank you to everyone who contributed to this release!
+
+**Humans:** 👤 Peter Reuterås
+
+**AI & Automation:** 🤖 Claude (AI Assistant)
+## [v0.5.16] - 2025-11-07
+
+### BUG FIXES
+
+- correct pytest path for VS Code test discovery (#483)
+
+
+
+#### Contributors
+
+Thank you to everyone who contributed to this release!
+
+**Humans:** 👤 Peter Reuterås
+
+**AI & Automation:** 🤖 Claude (AI Assistant)
+## [v0.5.15] - 2025-11-07
+
+### MAINTENANCE
+
+- Release v0.5.15 (#482)
+
+
+
+#### Contributors
+
+Thank you to everyone who contributed to this release!
+
+**Humans:** 👤 Peter Reuterås
+
+**AI & Automation:** 🤖 Claude (AI Assistant)
 ## [v0.5.14] - 2025-11-07
 
 ### BUG FIXES
