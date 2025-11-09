@@ -131,6 +131,7 @@ class Config:
         default_sort: str = "date",
         default_group_by_feed: bool = False,
         group_collapsed: bool = False,
+        show_info_messages: bool = True,
     ):
         self.server_url = server_url
         self._password_command = _normalize_command(password)
@@ -141,6 +142,7 @@ class Config:
         self.default_sort = default_sort
         self.default_group_by_feed = default_group_by_feed
         self.group_collapsed = group_collapsed
+        self.show_info_messages = show_info_messages
 
     @property
     def password_command(self) -> tuple[str, ...]:
@@ -261,6 +263,10 @@ class Config:
         default_group_by_feed = sorting.get("default_group_by_feed", False)
         group_collapsed = sorting.get("group_collapsed", False)
 
+        # UI settings
+        ui = data.get("ui", {})
+        show_info_messages = ui.get("show_info_messages", True)
+
         # Check for environment variable overrides (useful for Codespaces)
         server_url = data["server_url"]
         env_server_url = os.environ.get("MINIFLUX_SERVER_URL")
@@ -285,6 +291,7 @@ class Config:
             default_sort=default_sort,
             default_group_by_feed=default_group_by_feed,
             group_collapsed=group_collapsed,
+            show_info_messages=show_info_messages,
         )
 
 
@@ -375,6 +382,11 @@ default_sort = "date"
 
 # Default grouping by feed (default: false)
 default_group_by_feed = false
+
+[ui]
+# Show information messages (e.g., "Refreshing...", "Loaded N entries")
+# Set to false to only show warnings and errors (default: true)
+show_info_messages = true
 """
 
     # Always write config using UTF-8 to avoid locale-dependent encoding issues
@@ -460,6 +472,11 @@ default_group_by_feed = true
 
 # Start with groups collapsed (optional)
 group_collapsed = false
+
+[ui]
+# Show information messages (e.g., "Refreshing...", "Loaded N entries")
+# Set to false to only show warnings and errors (default: true)
+show_info_messages = true
 """
 
     with Path.open(config_path, "w", encoding="utf-8") as f:

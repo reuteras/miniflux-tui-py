@@ -1364,15 +1364,16 @@ class EntryListScreen(Screen):
             feed_title = highlighted.entry.feed.title
             feed_id = highlighted.entry.feed_id
 
-            self.notify(f"Refreshing feed: {feed_title}...")
+            # Show single "Refreshing..." message
+            if hasattr(self.app, "notify_info"):
+                self.app.notify_info(f"Refreshing feed: {feed_title}...")
+
             await self.app.client.refresh_feed(feed_id)
-            self.notify(f"Feed '{feed_title}' refreshed on server")
 
             # Reload entries after refreshing the feed
             if hasattr(self.app, "load_entries"):
-                self.notify("Reloading entries...")
                 await self.app.load_entries(self.app.current_view)
-                self.notify("Entries reloaded")
+                # load_entries will show the result message
         except (ConnectionError, TimeoutError) as e:
             self.notify(f"Network error refreshing feed: {e}", severity="error")
         except Exception as e:
@@ -1385,15 +1386,16 @@ class EntryListScreen(Screen):
             return
 
         try:
-            self.notify("Refreshing all feeds...")
+            # Show single "Refreshing..." message
+            if hasattr(self.app, "notify_info"):
+                self.app.notify_info("Refreshing all feeds...")
+
             await self.app.client.refresh_all_feeds()
-            self.notify("All feeds refreshed on server")
 
             # Reload entries after refreshing all feeds
             if hasattr(self.app, "load_entries"):
-                self.notify("Reloading entries...")
                 await self.app.load_entries(self.app.current_view)
-                self.notify("Entries reloaded")
+                # load_entries will show the result message
         except (ConnectionError, TimeoutError) as e:
             self.notify(f"Network error refreshing feeds: {e}", severity="error")
         except Exception as e:
@@ -1411,13 +1413,16 @@ class EntryListScreen(Screen):
             return
 
         try:
-            self.notify("Syncing entries from server...")
+            # Show single "Syncing..." message
+            if hasattr(self.app, "notify_info"):
+                self.app.notify_info("Syncing entries from server...")
+
             # Rebuild category mapping for fresh data
             if hasattr(self.app, "_build_entry_category_mapping"):
                 self.app.entry_category_map = await self.app._build_entry_category_mapping()
             # Reload entries without refreshing feeds
             await self.app.load_entries(self.app.current_view)
-            self.notify("Entries synced")
+            # load_entries will show the result message
         except (ConnectionError, TimeoutError) as e:
             self.notify(f"Network error syncing entries: {e}", severity="error")
         except Exception as e:

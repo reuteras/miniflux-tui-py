@@ -26,6 +26,7 @@ class SettingsScreen(Screen):
         Binding("r", "refresh", "Refresh"),
         Binding("o", "open_web_settings", "Web Settings"),
         Binding("e", "edit_settings", "Edit"),
+        Binding("i", "toggle_info_messages", "Toggle Info Messages"),
     ]
 
     def __init__(self, **kwargs):
@@ -76,11 +77,15 @@ class SettingsScreen(Screen):
             yield Static(id="reading-prefs")
             yield Static()
 
+            yield Static("[bold yellow]TUI Configuration[/bold yellow]")
+            yield Static(id="tui-config")
+            yield Static()
+
             yield Static("[bold yellow]Integrations Status[/bold yellow]")
             yield Static(id="integrations-status")
             yield Static()
 
-            yield Static("[dim]Press e to edit, o for web settings, r to refresh, Esc or q to close[/dim]")
+            yield Static("[dim]Press i to toggle info messages, e to edit, o for web settings, r to refresh, Esc or q to close[/dim]")
 
         yield footer
 
@@ -145,6 +150,7 @@ class SettingsScreen(Screen):
         self._update_user_info()
         self._update_display_preferences()
         self._update_reading_preferences()
+        self._update_tui_config()
         self._update_integrations()
 
     def _update_user_info(self) -> None:
@@ -189,6 +195,31 @@ class SettingsScreen(Screen):
         except Exception as e:
             self.app.log(f"Could not update reading preferences: {e}")
 
+    def _update_tui_config(self) -> None:
+        """Update the TUI configuration display."""
+        try:
+            widget = self.query_one("#tui-config", Static)
+
+            # Get config from app
+            config = getattr(self.app, "config", None)
+            if config:
+                show_info = getattr(self.app, "show_info_messages", config.show_info_messages)
+
+                lines = [
+                    f"  Show Info Messages:  {'Enabled' if show_info else 'Disabled'}",
+                    f"  Unread Color:        {config.unread_color}",
+                    f"  Read Color:          {config.read_color}",
+                    f"  Default Sort:        {config.default_sort}",
+                    f"  Group by Feed:       {'Yes' if config.default_group_by_feed else 'No'}",
+                    "  [dim]Press 'i' to toggle info messages[/dim]",
+                    "  [dim]Edit config file to change other settings[/dim]",
+                ]
+                widget.update("\n".join(lines))
+            else:
+                widget.update("[dim]TUI configuration not available[/dim]")
+        except Exception as e:
+            self.app.log(f"Could not update TUI config: {e}")
+
     def _update_integrations(self) -> None:
         """Update the integrations display."""
         try:
@@ -205,6 +236,14 @@ class SettingsScreen(Screen):
             widget.update(text)
         except Exception as e:
             self.app.log(f"Could not update integrations: {e}")
+
+    def action_toggle_info_messages(self):
+        """Toggle the display of information messages."""
+        toggle_func = getattr(self.app, "toggle_info_messages", None)
+        if toggle_func and callable(toggle_func):
+            toggle_func()
+            # Update the display to show the new state
+            self._update_tui_config()
 
     def action_close(self):
         """Close the settings screen."""
