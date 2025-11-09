@@ -8,6 +8,7 @@ from textual.app import App, ComposeResult
 
 from miniflux_tui.api.models import Entry, Feed
 from miniflux_tui.ui.screens.entry_list import EntryListScreen
+from miniflux_tui.ui.screens.input_dialog import InputDialog
 
 
 class EntryListTestApp(App):
@@ -508,7 +509,6 @@ class TestEntryListScreenSearch:
             await pilot.pause()
 
             # Verify dialog is on the screen stack
-            from miniflux_tui.ui.screens.input_dialog import InputDialog
             assert len(app.screen_stack) > 1
             # The top screen should be InputDialog
             top_screen = app.screen_stack[-1]
