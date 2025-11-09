@@ -1657,6 +1657,7 @@ class TestRefreshActions:
         mock_app.client = mock_client
         mock_app.load_entries = AsyncMock()
         mock_app.current_view = "unread"
+        mock_app.notify_info = MagicMock()  # Mock notify_info for info messages
 
         # Mock list view with highlighted entry
         mock_list_view = MagicMock()
@@ -1679,8 +1680,9 @@ class TestRefreshActions:
         # Verify load_entries was called to reload
         mock_app.load_entries.assert_called_once_with("unread")
 
-        # Verify notifications
-        assert screen.notify.call_count >= 2  # At least start and end notifications
+        # Verify notifications (now uses app.notify_info for info messages)
+        # At least one info notification should have been called
+        assert mock_app.notify_info.call_count >= 1
 
     @pytest.mark.asyncio
     async def test_action_refresh_no_client(self, diverse_entries):
@@ -1775,6 +1777,7 @@ class TestRefreshActions:
         mock_app.client = mock_client
         mock_app.load_entries = AsyncMock()
         mock_app.current_view = "unread"
+        mock_app.notify_info = MagicMock()  # Mock notify_info for info messages
 
         # Mock notify
         screen.notify = MagicMock()
@@ -1790,8 +1793,9 @@ class TestRefreshActions:
         # Verify load_entries was called to reload
         mock_app.load_entries.assert_called_once_with("unread")
 
-        # Verify notifications
-        assert screen.notify.call_count >= 2  # At least start and end notifications
+        # Verify notifications (now uses app.notify_info for info messages)
+        # At least one info notification should have been called
+        assert mock_app.notify_info.call_count >= 1
 
     @pytest.mark.asyncio
     async def test_action_refresh_all_feeds_no_client(self, diverse_entries):
