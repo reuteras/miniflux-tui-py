@@ -5,11 +5,16 @@ from miniflux_tui.ui.screens.entry_list import EntryListScreen
 
 
 class EntryHistoryScreen(EntryListScreen):
-    """Screen displaying previously read entries - extends EntryListScreen."""
+    """Screen displaying previously read entries - extends EntryListScreen.
+
+    Pressing Shift+H in this screen returns to the main entry list.
+    """
 
     def __init__(self, **kwargs):
         """Initialize with empty entries list - will be populated on mount."""
         super().__init__(entries=[], **kwargs)
+        # Update subtitle to indicate this is history view
+        self.sub_title = "Reading History"
 
     def on_mount(self) -> None:
         """Called when screen is mounted - load history instead of normal entries."""
@@ -50,3 +55,12 @@ class EntryHistoryScreen(EntryListScreen):
             self.app.notify(f"Failed to load history: {short_error}", severity="error")
             self.entries = []
             self._populate_list()
+
+    def action_show_history(self):
+        """Return to main entry list (override parent method).
+
+        In history view, pressing Shift+H returns to the main entry list
+        instead of opening history again.
+        """
+        self.app.log("History screen: action_show_history - popping back to main list")
+        self.app.pop_screen()

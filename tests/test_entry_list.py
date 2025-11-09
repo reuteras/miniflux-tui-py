@@ -1689,12 +1689,11 @@ class TestRefreshActions:
         # Verify refresh_feed was called with correct feed_id
         mock_client.refresh_feed.assert_called_once_with(diverse_entries[0].feed_id)
 
-        # Verify load_entries was called to reload
-        mock_app.load_entries.assert_called_once_with("unread")
+        # Verify load_entries was NOT called (new behavior: only refresh, don't reload)
+        mock_app.load_entries.assert_not_called()
 
-        # Verify notifications (now uses app.notify_info for info messages)
-        # At least one info notification should have been called
-        assert mock_app.notify_info.call_count >= 1
+        # Verify notifications (should show refreshing and success messages)
+        assert screen.notify.call_count >= 1
 
     @pytest.mark.asyncio
     async def test_action_refresh_no_client(self, diverse_entries):
@@ -1802,12 +1801,11 @@ class TestRefreshActions:
         # Verify refresh_all_feeds was called
         mock_client.refresh_all_feeds.assert_called_once()
 
-        # Verify load_entries was called to reload
-        mock_app.load_entries.assert_called_once_with("unread")
+        # Verify load_entries was NOT called (new behavior: only refresh, don't reload)
+        mock_app.load_entries.assert_not_called()
 
-        # Verify notifications (now uses app.notify_info for info messages)
-        # At least one info notification should have been called
-        assert mock_app.notify_info.call_count >= 1
+        # Verify notifications (should show refreshing and success messages)
+        assert screen.notify.call_count >= 1
 
     @pytest.mark.asyncio
     async def test_action_refresh_all_feeds_no_client(self, diverse_entries):
@@ -2127,32 +2125,42 @@ class TestCategoryGrouping:
 class TestSearchActions:
     """Test search-related actions."""
 
-    def test_action_search_clears_active_search(self, diverse_entries):
-        """Test action_search clears active search and repopulates list."""
+    def test_action_search_shows_input_dialog(self, diverse_entries):
+        """Test action_search shows input dialog for search."""
         screen = EntryListScreen(entries=diverse_entries)
-        screen.search_active = True
-        screen.search_term = "test"
-        screen._populate_list = MagicMock()
-        screen.notify = MagicMock()
 
-        screen.action_search()
+        # Mock the app
+        mock_app = MagicMock()
+        mock_app.push_screen = MagicMock()
 
-        screen._populate_list.assert_called_once()
-        screen.notify.assert_called_with("Search cleared")
-        assert screen.search_active is False
-        assert not screen.search_term
+        # Patch the app property
+        with patch.object(type(screen), "app", new_callable=lambda: property(lambda _: mock_app)):
+            screen.action_search()
 
-    def test_action_search_without_active_search_shows_hint(self, diverse_entries):
-        """Test action_search shows hint when no search term is active."""
+        # Verify push_screen was called with InputDialog
+        mock_app.push_screen.assert_called_once()
+        # Verify the dialog is an InputDialog
+        from miniflux_tui.ui.screens.input_dialog import InputDialog
+        assert isinstance(mock_app.push_screen.call_args[0][0], InputDialog)
+
+    def test_action_search_dialog_preserves_current_search(self, diverse_entries):
+        """Test action_search dialog pre-fills with current search term."""
         screen = EntryListScreen(entries=diverse_entries)
-        screen.notify = MagicMock()
-        screen._populate_list = MagicMock()
+        screen.search_term = "existing search"
 
-        screen.action_search()
+        # Mock the app
+        mock_app = MagicMock()
+        mock_app.push_screen = MagicMock()
 
-        # No populate call when nothing to clear
-        screen._populate_list.assert_not_called()
-        assert "Use set_search_term" in screen.notify.call_args[0][0]
+        # Patch the app property
+        with patch.object(type(screen), "app", new_callable=lambda: property(lambda _: mock_app)):
+            screen.action_search()
+
+        # Verify dialog was created with current search term as initial value
+        from miniflux_tui.ui.screens.input_dialog import InputDialog
+        dialog = mock_app.push_screen.call_args[0][0]
+        assert isinstance(dialog, InputDialog)
+        assert dialog.initial_value == "existing search"
 
     def test_set_search_term_applies_filter(self, diverse_entries):
         """Test set_search_term stores term and notifies about results."""
