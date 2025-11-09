@@ -241,15 +241,23 @@ To create a token:
 | e          | Save entry to third-party service                |
 | s          | Cycle sort mode (date/feed/status)               |
 | g          | Toggle grouping by feed                          |
-| Shift+G    | Expand all feeds (when grouped)                  |
-| Shift+Z    | Collapse all feeds (when grouped)                |
-| o          | Toggle fold/unfold on feed header (when grouped) |
-| h or ←     | Collapse individual feed (when grouped)          |
-| l or →     | Expand individual feed (when grouped)            |
-| r or ,     | Refresh entries                                  |
-| u          | Show unread entries                              |
-| t          | Show starred entries                             |
+| c          | Toggle grouping by category                      |
+| Shift+G    | Expand all feeds/categories (when grouped)       |
+| Shift+Z    | Collapse all feeds/categories (when grouped)     |
+| h or ←     | Collapse individual feed/category (when grouped) |
+| l or →     | Expand individual feed/category (when grouped)   |
+| r          | Refresh current feed on server                   |
+| Shift+R    | Refresh all feeds on server                      |
+| ,          | Sync entries from server (fetch new)             |
+| u          | Show unread entries only                         |
+| t          | Show starred entries only                        |
+| /          | Search entries (interactive dialog)              |
+| Shift+M    | Manage categories                                |
+| Shift+H    | Toggle reading history view                      |
+| Shift+X    | Open scraping rule helper                        |
 | ?          | Show keyboard help                               |
+| i          | Show system status                               |
+| Shift+S    | Show TUI settings                                |
 | q          | Quit application                                 |
 
 ### Entry Reader View
@@ -260,13 +268,16 @@ To create a token:
 | PageUp/PageDown | Fast scroll                       |
 | J               | Next entry                        |
 | K               | Previous entry                    |
-| m               | Toggle read/unread                |
+| u               | Mark as unread                    |
 | *               | Toggle star                       |
 | e               | Save entry to third-party service |
 | o               | Open in browser                   |
 | f               | Fetch original content            |
+| Shift+X         | Open scraping rule helper         |
 | b or Esc        | Back to list                      |
 | ?               | Show keyboard help                |
+| i               | Show system status                |
+| Shift+S         | Show TUI settings                 |
 
 ## Contributing
 
