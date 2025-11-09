@@ -94,21 +94,20 @@ This document outlines the planned features and improvements for the miniflux-tu
 ### Search & Discovery (📋 Planned)
 - [ ] Full-text search across all entries
 - [ ] Search filters by date, category, feed
-- [ ] Save search queries
-- [ ] Search history
+- [ ] Save search queries (current session only - in-memory)
+- [ ] Search history (current session only)
 
 ### Performance & Optimization (💡 Low Priority)
-- [ ] Database caching for faster startup
 - [ ] Incremental feed sync
 - [ ] Background refresh with notifications
 - [ ] Memory optimization for large feed lists
 
-### UI/UX Improvements (💡 Low Priority)
-- [ ] Dark/light theme toggle
-- [ ] Customizable keybindings
+### UI/UX Improvements (⭐ Medium Priority)
+- [ ] Dark/light theme toggle (🚀 High Priority)
 - [ ] Sidebar for category/feed navigation
 - [ ] Bookmark/clipboard integration
 - [ ] Export entries to various formats
+- [ ] Customizable keybindings (💡 Low Priority)
 
 ## Completed Features ✅
 
