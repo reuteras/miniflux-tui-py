@@ -16,6 +16,7 @@ from miniflux_tui.ui.screens.entry_list import (
     EntryListScreen,
     FeedHeaderItem,
 )
+from miniflux_tui.ui.screens.input_dialog import InputDialog
 
 
 @pytest.fixture
@@ -2140,7 +2141,6 @@ class TestSearchActions:
         # Verify push_screen was called with InputDialog
         mock_app.push_screen.assert_called_once()
         # Verify the dialog is an InputDialog
-        from miniflux_tui.ui.screens.input_dialog import InputDialog
         assert isinstance(mock_app.push_screen.call_args[0][0], InputDialog)
 
     def test_action_search_dialog_preserves_current_search(self, diverse_entries):
@@ -2157,7 +2157,6 @@ class TestSearchActions:
             screen.action_search()
 
         # Verify dialog was created with current search term as initial value
-        from miniflux_tui.ui.screens.input_dialog import InputDialog
         dialog = mock_app.push_screen.call_args[0][0]
         assert isinstance(dialog, InputDialog)
         assert dialog.initial_value == "existing search"
