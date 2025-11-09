@@ -332,7 +332,13 @@ class MinifluxTuiApp(App):
                 self.log("entry_list screen is installed")
                 self.log(f"Updating screen with {len(self.entries)} entries")
                 entry_list_screen.entries = self.entries
-                entry_list_screen._populate_list()
+                # Only populate if screen is currently shown (mounted)
+                # Otherwise, let on_mount() or on_screen_resume() handle it
+                if entry_list_screen.is_current:
+                    self.log("Screen is current - populating now")
+                    entry_list_screen._populate_list()
+                else:
+                    self.log("Screen is not current - will populate on mount/resume")
             else:
                 self.log("entry_list screen is NOT installed!")
 
