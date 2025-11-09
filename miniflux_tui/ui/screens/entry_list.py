@@ -200,7 +200,6 @@ class EntryListScreen(Screen):
         Binding("M", "manage_categories", "Manage Categories"),
         Binding("G", "expand_all", "Expand All"),
         Binding("Z", "collapse_all", "Collapse All"),
-        Binding("o", "toggle_fold", "Fold/Unfold Feed/Category"),
         Binding("h", "collapse_fold", "Collapse Feed/Category"),
         Binding("l", "expand_fold", "Expand Feed/Category"),
         Binding("left", "collapse_fold", "Collapse Feed/Category", show=False),
@@ -1391,52 +1390,66 @@ class EntryListScreen(Screen):
             self.notify("API client not initialized", severity="error")
             return
 
-        # Get the currently highlighted entry to determine which feed to refresh
+        # Get the currently highlighted item to determine which feed to refresh
         if not self.list_view or self.list_view.index is None:
             self.notify("No entry selected", severity="warning")
             return
 
         highlighted = self.list_view.highlighted_child
-        if not isinstance(highlighted, EntryListItem):
-            self.notify("No entry selected", severity="warning")
+        feed_title = None
+        feed_id = None
+
+        # Handle both feed headers and entry items
+        if isinstance(highlighted, FeedHeaderItem):
+            # User is on a feed header - get feed info from first entry in that feed
+            feed_title = highlighted.feed_title
+            # Find the first entry for this feed to get the feed_id
+            for entry in self.sorted_entries:
+                if entry.feed.title == feed_title:
+                    feed_id = entry.feed_id
+                    break
+            if feed_id is None:
+                self.notify("No entries found for this feed", severity="warning")
+                return
+        elif isinstance(highlighted, EntryListItem):
+            # User is on an entry - get feed info from the entry
+            feed_title = highlighted.entry.feed.title
+            feed_id = highlighted.entry.feed_id
+        else:
+            self.notify("No feed selected", severity="warning")
             return
 
         try:
-            feed_title = highlighted.entry.feed.title
-            feed_id = highlighted.entry.feed_id
-
-            # Show single "Refreshing..." message
-            if hasattr(self.app, "notify_info"):
-                self.app.notify_info(f"Refreshing feed: {feed_title}...")
+            # Show "Refreshing..." message
+            self.notify(f"Refreshing feed: {feed_title}...")
 
             await self.app.client.refresh_feed(feed_id)
 
-            # Reload entries after refreshing the feed
-            if hasattr(self.app, "load_entries"):
-                await self.app.load_entries(self.app.current_view)
-                # load_entries will show the result message
+            # Show success message
+            self.notify(f"Feed '{feed_title}' refreshed. Use ',' to sync new entries.", severity="information")
         except (ConnectionError, TimeoutError) as e:
             self.notify(f"Network error refreshing feed: {e}", severity="error")
         except Exception as e:
             self.notify(f"Error refreshing feed: {e}", severity="error")
 
     async def action_refresh_all_feeds(self):
-        """Refresh all feeds on the server (Issue #55 - Feed operations)."""
+        """Refresh all feeds on the server (Issue #55 - Feed operations).
+
+        This tells the Miniflux server to fetch new content from RSS feeds.
+        It does NOT reload entries - use 'comma' (,) to sync entries from server.
+        """
         if not hasattr(self.app, "client") or not self.app.client:
             self.notify("API client not initialized", severity="error")
             return
 
         try:
-            # Show single "Refreshing..." message
-            if hasattr(self.app, "notify_info"):
-                self.app.notify_info("Refreshing all feeds...")
+            # Show "Refreshing..." message
+            self.notify("Refreshing all feeds on server...")
 
             await self.app.client.refresh_all_feeds()
 
-            # Reload entries after refreshing all feeds
-            if hasattr(self.app, "load_entries"):
-                await self.app.load_entries(self.app.current_view)
-                # load_entries will show the result message
+            # Show success message
+            self.notify("All feeds refreshed successfully. Use ',' to sync new entries.", severity="information")
         except (ConnectionError, TimeoutError) as e:
             self.notify(f"Network error refreshing feeds: {e}", severity="error")
         except Exception as e:
@@ -1522,19 +1535,26 @@ class EntryListScreen(Screen):
         self.notify(f"Filtered to: {category_name}")
 
     def action_search(self):
-        """Clear current search filter.
+        """Open search dialog to filter entries by search term.
 
-        Toggles search mode off and refreshes the display to show all entries.
+        Shows an interactive input dialog for entering search terms.
+        Searches entry titles and content.
         """
-        # Clear any active search
-        if self.search_active or self.search_term:
-            self.search_active = False
-            self.search_term = ""
-            self._populate_list()
-            self.notify("Search cleared")
-        else:
-            # Notify that search feature is available
-            self.notify("Search: Use set_search_term() method to filter entries")
+        # Import InputDialog locally to avoid circular dependency
+        from miniflux_tui.ui.screens.input_dialog import InputDialog  # noqa: PLC0415
+
+        # Callback when user submits search
+        def on_search_submit(search_term: str) -> None:
+            self.set_search_term(search_term)
+
+        # Show input dialog with current search term as initial value
+        dialog = InputDialog(
+            title="Search Entries",
+            label="Search in titles and content:",
+            value=self.search_term,
+            on_submit=on_search_submit,
+        )
+        self.app.push_screen(dialog)
 
     def set_search_term(self, search_term: str) -> None:
         """Set search term and filter entries.
@@ -1550,6 +1570,8 @@ class EntryListScreen(Screen):
         if self.search_active:
             result_count = len(self._filter_entries(self.entries))
             self.notify(f"Search: {result_count} entries match '{self.search_term}'")
+        else:
+            self.notify("Search cleared")
 
     async def action_manage_categories(self) -> None:
         """Open the category management screen."""

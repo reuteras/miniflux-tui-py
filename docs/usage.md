@@ -82,9 +82,8 @@ Press `s` to cycle through sort modes:
 Press `g` to toggle grouping by feed. When enabled:
 
 - Entries are grouped under their feed name
-- Press `l` to expand a feed and see its entries
-- Press `h` to collapse a feed
-- Press `o` to toggle a feed's expansion state
+- Press `l` (or `→`) to expand a feed and see its entries
+- Press `h` (or `←`) to collapse a feed
 
 ### Filter Views
 
@@ -95,6 +94,22 @@ Press `g` to toggle grouping by feed. When enabled:
 
 Press again to return to all entries in the current feed list.
 
+### Search Entries
+
+Press `/` to open an interactive search dialog where you can enter search terms to filter entries by title or content. The search is case-insensitive and will show all matching entries.
+
+To clear the search, press `/` again and submit an empty search term.
+
+### Reading History
+
+Press `Shift+H` to toggle the reading history view, which shows your 200 most recently read entries. Press `Shift+H` again to return to the main entry list.
+
+In history view:
+- All entry list keys work the same way
+- Navigate with `j/k` or arrow keys
+- Open entries with `Enter`
+- Mark entries or toggle stars as usual
+
 ## Feed Management
 
 ### Expand/Collapse Feeds (Grouped Mode)
@@ -103,24 +118,29 @@ When in grouped mode (`g` to toggle):
 
 | Key       | Action                                       |
 |-----------|----------------------------------------------|
-| `l`       | Expand the highlighted feed                  |
-| `h`       | Collapse the highlighted feed                |
-| `o`       | Toggle expansion of the highlighted feed     |
-| `→`       | Expand the highlighted feed (alternative)    |
-| `←`       | Collapse the highlighted feed (alternative)  |
+| `l` / `→` | Expand the highlighted feed/category        |
+| `h` / `←` | Collapse the highlighted feed/category      |
 | `Shift+G` | Enable grouping by feed and expand all feeds |
-| `Shift+Z` | Collapse all feeds                           |
+| `Shift+Z` | Collapse all feeds/categories                |
 
 ## Category Management
 
 ### Accessing Category Management
 
-Press `c` to open the category management screen where you can:
+Press `Shift+M` to open the category management screen where you can:
 
 - View all categories
 - Create new categories
 - Edit category names
 - Delete categories
+
+### Group by Category
+
+Press `c` to toggle grouping by category. When enabled:
+
+- Entries are grouped under their category name
+- Press `l` (or `→`) to expand a category and see its entries
+- Press `h` (or `←`) to collapse a category
 
 ### Category Management Actions
 
@@ -139,10 +159,10 @@ In the category management screen:
 
 You can organize your feeds into categories via the Miniflux web interface or API. Then:
 
-1. Press `c` to open category management
+1. Press `Shift+M` to open category management
 2. Create categories as needed by pressing `n`
 3. Assign feeds to categories through Miniflux
-4. Press `Shift+C` to group entries by category in the entry list
+4. Press `c` to group entries by category in the entry list
 
 ### Category Information
 
@@ -174,17 +194,38 @@ The status screen displays:
 - Detailed list of all problematic feeds
 - Error messages and last check timestamps
 
-## Refreshing
+## Refreshing and Syncing
 
-| Key | Action                                    |
-|-----|-------------------------------------------|
-| `r` | Refresh entries from your Miniflux server |
-| `,` | Refresh entries (alternative)             |
+There are two types of refresh operations:
 
-The refresh will:
+### Refresh Feeds on Server
+
+Tell the Miniflux server to fetch new content from RSS feeds:
+
+| Key       | Action                            |
+|-----------|-----------------------------------|
+| `r`       | Refresh current feed on server    |
+| `Shift+R` | Refresh all feeds on server       |
+
+This tells the Miniflux server to check the RSS feeds for new articles. After refreshing, use `,` to sync.
+
+### Sync Entries from Server
+
+Fetch the latest entries from your Miniflux server to the TUI:
+
+| Key | Action                              |
+|-----|-------------------------------------|
+| `,` | Sync entries from server (fetch new) |
+
+The sync will:
 1. Fetch the latest entries from your server
 2. Preserve your view settings and position
 3. Update the display with new/changed entries
+
+**Typical workflow:**
+1. Press `r` or `Shift+R` to tell server to refresh feeds
+2. Wait a moment for server to fetch RSS content
+3. Press `,` to sync new entries to your TUI
 
 ## Getting Help
 
@@ -211,13 +252,17 @@ When you open an entry with `Enter`:
 
 In the entry reader, you can also:
 
-| Key | Action                             |
-|-----|------------------------------------|
-| `m` | Mark the entry as read/unread      |
-| `*` | Toggle star status                 |
-| `e` | Save the entry                     |
-| `o` | Open in your default browser       |
-| `f` | Fetch the original article content |
+| Key       | Action                               |
+|-----------|--------------------------------------|
+| `u`       | Mark the entry as unread             |
+| `*`       | Toggle star status                   |
+| `e`       | Save the entry                       |
+| `o`       | Open in your default browser         |
+| `f`       | Fetch the original article content   |
+| `Shift+X` | Open scraping rule helper for feed   |
+| `i`       | Show system status                   |
+| `Shift+S` | Show TUI settings                    |
+| `?`       | Show keyboard help                   |
 
 ## Tips and Tricks
 
@@ -230,8 +275,10 @@ In the entry reader, you can also:
 ### Working with Many Entries
 
 1. **Filter by status** - Use `u` for unread or `t` for starred entries
-2. **Refresh strategically** - Use `r` to update entries without losing your position
-3. **Star for later** - Use `*` to bookmark entries for review later
+2. **Search efficiently** - Use `/` to search by title or content
+3. **Refresh and sync** - Use `r` or `Shift+R` to refresh feeds on server, then `,` to sync
+4. **Star for later** - Use `*` to bookmark entries for review later
+5. **Review history** - Use `Shift+H` to check recently read entries
 
 ### Navigation Shortcuts
 
