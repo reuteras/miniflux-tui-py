@@ -146,6 +146,23 @@ class MinifluxTuiApp(App):
         self.current_view = "unread"  # or "starred"
         self._entry_list_screen_cls: type[EntryListScreen] | None = None
         self._status_screen_cls: type[StatusScreen] | None = None
+        # Runtime setting for showing info messages (can be toggled during session)
+        self.show_info_messages = config.show_info_messages
+
+    def notify_info(self, message: str) -> None:
+        """Send an information notification if info messages are enabled.
+
+        Args:
+            message: The message to display
+        """
+        if self.show_info_messages:
+            self.notify(message, severity="information")
+
+    def toggle_info_messages(self) -> None:
+        """Toggle the display of information messages during runtime."""
+        self.show_info_messages = not self.show_info_messages
+        status = "enabled" if self.show_info_messages else "disabled"
+        self.notify(f"Information messages {status}", severity="information")
 
     async def on_mount(self) -> None:
         """Called when app is mounted."""
@@ -316,11 +333,9 @@ class MinifluxTuiApp(App):
             if view == "starred":
                 self.entries = await self.client.get_starred_entries(limit=DEFAULT_ENTRY_LIMIT)
                 self.current_view = "starred"
-                self.notify(f"Loaded {len(self.entries)} starred entries")
             else:
                 self.entries = await self.client.get_unread_entries(limit=DEFAULT_ENTRY_LIMIT)
                 self.current_view = "unread"
-                self.notify(f"Loaded {len(self.entries)} unread entries")
 
             # Enrich entries with category information using the mapping
             if self.entry_category_map:
@@ -342,9 +357,11 @@ class MinifluxTuiApp(App):
             else:
                 self.log("entry_list screen is NOT installed!")
 
-            # Show message if no entries
+            # Show single message with count (info if > 0, warning if 0)
             if len(self.entries) == 0:
                 self.notify(f"No {view} entries found", severity="warning")
+            else:
+                self.notify_info(f"Loaded {len(self.entries)} {view} entries")
 
         except Exception as e:
             error_details = traceback.format_exc()
