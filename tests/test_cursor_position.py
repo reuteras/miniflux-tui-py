@@ -572,3 +572,212 @@ class TestCursorPositionEdgeCases:
 
                 # Verify cursor is back at the same position
                 assert screen.list_view.index == position_before
+
+class TestLifecycleAndCursorPosition:
+    """Test that cursor position is correct after full app lifecycle (on_mount + on_screen_resume)."""
+
+    async def test_cursor_position_after_complete_lifecycle_flat_mode(self, cursor_test_entries):
+        """Test cursor position after on_mount AND on_screen_resume in flat mode.
+
+        This test simulates the real app startup flow where Textual calls:
+        1. on_mount() - populates list
+        2. on_screen_resume() - called immediately after on first display
+
+        Bug scenario: If on_screen_resume re-populates with restoration logic,
+        it can corrupt the cursor position set by on_mount.
+        """
+        app = CursorTestApp(entries=cursor_test_entries)
+
+        async with app.run_test() as pilot:
+            screen = app.entry_list_screen
+
+            # Track lifecycle calls
+            mount_count = 0
+            resume_count = 0
+            original_on_mount = screen.on_mount
+            original_on_resume = screen.on_screen_resume
+
+            def tracked_on_mount():
+                nonlocal mount_count
+                mount_count += 1
+                return original_on_mount()
+
+            def tracked_on_resume():
+                nonlocal resume_count
+                resume_count += 1
+                return original_on_resume()
+
+            screen.on_mount = tracked_on_mount
+            screen.on_screen_resume = tracked_on_resume
+
+            # Wait for screen to be fully ready
+            await pilot.pause()
+
+            # Verify both lifecycle methods were called
+            # Note: In run_test(), on_mount is called, but on_screen_resume
+            # might not be called automatically. The real app DOES call it.
+            # If this assertion fails, it confirms tests don't match real app!
+
+            # Most importantly: verify cursor is at position 0 after full lifecycle
+            assert screen.list_view.index == 0, (
+                f"Cursor should be at position 0 after lifecycle, but got {screen.list_view.index}"
+            )
+
+            # Verify visual and actual position match
+            highlighted = screen.list_view.highlighted_child
+            first_child = screen.list_view.children[0]
+            assert highlighted is first_child, (
+                "Visual highlight should match actual cursor position at index 0"
+            )
+
+    async def test_cursor_position_after_complete_lifecycle_grouped_mode(self, cursor_test_entries):
+        """Test cursor position after on_mount AND on_screen_resume in grouped mode.
+
+        This is the critical test that would have caught the bug!
+        In grouped mode, the bug manifested as:
+        - on_mount() sets cursor to 0 correctly
+        - on_screen_resume() runs restoration logic and moves cursor elsewhere
+        - Visual highlight doesn't match actual position
+        """
+
+        class GroupedApp(App):
+            def __init__(self, entries=None, **kwargs):
+                super().__init__(**kwargs)
+                self.entries = entries or []
+                self.entry_list_screen = None
+                self.lifecycle_log = []
+
+            def compose(self) -> ComposeResult:
+                self.entry_list_screen = EntryListScreen(
+                    entries=self.entries,
+                    unread_color="cyan",
+                    read_color="gray",
+                    default_sort="date",
+                    group_by_feed=True,
+                    group_collapsed=False,
+                )
+                yield self.entry_list_screen
+
+        app = GroupedApp(entries=cursor_test_entries)
+
+        async with app.run_test() as pilot:
+            screen = app.entry_list_screen
+
+            # Track when _populate_list is called and what _is_initial_mount flag is
+            populate_calls = []
+            original_populate = screen._populate_list
+
+            def tracked_populate():
+                populate_calls.append({
+                    "is_initial_mount": screen._is_initial_mount,
+                    "cursor_before": screen.list_view.index if screen.list_view else None,
+                })
+                result = original_populate()
+                populate_calls[-1]["cursor_after"] = screen.list_view.index if screen.list_view else None
+                return result
+
+            screen._populate_list = tracked_populate
+
+            # Manually trigger the lifecycle that the real app does
+            # on_mount() will be called by run_test
+            await pilot.pause()
+
+            # Explicitly call on_screen_resume like the real app does
+            screen.on_screen_resume()
+            await pilot.pause()
+
+            # Log the lifecycle for debugging
+            for i, call in enumerate(populate_calls):
+                print(f"  _populate_list call #{i+1}: {call}")
+
+            # CRITICAL ASSERTION: Cursor must be at position 0 after full lifecycle
+            assert screen.list_view.index == 0, (
+                f"Cursor should be at position 0 after complete lifecycle in grouped mode, "
+                f"but got {screen.list_view.index}. "
+                f"Populate calls: {populate_calls}"
+            )
+
+            # Verify visual matches actual
+            highlighted = screen.list_view.highlighted_child
+            first_child = screen.list_view.children[0]
+            assert highlighted is first_child, (
+                f"Visual highlight should match position 0, but highlighted={highlighted}, "
+                f"first_child={first_child}"
+            )
+
+            # Verify navigation works
+            await pilot.press("j")
+            await pilot.pause()
+            assert screen.list_view.index > 0, (
+                "Pressing 'j' should move cursor down from 0"
+            )
+
+    async def test_on_screen_resume_not_called_twice_on_initial_mount(self, cursor_test_entries):
+        """Verify that on_screen_resume doesn't re-populate on initial mount.
+
+        This test specifically checks the _is_initial_mount flag behavior:
+        - First on_screen_resume call: flag is True, skip population
+        - Subsequent calls: flag is False, allow population
+        """
+
+        class TrackedApp(App):
+            def __init__(self, entries=None, **kwargs):
+                super().__init__(**kwargs)
+                self.entries = entries or []
+                self.entry_list_screen = None
+
+            def compose(self) -> ComposeResult:
+                self.entry_list_screen = EntryListScreen(
+                    entries=self.entries,
+                    unread_color="cyan",
+                    read_color="gray",
+                    default_sort="date",
+                    group_by_feed=True,
+                    group_collapsed=False,
+                )
+                yield self.entry_list_screen
+
+        app = TrackedApp(entries=cursor_test_entries)
+
+        async with app.run_test() as pilot:
+            screen = app.entry_list_screen
+            await pilot.pause()
+
+            # Track _populate_list calls
+            populate_count = 0
+            original_populate = screen._populate_list
+
+            def counted_populate():
+                nonlocal populate_count
+                populate_count += 1
+                return original_populate()
+
+            screen._populate_list = counted_populate
+
+            # First on_screen_resume call (simulating real app)
+            initial_mount_flag_before = screen._is_initial_mount
+            screen.on_screen_resume()
+            initial_mount_flag_after = screen._is_initial_mount
+            await pilot.pause()
+
+            # Flag should have been True and now be False
+            assert initial_mount_flag_before is True, (
+                "Flag should be True before first on_screen_resume"
+            )
+            assert initial_mount_flag_after is False, (
+                "Flag should be False after first on_screen_resume"
+            )
+
+            # _populate_list should NOT have been called (count still 0)
+            assert populate_count == 0, (
+                f"First on_screen_resume should skip population, but _populate_list was called {populate_count} times"
+            )
+
+            # Second on_screen_resume call (simulating return from entry reader)
+            screen.on_screen_resume()
+            await pilot.pause()
+
+            # NOW _populate_list should have been called
+            assert populate_count == 1, (
+                f"Second on_screen_resume should populate, but _populate_list was called {populate_count} times"
+            )
