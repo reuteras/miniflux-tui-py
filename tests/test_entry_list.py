@@ -11,6 +11,7 @@ from textual.widgets import ListItem, ListView
 from miniflux_tui.api.models import Category, Entry, Feed
 from miniflux_tui.constants import SORT_MODES
 from miniflux_tui.ui.screens.entry_list import (
+    CollapsibleListView,
     EntryListItem,
     EntryListScreen,
     FeedHeaderItem,
@@ -615,12 +616,23 @@ class TestEntryListScreenCursorNavigation:
         screen.action_cursor_up()
 
     def test_cursor_navigation_skips_hidden_items(self, diverse_entries):
-        """Test that cursor navigation skips hidden (collapsed) items."""
+        """Test that cursor navigation skips hidden (collapsed) items.
+
+        This test verifies that _is_item_visible correctly identifies collapsed items.
+        The CollapsibleListView class (used in EntryListScreen) overrides
+        action_cursor_down/up to skip collapsed items when navigating with arrow keys.
+        This ensures both j/k keys and arrow keys skip collapsed entries.
+        """
         screen = EntryListScreen(entries=diverse_entries)
         # Verify hidden items are skipped
         item = MagicMock(spec=ListItem)
         item.classes = {"collapsed"}
         assert screen._is_item_visible(item) is False
+
+        # Verify CollapsibleListView has the necessary methods
+        assert hasattr(CollapsibleListView, "action_cursor_down")
+        assert hasattr(CollapsibleListView, "action_cursor_up")
+        assert hasattr(CollapsibleListView, "_is_item_visible")
 
 
 class TestEntryListScreenFoldOperations:

@@ -22,6 +22,47 @@ if TYPE_CHECKING:
     MinifluxTuiApp = Any
 
 
+class CollapsibleListView(ListView):
+    """Custom ListView that skips collapsed items when navigating with arrow keys."""
+
+    @staticmethod
+    def _is_item_visible(item: ListItem) -> bool:
+        """Check if an item is visible (not hidden by CSS class)."""
+        return "collapsed" not in item.classes
+
+    def action_cursor_down(self) -> None:
+        """Move cursor down to next visible item, skipping collapsed ones."""
+        if len(self.children) == 0:
+            return
+
+        current_index = self.index
+        if current_index is None:
+            current_index = -1
+
+        # Find next visible item
+        for i in range(current_index + 1, len(self.children)):
+            widget = self.children[i]
+            if isinstance(widget, ListItem) and self._is_item_visible(widget):
+                self.index = i
+                return
+
+    def action_cursor_up(self) -> None:
+        """Move cursor up to previous visible item, skipping collapsed ones."""
+        if len(self.children) == 0:
+            return
+
+        current_index = self.index
+        if current_index is None:
+            current_index = len(self.children)
+
+        # Find previous visible item
+        for i in range(current_index - 1, -1, -1):
+            widget = self.children[i]
+            if isinstance(widget, ListItem) and self._is_item_visible(widget):
+                self.index = i
+                return
+
+
 class EntryListItem(ListItem):
     """Custom list item for displaying a feed entry."""
 
@@ -206,7 +247,7 @@ class EntryListScreen(Screen):
         self.filter_category_id: int | None = None  # Filter to show entries from selected category only
         self.search_active = False  # Flag to indicate search is active
         self.search_term = ""  # Current search term
-        self.list_view: ListView | None = None
+        self.list_view: CollapsibleListView | None = None
         self.displayed_items: list[ListItem] = []  # Track items in display order
         self.refresh_optimizer = ScreenRefreshOptimizer()  # Track refresh performance
         self.entry_item_map: dict[int, EntryListItem] = {}  # Map entry IDs to list items
@@ -231,7 +272,7 @@ class EntryListScreen(Screen):
     def compose(self) -> ComposeResult:
         """Create child widgets."""
         header = Header()
-        list_view = ListView()
+        list_view = CollapsibleListView()
         footer = Footer()
 
         # Store references for later use (e.g. focus management)
@@ -246,7 +287,7 @@ class EntryListScreen(Screen):
     def on_mount(self) -> None:
         """Called when screen is mounted."""
         # Get reference to the ListView after it's mounted
-        self.list_view = self.query_one(ListView)
+        self.list_view = self.query_one(CollapsibleListView)
         self._safe_log(f"on_mount: list_view is now {self.list_view}")
 
         # Only populate if we have entries
@@ -359,7 +400,7 @@ class EntryListScreen(Screen):
 
         # CRITICAL: Reset index to None after clearing to ensure clean state
         # This prevents issues where the old index persists after clearing
-        self.list_view.index = None
+        self.list_view.index = None  # type: ignore[assignment]
         self._safe_log("_populate_list: reset index to None")
 
         sorted_entries = self._get_sorted_entries()
@@ -547,7 +588,7 @@ class EntryListScreen(Screen):
         """Ensure list_view is available. Returns False if unavailable."""
         if not self.list_view:
             try:
-                self.list_view = self.query_one(ListView)
+                self.list_view = self.query_one(CollapsibleListView)
             except Exception as e:
                 self._safe_log(f"Failed to get list_view: {e}")
                 return False
