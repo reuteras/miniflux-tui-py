@@ -119,12 +119,6 @@ class TestSettingsScreenDisplay:
         app = SettingsTestApp()
 
         async with app.run_test() as pilot:
-            screen = cast(SettingsScreen, app.screen)
-
-            # Get initial state
-            tui_config = screen.query_one("#tui-config")
-            initial_content = tui_config.render().plain  # type: ignore[attr-defined]
-
             # Toggle info messages
             await pilot.press("i")
             await pilot.pause()
@@ -169,8 +163,6 @@ class TestSettingsScreenActions:
         app = SettingsTestApp()
 
         async with app.run_test() as pilot:
-            screen = cast(SettingsScreen, app.screen)
-
             # Toggle info messages
             await pilot.press("i")
             await pilot.pause()
