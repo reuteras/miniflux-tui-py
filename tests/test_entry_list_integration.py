@@ -493,18 +493,25 @@ class TestEntryListScreenSearch:
             # All results must be unread
             assert all(e.is_unread for e in filtered)
 
-    async def test_action_search_clears_active_search(self, integration_entries):
-        """Test that action_search clears active search."""
+    async def test_action_search_opens_dialog(self, integration_entries):
+        """Test that action_search opens the search dialog."""
         app = EntryListTestApp(entries=integration_entries)
 
-        async with app.run_test():
+        async with app.run_test() as pilot:
             screen = app.entry_list_screen
-            # Activate search
+            # Activate search first
             screen.set_search_term("First")
             assert screen.search_active is True
 
-            # Run action_search to clear
+            # Run action_search to open dialog
             screen.action_search()
-            assert screen.search_active is False
-            assert not screen.search_term
-            assert isinstance(screen.feed_fold_state, dict)
+            await pilot.pause()
+
+            # Verify dialog is on the screen stack
+            from miniflux_tui.ui.screens.input_dialog import InputDialog
+            assert len(app.screen_stack) > 1
+            # The top screen should be InputDialog
+            top_screen = app.screen_stack[-1]
+            assert isinstance(top_screen, InputDialog)
+            # Dialog should have the current search term as initial value
+            assert top_screen.initial_value == "First"
