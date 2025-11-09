@@ -254,14 +254,20 @@ class EntryListScreen(Screen):
             self._safe_log(f"on_mount: Populating with {len(self.entries)} entries")
             # _populate_list() now handles cursor restoration via call_later
             self._populate_list()
-            # Mark as no longer initial mount after first population
-            self._is_initial_mount = False
+            # Note: _is_initial_mount is cleared in on_screen_resume after first display
         else:
             self._safe_log("on_mount: No entries yet, skipping initial population")
 
     def on_screen_resume(self) -> None:
         """Called when screen is resumed (e.g., after returning from entry reader)."""
-        # Refresh the list to reflect any status changes
+        # On first resume (after on_mount), skip population and just clear the flag
+        # on_mount already populated the list
+        if self._is_initial_mount:
+            self._safe_log("on_screen_resume: initial mount, clearing flag and skipping population")
+            self._is_initial_mount = False
+            return
+
+        # Refresh the list to reflect any status changes when returning from other screens
         if self.entries and self.list_view:
             # _populate_list() now handles cursor restoration and focus via call_later
             self._populate_list()
