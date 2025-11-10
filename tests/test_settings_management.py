@@ -1,7 +1,6 @@
 # SPDX-License-Identifier: MIT
 """Tests for SettingsScreen."""
 
-import re
 from typing import cast
 from unittest.mock import MagicMock
 from urllib.parse import urlparse
