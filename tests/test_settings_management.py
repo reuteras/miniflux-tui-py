@@ -117,9 +117,9 @@ class TestSettingsScreenDisplay:
             # Extract and parse URL to ensure it's exactly "https://miniflux.example.com"
             # Using urlparse prevents incomplete URL substring sanitization vulnerability
             urls = re.findall(r"https?://[^\s,]+", content)
-            assert any(
-                urlparse(url).netloc == "miniflux.example.com" and urlparse(url).scheme == "https" for url in urls
-            ), f"Expected to find https://miniflux.example.com in content, but found URLs: {urls}"
+            assert any(urlparse(url).netloc == "miniflux.example.com" and urlparse(url).scheme == "https" for url in urls), (
+                f"Expected to find https://miniflux.example.com in content, but found URLs: {urls}"
+            )
 
     async def test_toggle_info_messages_updates_display(self) -> None:
         """Test that toggling info messages updates the display."""
