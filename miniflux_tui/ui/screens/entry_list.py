@@ -293,8 +293,9 @@ class EntryListScreen(Screen):
 
         # Get current spinner frame
         spinner = self._loading_animation_frames[self._loading_animation_frame]
-        # Update subtitle with spinner and message
-        self.sub_title = f"{spinner} {self._loading_message}"
+        # Update subtitle with spinner and message (safely handle if screen is unmounted)
+        with suppress(Exception):
+            self.sub_title = f"{spinner} {self._loading_message}"
         # Move to next frame (loop back to 0 after last frame)
         self._loading_animation_frame = (self._loading_animation_frame + 1) % len(self._loading_animation_frames)
 
@@ -302,10 +303,12 @@ class EntryListScreen(Screen):
         """Stop the loading animation and clear the subtitle."""
         # Stop the timer if it exists
         if self._loading_animation_timer:
-            self._loading_animation_timer.stop()
+            with suppress(Exception):
+                self._loading_animation_timer.stop()
             self._loading_animation_timer = None
-        # Clear the subtitle
-        self.sub_title = ""
+        # Clear the subtitle (safely handle if screen is unmounted)
+        with suppress(Exception):
+            self.sub_title = ""
         self._loading_message = ""
         self._loading_animation_frame = 0
 
@@ -338,6 +341,11 @@ class EntryListScreen(Screen):
             # Note: _is_initial_mount is cleared in on_screen_resume after first display
         else:
             self._safe_log("on_mount: No entries yet, skipping initial population")
+
+    def on_unmount(self) -> None:
+        """Called when screen is unmounted - cleanup resources."""
+        # Stop loading animation timer if it's running
+        self._stop_loading_animation()
 
     def on_screen_resume(self) -> None:
         """Called when screen is resumed (e.g., after returning from entry reader)."""
