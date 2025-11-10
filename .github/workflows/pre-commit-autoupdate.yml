@@ -43,7 +43,7 @@ jobs:
         run: uv run pre-commit autoupdate
 
       - name: Create pull request
-        uses: peter-evans/create-pull-request@c030c15a3d57baa4d53160436b08b8fe604773c6 # v6.0.4
+        uses: peter-evans/create-pull-request@271a8d0340265f705b14b6d32b9829c1cb33d45e # v7.0.8
         with:
           token: ${{ secrets.GITHUB_TOKEN }}
           commit-message: "chore: pre-commit autoupdate"
