@@ -573,6 +573,7 @@ class TestCursorPositionEdgeCases:
                 # Verify cursor is back at the same position
                 assert screen.list_view.index == position_before
 
+
 class TestLifecycleAndCursorPosition:
     """Test that cursor position is correct after full app lifecycle (on_mount + on_screen_resume)."""
 
@@ -619,16 +620,12 @@ class TestLifecycleAndCursorPosition:
             # If this assertion fails, it confirms tests don't match real app!
 
             # Most importantly: verify cursor is at position 0 after full lifecycle
-            assert screen.list_view.index == 0, (
-                f"Cursor should be at position 0 after lifecycle, but got {screen.list_view.index}"
-            )
+            assert screen.list_view.index == 0, f"Cursor should be at position 0 after lifecycle, but got {screen.list_view.index}"
 
             # Verify visual and actual position match
             highlighted = screen.list_view.highlighted_child
             first_child = screen.list_view.children[0]
-            assert highlighted is first_child, (
-                "Visual highlight should match actual cursor position at index 0"
-            )
+            assert highlighted is first_child, "Visual highlight should match actual cursor position at index 0"
 
     async def test_cursor_position_after_complete_lifecycle_grouped_mode(self, cursor_test_entries):
         """Test cursor position after on_mount AND on_screen_resume in grouped mode.
@@ -668,10 +665,12 @@ class TestLifecycleAndCursorPosition:
             original_populate = screen._populate_list
 
             def tracked_populate():
-                populate_calls.append({
-                    "is_initial_mount": screen._is_initial_mount,
-                    "cursor_before": screen.list_view.index if screen.list_view else None,
-                })
+                populate_calls.append(
+                    {
+                        "is_initial_mount": screen._is_initial_mount,
+                        "cursor_before": screen.list_view.index if screen.list_view else None,
+                    }
+                )
                 result = original_populate()
                 populate_calls[-1]["cursor_after"] = screen.list_view.index if screen.list_view else None
                 return result
@@ -688,7 +687,7 @@ class TestLifecycleAndCursorPosition:
 
             # Log the lifecycle for debugging
             for i, call in enumerate(populate_calls):
-                print(f"  _populate_list call #{i+1}: {call}")
+                print(f"  _populate_list call #{i + 1}: {call}")
 
             # CRITICAL ASSERTION: Cursor must be at position 0 after full lifecycle
             assert screen.list_view.index == 0, (
@@ -701,16 +700,13 @@ class TestLifecycleAndCursorPosition:
             highlighted = screen.list_view.highlighted_child
             first_child = screen.list_view.children[0]
             assert highlighted is first_child, (
-                f"Visual highlight should match position 0, but highlighted={highlighted}, "
-                f"first_child={first_child}"
+                f"Visual highlight should match position 0, but highlighted={highlighted}, first_child={first_child}"
             )
 
             # Verify navigation works
             await pilot.press("j")
             await pilot.pause()
-            assert screen.list_view.index > 0, (
-                "Pressing 'j' should move cursor down from 0"
-            )
+            assert screen.list_view.index > 0, "Pressing 'j' should move cursor down from 0"
 
     async def test_on_screen_resume_not_called_twice_on_initial_mount(self, cursor_test_entries):
         """Verify that on_screen_resume doesn't re-populate on initial mount.
@@ -761,12 +757,8 @@ class TestLifecycleAndCursorPosition:
             await pilot.pause()
 
             # Flag should have been True and now be False
-            assert initial_mount_flag_before is True, (
-                "Flag should be True before first on_screen_resume"
-            )
-            assert initial_mount_flag_after is False, (
-                "Flag should be False after first on_screen_resume"
-            )
+            assert initial_mount_flag_before is True, "Flag should be True before first on_screen_resume"
+            assert initial_mount_flag_after is False, "Flag should be False after first on_screen_resume"
 
             # _populate_list should NOT have been called (count still 0)
             assert populate_count == 0, (
@@ -778,6 +770,4 @@ class TestLifecycleAndCursorPosition:
             await pilot.pause()
 
             # NOW _populate_list should have been called
-            assert populate_count == 1, (
-                f"Second on_screen_resume should populate, but _populate_list was called {populate_count} times"
-            )
+            assert populate_count == 1, f"Second on_screen_resume should populate, but _populate_list was called {populate_count} times"

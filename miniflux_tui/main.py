@@ -210,7 +210,6 @@ def _auto_setup_tailscale() -> None:
         print("  tailscale set --accept-routes")
 
 
-
 def _run_application() -> int:
     """Run the main TUI application."""
     # Auto-create Codespace config if environment variables are present
