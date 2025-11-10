@@ -261,12 +261,56 @@ class EntryListScreen(Screen):
         self._is_initial_mount: bool = True  # Track if this is the first time mounting the screen
         self._header_widget: Header | None = None
         self._footer_widget: Footer | None = None
+        # Loading animation state
+        self._loading_animation_timer = None  # Timer for loading animation
+        self._loading_animation_frame = 0  # Current animation frame
+        self._loading_animation_frames = ["⠋", "⠙", "⠹", "⠸", "⠼", "⠴", "⠦", "⠧", "⠇", "⠏"]  # Spinner frames
+        self._loading_message = ""  # Message to show during loading
 
     def _safe_log(self, message: str) -> None:
         """Safely log a message, handling cases where app is not available."""
         # Silently ignore logging errors (e.g., in tests without app context)
         with suppress(Exception):
             self.log(message)
+
+    def _start_loading_animation(self, message: str = "Loading") -> None:
+        """Start the loading animation in the subtitle.
+
+        Args:
+            message: The message to display with the spinner
+        """
+        self._loading_message = message
+        self._loading_animation_frame = 0
+        # Update subtitle with first frame
+        self._update_loading_animation()
+        # Start timer to update animation every 100ms
+        self._loading_animation_timer = self.set_interval(0.1, self._update_loading_animation)
+
+    def _update_loading_animation(self) -> None:
+        """Update the loading animation frame."""
+        if not self._loading_message:
+            return
+
+        # Get current spinner frame
+        spinner = self._loading_animation_frames[self._loading_animation_frame]
+        # Update subtitle with spinner and message (safely handle if screen is unmounted)
+        with suppress(Exception):
+            self.sub_title = f"{spinner} {self._loading_message}"
+        # Move to next frame (loop back to 0 after last frame)
+        self._loading_animation_frame = (self._loading_animation_frame + 1) % len(self._loading_animation_frames)
+
+    def _stop_loading_animation(self) -> None:
+        """Stop the loading animation and clear the subtitle."""
+        # Stop the timer if it exists
+        if self._loading_animation_timer:
+            with suppress(Exception):
+                self._loading_animation_timer.stop()
+            self._loading_animation_timer = None
+        # Clear the subtitle (safely handle if screen is unmounted)
+        with suppress(Exception):
+            self.sub_title = ""
+        self._loading_message = ""
+        self._loading_animation_frame = 0
 
     def compose(self) -> ComposeResult:
         """Create child widgets."""
@@ -297,6 +341,11 @@ class EntryListScreen(Screen):
             # Note: _is_initial_mount is cleared in on_screen_resume after first display
         else:
             self._safe_log("on_mount: No entries yet, skipping initial population")
+
+    def on_unmount(self) -> None:
+        """Called when screen is unmounted - cleanup resources."""
+        # Stop loading animation timer if it's running
+        self._stop_loading_animation()
 
     def on_screen_resume(self) -> None:
         """Called when screen is resumed (e.g., after returning from entry reader)."""
@@ -1420,8 +1469,8 @@ class EntryListScreen(Screen):
             return
 
         try:
-            # Show "Refreshing..." message
-            self.notify(f"Refreshing feed: {feed_title}...")
+            # Start loading animation in header
+            self._start_loading_animation(f"Refreshing {feed_title}...")
 
             await self.app.client.refresh_feed(feed_id)
 
@@ -1431,6 +1480,9 @@ class EntryListScreen(Screen):
             self.notify(f"Network error refreshing feed: {e}", severity="error")
         except Exception as e:
             self.notify(f"Error refreshing feed: {e}", severity="error")
+        finally:
+            # Always stop the loading animation
+            self._stop_loading_animation()
 
     async def action_refresh_all_feeds(self):
         """Refresh all feeds on the server (Issue #55 - Feed operations).
@@ -1443,8 +1495,8 @@ class EntryListScreen(Screen):
             return
 
         try:
-            # Show "Refreshing..." message
-            self.notify("Refreshing all feeds on server...")
+            # Start loading animation in header
+            self._start_loading_animation("Refreshing all feeds...")
 
             await self.app.client.refresh_all_feeds()
 
@@ -1454,6 +1506,9 @@ class EntryListScreen(Screen):
             self.notify(f"Network error refreshing feeds: {e}", severity="error")
         except Exception as e:
             self.notify(f"Error refreshing all feeds: {e}", severity="error")
+        finally:
+            # Always stop the loading animation
+            self._stop_loading_animation()
 
     async def action_sync_entries(self):
         """Sync/reload entries from server without refreshing feeds.
@@ -1467,9 +1522,8 @@ class EntryListScreen(Screen):
             return
 
         try:
-            # Show single "Syncing..." message
-            if hasattr(self.app, "notify_info"):
-                self.app.notify_info("Syncing entries from server...")
+            # Start loading animation in header
+            self._start_loading_animation("Syncing entries...")
 
             # Rebuild category mapping for fresh data
             if hasattr(self.app, "_build_entry_category_mapping"):
@@ -1481,22 +1535,39 @@ class EntryListScreen(Screen):
             self.notify(f"Network error syncing entries: {e}", severity="error")
         except Exception as e:
             self.notify(f"Error syncing entries: {e}", severity="error")
+        finally:
+            # Always stop the loading animation
+            self._stop_loading_animation()
 
     async def action_show_unread(self):
         """Load and show only unread entries."""
         if hasattr(self.app, "load_entries"):
-            await self.app.load_entries("unread")
-            self.filter_unread_only = False
-            self.filter_starred_only = False
-            self._populate_list()
+            try:
+                # Start loading animation in header
+                self._start_loading_animation("Loading unread entries...")
+
+                await self.app.load_entries("unread")
+                self.filter_unread_only = False
+                self.filter_starred_only = False
+                self._populate_list()
+            finally:
+                # Always stop the loading animation
+                self._stop_loading_animation()
 
     async def action_show_starred(self):
         """Load and show only starred entries."""
         if hasattr(self.app, "load_entries"):
-            await self.app.load_entries("starred")
-            self.filter_unread_only = False
-            self.filter_starred_only = False
-            self._populate_list()
+            try:
+                # Start loading animation in header
+                self._start_loading_animation("Loading starred entries...")
+
+                await self.app.load_entries("starred")
+                self.filter_unread_only = False
+                self.filter_starred_only = False
+                self._populate_list()
+            finally:
+                # Always stop the loading animation
+                self._stop_loading_animation()
 
     def action_clear_filters(self) -> None:
         """Clear all active filters and show all entries.

@@ -63,6 +63,10 @@ class MinifluxTuiApp(App):
         background: $surface;
     }
 
+    Header {
+        text-align: left;
+    }
+
     .entry-title {
         padding: 1 2;
         background: $boost;
