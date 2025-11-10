@@ -1333,4 +1333,3 @@ Thank you to everyone who contributed to this release!
 **Humans:** 👤 Peter Reuterås
 
 **AI & Automation:** 🤖 Claude (AI Assistant)
-
