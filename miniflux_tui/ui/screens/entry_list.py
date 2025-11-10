@@ -200,7 +200,6 @@ class EntryListScreen(Screen):
         Binding("M", "manage_categories", "Manage Categories"),
         Binding("G", "expand_all", "Expand All"),
         Binding("Z", "collapse_all", "Collapse All"),
-        Binding("o", "toggle_fold", "Fold/Unfold Feed/Category"),
         Binding("h", "collapse_fold", "Collapse Feed/Category"),
         Binding("l", "expand_fold", "Expand Feed/Category"),
         Binding("left", "collapse_fold", "Collapse Feed/Category", show=False),
@@ -262,12 +261,56 @@ class EntryListScreen(Screen):
         self._is_initial_mount: bool = True  # Track if this is the first time mounting the screen
         self._header_widget: Header | None = None
         self._footer_widget: Footer | None = None
+        # Loading animation state
+        self._loading_animation_timer = None  # Timer for loading animation
+        self._loading_animation_frame = 0  # Current animation frame
+        self._loading_animation_frames = ["⠋", "⠙", "⠹", "⠸", "⠼", "⠴", "⠦", "⠧", "⠇", "⠏"]  # Spinner frames
+        self._loading_message = ""  # Message to show during loading
 
     def _safe_log(self, message: str) -> None:
         """Safely log a message, handling cases where app is not available."""
         # Silently ignore logging errors (e.g., in tests without app context)
         with suppress(Exception):
             self.log(message)
+
+    def _start_loading_animation(self, message: str = "Loading") -> None:
+        """Start the loading animation in the subtitle.
+
+        Args:
+            message: The message to display with the spinner
+        """
+        self._loading_message = message
+        self._loading_animation_frame = 0
+        # Update subtitle with first frame
+        self._update_loading_animation()
+        # Start timer to update animation every 100ms
+        self._loading_animation_timer = self.set_interval(0.1, self._update_loading_animation)
+
+    def _update_loading_animation(self) -> None:
+        """Update the loading animation frame."""
+        if not self._loading_message:
+            return
+
+        # Get current spinner frame
+        spinner = self._loading_animation_frames[self._loading_animation_frame]
+        # Update subtitle with spinner and message (safely handle if screen is unmounted)
+        with suppress(Exception):
+            self.sub_title = f"{spinner} {self._loading_message}"
+        # Move to next frame (loop back to 0 after last frame)
+        self._loading_animation_frame = (self._loading_animation_frame + 1) % len(self._loading_animation_frames)
+
+    def _stop_loading_animation(self) -> None:
+        """Stop the loading animation and clear the subtitle."""
+        # Stop the timer if it exists
+        if self._loading_animation_timer:
+            with suppress(Exception):
+                self._loading_animation_timer.stop()
+            self._loading_animation_timer = None
+        # Clear the subtitle (safely handle if screen is unmounted)
+        with suppress(Exception):
+            self.sub_title = ""
+        self._loading_message = ""
+        self._loading_animation_frame = 0
 
     def compose(self) -> ComposeResult:
         """Create child widgets."""
@@ -298,6 +341,11 @@ class EntryListScreen(Screen):
             # Note: _is_initial_mount is cleared in on_screen_resume after first display
         else:
             self._safe_log("on_mount: No entries yet, skipping initial population")
+
+    def on_unmount(self) -> None:
+        """Called when screen is unmounted - cleanup resources."""
+        # Stop loading animation timer if it's running
+        self._stop_loading_animation()
 
     def on_screen_resume(self) -> None:
         """Called when screen is resumed (e.g., after returning from entry reader)."""
@@ -1391,56 +1439,76 @@ class EntryListScreen(Screen):
             self.notify("API client not initialized", severity="error")
             return
 
-        # Get the currently highlighted entry to determine which feed to refresh
+        # Get the currently highlighted item to determine which feed to refresh
         if not self.list_view or self.list_view.index is None:
             self.notify("No entry selected", severity="warning")
             return
 
         highlighted = self.list_view.highlighted_child
-        if not isinstance(highlighted, EntryListItem):
-            self.notify("No entry selected", severity="warning")
+        feed_title = None
+        feed_id = None
+
+        # Handle both feed headers and entry items
+        if isinstance(highlighted, FeedHeaderItem):
+            # User is on a feed header - get feed info from first entry in that feed
+            feed_title = highlighted.feed_title
+            # Find the first entry for this feed to get the feed_id
+            for entry in self.sorted_entries:
+                if entry.feed.title == feed_title:
+                    feed_id = entry.feed_id
+                    break
+            if feed_id is None:
+                self.notify("No entries found for this feed", severity="warning")
+                return
+        elif isinstance(highlighted, EntryListItem):
+            # User is on an entry - get feed info from the entry
+            feed_title = highlighted.entry.feed.title
+            feed_id = highlighted.entry.feed_id
+        else:
+            self.notify("No feed selected", severity="warning")
             return
 
         try:
-            feed_title = highlighted.entry.feed.title
-            feed_id = highlighted.entry.feed_id
-
-            # Show single "Refreshing..." message
-            if hasattr(self.app, "notify_info"):
-                self.app.notify_info(f"Refreshing feed: {feed_title}...")
+            # Start loading animation in header
+            self._start_loading_animation(f"Refreshing {feed_title}...")
 
             await self.app.client.refresh_feed(feed_id)
 
-            # Reload entries after refreshing the feed
-            if hasattr(self.app, "load_entries"):
-                await self.app.load_entries(self.app.current_view)
-                # load_entries will show the result message
+            # Show success message
+            self.notify(f"Feed '{feed_title}' refreshed. Use ',' to sync new entries.", severity="information")
         except (ConnectionError, TimeoutError) as e:
             self.notify(f"Network error refreshing feed: {e}", severity="error")
         except Exception as e:
             self.notify(f"Error refreshing feed: {e}", severity="error")
+        finally:
+            # Always stop the loading animation
+            self._stop_loading_animation()
 
     async def action_refresh_all_feeds(self):
-        """Refresh all feeds on the server (Issue #55 - Feed operations)."""
+        """Refresh all feeds on the server (Issue #55 - Feed operations).
+
+        This tells the Miniflux server to fetch new content from RSS feeds.
+        It does NOT reload entries - use 'comma' (,) to sync entries from server.
+        """
         if not hasattr(self.app, "client") or not self.app.client:
             self.notify("API client not initialized", severity="error")
             return
 
         try:
-            # Show single "Refreshing..." message
-            if hasattr(self.app, "notify_info"):
-                self.app.notify_info("Refreshing all feeds...")
+            # Start loading animation in header
+            self._start_loading_animation("Refreshing all feeds...")
 
             await self.app.client.refresh_all_feeds()
 
-            # Reload entries after refreshing all feeds
-            if hasattr(self.app, "load_entries"):
-                await self.app.load_entries(self.app.current_view)
-                # load_entries will show the result message
+            # Show success message
+            self.notify("All feeds refreshed successfully. Use ',' to sync new entries.", severity="information")
         except (ConnectionError, TimeoutError) as e:
             self.notify(f"Network error refreshing feeds: {e}", severity="error")
         except Exception as e:
             self.notify(f"Error refreshing all feeds: {e}", severity="error")
+        finally:
+            # Always stop the loading animation
+            self._stop_loading_animation()
 
     async def action_sync_entries(self):
         """Sync/reload entries from server without refreshing feeds.
@@ -1454,9 +1522,8 @@ class EntryListScreen(Screen):
             return
 
         try:
-            # Show single "Syncing..." message
-            if hasattr(self.app, "notify_info"):
-                self.app.notify_info("Syncing entries from server...")
+            # Start loading animation in header
+            self._start_loading_animation("Syncing entries...")
 
             # Rebuild category mapping for fresh data
             if hasattr(self.app, "_build_entry_category_mapping"):
@@ -1468,22 +1535,39 @@ class EntryListScreen(Screen):
             self.notify(f"Network error syncing entries: {e}", severity="error")
         except Exception as e:
             self.notify(f"Error syncing entries: {e}", severity="error")
+        finally:
+            # Always stop the loading animation
+            self._stop_loading_animation()
 
     async def action_show_unread(self):
         """Load and show only unread entries."""
         if hasattr(self.app, "load_entries"):
-            await self.app.load_entries("unread")
-            self.filter_unread_only = False
-            self.filter_starred_only = False
-            self._populate_list()
+            try:
+                # Start loading animation in header
+                self._start_loading_animation("Loading unread entries...")
+
+                await self.app.load_entries("unread")
+                self.filter_unread_only = False
+                self.filter_starred_only = False
+                self._populate_list()
+            finally:
+                # Always stop the loading animation
+                self._stop_loading_animation()
 
     async def action_show_starred(self):
         """Load and show only starred entries."""
         if hasattr(self.app, "load_entries"):
-            await self.app.load_entries("starred")
-            self.filter_unread_only = False
-            self.filter_starred_only = False
-            self._populate_list()
+            try:
+                # Start loading animation in header
+                self._start_loading_animation("Loading starred entries...")
+
+                await self.app.load_entries("starred")
+                self.filter_unread_only = False
+                self.filter_starred_only = False
+                self._populate_list()
+            finally:
+                # Always stop the loading animation
+                self._stop_loading_animation()
 
     def action_clear_filters(self) -> None:
         """Clear all active filters and show all entries.
@@ -1522,19 +1606,26 @@ class EntryListScreen(Screen):
         self.notify(f"Filtered to: {category_name}")
 
     def action_search(self):
-        """Clear current search filter.
+        """Open search dialog to filter entries by search term.
 
-        Toggles search mode off and refreshes the display to show all entries.
+        Shows an interactive input dialog for entering search terms.
+        Searches entry titles and content.
         """
-        # Clear any active search
-        if self.search_active or self.search_term:
-            self.search_active = False
-            self.search_term = ""
-            self._populate_list()
-            self.notify("Search cleared")
-        else:
-            # Notify that search feature is available
-            self.notify("Search: Use set_search_term() method to filter entries")
+        # Import InputDialog locally to avoid circular dependency
+        from miniflux_tui.ui.screens.input_dialog import InputDialog  # noqa: PLC0415
+
+        # Callback when user submits search
+        def on_search_submit(search_term: str) -> None:
+            self.set_search_term(search_term)
+
+        # Show input dialog with current search term as initial value
+        dialog = InputDialog(
+            title="Search Entries",
+            label="Search in titles and content:",
+            value=self.search_term,
+            on_submit=on_search_submit,
+        )
+        self.app.push_screen(dialog)
 
     def set_search_term(self, search_term: str) -> None:
         """Set search term and filter entries.
@@ -1550,6 +1641,8 @@ class EntryListScreen(Screen):
         if self.search_active:
             result_count = len(self._filter_entries(self.entries))
             self.notify(f"Search: {result_count} entries match '{self.search_term}'")
+        else:
+            self.notify("Search cleared")
 
     async def action_manage_categories(self) -> None:
         """Open the category management screen."""

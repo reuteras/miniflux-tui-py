@@ -15,6 +15,12 @@ updates:
     allow:
       - dependency-type: "direct"
       - dependency-type: "indirect"
+    # Ignore dependencies that require special build environments
+    ignore:
+      - dependency-name: "atheris"
+        # atheris requires clang/libfuzzer to build from source
+        # It's only used for optional fuzzing (not production)
+        # CIFuzz workflow has proper build tools configured
     # Group updates by type for easier management
     groups:
       development-dependencies:

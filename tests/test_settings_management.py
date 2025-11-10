@@ -3,6 +3,7 @@
 
 from typing import cast
 from unittest.mock import MagicMock
+from urllib.parse import urlparse
 
 from textual.app import App
 
@@ -112,7 +113,12 @@ class TestSettingsScreenDisplay:
 
             # Should show config file info
             assert "config.toml" in content
-            assert "https://miniflux.example.com" in content
+            # Extract and parse URL to ensure it's exactly "https://miniflux.example.com"
+            # Using urlparse prevents incomplete URL substring sanitization vulnerability
+            urls = re.findall(r"https?://[^\s,]+", content)
+            assert any(urlparse(url).netloc == "miniflux.example.com" and urlparse(url).scheme == "https" for url in urls), (
+                f"Expected to find https://miniflux.example.com in content, but found URLs: {urls}"
+            )
 
     async def test_toggle_info_messages_updates_display(self) -> None:
         """Test that toggling info messages updates the display."""
