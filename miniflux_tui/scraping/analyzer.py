@@ -48,6 +48,29 @@ class ContentAnalyzer:
         self.soup = BeautifulSoup(html, "html5lib")
         self.analyzed_selectors = set()
 
+    def _add_candidate_if_new(self, element, selector: str, element_type: str, element_count: int, candidates: list) -> None:
+        """Add element as candidate if selector not already analyzed.
+
+        Args:
+            element: BeautifulSoup element to analyze
+            selector: CSS selector for the element
+            element_type: Type label (article, main, id, class)
+            element_count: Number of matching elements
+            candidates: List to append candidate to
+        """
+        if selector not in self.analyzed_selectors:
+            self.analyzed_selectors.add(selector)
+            text = self._get_text_preview(element)
+            candidates.append(
+                {
+                    "selector": selector,
+                    "preview": text,
+                    "score": self._score_element(element),
+                    "type": element_type,
+                    "element_count": element_count,
+                }
+            )
+
     def find_main_content(self) -> list[dict[str, Any]]:
         """Find likely content containers and suggest selectors.
 
@@ -56,96 +79,8 @@ class ContentAnalyzer:
         """
         candidates = []
 
-        # Search for content in priority order
-        candidates.extend(self._find_article_candidates())
-        candidates.extend(self._find_main_candidates())
-        candidates.extend(self._find_id_candidates())
-        candidates.extend(self._find_class_candidates())
-
-        # Sort by score (higher is better)
-        candidates.sort(key=lambda x: x["score"], reverse=True)
-
-        # Return top 10 candidates
-        return candidates[:10]
-
-    def _find_article_candidates(self) -> list[dict[str, Any]]:
-        """Find content candidates in <article> tags (Priority 1).
-
-        Returns:
-            List of candidate dictionaries for article elements
-        """
-        candidates = []
-        for article in self.soup.find_all("article"):
-            selector = self._generate_selector(article)
-            if selector not in self.analyzed_selectors:
-                self.analyzed_selectors.add(selector)
-                candidates.append(
-                    {
-                        "selector": selector,
-                        "preview": self._get_text_preview(article),
-                        "score": self._score_element(article),
-                        "type": "article",
-                        "element_count": 1,
-                    }
-                )
-        return candidates
-
-    def _find_main_candidates(self) -> list[dict[str, Any]]:
-        """Find content candidates in <main> tags (Priority 2).
-
-        Returns:
-            List of candidate dictionaries for main elements
-        """
-        candidates = []
-        for main in self.soup.find_all("main"):
-            selector = self._generate_selector(main)
-            if selector not in self.analyzed_selectors:
-                self.analyzed_selectors.add(selector)
-                candidates.append(
-                    {
-                        "selector": selector,
-                        "preview": self._get_text_preview(main),
-                        "score": self._score_element(main),
-                        "type": "main",
-                        "element_count": 1,
-                    }
-                )
-        return candidates
-
-    def _find_id_candidates(self) -> list[dict[str, Any]]:
-        """Find content candidates by ID (Priority 3).
-
-        Returns:
-            List of candidate dictionaries for elements with content-like IDs
-        """
-        candidates = []
+        # Common content indicators
         content_ids = ["content", "main", "article", "post", "entry", "body-content"]
-
-        for id_name in content_ids:
-            elements = self.soup.find_all(id=id_name)
-            if elements:
-                elem = elements[0]  # Take first match
-                selector = f"#{id_name}"
-                if selector not in self.analyzed_selectors:
-                    self.analyzed_selectors.add(selector)
-                    candidates.append(
-                        {
-                            "selector": selector,
-                            "preview": self._get_text_preview(elem),
-                            "score": self._score_element(elem),
-                            "type": "id",
-                            "element_count": len(elements),
-                        }
-                    )
-        return candidates
-
-    def _find_class_candidates(self) -> list[dict[str, Any]]:
-        """Find content candidates by class (Priority 4).
-
-        Returns:
-            List of candidate dictionaries for elements with content-like classes
-        """
-        candidates = []
         content_classes = [
             "content",
             "main",
@@ -156,23 +91,35 @@ class ContentAnalyzer:
             "story-body",
         ]
 
+        # Priority 1: Check <article> tags first (semantic HTML)
+        for article in self.soup.find_all("article"):
+            selector = self._generate_selector(article)
+            self._add_candidate_if_new(article, selector, "article", 1, candidates)
+
+        # Priority 2: Check <main> tags
+        for main in self.soup.find_all("main"):
+            selector = self._generate_selector(main)
+            self._add_candidate_if_new(main, selector, "main", 1, candidates)
+
+        # Priority 3: Check elements with content-like IDs
+        for id_name in content_ids:
+            elements = self.soup.find_all(id=id_name)
+            if elements:
+                selector = f"#{id_name}"
+                self._add_candidate_if_new(elements[0], selector, "id", len(elements), candidates)
+
+        # Priority 4: Check elements with content-like classes
         for class_name in content_classes:
             elements = self.soup.find_all(class_=class_name)
             if elements:
-                elem = elements[0]  # Take first match
                 selector = f".{class_name}"
-                if selector not in self.analyzed_selectors:
-                    self.analyzed_selectors.add(selector)
-                    candidates.append(
-                        {
-                            "selector": selector,
-                            "preview": self._get_text_preview(elem),
-                            "score": self._score_element(elem),
-                            "type": "class",
-                            "element_count": len(elements),
-                        }
-                    )
-        return candidates
+                self._add_candidate_if_new(elements[0], selector, "class", len(elements), candidates)
+
+        # Sort by score (higher is better)
+        candidates.sort(key=lambda x: x["score"], reverse=True)
+
+        # Return top 10 candidates
+        return candidates[:10]
 
     def _score_element(self, element) -> int:
         """Score element likelihood of being main content.

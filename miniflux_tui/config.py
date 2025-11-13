@@ -11,45 +11,17 @@ import tomllib
 from collections.abc import Sequence
 from pathlib import Path, PurePosixPath
 from textwrap import dedent
-from typing import NoReturn
-
-
-def _normalize_command(command: Sequence[str] | str) -> tuple[str, ...]:
-    """Normalize a command into a tuple of executable arguments."""
-    parts = _parse_command_input(command)
-    _validate_command_parts(parts)
-    return tuple(parts)
-
-
-def _parse_command_input(command: Sequence[str] | str) -> list[str]:
-    """Parse command input (string or sequence) into list of parts.
-
-    Args:
-        command: Command as string or sequence
-
-    Returns:
-        List of command parts
-
-    Raises:
-        TypeError: If command is not string or sequence
-    """
-    if isinstance(command, str):
-        return shlex.split(command, posix=(os.name != "nt"))
-    if isinstance(command, Sequence):
-        return list(command)
-    msg = "Command must be provided as a string or list of strings"
-    raise TypeError(msg)
 
 
 def _validate_command_parts(parts: list[str]) -> None:
     """Validate command parts are non-empty strings.
 
     Args:
-        parts: List of command parts
+        parts: List of command parts to validate
 
     Raises:
-        ValueError: If parts is empty or contains empty strings
-        TypeError: If parts contain non-string values
+        ValueError: If parts list is empty or contains empty strings
+        TypeError: If parts contain non-string elements
     """
     if not parts:
         msg = "Command must contain at least one argument"
@@ -62,6 +34,20 @@ def _validate_command_parts(parts: list[str]) -> None:
         if not part:
             msg = "Command arguments cannot be empty strings"
             raise ValueError(msg)
+
+
+def _normalize_command(command: Sequence[str] | str) -> tuple[str, ...]:
+    """Normalize a command into a tuple of executable arguments."""
+    if isinstance(command, str):
+        parts = shlex.split(command, posix=(os.name != "nt"))
+    elif isinstance(command, Sequence):
+        parts = list(command)
+    else:
+        msg = "Command must be provided as a string or list of strings"
+        raise TypeError(msg)
+
+    _validate_command_parts(parts)
+    return tuple(parts)
 
 
 def validate_config(config_dict: dict) -> tuple[bool, str]:
@@ -173,31 +159,18 @@ class Config:
         """Return the configured command used to retrieve the API token."""
         return self._password_command
 
-    def get_api_key(self, *, refresh: bool = False) -> str:
-        """
-        Execute the password command and return the Miniflux API token.
-
-        The result is cached. Pass ``refresh=True`` to force re-execution.
-        """
-        if not refresh and self._api_key_cache is not None:
-            return self._api_key_cache
-
-        api_key = self._execute_password_command()
-        self._api_key_cache = api_key
-        return api_key
-
     def _execute_password_command(self) -> str:
-        """Execute password command and return sanitized output.
+        """Execute the password command and return the output.
 
         Returns:
-            The API key output from the password command
+            Stripped stdout from the command
 
         Raises:
             RuntimeError: If command fails or returns empty output
         """
-        # Command originates from a trusted local configuration file.
         try:
-            completed: subprocess.CompletedProcess[str] = subprocess.run(  # nosec B603
+            # Command originates from a trusted local configuration file.
+            completed = subprocess.run(  # nosec B603
                 self._password_command,
                 capture_output=True,
                 text=True,
@@ -207,7 +180,11 @@ class Config:
             msg = f"Password command failed: {exc}"
             raise RuntimeError(msg) from exc
         except subprocess.CalledProcessError as exc:
-            self._handle_password_command_error(exc)
+            stderr = (exc.stderr or "").strip()
+            msg = f"Password command exited with status {exc.returncode}"
+            if stderr:
+                msg = f"{msg}: {stderr}"
+            raise RuntimeError(msg) from exc
 
         api_key = (completed.stdout or "").strip()
         if not api_key:
@@ -216,25 +193,91 @@ class Config:
 
         return api_key
 
-    def _handle_password_command_error(self, exc: subprocess.CalledProcessError) -> NoReturn:
-        """Handle password command execution errors.
-
-        Args:
-            exc: The CalledProcessError from subprocess
-
-        Raises:
-            RuntimeError: Always raises with formatted error message
+    def get_api_key(self, *, refresh: bool = False) -> str:
         """
-        stderr = (exc.stderr or "").strip()
-        msg = f"Password command exited with status {exc.returncode}"
-        if stderr:
-            msg = f"{msg}: {stderr}"
-        raise RuntimeError(msg) from exc
+        Execute the password command and return the Miniflux API token.
+
+        The result is cached. Pass ``refresh=True`` to force re-execution.
+        """
+        if not refresh and self._api_key_cache is not None:
+            return self._api_key_cache
+
+        self._api_key_cache = self._execute_password_command()
+        return self._api_key_cache
 
     @property
     def api_key(self) -> str:
         """Backward-compatible access to the retrieved API token."""
         return self.get_api_key()
+
+    @classmethod
+    def _build_validation_error_hints(cls, error_msg: str, data: dict) -> list[str]:
+        """Build helpful hint messages for validation errors.
+
+        Args:
+            error_msg: The validation error message
+            data: The raw config data dictionary
+
+        Returns:
+            List of hint message strings
+        """
+        hint_messages: list[str] = []
+
+        if "Missing required field: password" in error_msg:  # nosec: CWE-208 - Non-cryptographic string comparison
+            hint_messages.append(
+                dedent(
+                    """
+                    This configuration predates the password-command format introduced in v0.4.19.
+                    Add a `password` command that returns your Miniflux API token. For example:
+
+                        password = ["op", "read", "op://Personal/Miniflux/API Token"]
+
+                    Alternatively run `miniflux-tui --init` to generate a fresh template and copy
+                    your settings across.
+                    """
+                ).strip()
+            )
+
+        if "api_key" in data:
+            hint_messages.append(
+                dedent(
+                    """
+                    Remove the deprecated `api_key` entry and configure a `password` command instead.
+                    The command should output your Miniflux API token, for example:
+
+                        password = ["op", "read", "op://Personal/Miniflux/API Token"]
+                    """
+                ).strip()
+            )
+
+        return hint_messages
+
+    @classmethod
+    def _resolve_server_url(cls, config_url: str) -> str:
+        """Resolve server URL with environment variable override support.
+
+        Args:
+            config_url: The server URL from config file
+
+        Returns:
+            Resolved server URL
+
+        Raises:
+            ConfigurationError: If placeholder is used without env var
+        """
+        env_server_url = os.environ.get("MINIFLUX_SERVER_URL")
+        if env_server_url:
+            return env_server_url
+
+        if "PLACEHOLDER" in config_url:
+            msg = (
+                "Configuration contains placeholder for server_url. "
+                "Please set the MINIFLUX_SERVER_URL environment variable or "
+                "edit the config file with your actual server URL."
+            )
+            raise ConfigurationError(msg)
+
+        return config_url
 
     @classmethod
     def from_file(cls, path: Path) -> Config:
@@ -255,169 +298,50 @@ class Config:
             msg = f"Config file not found: {path}"
             raise FileNotFoundError(msg)
 
-        data = _load_toml_file(path)
-        _validate_and_handle_config(data)
+        try:
+            data = tomllib.loads(path.read_text(encoding="utf-8"))
+        except (tomllib.TOMLDecodeError, TypeError) as exc:
+            msg = f"Invalid configuration: {exc}"
+            raise ConfigurationError(msg) from exc
 
-        # Extract all settings from configuration
-        settings = _extract_config_settings(data)
-        server_url = _resolve_server_url(data)
+        # Validate configuration
+        is_valid, error_msg = validate_config(data)
+        if not is_valid:
+            hint_messages = cls._build_validation_error_hints(error_msg, data)
+            msg = f"Invalid configuration: {error_msg}"
+            if hint_messages:
+                msg = f"{msg}\n\n" + "\n\n".join(hint_messages)
+            raise ConfigurationError(msg)
+
+        # Theme settings
+        theme = data.get("theme", {})
+        unread_color = theme.get("unread_color", "cyan")
+        read_color = theme.get("read_color", "gray")
+
+        # Sorting settings
+        sorting = data.get("sorting", {})
+        default_sort = sorting.get("default_sort", "date")
+        default_group_by_feed = sorting.get("default_group_by_feed", False)
+        group_collapsed = sorting.get("group_collapsed", False)
+
+        # UI settings
+        ui = data.get("ui", {})
+        show_info_messages = ui.get("show_info_messages", True)
+
+        # Resolve server URL with environment variable support
+        server_url = cls._resolve_server_url(data["server_url"])
 
         return cls(
             server_url=server_url,
             password=data["password"],
             allow_invalid_certs=data.get("allow_invalid_certs", False),
-            unread_color=settings["unread_color"],
-            read_color=settings["read_color"],
-            default_sort=settings["default_sort"],
-            default_group_by_feed=settings["default_group_by_feed"],
-            group_collapsed=settings["group_collapsed"],
-            show_info_messages=settings["show_info_messages"],
+            unread_color=unread_color,
+            read_color=read_color,
+            default_sort=default_sort,
+            default_group_by_feed=default_group_by_feed,
+            group_collapsed=group_collapsed,
+            show_info_messages=show_info_messages,
         )
-
-
-def _load_toml_file(path: Path) -> dict:
-    """Load and parse TOML configuration file.
-
-    Args:
-        path: Path to the TOML file
-
-    Returns:
-        Parsed TOML data as dictionary
-
-    Raises:
-        ConfigurationError: If file cannot be parsed
-    """
-    try:
-        return tomllib.loads(path.read_text(encoding="utf-8"))
-    except (tomllib.TOMLDecodeError, TypeError) as exc:
-        msg = f"Invalid configuration: {exc}"
-        raise ConfigurationError(msg) from exc
-
-
-def _validate_and_handle_config(data: dict) -> None:
-    """Validate configuration and raise errors with helpful hints.
-
-    Args:
-        data: Configuration dictionary
-
-    Raises:
-        ConfigurationError: If configuration is invalid
-    """
-    is_valid, error_msg = validate_config(data)
-    if not is_valid:
-        hint_messages = _build_config_hint_messages(data, error_msg)
-        msg = f"Invalid configuration: {error_msg}"
-        if hint_messages:
-            msg = f"{msg}\n\n" + "\n\n".join(hint_messages)
-        raise ConfigurationError(msg)
-
-
-def _build_config_hint_messages(data: dict, error_msg: str) -> list[str]:
-    """Build helpful hint messages for configuration errors.
-
-    Args:
-        data: Configuration dictionary
-        error_msg: The error message from validation
-
-    Returns:
-        List of hint messages to display to user
-    """
-    hints = []
-
-    # Check for missing password field error
-    if "password" in error_msg.lower():
-        hints.append(
-            dedent(
-                """
-                This configuration predates the password-command format introduced in v0.4.19.
-                Add a `password` command that returns your Miniflux API token. For example:
-
-                    password = ["op", "read", "op://Personal/Miniflux/API Token"]
-
-                Alternatively run `miniflux-tui --init` to generate a fresh template and copy
-                your settings across.
-                """
-            ).strip()
-        )
-
-    if "api_key" in data:
-        hints.append(
-            dedent(
-                """
-                Remove the deprecated `api_key` entry and configure a `password` command instead.
-                The command should output your Miniflux API token, for example:
-
-                    password = ["op", "read", "op://Personal/Miniflux/API Token"]
-                """
-            ).strip()
-        )
-
-    return hints
-
-
-def _extract_config_settings(data: dict) -> dict:
-    """Extract theme, sorting, and UI settings from configuration.
-
-    Args:
-        data: Configuration dictionary
-
-    Returns:
-        Dictionary containing all extracted settings
-    """
-    # Theme settings
-    theme: dict = data.get("theme", {})
-    unread_color: str = theme.get("unread_color", "cyan")
-    read_color: str = theme.get("read_color", "gray")
-
-    # Sorting settings
-    sorting: dict = data.get("sorting", {})
-    default_sort: str = sorting.get("default_sort", "date")
-    default_group_by_feed: bool = sorting.get("default_group_by_feed", False)
-    group_collapsed: bool = sorting.get("group_collapsed", False)
-
-    # UI settings
-    ui: dict = data.get("ui", {})
-    show_info_messages: bool = ui.get("show_info_messages", True)
-
-    return {
-        "unread_color": unread_color,
-        "read_color": read_color,
-        "default_sort": default_sort,
-        "default_group_by_feed": default_group_by_feed,
-        "group_collapsed": group_collapsed,
-        "show_info_messages": show_info_messages,
-    }
-
-
-def _resolve_server_url(data: dict) -> str:
-    """Resolve server URL with environment variable override support.
-
-    Args:
-        data: Configuration dictionary
-
-    Returns:
-        The resolved server URL
-
-    Raises:
-        ConfigurationError: If server_url is invalid
-    """
-    server_url = data["server_url"]
-    env_server_url = os.environ.get("MINIFLUX_SERVER_URL")
-
-    if env_server_url:
-        # Environment variable takes precedence
-        return env_server_url
-
-    if "PLACEHOLDER" in server_url and not env_server_url:
-        # Config has placeholder and no env var set
-        msg = (
-            "Configuration contains placeholder for server_url. "
-            "Please set the MINIFLUX_SERVER_URL environment variable or "
-            "edit the config file with your actual server URL."
-        )
-        raise ConfigurationError(msg)
-
-    return server_url
 
 
 def _resolve_unix_config_home() -> PurePosixPath:
