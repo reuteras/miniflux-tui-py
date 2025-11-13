@@ -95,12 +95,16 @@ class FeedHeaderItem(ListItem):
         category_title: str | None = None,
         has_errors: bool = False,
         feed_disabled: bool = False,
+        unread_count: int = 0,
+        total_count: int = 0,
     ):
         self.feed_title = feed_title
         self.is_expanded = is_expanded
         self.category_title = category_title
         self.has_errors = has_errors
         self.feed_disabled = feed_disabled
+        self.unread_count = unread_count
+        self.total_count = total_count
 
         # Format header with fold indicator, category, and error indicators
         fold_icon = FOLD_EXPANDED if is_expanded else FOLD_COLLAPSED
@@ -112,16 +116,18 @@ class FeedHeaderItem(ListItem):
             error_indicators.append("[yellow]⚠ ERRORS[/yellow]")
 
         error_text = " ".join(error_indicators)
+        count_text = f"[dim]({unread_count} unread / {total_count} total)[/dim]" if total_count > 0 else ""
 
         if category_title:
+            category_part = f"[dim]({category_title})[/dim]"
             if error_text:
-                header_text = f"[bold]{fold_icon} {feed_title}[/bold] [dim]({category_title})[/dim] {error_text}"
+                header_text = f"[bold]{fold_icon} {feed_title}[/bold] {category_part} {count_text} {error_text}".strip()
             else:
-                header_text = f"[bold]{fold_icon} {feed_title}[/bold] [dim]({category_title})[/dim]"
+                header_text = f"[bold]{fold_icon} {feed_title}[/bold] {category_part} {count_text}".strip()
         elif error_text:
-            header_text = f"[bold]{fold_icon} {feed_title}[/bold] {error_text}"
+            header_text = f"[bold]{fold_icon} {feed_title}[/bold] {count_text} {error_text}".strip()
         else:
-            header_text = f"[bold]{fold_icon} {feed_title}[/bold]"
+            header_text = f"[bold]{fold_icon} {feed_title}[/bold] {count_text}".strip()
 
         label = Label(header_text, classes="feed-header")
 
@@ -140,16 +146,18 @@ class FeedHeaderItem(ListItem):
             error_indicators.append("[yellow]⚠ ERRORS[/yellow]")
 
         error_text = " ".join(error_indicators)
+        count_text = f"[dim]({self.unread_count} unread / {self.total_count} total)[/dim]" if self.total_count > 0 else ""
 
         if self.category_title:
+            category_part = f"[dim]({self.category_title})[/dim]"
             if error_text:
-                header_text = f"[bold]{fold_icon} {self.feed_title}[/bold] [dim]({self.category_title})[/dim] {error_text}"
+                header_text = f"[bold]{fold_icon} {self.feed_title}[/bold] {category_part} {count_text} {error_text}".strip()
             else:
-                header_text = f"[bold]{fold_icon} {self.feed_title}[/bold] [dim]({self.category_title})[/dim]"
+                header_text = f"[bold]{fold_icon} {self.feed_title}[/bold] {category_part} {count_text}".strip()
         elif error_text:
-            header_text = f"[bold]{fold_icon} {self.feed_title}[/bold] {error_text}"
+            header_text = f"[bold]{fold_icon} {self.feed_title}[/bold] {count_text} {error_text}".strip()
         else:
-            header_text = f"[bold]{fold_icon} {self.feed_title}[/bold]"
+            header_text = f"[bold]{fold_icon} {self.feed_title}[/bold] {count_text}".strip()
 
         # Update the label
         if self.children:
@@ -874,6 +882,9 @@ class EntryListScreen(Screen):
             has_errors = entry.feed.has_errors
             feed_disabled = entry.feed.disabled
 
+        # Get feed statistics
+        unread_count, total_count = self._get_feed_stats(current_feed, self.sorted_entries)
+
         # Create and add a fold-aware header item
         is_expanded = self.feed_fold_state[current_feed]
         header = FeedHeaderItem(
@@ -882,6 +893,8 @@ class EntryListScreen(Screen):
             category_title=category_title,
             has_errors=has_errors,
             feed_disabled=feed_disabled,
+            unread_count=unread_count,
+            total_count=total_count,
         )
         self.feed_header_map[current_feed] = header
         self.list_view.append(header)
@@ -956,6 +969,25 @@ class EntryListScreen(Screen):
                 return category.title
 
         return f"Category {category_id}"
+
+    def _get_feed_stats(self, feed_title: str, entries: list[Entry]) -> tuple[int, int]:
+        """Calculate unread and total counts for a feed.
+
+        Args:
+            feed_title: Title of the feed
+            entries: List of entries to count from
+
+        Returns:
+            Tuple of (unread_count, total_count) for the feed
+        """
+        unread = 0
+        total = 0
+        for entry in entries:
+            if entry.feed.title == feed_title:
+                total += 1
+                if entry.is_unread:
+                    unread += 1
+        return unread, total
 
     def _add_category_header_if_needed(self, category_title: str, first_category_ref: list) -> None:
         """Add a category header if transitioning to a new category.

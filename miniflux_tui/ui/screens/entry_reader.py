@@ -115,8 +115,10 @@ class EntryReaderScreen(Screen):
         # Get reference to the scroll container after mount
         self.scroll_container = self.query_one(VerticalScroll)
 
-        # Set sub_title with group info if available
-        self._update_sub_title()
+        # Set title to the entry title and feed name
+        self.title = f"{self.entry.title} - {self.entry.feed.title}"
+        # Clear subtitle (remove counts from there)
+        self.sub_title = ""
 
         # Mark entry as read when opened
         if self.entry.is_unread:
@@ -206,17 +208,9 @@ class EntryReaderScreen(Screen):
         return f"Category {entry.feed.category_id}"
 
     def _update_sub_title(self) -> None:
-        """Update screen sub_title with group statistics."""
-        group_stats = self._calculate_group_info()
-        if group_stats:
-            mode = group_stats["mode"]
-            name = group_stats["name"]
-            unread = group_stats["unread"]
-            total = group_stats["total"]
-            mode_label = "Feed" if mode == "feed" else "Category"
-            self.sub_title = f"{mode_label}: {name} ({unread} unread / {total} total)"
-        else:
-            self.sub_title = ""
+        """Clear the sub_title (counts are now in feed header)."""
+        # Subtitle is no longer used - title shows entry and feed info
+        self.sub_title = ""
 
     async def _mark_entry_as_read(self):
         """Mark the current entry as read via API."""
