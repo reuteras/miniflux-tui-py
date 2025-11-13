@@ -7,3 +7,4 @@ query-filters:
       id: py/possible-timing-attack-sensitive-info
       paths:
         - scripts/build_binary.py
+        - miniflux_tui/config.py  # Line 328: Checking for "password" keyword in error message, not comparing secrets
