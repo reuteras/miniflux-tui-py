@@ -70,6 +70,7 @@ class EntryReaderScreen(Screen):
         self.read_color = read_color
         self.group_info = group_info  # Contains: mode, name, total, unread
         self.scroll_container = None
+        self.group_stats_widget: Static | None = None  # Reference to group stats widget for updates
         self.links: list[dict[str, str]] = []  # List of {text: str, url: str}
         self.focused_link_index: int | None = None  # Currently focused link index
         self.link_indicator: Static | None = None  # Widget to show focused link
@@ -96,7 +97,9 @@ class EntryReaderScreen(Screen):
             # Add group statistics if available
             group_stats_text = self._get_group_stats_text()
             if group_stats_text:
-                yield Static(group_stats_text, classes="entry-meta")
+                group_stats_widget = Static(group_stats_text, classes="entry-meta")
+                self.group_stats_widget = group_stats_widget
+                yield group_stats_widget
 
             yield Static(f"[dim]{self.entry.url}[/dim]", classes="entry-url")
             yield Static(CONTENT_SEPARATOR, classes="separator")
@@ -121,8 +124,8 @@ class EntryReaderScreen(Screen):
         # Get reference to the scroll container after mount
         self.scroll_container = self.query_one(VerticalScroll)
 
-        # Set title to the entry title and feed name
-        self.title = f"{self.entry.title} - {self.entry.feed.title}"
+        # Set title to just the application name (no feed name or entry title)
+        self.title = ""
         # Clear subtitle (remove counts from there)
         self.sub_title = ""
 
@@ -247,6 +250,11 @@ class EntryReaderScreen(Screen):
                     if entry.id == self.entry.id:
                         entry.status = "read"
                         break
+
+                # Update group stats widget to reflect new unread count
+                if self.group_stats_widget:
+                    updated_stats = self._get_group_stats_text()
+                    self.group_stats_widget.update(updated_stats)
 
                 # Update sub_title to reflect new unread count
                 self._update_sub_title()
