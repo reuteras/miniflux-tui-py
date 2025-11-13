@@ -5,6 +5,69 @@ import re
 from urllib.parse import urlparse
 
 
+def _validate_hostname(hostname: str) -> tuple[bool, str]:
+    """Validate hostname for SSRF prevention.
+
+    Args:
+        hostname: Hostname to validate (without port)
+
+    Returns:
+        Tuple of (is_valid, error_message)
+    """
+    # Block localhost/loopback addresses
+    if hostname in ["localhost", "127.0.0.1", "::1", "[::1]"]:
+        return False, "Cannot add local URLs (localhost)"
+
+    # Block private IP ranges
+    private_patterns = [
+        r"^192\.168\.",
+        r"^10\.",
+        r"^172\.(1[6-9]|2[0-9]|3[01])\.",  # 172.16.0.0 - 172.31.255.255
+        r"^127\.",  # Loopback
+        r"^169\.254\.",  # Link-local
+    ]
+
+    for pattern in private_patterns:
+        if re.match(pattern, hostname):
+            return False, "Cannot add private network URLs"
+
+    # Block IPv6 loopback and link-local
+    if hostname.startswith(("fe80:", "[fe80:")):
+        return False, "Cannot add link-local IPv6 addresses"
+
+    return True, ""
+
+
+def _validate_url_characters(url: str) -> tuple[bool, str]:
+    """Validate URL doesn't contain malicious characters.
+
+    Args:
+        url: URL to validate
+
+    Returns:
+        Tuple of (is_valid, error_message)
+    """
+    # Check for control characters
+    if any(ord(c) < 32 for c in url):
+        return False, "URL contains invalid control characters"
+
+    # Check for newlines (header injection attempt)
+    if "\n" in url or "\r" in url:
+        return False, "URL contains invalid characters (newlines)"
+
+    # Check for suspicious patterns
+    suspicious_patterns = [
+        r"[;|&$`<>]",  # Shell metacharacters
+        r"%00",  # Null byte
+    ]
+
+    for pattern in suspicious_patterns:
+        if re.search(pattern, url):
+            return False, "URL contains suspicious characters"
+
+    return True, ""
+
+
 def validate_feed_url(url: str) -> tuple[bool, str]:  # noqa: PLR0911
     """Validate and sanitize feed URL for SSRF prevention.
 
@@ -36,44 +99,15 @@ def validate_feed_url(url: str) -> tuple[bool, str]:  # noqa: PLR0911
     # Extract hostname without port
     hostname = parsed.netloc.split(":")[0].lower()
 
-    # Block localhost/loopback addresses
-    if hostname in ["localhost", "127.0.0.1", "::1", "[::1]"]:
-        return False, "Cannot add local URLs (localhost)"
+    # Validate hostname for SSRF
+    is_valid, error = _validate_hostname(hostname)
+    if not is_valid:
+        return False, error
 
-    # Block private IP ranges
-    private_patterns = [
-        r"^192\.168\.",
-        r"^10\.",
-        r"^172\.(1[6-9]|2[0-9]|3[01])\.",  # 172.16.0.0 - 172.31.255.255
-        r"^127\.",  # Loopback
-        r"^169\.254\.",  # Link-local
-    ]
-
-    for pattern in private_patterns:
-        if re.match(pattern, hostname):
-            return False, "Cannot add private network URLs"
-
-    # Block IPv6 loopback and link-local
-    if hostname.startswith(("fe80:", "[fe80:")):
-        return False, "Cannot add link-local IPv6 addresses"
-
-    # Check for control characters or suspicious patterns
-    if any(ord(c) < 32 for c in url):
-        return False, "URL contains invalid control characters"
-
-    # Check for multiple newlines (header injection attempt)
-    if "\n" in url or "\r" in url:
-        return False, "URL contains invalid characters (newlines)"
-
-    # Check for suspicious patterns
-    suspicious_patterns = [
-        r"[;|&$`<>]",  # Shell metacharacters
-        r"%00",  # Null byte
-    ]
-
-    for pattern in suspicious_patterns:
-        if re.search(pattern, url):
-            return False, "URL contains suspicious characters"
+    # Validate URL characters
+    is_valid, error = _validate_url_characters(url)
+    if not is_valid:
+        return False, error
 
     return True, ""
 
