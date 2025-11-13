@@ -173,14 +173,11 @@ class Config:
         """Return the configured command used to retrieve the API token."""
         return self._password_command
 
-    def get_api_key(self, *, refresh: bool = False) -> str:
-        """
-        Execute the password command and return the Miniflux API token.
+    def _execute_password_command(self) -> str:
+        """Execute the password command and return the output.
 
-        The result is cached. Pass ``refresh=True`` to force re-execution.
-        """
-        if not refresh and self._api_key_cache is not None:
-            return self._api_key_cache
+        Returns:
+            Stripped stdout from the command
 
         api_key = self._execute_password_command()
         self._api_key_cache = api_key
@@ -235,6 +232,75 @@ class Config:
     def api_key(self) -> str:
         """Backward-compatible access to the retrieved API token."""
         return self.get_api_key()
+
+    @classmethod
+    def _build_validation_error_hints(cls, error_msg: str, data: dict) -> list[str]:
+        """Build helpful hint messages for validation errors.
+
+        Args:
+            error_msg: The validation error message
+            data: The raw config data dictionary
+
+        Returns:
+            List of hint message strings
+        """
+        hint_messages: list[str] = []
+
+        if "Missing required field: password" in error_msg:  # nosec: CWE-208 - Non-cryptographic string comparison
+            hint_messages.append(
+                dedent(
+                    """
+                    This configuration predates the password-command format introduced in v0.4.19.
+                    Add a `password` command that returns your Miniflux API token. For example:
+
+                        password = ["op", "read", "op://Personal/Miniflux/API Token"]
+
+                    Alternatively run `miniflux-tui --init` to generate a fresh template and copy
+                    your settings across.
+                    """
+                ).strip()
+            )
+
+        if "api_key" in data:
+            hint_messages.append(
+                dedent(
+                    """
+                    Remove the deprecated `api_key` entry and configure a `password` command instead.
+                    The command should output your Miniflux API token, for example:
+
+                        password = ["op", "read", "op://Personal/Miniflux/API Token"]
+                    """
+                ).strip()
+            )
+
+        return hint_messages
+
+    @classmethod
+    def _resolve_server_url(cls, config_url: str) -> str:
+        """Resolve server URL with environment variable override support.
+
+        Args:
+            config_url: The server URL from config file
+
+        Returns:
+            Resolved server URL
+
+        Raises:
+            ConfigurationError: If placeholder is used without env var
+        """
+        env_server_url = os.environ.get("MINIFLUX_SERVER_URL")
+        if env_server_url:
+            return env_server_url
+
+        if "PLACEHOLDER" in config_url:
+            msg = (
+                "Configuration contains placeholder for server_url. "
+                "Please set the MINIFLUX_SERVER_URL environment variable or "
+                "edit the config file with your actual server URL."
+            )
+            raise ConfigurationError(msg)
+
+        return config_url
 
     @classmethod
     def from_file(cls, path: Path) -> Config:

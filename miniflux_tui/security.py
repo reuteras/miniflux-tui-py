@@ -9,7 +9,7 @@ def validate_feed_url(url: str) -> tuple[bool, str]:
     """Validate and sanitize feed URL for SSRF prevention.
 
     Args:
-        url: The URL to validate
+        hostname: Hostname to validate (without port)
 
     Returns:
         Tuple of (is_valid, error_message)
@@ -156,6 +156,50 @@ def _has_suspicious_patterns(url: str) -> bool:
         r"%00",  # Null byte
     ]
     return any(re.search(pattern, url) for pattern in suspicious_patterns)
+
+
+def validate_feed_url(url: str) -> tuple[bool, str]:  # noqa: PLR0911
+    """Validate and sanitize feed URL for SSRF prevention.
+
+    Args:
+        url: The URL to validate
+
+    Returns:
+        Tuple of (is_valid, error_message)
+    """
+    # Length check
+    if len(url) > 2048:
+        return False, "URL too long (max 2048 characters)"
+
+    # Empty check
+    if not url.strip():
+        return False, "URL cannot be empty"
+
+    # Parse URL (urlparse doesn't raise exceptions, just returns parsed components)
+    parsed = urlparse(url)
+
+    # Protocol whitelist - only HTTP and HTTPS allowed
+    if parsed.scheme not in ["http", "https"]:
+        return False, "Only HTTP and HTTPS URLs are allowed"
+
+    # Hostname validation
+    if not parsed.netloc:
+        return False, "URL must have a valid hostname"
+
+    # Extract hostname without port
+    hostname = parsed.netloc.split(":")[0].lower()
+
+    # Validate hostname for SSRF
+    is_valid, error = _validate_hostname(hostname)
+    if not is_valid:
+        return False, error
+
+    # Validate URL characters
+    is_valid, error = _validate_url_characters(url)
+    if not is_valid:
+        return False, error
+
+    return True, ""
 
 
 def sanitize_error_message(error: Exception, operation: str) -> str:

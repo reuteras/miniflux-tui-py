@@ -48,6 +48,29 @@ class ContentAnalyzer:
         self.soup = BeautifulSoup(html, "html5lib")
         self.analyzed_selectors = set()
 
+    def _add_candidate_if_new(self, element, selector: str, element_type: str, element_count: int, candidates: list) -> None:
+        """Add element as candidate if selector not already analyzed.
+
+        Args:
+            element: BeautifulSoup element to analyze
+            selector: CSS selector for the element
+            element_type: Type label (article, main, id, class)
+            element_count: Number of matching elements
+            candidates: List to append candidate to
+        """
+        if selector not in self.analyzed_selectors:
+            self.analyzed_selectors.add(selector)
+            text = self._get_text_preview(element)
+            candidates.append(
+                {
+                    "selector": selector,
+                    "preview": text,
+                    "score": self._score_element(element),
+                    "type": element_type,
+                    "element_count": element_count,
+                }
+            )
+
     def find_main_content(self) -> list[dict[str, Any]]:
         """Find likely content containers and suggest selectors.
 
@@ -159,7 +182,6 @@ class ContentAnalyzer:
         for class_name in content_classes:
             elements = self.soup.find_all(class_=class_name)
             if elements:
-                elem = elements[0]  # Take first match
                 selector = f".{class_name}"
                 if selector not in self.analyzed_selectors:
                     self.analyzed_selectors.add(selector)
