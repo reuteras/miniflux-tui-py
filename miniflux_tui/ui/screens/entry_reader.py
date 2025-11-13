@@ -241,6 +241,13 @@ class EntryReaderScreen(Screen):
             try:
                 await app.client.mark_as_read(self.entry.id)
                 self.entry.status = "read"
+
+                # Also update the entry in the entry_list if it exists there
+                for entry in self.entry_list:
+                    if entry.id == self.entry.id:
+                        entry.status = "read"
+                        break
+
                 # Update sub_title to reflect new unread count
                 self._update_sub_title()
             except Exception as e:
@@ -516,6 +523,11 @@ class EntryReaderScreen(Screen):
                 classes="entry-meta",
             )
         )
+
+        # Add group statistics if available
+        group_stats_text = self._get_group_stats_text()
+        if group_stats_text:
+            scroll.mount(Static(group_stats_text, classes="entry-meta"))
 
     def _mount_url(self, scroll: VerticalScroll):
         """Mount entry URL widget."""
