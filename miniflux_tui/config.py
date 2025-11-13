@@ -13,6 +13,29 @@ from pathlib import Path, PurePosixPath
 from textwrap import dedent
 
 
+def _validate_command_parts(parts: list[str]) -> None:
+    """Validate command parts are non-empty strings.
+
+    Args:
+        parts: List of command parts to validate
+
+    Raises:
+        ValueError: If parts list is empty or contains empty strings
+        TypeError: If parts contain non-string elements
+    """
+    if not parts:
+        msg = "Command must contain at least one argument"
+        raise ValueError(msg)
+
+    for part in parts:
+        if not isinstance(part, str):
+            msg = "Command arguments must be strings"
+            raise TypeError(msg)
+        if not part:
+            msg = "Command arguments cannot be empty strings"
+            raise ValueError(msg)
+
+
 def _normalize_command(command: Sequence[str] | str) -> tuple[str, ...]:
     """Normalize a command into a tuple of executable arguments."""
     if isinstance(command, str):
@@ -23,21 +46,8 @@ def _normalize_command(command: Sequence[str] | str) -> tuple[str, ...]:
         msg = "Command must be provided as a string or list of strings"
         raise TypeError(msg)
 
-    if not parts:
-        msg = "Command must contain at least one argument"
-        raise ValueError(msg)
-
-    normalized: list[str] = []
-    for part in parts:
-        if not isinstance(part, str):
-            msg = "Command arguments must be strings"
-            raise TypeError(msg)
-        if not part:
-            msg = "Command arguments cannot be empty strings"
-            raise ValueError(msg)
-        normalized.append(part)
-
-    return tuple(normalized)
+    _validate_command_parts(parts)
+    return tuple(parts)
 
 
 def validate_config(config_dict: dict) -> tuple[bool, str]:
@@ -149,15 +159,15 @@ class Config:
         """Return the configured command used to retrieve the API token."""
         return self._password_command
 
-    def get_api_key(self, *, refresh: bool = False) -> str:
-        """
-        Execute the password command and return the Miniflux API token.
+    def _execute_password_command(self) -> str:
+        """Execute the password command and return the output.
 
-        The result is cached. Pass ``refresh=True`` to force re-execution.
-        """
-        if not refresh and self._api_key_cache is not None:
-            return self._api_key_cache
+        Returns:
+            Stripped stdout from the command
 
+        Raises:
+            RuntimeError: If command fails or returns empty output
+        """
         try:
             # Command originates from a trusted local configuration file.
             completed = subprocess.run(  # nosec B603
@@ -181,13 +191,93 @@ class Config:
             msg = "Password command returned empty output"
             raise RuntimeError(msg)
 
-        self._api_key_cache = api_key
         return api_key
+
+    def get_api_key(self, *, refresh: bool = False) -> str:
+        """
+        Execute the password command and return the Miniflux API token.
+
+        The result is cached. Pass ``refresh=True`` to force re-execution.
+        """
+        if not refresh and self._api_key_cache is not None:
+            return self._api_key_cache
+
+        self._api_key_cache = self._execute_password_command()
+        return self._api_key_cache
 
     @property
     def api_key(self) -> str:
         """Backward-compatible access to the retrieved API token."""
         return self.get_api_key()
+
+    @classmethod
+    def _build_validation_error_hints(cls, error_msg: str, data: dict) -> list[str]:
+        """Build helpful hint messages for validation errors.
+
+        Args:
+            error_msg: The validation error message
+            data: The raw config data dictionary
+
+        Returns:
+            List of hint message strings
+        """
+        hint_messages: list[str] = []
+
+        if "Missing required field: password" in error_msg:  # nosec: CWE-208 - Non-cryptographic string comparison
+            hint_messages.append(
+                dedent(
+                    """
+                    This configuration predates the password-command format introduced in v0.4.19.
+                    Add a `password` command that returns your Miniflux API token. For example:
+
+                        password = ["op", "read", "op://Personal/Miniflux/API Token"]
+
+                    Alternatively run `miniflux-tui --init` to generate a fresh template and copy
+                    your settings across.
+                    """
+                ).strip()
+            )
+
+        if "api_key" in data:
+            hint_messages.append(
+                dedent(
+                    """
+                    Remove the deprecated `api_key` entry and configure a `password` command instead.
+                    The command should output your Miniflux API token, for example:
+
+                        password = ["op", "read", "op://Personal/Miniflux/API Token"]
+                    """
+                ).strip()
+            )
+
+        return hint_messages
+
+    @classmethod
+    def _resolve_server_url(cls, config_url: str) -> str:
+        """Resolve server URL with environment variable override support.
+
+        Args:
+            config_url: The server URL from config file
+
+        Returns:
+            Resolved server URL
+
+        Raises:
+            ConfigurationError: If placeholder is used without env var
+        """
+        env_server_url = os.environ.get("MINIFLUX_SERVER_URL")
+        if env_server_url:
+            return env_server_url
+
+        if "PLACEHOLDER" in config_url:
+            msg = (
+                "Configuration contains placeholder for server_url. "
+                "Please set the MINIFLUX_SERVER_URL environment variable or "
+                "edit the config file with your actual server URL."
+            )
+            raise ConfigurationError(msg)
+
+        return config_url
 
     @classmethod
     def from_file(cls, path: Path) -> Config:
@@ -217,39 +307,10 @@ class Config:
         # Validate configuration
         is_valid, error_msg = validate_config(data)
         if not is_valid:
-            hint_messages: list[str] = []
-
-            if "Missing required field: password" in error_msg:  # nosec: CWE-208 - Non-cryptographic string comparison
-                hint_messages.append(
-                    dedent(
-                        """
-                        This configuration predates the password-command format introduced in v0.4.19.
-                        Add a `password` command that returns your Miniflux API token. For example:
-
-                            password = ["op", "read", "op://Personal/Miniflux/API Token"]
-
-                        Alternatively run `miniflux-tui --init` to generate a fresh template and copy
-                        your settings across.
-                        """
-                    ).strip()
-                )
-
-            if "api_key" in data:
-                hint_messages.append(
-                    dedent(
-                        """
-                        Remove the deprecated `api_key` entry and configure a `password` command instead.
-                        The command should output your Miniflux API token, for example:
-
-                            password = ["op", "read", "op://Personal/Miniflux/API Token"]
-                        """
-                    ).strip()
-                )
-
+            hint_messages = cls._build_validation_error_hints(error_msg, data)
             msg = f"Invalid configuration: {error_msg}"
             if hint_messages:
                 msg = f"{msg}\n\n" + "\n\n".join(hint_messages)
-
             raise ConfigurationError(msg)
 
         # Theme settings
@@ -267,20 +328,8 @@ class Config:
         ui = data.get("ui", {})
         show_info_messages = ui.get("show_info_messages", True)
 
-        # Check for environment variable overrides (useful for Codespaces)
-        server_url = data["server_url"]
-        env_server_url = os.environ.get("MINIFLUX_SERVER_URL")
-        if env_server_url:
-            # Environment variable takes precedence
-            server_url = env_server_url
-        elif "PLACEHOLDER" in server_url and not env_server_url:
-            # Config has placeholder and no env var set
-            msg = (
-                "Configuration contains placeholder for server_url. "
-                "Please set the MINIFLUX_SERVER_URL environment variable or "
-                "edit the config file with your actual server URL."
-            )
-            raise ConfigurationError(msg)
+        # Resolve server URL with environment variable support
+        server_url = cls._resolve_server_url(data["server_url"])
 
         return cls(
             server_url=server_url,
