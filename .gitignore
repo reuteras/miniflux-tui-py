@@ -51,6 +51,7 @@ coverage.xml
 htmlcov/
 *.cover
 fuzz/artifacts/
+.pyscn/
 
 # Configuration (local)
 config.toml
