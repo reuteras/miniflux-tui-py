@@ -5,41 +5,6 @@ import re
 from urllib.parse import urlparse
 
 
-def validate_feed_url(url: str) -> tuple[bool, str]:
-    """Validate and sanitize feed URL for SSRF prevention.
-
-    Args:
-        hostname: Hostname to validate (without port)
-
-    Returns:
-        Tuple of (is_valid, error_message)
-    """
-    # Basic validation
-    error = _check_url_basic_validity(url)
-    if error:
-        return False, error
-
-    # Parse URL
-    parsed = urlparse(url)
-
-    # Protocol validation
-    error = _check_url_scheme(parsed)
-    if error:
-        return False, error
-
-    # Hostname validation
-    error = _check_url_hostname(parsed)
-    if error:
-        return False, error
-
-    # Suspicious content validation
-    error = _check_url_suspicious_content(url)
-    if error:
-        return False, error
-
-    return True, ""
-
-
 def _check_url_basic_validity(url: str) -> str | None:
     """Check URL length and emptiness.
 
@@ -158,7 +123,7 @@ def _has_suspicious_patterns(url: str) -> bool:
     return any(re.search(pattern, url) for pattern in suspicious_patterns)
 
 
-def validate_feed_url(url: str) -> tuple[bool, str]:  # noqa: PLR0911
+def validate_feed_url(url: str) -> tuple[bool, str]:
     """Validate and sanitize feed URL for SSRF prevention.
 
     Args:
@@ -167,36 +132,27 @@ def validate_feed_url(url: str) -> tuple[bool, str]:  # noqa: PLR0911
     Returns:
         Tuple of (is_valid, error_message)
     """
-    # Length check
-    if len(url) > 2048:
-        return False, "URL too long (max 2048 characters)"
-
-    # Empty check
-    if not url.strip():
-        return False, "URL cannot be empty"
+    # Basic validation
+    error = _check_url_basic_validity(url)
+    if error:
+        return False, error
 
     # Parse URL (urlparse doesn't raise exceptions, just returns parsed components)
     parsed = urlparse(url)
 
-    # Protocol whitelist - only HTTP and HTTPS allowed
-    if parsed.scheme not in ["http", "https"]:
-        return False, "Only HTTP and HTTPS URLs are allowed"
-
-    # Hostname validation
-    if not parsed.netloc:
-        return False, "URL must have a valid hostname"
-
-    # Extract hostname without port
-    hostname = parsed.netloc.split(":")[0].lower()
-
-    # Validate hostname for SSRF
-    is_valid, error = _validate_hostname(hostname)
-    if not is_valid:
+    # Protocol validation
+    error = _check_url_scheme(parsed)
+    if error:
         return False, error
 
-    # Validate URL characters
-    is_valid, error = _validate_url_characters(url)
-    if not is_valid:
+    # Hostname validation
+    error = _check_url_hostname(parsed)
+    if error:
+        return False, error
+
+    # Suspicious content validation
+    error = _check_url_suspicious_content(url)
+    if error:
         return False, error
 
     return True, ""

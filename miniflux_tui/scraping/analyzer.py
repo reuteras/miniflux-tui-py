@@ -188,8 +188,8 @@ class ContentAnalyzer:
                     candidates.append(
                         {
                             "selector": selector,
-                            "preview": self._get_text_preview(elem),
-                            "score": self._score_element(elem),
+                            "preview": self._get_text_preview(elements[0]),
+                            "score": self._score_element(elements[0]),
                             "type": "class",
                             "element_count": len(elements),
                         }
