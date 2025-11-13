@@ -174,16 +174,6 @@ class Config:
         return self._password_command
 
     def _execute_password_command(self) -> str:
-        """Execute the password command and return the output.
-
-        Returns:
-            Stripped stdout from the command
-
-        api_key = self._execute_password_command()
-        self._api_key_cache = api_key
-        return api_key
-
-    def _execute_password_command(self) -> str:
         """Execute password command and return sanitized output.
 
         Returns:
@@ -227,6 +217,22 @@ class Config:
         if stderr:
             msg = f"{msg}: {stderr}"
         raise RuntimeError(msg) from exc
+
+    def get_api_key(self) -> str:
+        """Get the API key, using cache if available.
+
+        Returns:
+            The API key from cache or by executing the password command
+
+        Raises:
+            RuntimeError: If command fails or returns empty output
+        """
+        if self._api_key_cache is not None:
+            return self._api_key_cache
+
+        api_key = self._execute_password_command()
+        self._api_key_cache = api_key
+        return api_key
 
     @property
     def api_key(self) -> str:
