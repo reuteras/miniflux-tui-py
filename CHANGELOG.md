@@ -4,7 +4,43 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
-## [0.6.0] - 2025-11-09
+## [0.6.1] - 2025-11-13
+
+### BUG FIXES
+
+- Exclude timing attack false positive for config.py password error check (#513)
+- Exclude timing attack false positives in test files (#514)
+- Remove duplicate and malformed docstring in config.py (#517)
+- Correct header title alignment from center to left (#518)
+- Resolve code quality errors in analyzer, security, and config modules (#519)
+- Replace grep -c with wc -l in complexity check for cross-platform CI compatibility (#520)
+- Move entry count statistics from subtitle to feed header row (#521)
+- Display feed statistics row on all entries in grouped mode and mark as read on open (#523)
+
+### FEATURES
+
+- Add group statistics to entry reader view (#522)
+
+### MAINTENANCE
+
+- bump google/osv-scanner-action/.github/workflows/osv-scanner-reusable.yml (#503) 🤖
+- Update pre-commit hooks and cleanup code formatting (#507)
+
+### REFACTORING
+
+- Reduce SecureFetcher.fetch complexity from 33 to acceptable level (#510)
+- Fix remaining 5 complexity issues in config, security, and analyzer (#511)
+
+
+
+#### Contributors
+
+Thank you to everyone who contributed to this release!
+
+**Humans:** 👤 Peter Reuterås
+
+**AI & Automation:** 🤖 Claude (AI Assistant), dependabot[bot] (Dependencies)
+## [v0.6.0] - 2025-11-09
 
 ### BUG FIXES
 
@@ -17,6 +53,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### MAINTENANCE
 
 - Update roadmap priorities for v0.7.0 features (#500)
+- Release v0.6.0 (#502)
 
 ### TESTING
 
@@ -1333,3 +1370,4 @@ Thank you to everyone who contributed to this release!
 **Humans:** 👤 Peter Reuterås
 
 **AI & Automation:** 🤖 Claude (AI Assistant)
+
