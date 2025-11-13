@@ -218,8 +218,11 @@ class Config:
             msg = f"{msg}: {stderr}"
         raise RuntimeError(msg) from exc
 
-    def get_api_key(self) -> str:
+    def get_api_key(self, refresh: bool = False) -> str:
         """Get the API key, using cache if available.
+
+        Args:
+            refresh: If True, bypass cache and re-execute the password command
 
         Returns:
             The API key from cache or by executing the password command
@@ -227,7 +230,7 @@ class Config:
         Raises:
             RuntimeError: If command fails or returns empty output
         """
-        if self._api_key_cache is not None:
+        if self._api_key_cache is not None and not refresh:
             return self._api_key_cache
 
         api_key = self._execute_password_command()
