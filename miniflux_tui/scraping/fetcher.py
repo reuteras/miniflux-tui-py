@@ -1,7 +1,7 @@
 # SPDX-License-Identifier: MIT
 """Secure web content fetcher with strict validation and safety measures."""
 
-from typing import ClassVar
+from typing import ClassVar, NoReturn
 from urllib.parse import urlparse
 
 import httpx
@@ -39,39 +39,118 @@ class SecureFetcher:
             TimeoutError: If request times out
             RuntimeError: For other fetch errors
         """
-        if not self._is_safe_url(url):
-            msg = f"Unsafe URL: {url}"
-            raise ValueError(msg)
+        self._validate_url(url)
 
         try:
             response = await self.client.get(url)
             response.raise_for_status()
-
-            # Check size before reading full content
-            content_length = response.headers.get("content-length")
-            if content_length and int(content_length) > self.MAX_SIZE:
-                msg = f"Response too large: {content_length} bytes"
-                raise ValueError(msg)
-
-            # Read content with size check
-            content = response.content
-            if len(content) > self.MAX_SIZE:
-                msg = f"Response too large: {len(content)} bytes"
-                raise ValueError(msg)
-
+            self._validate_response_size(response, url)
             return response.text
         except ValueError:
-            # Re-raise ValueError (size limits) without catching
             raise
         except httpx.TimeoutException as e:
-            msg = f"Timeout fetching {url}"
-            raise TimeoutError(msg) from e
+            self._handle_timeout(url, e)
         except httpx.HTTPStatusError as e:
-            msg = f"HTTP error {e.response.status_code}: {url}"
-            raise RuntimeError(msg) from e
+            self._handle_http_error(url, e)
         except Exception as e:
-            msg = f"Fetch error: {e}"
-            raise RuntimeError(msg) from e
+            self._handle_generic_error(url, e)
+
+    def _validate_url(self, url: str) -> None:
+        """Validate that URL is safe to fetch.
+
+        Args:
+            url: The URL to validate
+
+        Raises:
+            ValueError: If URL is unsafe
+        """
+        if not self._is_safe_url(url):
+            msg = f"Unsafe URL: {url}"
+            raise ValueError(msg)
+
+    def _validate_response_size(self, response: httpx.Response, url: str) -> None:
+        """Validate response size is within limits.
+
+        Checks both headers and actual content size.
+
+        Args:
+            response: The HTTP response object
+            url: The URL being fetched (for error messages)
+
+        Raises:
+            ValueError: If response exceeds MAX_SIZE
+        """
+        self._check_content_length_header(response, url)
+        self._check_actual_content_size(response, url)
+
+    def _check_content_length_header(self, response: httpx.Response, url: str) -> None:
+        """Check Content-Length header before reading full content.
+
+        Args:
+            response: The HTTP response object
+            url: The URL being fetched (for error messages)
+
+        Raises:
+            ValueError: If Content-Length header exceeds MAX_SIZE
+        """
+        content_length = response.headers.get("content-length")
+        if content_length and int(content_length) > self.MAX_SIZE:
+            msg = f"Response too large: {content_length} bytes from {url}"
+            raise ValueError(msg)
+
+    def _check_actual_content_size(self, response: httpx.Response, url: str) -> None:
+        """Check actual content size after reading.
+
+        Args:
+            response: The HTTP response object
+            url: The URL being fetched (for error messages)
+
+        Raises:
+            ValueError: If actual content exceeds MAX_SIZE
+        """
+        content = response.content
+        if len(content) > self.MAX_SIZE:
+            msg = f"Response too large: {len(content)} bytes from {url}"
+            raise ValueError(msg)
+
+    def _handle_timeout(self, url: str, e: httpx.TimeoutException) -> NoReturn:
+        """Handle timeout exceptions.
+
+        Args:
+            url: The URL that timed out
+            e: The timeout exception
+
+        Raises:
+            TimeoutError: Always raises with formatted message
+        """
+        msg = f"Timeout fetching {url}"
+        raise TimeoutError(msg) from e
+
+    def _handle_http_error(self, url: str, e: httpx.HTTPStatusError) -> NoReturn:
+        """Handle HTTP status errors.
+
+        Args:
+            url: The URL that returned an error
+            e: The HTTP status error
+
+        Raises:
+            RuntimeError: Always raises with formatted message
+        """
+        msg = f"HTTP error {e.response.status_code}: {url}"
+        raise RuntimeError(msg) from e
+
+    def _handle_generic_error(self, url: str, e: Exception) -> NoReturn:
+        """Handle generic fetch errors.
+
+        Args:
+            url: The URL being fetched
+            e: The exception that occurred
+
+        Raises:
+            RuntimeError: Always raises with formatted message
+        """
+        msg = f"Fetch error for {url}: {e}"
+        raise RuntimeError(msg) from e
 
     def _is_safe_url(self, url: str) -> bool:
         """Validate URL is safe to fetch.
