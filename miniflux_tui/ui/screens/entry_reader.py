@@ -92,6 +92,12 @@ class EntryReaderScreen(Screen):
                 f"[dim]{self.entry.feed.title} | {self.entry.published_at.strftime('%Y-%m-%d %H:%M')}[/dim]",
                 classes="entry-meta",
             )
+
+            # Add group statistics if available
+            group_stats_text = self._get_group_stats_text()
+            if group_stats_text:
+                yield Static(group_stats_text, classes="entry-meta")
+
             yield Static(f"[dim]{self.entry.url}[/dim]", classes="entry-url")
             yield Static(CONTENT_SEPARATOR, classes="separator")
 
@@ -211,6 +217,22 @@ class EntryReaderScreen(Screen):
         """Clear the sub_title (counts are now in feed header)."""
         # Subtitle is no longer used - title shows entry and feed info
         self.sub_title = ""
+
+    def _get_group_stats_text(self) -> str:
+        """Get formatted group statistics text for display in entry view.
+
+        Returns:
+            Formatted string with group statistics, or empty string if not in grouped mode
+        """
+        group_stats = self._calculate_group_info()
+        if group_stats:
+            mode = group_stats["mode"]
+            unread = group_stats["unread"]
+            total = group_stats["total"]
+            mode_label = "Feed" if mode == "feed" else "Category"
+            # Format as: "Feed: 5 unread / 20 total"
+            return f"[dim]{mode_label}: {unread} unread / {total} total[/dim]"
+        return ""
 
     async def _mark_entry_as_read(self):
         """Mark the current entry as read via API."""
