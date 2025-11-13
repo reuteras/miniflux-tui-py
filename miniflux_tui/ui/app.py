@@ -64,7 +64,7 @@ class MinifluxTuiApp(App):
     }
 
     Header {
-        text-align: left;
+        align: left top;
     }
 
     .entry-title {
