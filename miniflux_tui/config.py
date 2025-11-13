@@ -324,7 +324,8 @@ def _build_config_hint_messages(data: dict, error_msg: str) -> list[str]:
     """
     hints = []
 
-    if "Missing required field: password" in error_msg:  # nosec: CWE-208 - Non-cryptographic string comparison
+    # Check for missing password field error
+    if "password" in error_msg.lower():
         hints.append(
             dedent(
                 """
