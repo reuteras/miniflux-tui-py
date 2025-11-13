@@ -11,6 +11,7 @@ import tomllib
 from collections.abc import Sequence
 from pathlib import Path, PurePosixPath
 from textwrap import dedent
+from typing import NoReturn
 
 
 def _normalize_command(command: Sequence[str] | str) -> tuple[str, ...]:
@@ -194,9 +195,9 @@ class Config:
         Raises:
             RuntimeError: If command fails or returns empty output
         """
+        # Command originates from a trusted local configuration file.
         try:
-            # Command originates from a trusted local configuration file.
-            completed = subprocess.run(  # nosec B603
+            completed: subprocess.CompletedProcess[str] = subprocess.run(  # nosec B603
                 self._password_command,
                 capture_output=True,
                 text=True,
@@ -215,7 +216,7 @@ class Config:
 
         return api_key
 
-    def _handle_password_command_error(self, exc: subprocess.CalledProcessError) -> None:
+    def _handle_password_command_error(self, exc: subprocess.CalledProcessError) -> NoReturn:
         """Handle password command execution errors.
 
         Args:
@@ -353,7 +354,7 @@ def _build_config_hint_messages(data: dict, error_msg: str) -> list[str]:
     return hints
 
 
-def _extract_config_settings(data: dict) -> dict[str, str | bool]:
+def _extract_config_settings(data: dict) -> dict:
     """Extract theme, sorting, and UI settings from configuration.
 
     Args:
@@ -363,19 +364,19 @@ def _extract_config_settings(data: dict) -> dict[str, str | bool]:
         Dictionary containing all extracted settings
     """
     # Theme settings
-    theme = data.get("theme", {})
-    unread_color = theme.get("unread_color", "cyan")
-    read_color = theme.get("read_color", "gray")
+    theme: dict = data.get("theme", {})
+    unread_color: str = theme.get("unread_color", "cyan")
+    read_color: str = theme.get("read_color", "gray")
 
     # Sorting settings
-    sorting = data.get("sorting", {})
-    default_sort = sorting.get("default_sort", "date")
-    default_group_by_feed = sorting.get("default_group_by_feed", False)
-    group_collapsed = sorting.get("group_collapsed", False)
+    sorting: dict = data.get("sorting", {})
+    default_sort: str = sorting.get("default_sort", "date")
+    default_group_by_feed: bool = sorting.get("default_group_by_feed", False)
+    group_collapsed: bool = sorting.get("group_collapsed", False)
 
     # UI settings
-    ui = data.get("ui", {})
-    show_info_messages = ui.get("show_info_messages", True)
+    ui: dict = data.get("ui", {})
+    show_info_messages: bool = ui.get("show_info_messages", True)
 
     return {
         "unread_color": unread_color,
