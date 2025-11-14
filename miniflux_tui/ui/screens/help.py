@@ -9,8 +9,9 @@ from textual.app import ComposeResult
 from textual.binding import Binding
 from textual.containers import VerticalScroll
 from textual.screen import Screen
-from textual.widgets import Footer, Header, Static
+from textual.widgets import Footer, Static
 
+from miniflux_tui.ui.widgets.safe_widgets import SafeHeader
 from miniflux_tui.utils import get_app_version
 
 
@@ -31,7 +32,7 @@ class HelpScreen(Screen):
 
     def compose(self) -> ComposeResult:  # noqa: PLR0915
         """Create child widgets."""
-        yield Header()
+        yield SafeHeader()
 
         with VerticalScroll():
             yield Static("[bold cyan]Miniflux TUI - Keyboard Shortcuts[/bold cyan]\n")

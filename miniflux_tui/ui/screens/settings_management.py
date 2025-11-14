@@ -12,6 +12,7 @@ from textual.screen import Screen
 from textual.widgets import Footer, Header, Static
 
 from miniflux_tui.config import get_config_file_path
+from miniflux_tui.ui.widgets.safe_widgets import SafeHeader
 
 if TYPE_CHECKING:
     pass
@@ -35,7 +36,7 @@ class SettingsScreen(Screen):
 
     def compose(self) -> ComposeResult:
         """Create child widgets."""
-        header = Header()
+        header = SafeHeader()
         scroll = VerticalScroll()
         footer = Footer()
 
