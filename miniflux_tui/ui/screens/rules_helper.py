@@ -12,6 +12,7 @@ from textual.screen import Screen
 from textual.widgets import Footer, Header, Static
 
 from miniflux_tui.docs_fetcher import DocsFetcher
+from miniflux_tui.utils import consolidate_blank_lines
 
 if TYPE_CHECKING:
     from miniflux_tui.docs_cache import DocsCache
@@ -59,22 +60,36 @@ class RulesHelperScreen(Screen):
     #helper-header {
         width: 100%;
         height: auto;
-        padding: 1 2;
+        padding: 2 2;
         background: $boost;
-        border-bottom: solid $primary;
+        border-bottom: solid $primary 50%;
         content-align: left middle;
+        text-style: bold;
+        color: $text;
     }
 
     #helper-content {
         width: 100%;
         height: 1fr;
-        padding: 1 2;
+        padding: 2 2;
+        overflow: auto;
     }
 
     #helper-content Static {
         width: 100%;
         height: auto;
         margin-bottom: 1;
+        line-height: 1.5;
+    }
+
+    #help-text {
+        width: 100%;
+        height: auto;
+    }
+
+    #help-text.loading {
+        color: $accent;
+        text-style: dim;
     }
 
     #status-message {
@@ -82,6 +97,17 @@ class RulesHelperScreen(Screen):
         height: auto;
         padding: 1 2;
         color: $text-muted;
+        min-height: 1;
+    }
+
+    #status-message.error {
+        color: $error;
+        text-style: bold;
+    }
+
+    #status-message.success {
+        color: $success;
+        text-style: bold;
     }
     """
 
@@ -130,9 +156,15 @@ class RulesHelperScreen(Screen):
     async def on_mount(self) -> None:
         """Called when screen is mounted.
 
-        Fetch documentation for the rule type.
+        Fetch documentation for the rule type with loading feedback.
         """
+        help_text = self.query_one("#help-text", expect_type=Static)
+
         try:
+            # Show loading state
+            help_text.update("📚 Loading documentation...")
+            help_text.add_class("loading")
+
             # Try to get from cache first
             if self.docs_cache:
                 self.content = await self.docs_cache.get_documentation(self.rule_type)
@@ -140,18 +172,21 @@ class RulesHelperScreen(Screen):
                 # Fetch directly if no cache
                 self.content = await self.fetcher.fetch_snippet(self.rule_type)
 
-            # Update the display
-            help_text = self.query_one("#help-text", expect_type=Static)
+            # Consolidate excessive blank lines for cleaner display
+            self.content = consolidate_blank_lines(self.content, max_consecutive=1)
+
+            # Remove loading class and update content
+            help_text.remove_class("loading")
             help_text.update(self.content)
 
         except ValueError as e:
-            self._show_error(f"Invalid rule type: {e}")
+            self._show_error(f"✗ Invalid rule type: {e}")
         except TimeoutError:
-            self._show_error("Request timeout while fetching documentation")
+            self._show_error("✗ Request timeout while fetching documentation")
         except ConnectionError:
-            self._show_error("Connection failed while fetching documentation")
+            self._show_error("✗ Connection failed while fetching documentation")
         except Exception as e:
-            self._show_error(f"Error fetching documentation: {e}")
+            self._show_error(f"✗ Error fetching documentation: {e}")
 
     def _get_rule_title(self) -> str:
         """Get human-readable title for rule type.
@@ -173,14 +208,15 @@ class RulesHelperScreen(Screen):
         self.app.pop_screen()
 
     def _show_error(self, message: str) -> None:
-        """Display error message and update content.
+        """Display error message and update content with visual styling.
 
         Args:
             message: Error message to display
         """
         help_text = self.query_one("#help-text", expect_type=Static)
-        help_text.update(f"Error: {message}")
+        help_text.remove_class("loading")
+        help_text.update(f"{message}\n\nPress Escape to close this screen.")
 
         status_widget = self.query_one("#status-message", expect_type=Static)
         status_widget.update(message)
-        status_widget.styles.color = "red"
+        status_widget.add_class("error")

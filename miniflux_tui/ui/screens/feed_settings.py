@@ -69,46 +69,61 @@ class FeedSettingsScreen(Screen):
     #settings-header {
         width: 100%;
         height: auto;
-        padding: 1 2;
+        padding: 2 2;
         background: $boost;
-        border-bottom: solid $primary;
+        border-bottom: solid $primary 50%;
         content-align: left middle;
+        text-style: bold;
+        color: $text;
+    }
+
+    #unsaved-indicator {
+        width: 100%;
+        height: auto;
+        padding: 0 2;
+        margin-bottom: 1;
+        color: $warning;
+        text-style: dim;
     }
 
     .section {
         width: 100%;
         height: auto;
-        padding: 1 2;
-        margin-bottom: 1;
+        padding: 2 2;
+        margin-bottom: 2;
         border-bottom: solid $primary 30%;
     }
 
     .section-title {
         width: 100%;
         height: auto;
+        padding: 1 0;
         padding-bottom: 1;
         text-style: bold;
         color: $accent;
+        border-bottom: solid $primary 20%;
+        margin-bottom: 1;
     }
 
     .field-group {
         width: 100%;
         height: auto;
-        margin-bottom: 1;
-        padding: 0 1;
+        margin-bottom: 2;
+        padding: 0 0;
     }
 
     .field-label {
         width: 100%;
         height: auto;
-        margin-bottom: 0;
+        margin-bottom: 1;
         color: $text-muted;
+        text-style: dim;
     }
 
     .field-value {
         width: 100%;
         height: auto;
-        margin: 0;
+        margin: 0 0 1 0;
     }
 
     #status-message {
@@ -116,6 +131,26 @@ class FeedSettingsScreen(Screen):
         height: auto;
         padding: 1 2;
         color: $text-muted;
+        min-height: 1;
+    }
+
+    #status-message.success {
+        color: $success;
+        text-style: bold;
+    }
+
+    #status-message.error {
+        color: $error;
+        text-style: bold;
+    }
+
+    #status-message.warning {
+        color: $warning;
+        text-style: bold;
+    }
+
+    #status-message.info {
+        color: $text;
     }
 
     #button-container {
@@ -127,11 +162,17 @@ class FeedSettingsScreen(Screen):
     }
 
     #button-container Button {
-        margin-right: 1;
+        margin-right: 2;
+        min-width: 20;
     }
 
     .danger-button {
         background: $error;
+        color: $text;
+    }
+
+    .danger-button:hover {
+        background: $error 80%;
     }
     """
 
@@ -445,19 +486,25 @@ class FeedSettingsScreen(Screen):
 
         This action:
         1. Collects all modified field values
-        2. Calls the API to update the feed
-        3. Clears persistence state on success
-        4. Shows success/error message
+        2. Shows loading indicator
+        3. Calls the API to update the feed
+        4. Clears persistence state on success
+        5. Shows success/error message with visual feedback
         """
         if not self.is_dirty:
             self._show_message("No changes to save", severity="info")
             return
 
+        # Disable save button and show loading message
+        save_button = self.query_one("Button#save-button", expect_type=Button)
+        save_button.disabled = True
+        self._show_message("💾 Saving feed settings...", severity="info")
+
         try:
-            # Collect field values (to be implemented with actual fields)
+            # Collect field values
             updates = self._collect_field_values()
 
-            # Call API
+            # Call API to update feed
             updated_feed = await self.client.update_feed(self.feed_id, **updates)
 
             # Update internal state
@@ -469,25 +516,27 @@ class FeedSettingsScreen(Screen):
             # Clear persistence state after successful save
             self.persistence.clear_session(self.feed_id)
 
-            # Disable save button
-            self.query_one("Button#save-button", expect_type=Button).disabled = True
-
             # Clear unsaved indicator
             self._update_unsaved_indicator()
 
+            # Show success message with confirmation
             self._show_message(
-                "Feed settings saved successfully",
+                "✓ Feed settings saved successfully",
                 severity="success",
             )
 
         except TimeoutError:
-            self._show_message("Request timeout while saving", severity="error")
+            self._show_message("✗ Request timeout while saving", severity="error")
+            save_button.disabled = False
         except ConnectionError:
-            self._show_message("Connection failed while saving", severity="error")
+            self._show_message("✗ Connection failed while saving", severity="error")
+            save_button.disabled = False
         except ValueError as e:
-            self._show_message(f"Invalid input: {e}", severity="error")
+            self._show_message(f"✗ Invalid input: {e}", severity="error")
+            save_button.disabled = False
         except Exception as e:
-            self._show_message(f"Error saving settings: {e}", severity="error")
+            self._show_message(f"✗ Error saving settings: {e}", severity="error")
+            save_button.disabled = False
 
     async def action_cancel_changes(self) -> None:
         """Cancel changes and close screen.
@@ -574,10 +623,11 @@ class FeedSettingsScreen(Screen):
         self.app.push_screen(helper_screen)
 
     async def action_delete_feed(self) -> None:
-        """Delete the feed with confirmation.
+        """Delete the feed with confirmation and visual feedback.
 
         Shows a confirmation message before deleting.
         Requires pressing the button twice for safety.
+        Provides visual feedback during deletion.
         """
         # Check if this is a confirmation press
         if not hasattr(self, "_delete_confirmed"):
@@ -586,7 +636,7 @@ class FeedSettingsScreen(Screen):
         if not self._delete_confirmed:
             # First press - show confirmation
             self._show_message(
-                "Press Delete Feed again to confirm. This action cannot be undone.",
+                "⚠️  Press Delete Feed again to confirm. This action cannot be undone.",
                 severity="error",
             )
             self._delete_confirmed = True
@@ -594,26 +644,35 @@ class FeedSettingsScreen(Screen):
 
         # Second press - proceed with deletion
         if not hasattr(self.app, "client") or not self.app.client:  # type: ignore[attr-defined]
-            self._show_message("Error: API client not available", severity="error")
+            self._show_message("✗ Error: API client not available", severity="error")
+            self._delete_confirmed = False
             return
+
+        # Disable delete button and show loading message
+        delete_button = self.query_one("Button#delete-feed-button", expect_type=Button)
+        delete_button.disabled = True
+        self._show_message("🗑️  Deleting feed...", severity="info")
 
         try:
             await self.app.client.delete_feed(self.feed_id)  # type: ignore[attr-defined]
             self._show_message(
-                f"Feed '{self.feed.title}' deleted successfully",
+                f"✓ Feed '{self.feed.title}' deleted successfully",
                 severity="success",
             )
             # Close the screen after successful deletion
             self.app.pop_screen()
         except TimeoutError:
-            self._show_message("Request timeout while deleting feed", severity="error")
+            self._show_message("✗ Request timeout while deleting feed", severity="error")
             self._delete_confirmed = False
+            delete_button.disabled = False
         except ConnectionError:
-            self._show_message("Connection failed while deleting feed", severity="error")
+            self._show_message("✗ Connection failed while deleting feed", severity="error")
             self._delete_confirmed = False
+            delete_button.disabled = False
         except Exception as e:
-            self._show_message(f"Error deleting feed: {e}", severity="error")
+            self._show_message(f"✗ Error deleting feed: {e}", severity="error")
             self._delete_confirmed = False
+            delete_button.disabled = False
 
     def _on_field_changed(self, widget_id: str, new_value: Any) -> None:
         """Mark a field as dirty when its value changes.
@@ -701,7 +760,7 @@ class FeedSettingsScreen(Screen):
         message: str,
         severity: str = "info",
     ) -> None:
-        """Display a status message.
+        """Display a status message with styled appearance.
 
         Args:
             message: Message text to display
@@ -714,15 +773,21 @@ class FeedSettingsScreen(Screen):
         status_widget = self.query_one("#status-message", expect_type=Static)
         status_widget.update(message)
 
-        # Set color based on severity
+        # Remove all severity classes
+        status_widget.remove_class("success")
+        status_widget.remove_class("error")
+        status_widget.remove_class("warning")
+        status_widget.remove_class("info")
+
+        # Add appropriate severity class and color
         if severity == "success":
-            status_widget.styles.color = "green"
+            status_widget.add_class("success")
         elif severity == "error":
-            status_widget.styles.color = "red"
+            status_widget.add_class("error")
         elif severity == "warning":
-            status_widget.styles.color = "yellow"
+            status_widget.add_class("warning")
         else:
-            status_widget.styles.color = "$text-muted"
+            status_widget.add_class("info")
 
     def _store_original_values(self) -> None:
         """Store original field values for change tracking."""
