@@ -4,12 +4,31 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
-## [0.6.3] - 2025-11-14
+## [0.6.4] - 2025-11-14
+
+### BUG FIXES
+
+- Apply SafeHeader to all screens that use Header widget (#536)
+
+
+
+#### Contributors
+
+Thank you to everyone who contributed to this release!
+
+**Humans:** 👤 Peter Reuterås
+
+**AI & Automation:** 🤖 Claude (AI Assistant)
+## [v0.6.3] - 2025-11-14
 
 ### BUG FIXES
 
 - Add SafeHeader widget to handle Windows Header lifecycle issues (#532)
 - Correct SafeHeader._on_mount implementation to properly catch NoMatches (#534)
+
+### MAINTENANCE
+
+- Release v0.6.3 (#535)
 
 
 
