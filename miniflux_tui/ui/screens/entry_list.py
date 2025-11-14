@@ -16,6 +16,7 @@ from miniflux_tui.constants import (
     SORT_MODES,
 )
 from miniflux_tui.performance import ScreenRefreshOptimizer
+from miniflux_tui.ui.widgets.safe_widgets import SafeHeader
 from miniflux_tui.utils import api_call, get_star_icon, get_status_icon
 
 if TYPE_CHECKING:
@@ -322,7 +323,7 @@ class EntryListScreen(Screen):
 
     def compose(self) -> ComposeResult:
         """Create child widgets."""
-        header = Header()
+        header = SafeHeader()
         list_view = CollapsibleListView()
         footer = Footer()
 
