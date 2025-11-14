@@ -39,4 +39,9 @@ class SafeHeader(Header):
             with suppress(NoMatches, NoScreen):
                 self.query_one(HeaderTitle).update(self.format_title())
 
-        self.call_later(set_title)
+        # Set up watchers that call set_title when title/sub_title changes
+        # Use call_later with async function to handle timing issues
+        self.watch(self.app, "title", set_title)
+        self.watch(self.app, "sub_title", set_title)
+        self.watch(self.screen, "title", set_title)
+        self.watch(self.screen, "sub_title", set_title)
