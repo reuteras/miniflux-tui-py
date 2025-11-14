@@ -535,7 +535,9 @@ class EntryReaderScreen(Screen):
         # Add group statistics if available
         group_stats_text = self._get_group_stats_text()
         if group_stats_text:
-            scroll.mount(Static(group_stats_text, classes="entry-meta"))
+            group_stats_widget = Static(group_stats_text, classes="entry-meta")
+            self.group_stats_widget = group_stats_widget
+            scroll.mount(group_stats_widget)
 
     def _mount_url(self, scroll: VerticalScroll):
         """Mount entry URL widget."""
