@@ -758,3 +758,96 @@ class TestRulesAndFilteringIntegration:
             # Verify clean after save
             assert feed_settings_screen.is_dirty is False
             assert feed_settings_screen.dirty_fields == {}
+
+
+class TestFeedInformationFields:
+    """Test Feed Information field handling."""
+
+    def test_feed_information_field_mapping(self, feed_settings_screen):
+        """Test that feed information widget IDs are correctly mapped."""
+        with patch.object(feed_settings_screen, "query_one"):
+            # Test check interval field mapping
+            feed_settings_screen._on_field_changed("check-interval", "60")
+            assert "check_interval" in feed_settings_screen.dirty_fields
+            assert feed_settings_screen._field_values["check_interval"] == "60"
+
+    def test_collect_feed_information_field_values(self, feed_settings_screen):
+        """Test that _collect_field_values returns feed information field names."""
+        with patch.object(feed_settings_screen, "query_one"):
+            feed_settings_screen._on_field_changed("check-interval", "120")
+
+        updates = feed_settings_screen._collect_field_values()
+        assert updates["check_interval"] == "120"
+        assert len(updates) == 1
+
+    def test_empty_check_interval_not_collected(self, feed_settings_screen):
+        """Test that empty check interval is not collected if not modified."""
+        # Don't modify check interval
+        updates = feed_settings_screen._collect_field_values()
+        # Should have no check_interval since nothing was modified
+        assert "check_interval" not in updates
+
+    def test_original_values_with_feed_information(self, feed_settings_screen):
+        """Test that original values are stored for feed information fields."""
+        with patch.object(feed_settings_screen, "query_one"):
+            feed_settings_screen._on_field_changed("check-interval", "30")
+
+        # Original value should be None for new field
+        assert feed_settings_screen.original_values["check_interval"] is None
+
+
+class TestFeedInformationIntegration:
+    """Integration tests for Feed Information workflow."""
+
+    @pytest.mark.asyncio
+    async def test_feed_information_edit_workflow(self, feed_settings_screen):
+        """Test complete workflow for editing Feed Information."""
+        with patch.object(feed_settings_screen, "query_one"):
+            # Simulate user edit for check interval
+            feed_settings_screen._on_field_changed("check-interval", "45")
+
+            # Verify dirty state
+            assert feed_settings_screen.is_dirty is True
+            assert "check_interval" in feed_settings_screen.dirty_fields
+
+            # Collect values
+            updates = feed_settings_screen._collect_field_values()
+            assert updates["check_interval"] == "45"
+
+    @pytest.mark.asyncio
+    async def test_combined_all_four_sections_edit(self, feed_settings_screen):
+        """Test workflow when fields from all four sections are modified."""
+        with patch.object(feed_settings_screen, "query_one"):
+            # Modify fields from each section
+            feed_settings_screen._on_field_changed("feed-title", "Updated")  # General
+            feed_settings_screen._on_field_changed("auth-username", "user")  # Network
+            feed_settings_screen._on_field_changed("scraper-rules", "div")  # Rules
+            feed_settings_screen._on_field_changed("check-interval", "60")  # Feed Info
+
+        updates = feed_settings_screen._collect_field_values()
+        # Should have 4 updates total
+        assert len(updates) == 4
+        assert updates["title"] == "Updated"
+        assert updates["username"] == "user"
+        assert updates["scraper_rules"] == "div"
+        assert updates["check_interval"] == "60"
+
+    @pytest.mark.asyncio
+    async def test_feed_information_save_workflow(self, feed_settings_screen):
+        """Test save workflow with feed information changes."""
+        with patch.object(feed_settings_screen, "query_one"):
+            # Modify feed information
+            feed_settings_screen._on_field_changed("check-interval", "30")
+
+            # Verify dirty before save
+            assert feed_settings_screen.is_dirty is True
+
+            # Prepare for save
+            feed_settings_screen._collect_field_values = MagicMock(return_value={"check_interval": "30"})
+
+            # Save
+            await feed_settings_screen.action_save_changes()
+
+            # Verify clean after save
+            assert feed_settings_screen.is_dirty is False
+            assert feed_settings_screen.dirty_fields == {}

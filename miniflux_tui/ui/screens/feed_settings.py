@@ -162,7 +162,7 @@ class FeedSettingsScreen(Screen):
         self.status_message = ""
         self.status_severity = "info"  # "info", "success", "error", "warning"
 
-    def compose(self) -> ComposeResult:
+    def compose(self) -> ComposeResult:  # noqa: PLR0915
         """Compose the feed settings screen layout.
 
         Yields:
@@ -310,8 +310,50 @@ class FeedSettingsScreen(Screen):
                     classes="field-value",
                 )
 
-            # Placeholder for other sections
-            yield Static("Feed Information - TBD", classes="section")
+            # Feed Information Section
+            yield Static("Feed Information", classes="section-title")
+            with Static(classes="section"):
+                # Last Checked
+                yield Static("Last Checked", classes="field-label")
+                yield Static(
+                    self.feed.checked_at or "Never",
+                    id="last-checked",
+                    classes="field-value",
+                )
+
+                # Parsing Error Count
+                yield Static("Parsing Errors", classes="field-label")
+                yield Static(
+                    f"{self.feed.parsing_error_count} error(s)",
+                    id="error-count",
+                    classes="field-value",
+                )
+
+                # Parsing Error Message (if present)
+                if self.feed.parsing_error_message:
+                    yield Static("Error Message", classes="field-label")
+                    yield Static(
+                        self.feed.parsing_error_message,
+                        id="error-message",
+                        classes="field-value",
+                    )
+
+                # Check Interval
+                yield Static("Check Interval (minutes, optional)", classes="field-label")
+                yield Input(
+                    value="",
+                    id="check-interval",
+                    classes="field-value",
+                )
+
+                # Feed ID (read-only for reference)
+                yield Static("Feed ID", classes="field-label")
+                yield Static(
+                    str(self.feed.id),
+                    id="feed-id",
+                    classes="field-value",
+                )
+
             yield Static("Danger Zone - TBD", classes="section")
 
         # Status message area
@@ -465,6 +507,8 @@ class FeedSettingsScreen(Screen):
             "url-rewrite-rules": "url_rewrite_rules",
             "blocking-rules": "blocking_rules",
             "keep-rules": "keep_rules",
+            # Feed Information
+            "check-interval": "check_interval",
         }
 
         field_name = field_mapping.get(widget_id, widget_id)
