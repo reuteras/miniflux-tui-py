@@ -4,7 +4,32 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
-## [0.6.1] - 2025-11-13
+## [0.6.2] - 2025-11-14
+
+### BUG FIXES
+
+- Resolve intermittent race condition in grouping and sorting test (#526)
+- Correct group statistics display when navigating between entries in grouped feeds (#528)
+- Handle widget lifecycle exceptions in _get_entry_list_screen (#529)
+
+### FEATURES
+
+- Clean application heading and fix group statistics display (#527)
+
+### MAINTENANCE
+
+- Release v0.6.1 (#525)
+
+
+
+#### Contributors
+
+Thank you to everyone who contributed to this release!
+
+**Humans:** 👤 Peter Reuterås
+
+**AI & Automation:** 🤖 Claude (AI Assistant)
+## [v0.6.1] - 2025-11-13
 
 ### BUG FIXES
 
@@ -25,6 +50,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - bump google/osv-scanner-action/.github/workflows/osv-scanner-reusable.yml (#503) 🤖
 - Update pre-commit hooks and cleanup code formatting (#507)
+- Release v0.6.1 (#524)
 
 ### REFACTORING
 
