@@ -8,6 +8,7 @@ from textual.screen import Screen
 from textual.widgets import Footer, Header, Static
 
 from miniflux_tui.api.models import Feed
+from miniflux_tui.ui.widgets.safe_widgets import SafeHeader
 
 
 class StatusScreen(Screen):
@@ -35,7 +36,7 @@ class StatusScreen(Screen):
 
     def compose(self) -> ComposeResult:
         """Create child widgets."""
-        header = Header()
+        header = SafeHeader()
         scroll = VerticalScroll()
         footer = Footer()
 

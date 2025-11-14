@@ -8,9 +8,10 @@ from textual.app import ComposeResult
 from textual.binding import Binding
 from textual.containers import Container, Horizontal, Vertical, VerticalScroll
 from textual.screen import Screen
-from textual.widgets import Button, Footer, Header, Input, Label, ListItem, ListView, RadioButton, RadioSet, Static
+from textual.widgets import Button, Footer, Input, Label, ListItem, ListView, RadioButton, RadioSet, Static
 
 from miniflux_tui.scraping import ContentAnalyzer, SecureFetcher
+from miniflux_tui.ui.widgets.safe_widgets import SafeHeader
 
 
 class SelectorListItem(ListItem):
@@ -149,7 +150,7 @@ class ScrapingHelperScreen(Screen):
 
     def compose(self) -> ComposeResult:
         """Compose the screen layout."""
-        yield Header()
+        yield SafeHeader()
 
         with Container(id="main-container"):
             yield Label(f"Feed: {self.feed_title}", id="feed-display")
