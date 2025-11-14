@@ -420,3 +420,176 @@ class TestGeneralSettingsIntegration:
         # site_url and category_id should not be in updates
         assert "site_url" not in updates
         assert "category_id" not in updates
+
+
+class TestNetworkSettingsFields:
+    """Test Network Settings field handling."""
+
+    def test_network_field_mapping(self, feed_settings_screen):
+        """Test that network widget IDs are correctly mapped to field names."""
+        with patch.object(feed_settings_screen, "query_one"):
+            # Test username field mapping
+            feed_settings_screen._on_field_changed("auth-username", "testuser")
+            assert "username" in feed_settings_screen.dirty_fields
+            assert feed_settings_screen._field_values["username"] == "testuser"
+
+            # Test password field mapping
+            feed_settings_screen._on_field_changed("auth-password", "secretpass")
+            assert "password" in feed_settings_screen.dirty_fields
+            assert feed_settings_screen._field_values["password"] == "secretpass"  # noqa: S105
+
+            # Test user_agent field mapping
+            feed_settings_screen._on_field_changed("user-agent", "Mozilla/5.0")
+            assert "user_agent" in feed_settings_screen.dirty_fields
+            assert feed_settings_screen._field_values["user_agent"] == "Mozilla/5.0"
+
+            # Test proxy_url field mapping
+            feed_settings_screen._on_field_changed("proxy-url", "http://proxy.example.com:8080")
+            assert "proxy_url" in feed_settings_screen.dirty_fields
+            assert feed_settings_screen._field_values["proxy_url"] == "http://proxy.example.com:8080"
+
+            # Test ignore_https_errors field mapping
+            feed_settings_screen._on_field_changed("ignore-https-errors", True)
+            assert "ignore_https_errors" in feed_settings_screen.dirty_fields
+            assert feed_settings_screen._field_values["ignore_https_errors"] is True
+
+    def test_on_input_changed_for_network_fields(self, feed_settings_screen):
+        """Test on_input_changed event handler for network fields."""
+        mock_input = MagicMock()
+        mock_input.id = "auth-username"
+        mock_input.disabled = False
+
+        event = MagicMock()
+        event.input = mock_input
+        event.value = "networkuser"
+
+        with patch.object(feed_settings_screen, "query_one"):
+            feed_settings_screen.on_input_changed(event)
+
+        assert feed_settings_screen.is_dirty is True
+        assert "username" in feed_settings_screen.dirty_fields
+
+    def test_on_checkbox_changed_for_https_errors(self, feed_settings_screen):
+        """Test on_checkbox_changed for HTTPS certificate errors setting."""
+        mock_checkbox = MagicMock()
+        mock_checkbox.id = "ignore-https-errors"
+
+        event = MagicMock()
+        event.checkbox = mock_checkbox
+        event.value = True
+
+        with patch.object(feed_settings_screen, "query_one"):
+            feed_settings_screen.on_checkbox_changed(event)
+
+        assert feed_settings_screen.is_dirty is True
+        assert "ignore_https_errors" in feed_settings_screen.dirty_fields
+        assert feed_settings_screen._field_values["ignore_https_errors"] is True
+
+    def test_collect_network_field_values(self, feed_settings_screen):
+        """Test that _collect_field_values returns network field names."""
+        with patch.object(feed_settings_screen, "query_one"):
+            feed_settings_screen._on_field_changed("auth-username", "user123")
+            feed_settings_screen._on_field_changed("auth-password", "pass123")
+            feed_settings_screen._on_field_changed("user-agent", "CustomAgent/1.0")
+            feed_settings_screen._on_field_changed("ignore-https-errors", True)
+
+        updates = feed_settings_screen._collect_field_values()
+        assert updates["username"] == "user123"
+        assert updates["password"] == "pass123"  # noqa: S105
+        assert updates["user_agent"] == "CustomAgent/1.0"
+        assert updates["ignore_https_errors"] is True
+        assert len(updates) == 4
+
+    def test_empty_network_fields_not_collected(self, feed_settings_screen):
+        """Test that empty network fields are not collected if not modified."""
+        # Don't modify any network fields
+        updates = feed_settings_screen._collect_field_values()
+        # Should have no network fields since nothing was modified
+        assert "username" not in updates
+        assert "password" not in updates
+        assert "user_agent" not in updates
+        assert "proxy_url" not in updates
+
+    def test_partial_network_settings_edit(self, feed_settings_screen):
+        """Test workflow when only some network settings are modified."""
+        with patch.object(feed_settings_screen, "query_one"):
+            # Only modify username and proxy
+            feed_settings_screen._on_field_changed("auth-username", "admin")
+            feed_settings_screen._on_field_changed("proxy-url", "http://proxy:3128")
+
+        updates = feed_settings_screen._collect_field_values()
+        assert len(updates) == 2
+        assert updates["username"] == "admin"
+        assert updates["proxy_url"] == "http://proxy:3128"
+        # password and user_agent should not be in updates
+        assert "password" not in updates
+        assert "user_agent" not in updates
+
+
+class TestNetworkSettingsIntegration:
+    """Integration tests for Network Settings workflow."""
+
+    @pytest.mark.asyncio
+    async def test_network_settings_full_workflow(self, feed_settings_screen):
+        """Test complete workflow for editing all Network Settings."""
+        with patch.object(feed_settings_screen, "query_one"):
+            # Simulate user edits for all network fields
+            feed_settings_screen._on_field_changed("auth-username", "networkuser")
+            feed_settings_screen._on_field_changed("auth-password", "networkpass")
+            feed_settings_screen._on_field_changed("user-agent", "Mozilla/5.0 Custom")
+            feed_settings_screen._on_field_changed("proxy-url", "http://proxy.example.com:8080")
+            feed_settings_screen._on_field_changed("ignore-https-errors", True)
+
+            # Verify dirty state
+            assert feed_settings_screen.is_dirty is True
+            assert len(feed_settings_screen.dirty_fields) == 5
+
+            # Collect values
+            updates = feed_settings_screen._collect_field_values()
+            assert updates["username"] == "networkuser"
+            assert updates["password"] == "networkpass"  # noqa: S105
+            assert updates["user_agent"] == "Mozilla/5.0 Custom"
+            assert updates["proxy_url"] == "http://proxy.example.com:8080"
+            assert updates["ignore_https_errors"] is True
+
+    @pytest.mark.asyncio
+    async def test_mixed_general_and_network_settings_edit(self, feed_settings_screen):
+        """Test workflow when both General and Network Settings are modified."""
+        with patch.object(feed_settings_screen, "query_one"):
+            # Modify both general and network fields
+            feed_settings_screen._on_field_changed("feed-title", "Updated Title")
+            feed_settings_screen._on_field_changed("auth-username", "user456")
+            feed_settings_screen._on_field_changed("ignore-https-errors", True)
+
+        updates = feed_settings_screen._collect_field_values()
+        # Should have 3 updates total
+        assert len(updates) == 3
+        assert updates["title"] == "Updated Title"
+        assert updates["username"] == "user456"
+        assert updates["ignore_https_errors"] is True
+
+    @pytest.mark.asyncio
+    async def test_network_settings_save_workflow(self, feed_settings_screen):
+        """Test save workflow with network settings changes."""
+        with patch.object(feed_settings_screen, "query_one"):
+            # Modify network fields
+            feed_settings_screen._on_field_changed("auth-username", "saveuser")
+            feed_settings_screen._on_field_changed("proxy-url", "http://save-proxy:8080")
+
+            # Verify dirty before save
+            assert feed_settings_screen.is_dirty is True
+
+            # Prepare for save
+            feed_settings_screen._collect_field_values = MagicMock(
+                return_value={
+                    "username": "saveuser",
+                    "proxy_url": "http://save-proxy:8080",
+                }
+            )
+
+            # Save
+            await feed_settings_screen.action_save_changes()
+
+            # Verify clean after save
+            assert feed_settings_screen.is_dirty is False
+            assert feed_settings_screen.dirty_fields == {}

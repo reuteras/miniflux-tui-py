@@ -222,8 +222,52 @@ class FeedSettingsScreen(Screen):
                     classes="field-value",
                 )
 
+            # Network Settings Section
+            yield Static("Network Settings", classes="section-title")
+            with Static(classes="section"):
+                # Username
+                yield Static("Username (optional)", classes="field-label")
+                yield Input(
+                    value="",
+                    id="auth-username",
+                    classes="field-value",
+                )
+
+                # Password
+                yield Static("Password (optional)", classes="field-label")
+                yield Input(
+                    value="",
+                    id="auth-password",
+                    password=True,
+                    classes="field-value",
+                )
+
+                # User-Agent
+                yield Static("User-Agent (optional)", classes="field-label")
+                yield Input(
+                    value="",
+                    id="user-agent",
+                    classes="field-value",
+                )
+
+                # Proxy URL
+                yield Static("Proxy URL (optional)", classes="field-label")
+                yield Input(
+                    value="",
+                    id="proxy-url",
+                    classes="field-value",
+                )
+
+                # Ignore HTTPS errors
+                yield Static("HTTPS Settings", classes="field-label")
+                yield Checkbox(
+                    label="Ignore HTTPS certificate errors",
+                    value=False,
+                    id="ignore-https-errors",
+                    classes="field-value",
+                )
+
             # Placeholder for other sections
-            yield Static("Network Settings - TBD", classes="section")
             yield Static("Rules & Filtering - TBD", classes="section")
             yield Static("Feed Information - TBD", classes="section")
             yield Static("Danger Zone - TBD", classes="section")
@@ -352,11 +396,18 @@ class FeedSettingsScreen(Screen):
         """
         # Map widget IDs to feed field names
         field_mapping = {
+            # General Settings
             "feed-title": "title",
             "site-url": "site_url",
             "feed-url": "feed_url",
             "category-id": "category_id",
             "feed-disabled": "disabled",
+            # Network Settings
+            "auth-username": "username",
+            "auth-password": "password",
+            "user-agent": "user_agent",
+            "proxy-url": "proxy_url",
+            "ignore-https-errors": "ignore_https_errors",
         }
 
         field_name = field_mapping.get(widget_id, widget_id)
