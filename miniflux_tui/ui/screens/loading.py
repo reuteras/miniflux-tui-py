@@ -10,15 +10,15 @@ from miniflux_tui.utils import get_app_version
 
 # editorconfig-checker-disable
 ASCII_ART_TEMPLATE = r"""
-                _       _  __ _               _         _
-     _ __ ___  (_)_ __ (_)/ _| |_   ___  __  | |_ _   _(_)
-    | '_ ` _ \ | | '_ \| | |_| | | | \ \/ /  | __| | | | |
-    | | | | | || | | | | |  _| | |_| |>  < _ | |_| |_| | |
-    |_| |_| |_||_|_| |_|_|_| |_|\__,_/_/\_(_) \__|\__,_|_|
+                  _           _    __   _                          _             _
+      _ __ ___   (_)  _ __   (_)  / _| | |  _   _  __  __         | |_   _   _  (_)
+     | '_ ` _ \  | | | '_ \  | | | |_  | | | | | | \ \/ /  _____  | __| | | | | | |
+     | | | | | | | | | | | | | | |  _| | | | |_| |  >  <  |_____| | |_  | |_| | | |
+     |_| |_| |_| |_| |_| |_| |_| |_|   |_|  \__,_| /_/\_\          \__|  \__,_| |_|
 
-    version {version}
+     version {version}
 
-    ~ Loading your feeds ~
+     ~ Loading your feeds ~
 """
 # editorconfig-checker-enable
 
