@@ -8,6 +8,7 @@ platform-specific issues (e.g., Windows widget lifecycle timing issues).
 from contextlib import suppress
 
 from textual.css.query import NoMatches
+from textual.dom import NoScreen
 from textual.widgets._header import Header, HeaderTitle
 
 
@@ -16,19 +17,31 @@ class SafeHeader(Header):
 
     Textual's Header widget on Windows sometimes fails to query HeaderTitle
     during _on_mount due to async timing differences between platforms.
-    This subclass catches those exceptions gracefully, allowing the Header
-    to function correctly on all platforms.
+    The default Header only catches NoScreen but not NoMatches exceptions.
+
+    This subclass overrides _on_mount to catch both NoScreen AND NoMatches,
+    allowing the Header to function correctly on all platforms.
 
     The HeaderTitle widget's text may not be updated immediately on Windows,
     but the Header will continue to function without raising exceptions.
     """
 
-    def _on_mount(self, _):
-        """Called when the Header is mounted, with exception handling."""
+    def _on_mount(self, _) -> None:
+        """Called when the Header is mounted, with improved exception handling.
+
+        This override catches NoMatches in addition to NoScreen, fixing
+        Windows-specific timing issues where HeaderTitle isn't ready yet.
+        """
 
         async def set_title() -> None:
-            """Set the title with NoMatches exception handling."""
-            with suppress(NoMatches):
+            """Set the title with comprehensive exception handling."""
+            # Suppress both NoMatches (Windows timing) and NoScreen (context issues)
+            with suppress(NoMatches, NoScreen):
                 self.query_one(HeaderTitle).update(self.format_title())
 
-        self.app.call_later(set_title)
+        # Set up watchers that call set_title when title/sub_title changes
+        # Use call_later with async function to handle timing issues
+        self.watch(self.app, "title", set_title)
+        self.watch(self.app, "sub_title", set_title)
+        self.watch(self.screen, "title", set_title)
+        self.watch(self.screen, "sub_title", set_title)
