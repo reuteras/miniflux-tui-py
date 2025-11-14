@@ -236,9 +236,14 @@ class MinifluxTuiApp(App):
         if not self.is_screen_installed("entry_list"):
             return None
 
-        screen = self.get_screen("entry_list")
-        if isinstance(screen, entry_list_cls):
-            return screen
+        try:
+            screen = self.get_screen("entry_list")
+            if isinstance(screen, entry_list_cls):
+                return screen
+        except Exception as e:
+            # Can occur during widget lifecycle transitions (especially on Windows)
+            self.log(f"Failed to get entry_list screen: {e}")
+            return None
 
         self.log("entry_list screen is installed but not an EntryListScreen instance")
         return None
