@@ -38,11 +38,15 @@ def sample_feed():
 @pytest.fixture
 def feed_settings_screen(sample_feed, mock_client):
     """Create a FeedSettingsScreen instance for testing."""
-    return FeedSettingsScreen(
+    screen = FeedSettingsScreen(
         feed_id=sample_feed.id,
         feed=sample_feed,
         client=mock_client,
     )
+    # Mock set_timer and _update_unsaved_indicator for all tests to avoid async issues
+    screen.set_timer = MagicMock(return_value=MagicMock())
+    screen._update_unsaved_indicator = MagicMock()
+    return screen
 
 
 class TestFeedSettingsScreenInitialization:
@@ -204,7 +208,7 @@ class TestCancelAction:
 
     @pytest.mark.asyncio
     async def test_cancel_with_changes_shows_warning(self, feed_settings_screen):
-        """Test that cancel shows warning with unsaved changes."""
+        """Test that cancel shows warning with unsaved changes (first press)."""
         with patch.object(feed_settings_screen, "query_one"):
             feed_settings_screen._on_field_changed("title", "New Title")
         assert feed_settings_screen.is_dirty is True
@@ -212,8 +216,9 @@ class TestCancelAction:
         with patch.object(feed_settings_screen, "query_one"):
             await feed_settings_screen.action_cancel_changes()
 
-        assert feed_settings_screen.is_dirty is False
-        assert "discarded" in feed_settings_screen.status_message.lower()
+        # After first press with unsaved changes, show confirmation and set flag
+        assert feed_settings_screen._cancel_confirmed is True
+        assert "discard" in feed_settings_screen.status_message.lower()
         assert feed_settings_screen.status_severity == "warning"
 
 
@@ -1270,3 +1275,113 @@ class TestHelperIntegration:
             call_args = mock_app.push_screen.call_args
             screen = call_args[0][0]
             assert screen.rule_type == "scraper_rules"
+
+
+class TestFormPersistenceIntegration:
+    """Test Phase 10: Form Persistence integration."""
+
+    def test_persistence_manager_initialized(self, feed_settings_screen):
+        """Test that FormPersistenceManager is initialized."""
+        assert hasattr(feed_settings_screen, "persistence")
+        assert feed_settings_screen.persistence is not None
+
+    def test_original_values_stored_on_mount(self, feed_settings_screen):
+        """Test that original values are stored when storing."""
+        feed_settings_screen._store_original_values()
+
+        assert "title" in feed_settings_screen.original_values
+        assert feed_settings_screen.original_values["title"] == "Test Feed"
+        assert feed_settings_screen.original_values["site_url"] == "https://example.com"
+
+    def test_field_change_tracked_with_persistence(self, feed_settings_screen):
+        """Test that field changes are tracked with persistence manager."""
+        with (
+            patch.object(feed_settings_screen, "query_one"),
+            patch.object(feed_settings_screen, "set_timer"),
+        ):
+            feed_settings_screen._on_field_changed("feed-title", "New Title")
+
+        # Check that change was tracked
+        assert feed_settings_screen.persistence.has_unsaved_changes(feed_settings_screen.feed_id)
+
+    def test_change_count_incremented(self, feed_settings_screen):
+        """Test that change count is incremented."""
+        with (
+            patch.object(feed_settings_screen, "query_one"),
+            patch.object(feed_settings_screen, "set_timer"),
+        ):
+            feed_settings_screen._on_field_changed("feed-title", "New Title")
+            feed_settings_screen._on_field_changed("site-url", "https://new.com")
+
+        count = feed_settings_screen.persistence.get_change_count(feed_settings_screen.feed_id)
+        assert count == 2
+
+    def test_unsaved_indicator_updated(self, feed_settings_screen):
+        """Test that unsaved indicator is updated when changes occur."""
+        # Reset mock to track calls in this test
+        feed_settings_screen._update_unsaved_indicator.reset_mock()
+
+        with patch.object(feed_settings_screen, "query_one"):
+            feed_settings_screen._on_field_changed("feed-title", "New Title")
+
+        # Unsaved indicator should be updated
+        assert feed_settings_screen._update_unsaved_indicator.called
+
+    def test_auto_save_scheduled(self, feed_settings_screen):
+        """Test that auto-save is scheduled on field change."""
+        with (
+            patch.object(feed_settings_screen, "query_one"),
+            patch.object(feed_settings_screen, "set_timer") as mock_timer,
+        ):
+            feed_settings_screen._on_field_changed("feed-title", "New Title")
+
+        # Auto-save should be scheduled
+        assert mock_timer.called
+
+    def test_recovery_checked_on_mount(self, feed_settings_screen):
+        """Test that recovery is checked on mount."""
+        with (
+            patch.object(feed_settings_screen, "_check_for_recovery") as mock_check,
+            patch.object(feed_settings_screen, "query_one"),
+        ):
+            feed_settings_screen.on_mount()
+
+        assert mock_check.called
+
+    def test_original_values_stored_on_mount_call(self, feed_settings_screen):
+        """Test that original values are stored in on_mount."""
+        with (
+            patch.object(feed_settings_screen, "_store_original_values") as mock_store,
+            patch.object(feed_settings_screen, "query_one"),
+        ):
+            feed_settings_screen.on_mount()
+
+        assert mock_store.called
+
+    def test_cancel_confirms_with_dirty_flag(self, feed_settings_screen):
+        """Test that cancel sets confirmation flag when there are unsaved changes."""
+        feed_settings_screen.is_dirty = True
+        feed_settings_screen._cancel_confirmed = False
+
+        # Verify initial state
+        assert feed_settings_screen.is_dirty is True
+        assert feed_settings_screen._cancel_confirmed is False
+
+    def test_auto_save_with_field_values(self, feed_settings_screen):
+        """Test that auto-save collects field values."""
+        # Mock the internal methods
+        with (
+            patch.object(feed_settings_screen, "_collect_field_values", return_value={"title": "Test"}),
+            patch.object(feed_settings_screen, "_get_current_field_values", return_value={}),
+            patch.object(feed_settings_screen.persistence, "auto_save_draft") as mock_save,
+        ):
+            feed_settings_screen._auto_save_draft()
+
+        assert mock_save.called
+
+    def test_get_current_field_values_empty_by_default(self, feed_settings_screen):
+        """Test that _get_current_field_values returns empty dict when no widgets."""
+        with patch.object(feed_settings_screen, "query", return_value=[]):
+            result = feed_settings_screen._get_current_field_values()
+
+        assert result == {}

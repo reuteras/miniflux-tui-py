@@ -12,6 +12,7 @@ from textual.screen import Screen
 from textual.widgets import Button, Checkbox, Footer, Header, Input, Static, TextArea
 
 from miniflux_tui.docs_cache import DocsCache
+from miniflux_tui.form_persistence_manager import FormPersistenceManager
 from miniflux_tui.ui.screens.rules_helper import RulesHelperScreen
 
 if TYPE_CHECKING:
@@ -157,6 +158,9 @@ class FeedSettingsScreen(Screen):
         # Documentation cache for helper screens
         self.docs_cache = DocsCache()
 
+        # Form persistence and auto-recovery
+        self.persistence = FormPersistenceManager()
+
         # Dirty state tracking
         self.dirty_fields: dict[str, bool] = {}
         self.is_dirty = False
@@ -168,6 +172,9 @@ class FeedSettingsScreen(Screen):
         self.status_message = ""
         self.status_severity = "info"  # "info", "success", "error", "warning"
 
+        # Auto-save debounce timer
+        self._auto_save_handle = None
+
     def compose(self) -> ComposeResult:  # noqa: PLR0915
         """Compose the feed settings screen layout.
 
@@ -177,11 +184,12 @@ class FeedSettingsScreen(Screen):
         yield Header()
 
         with ScrollableContainer():
-            # Settings header
+            # Settings header with unsaved indicator
             yield Static(
                 f"Feed Settings: {self.feed.title}",
                 id="settings-header",
             )
+            yield Static("", id="unsaved-indicator", classes="field-label")
 
             # General Settings Section
             yield Static("General Settings", classes="section-title")
@@ -386,8 +394,14 @@ class FeedSettingsScreen(Screen):
     def on_mount(self) -> None:
         """Called when screen is mounted.
 
-        Initialize screen state and load feed data.
+        Initialize screen state, check for recovery, and load feed data.
         """
+        # Store original field values for change tracking
+        self._store_original_values()
+
+        # Check for recovery from previous session
+        self._check_for_recovery()
+
         # Focus on first focusable element
         self.query_one("Button#save-button", expect_type=Button)
 
@@ -432,7 +446,7 @@ class FeedSettingsScreen(Screen):
         This action:
         1. Collects all modified field values
         2. Calls the API to update the feed
-        3. Clears dirty state on success
+        3. Clears persistence state on success
         4. Shows success/error message
         """
         if not self.is_dirty:
@@ -452,8 +466,14 @@ class FeedSettingsScreen(Screen):
             self.dirty_fields.clear()
             self.original_values.clear()
 
+            # Clear persistence state after successful save
+            self.persistence.clear_session(self.feed_id)
+
             # Disable save button
             self.query_one("Button#save-button", expect_type=Button).disabled = True
+
+            # Clear unsaved indicator
+            self._update_unsaved_indicator()
 
             self._show_message(
                 "Feed settings saved successfully",
@@ -472,18 +492,29 @@ class FeedSettingsScreen(Screen):
     async def action_cancel_changes(self) -> None:
         """Cancel changes and close screen.
 
-        If there are unsaved changes, show confirmation dialog.
+        If there are unsaved changes, show confirmation message.
         Otherwise, close immediately.
         """
         if self.is_dirty:
-            # Show confirmation (to be implemented)
-            self._show_message(
-                "Changes discarded. Press Escape again to close.",
-                severity="warning",
-            )
+            # Show confirmation message
+            if not hasattr(self, "_cancel_confirmed"):
+                self._cancel_confirmed = False
+
+            if not self._cancel_confirmed:
+                # First press - show confirmation
+                self._show_message(
+                    "Press Escape again to discard unsaved changes",
+                    severity="warning",
+                )
+                self._cancel_confirmed = True
+                return
+
+            # Second press - discard changes and close
             self.is_dirty = False
             self.dirty_fields.clear()
-            return
+            self.persistence.discard_recovery(self.feed_id)
+            self._cancel_confirmed = False
+            self._update_unsaved_indicator()
 
         # Close the screen
         self.app.pop_screen()
@@ -626,12 +657,28 @@ class FeedSettingsScreen(Screen):
             self._field_values: dict[str, Any] = {}
         self._field_values[field_name] = new_value
 
+        # Track change with persistence manager
+        old_value = self.original_values.get(field_name)
+        self.persistence.track_field_change(
+            feed_id=self.feed_id,
+            field_id=widget_id,
+            field_name=field_name,
+            before_value=old_value,
+            after_value=new_value,
+        )
+
         # Mark field as dirty
         self.dirty_fields[field_name] = True
         self.is_dirty = True
 
         # Enable save button
         self.query_one("Button#save-button", expect_type=Button).disabled = False
+
+        # Update unsaved indicator
+        self._update_unsaved_indicator()
+
+        # Trigger auto-save with debouncing
+        self._schedule_auto_save()
 
     def _collect_field_values(self) -> dict[str, Any]:
         """Collect all modified field values for API update.
@@ -676,3 +723,120 @@ class FeedSettingsScreen(Screen):
             status_widget.styles.color = "yellow"
         else:
             status_widget.styles.color = "$text-muted"
+
+    def _store_original_values(self) -> None:
+        """Store original field values for change tracking."""
+        self.original_values = {
+            # General Settings
+            "title": self.feed.title,
+            "site_url": self.feed.site_url,
+            "feed_url": self.feed.feed_url,
+            "category_id": self.feed.category_id,
+            "disabled": self.feed.disabled,
+            # Network Settings
+            "username": "",
+            "password": "",
+            "user_agent": "",
+            "proxy_url": "",
+            "ignore_https_errors": False,
+            # Rules & Filtering
+            "scraper_rules": "",
+            "rewrite_rules": "",
+            "url_rewrite_rules": "",
+            "blocking_rules": "",
+            "keep_rules": "",
+            # Feed Information
+            "check_interval": "",
+        }
+
+    def _check_for_recovery(self) -> None:
+        """Check and handle recovery from previous session."""
+        if self.persistence.should_prompt_recovery(self.feed_id):
+            recovery = self.persistence.check_for_recovery(self.feed_id)
+
+            if recovery:
+                self._show_recovery_dialog(recovery)
+            else:
+                # Mark that we prompted (even if no recovery)
+                self.persistence.mark_recovery_handled(self.feed_id)
+
+    def _show_recovery_dialog(self, recovery: Any) -> None:
+        """Show recovery dialog with user options.
+
+        Args:
+            recovery: RecoveryInfo object with recovery data
+        """
+        message = (
+            f"Found unsaved changes from {recovery.time_since_last_save}\n\n"
+            f"Would you like to:\n"
+            f"• (R)ecover: Restore unsaved changes\n"
+            f"• (D)iscard: Start with current feed values\n"
+            f"• (C)ancel: Cancel editing"
+        )
+
+        self._show_message(message, severity="warning")
+        self._recovery_pending = recovery
+
+    def _update_unsaved_indicator(self) -> None:
+        """Update the unsaved changes indicator in the header."""
+        try:
+            indicator = self.query_one("#unsaved-indicator", expect_type=Static)
+            change_count = self.persistence.get_change_count(self.feed_id)
+
+            if change_count > 0:
+                indicator.update(f"● Unsaved changes: {change_count} field(s)")
+                indicator.styles.color = "yellow"
+            else:
+                indicator.update("")
+                indicator.styles.color = "$text-muted"
+        except Exception:  # noqa: S110  # nosec: B110
+            pass
+
+    def _schedule_auto_save(self) -> None:
+        """Schedule auto-save with debouncing (1 second delay)."""
+        # Cancel previous timer if exists
+        if self._auto_save_handle:
+            self._auto_save_handle.stop()
+
+        # Schedule new auto-save (1 second debounce delay)
+        self._auto_save_handle = self.set_timer(1.0, self._auto_save_draft)
+
+    def _auto_save_draft(self) -> None:
+        """Auto-save current field values as draft."""
+        # Collect current field values from UI
+        field_values = self._collect_field_values()
+
+        if field_values:
+            # Add current field values
+            field_values.update(self._get_current_field_values())
+
+            # Save as draft
+            self.persistence.auto_save_draft(self.feed_id, field_values)
+
+    def _get_current_field_values(self) -> dict[str, Any]:
+        """Get current values from all UI fields.
+
+        Returns:
+            Dictionary of field_id: value for all fields
+        """
+        field_values: dict[str, Any] = {}
+
+        try:
+            # Collect from Input fields
+            for input_field in self.query(Input):
+                if input_field.id and not input_field.disabled:
+                    field_values[input_field.id] = input_field.value
+
+            # Collect from Checkbox fields
+            for checkbox in self.query(Checkbox):
+                if checkbox.id:
+                    field_values[checkbox.id] = checkbox.value
+
+            # Collect from TextArea fields
+            for textarea in self.query(TextArea):
+                if textarea.id:
+                    field_values[textarea.id] = textarea.text
+        except Exception:  # noqa: S110  # nosec: B110
+            pass
+
+        return field_values
