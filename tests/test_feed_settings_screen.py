@@ -1081,3 +1081,192 @@ class TestDangerZoneIntegration:
             assert "deleted successfully" in screen.status_message.lower()
             assert screen.status_severity == "success"
             mock_app.pop_screen.assert_called_once()
+
+
+class TestHelperIntegration:
+    """Integration tests for helper functionality."""
+
+    def test_open_helper_no_focused_widget(self, feed_settings_screen):
+        """Test opening helper with no focused widget."""
+        with (
+            patch.object(type(feed_settings_screen), "focused", new_callable=PropertyMock) as mock_focused,
+            patch.object(feed_settings_screen, "query_one"),
+        ):
+            mock_focused.return_value = None
+            feed_settings_screen.action_open_helper()
+
+            assert "no field focused" in feed_settings_screen.status_message.lower()
+            assert feed_settings_screen.status_severity == "info"
+
+    def test_open_helper_non_rule_field(self, feed_settings_screen):
+        """Test opening helper with non-rule field focused."""
+        mock_widget = MagicMock()
+        mock_widget.id = "feed-title"
+        mock_widget.parent = None
+
+        with (
+            patch.object(type(feed_settings_screen), "focused", new_callable=PropertyMock) as mock_focused,
+            patch.object(feed_settings_screen, "query_one"),
+        ):
+            mock_focused.return_value = mock_widget
+            feed_settings_screen.action_open_helper()
+
+            assert "focus a rule field" in feed_settings_screen.status_message.lower()
+            assert feed_settings_screen.status_severity == "info"
+
+    def test_open_helper_scraper_rules_field(self, feed_settings_screen):
+        """Test opening helper for scraper rules field."""
+        mock_app = MagicMock()
+        mock_app.push_screen = MagicMock()
+
+        mock_widget = MagicMock()
+        mock_widget.id = "scraper-rules"
+        mock_widget.parent = None
+
+        with (
+            patch.object(type(feed_settings_screen), "focused", new_callable=PropertyMock) as mock_focused,
+            patch.object(type(feed_settings_screen), "app", new_callable=PropertyMock) as mock_app_prop,
+        ):
+            mock_focused.return_value = mock_widget
+            mock_app_prop.return_value = mock_app
+            feed_settings_screen.action_open_helper()
+
+            mock_app.push_screen.assert_called_once()
+            call_args = mock_app.push_screen.call_args
+            screen = call_args[0][0]
+            assert screen.rule_type == "scraper_rules"
+
+    def test_open_helper_rewrite_rules_field(self, feed_settings_screen):
+        """Test opening helper for rewrite rules field."""
+        mock_app = MagicMock()
+        mock_app.push_screen = MagicMock()
+
+        mock_widget = MagicMock()
+        mock_widget.id = "rewrite-rules"
+        mock_widget.parent = None
+
+        with (
+            patch.object(type(feed_settings_screen), "focused", new_callable=PropertyMock) as mock_focused,
+            patch.object(type(feed_settings_screen), "app", new_callable=PropertyMock) as mock_app_prop,
+        ):
+            mock_focused.return_value = mock_widget
+            mock_app_prop.return_value = mock_app
+            feed_settings_screen.action_open_helper()
+
+            mock_app.push_screen.assert_called_once()
+            call_args = mock_app.push_screen.call_args
+            screen = call_args[0][0]
+            assert screen.rule_type == "rewrite_rules"
+
+    def test_open_helper_url_rewrite_rules_field(self, feed_settings_screen):
+        """Test opening helper for URL rewrite rules field."""
+        mock_app = MagicMock()
+        mock_app.push_screen = MagicMock()
+
+        mock_widget = MagicMock()
+        mock_widget.id = "url-rewrite-rules"
+        mock_widget.parent = None
+
+        with (
+            patch.object(type(feed_settings_screen), "focused", new_callable=PropertyMock) as mock_focused,
+            patch.object(type(feed_settings_screen), "app", new_callable=PropertyMock) as mock_app_prop,
+        ):
+            mock_focused.return_value = mock_widget
+            mock_app_prop.return_value = mock_app
+            feed_settings_screen.action_open_helper()
+
+            mock_app.push_screen.assert_called_once()
+            call_args = mock_app.push_screen.call_args
+            screen = call_args[0][0]
+            assert screen.rule_type == "url_rewrite_rules"
+
+    def test_open_helper_blocking_rules_field(self, feed_settings_screen):
+        """Test opening helper for blocking rules field."""
+        mock_app = MagicMock()
+        mock_app.push_screen = MagicMock()
+
+        mock_widget = MagicMock()
+        mock_widget.id = "blocking-rules"
+        mock_widget.parent = None
+
+        with (
+            patch.object(type(feed_settings_screen), "focused", new_callable=PropertyMock) as mock_focused,
+            patch.object(type(feed_settings_screen), "app", new_callable=PropertyMock) as mock_app_prop,
+        ):
+            mock_focused.return_value = mock_widget
+            mock_app_prop.return_value = mock_app
+            feed_settings_screen.action_open_helper()
+
+            mock_app.push_screen.assert_called_once()
+            call_args = mock_app.push_screen.call_args
+            screen = call_args[0][0]
+            assert screen.rule_type == "blocking_rules"
+
+    def test_open_helper_keep_rules_field(self, feed_settings_screen):
+        """Test opening helper for keep rules field."""
+        mock_app = MagicMock()
+        mock_app.push_screen = MagicMock()
+
+        mock_widget = MagicMock()
+        mock_widget.id = "keep-rules"
+        mock_widget.parent = None
+
+        with (
+            patch.object(type(feed_settings_screen), "focused", new_callable=PropertyMock) as mock_focused,
+            patch.object(type(feed_settings_screen), "app", new_callable=PropertyMock) as mock_app_prop,
+        ):
+            mock_focused.return_value = mock_widget
+            mock_app_prop.return_value = mock_app
+            feed_settings_screen.action_open_helper()
+
+            mock_app.push_screen.assert_called_once()
+            call_args = mock_app.push_screen.call_args
+            screen = call_args[0][0]
+            assert screen.rule_type == "keep_rules"
+
+    def test_open_helper_passes_docs_cache(self, feed_settings_screen):
+        """Test that docs cache is passed to helper screen."""
+        mock_app = MagicMock()
+        mock_app.push_screen = MagicMock()
+
+        mock_widget = MagicMock()
+        mock_widget.id = "scraper-rules"
+        mock_widget.parent = None
+
+        with (
+            patch.object(type(feed_settings_screen), "focused", new_callable=PropertyMock) as mock_focused,
+            patch.object(type(feed_settings_screen), "app", new_callable=PropertyMock) as mock_app_prop,
+        ):
+            mock_focused.return_value = mock_widget
+            mock_app_prop.return_value = mock_app
+            feed_settings_screen.action_open_helper()
+
+            call_args = mock_app.push_screen.call_args
+            screen = call_args[0][0]
+            assert screen.docs_cache is feed_settings_screen.docs_cache
+
+    def test_open_helper_detects_parent_rule_field(self, feed_settings_screen):
+        """Test that helper detects rule field in parent widget."""
+        mock_app = MagicMock()
+        mock_app.push_screen = MagicMock()
+
+        # Create widget hierarchy where child is focused but parent is the rule field
+        mock_parent = MagicMock()
+        mock_parent.id = "scraper-rules"
+        mock_parent.parent = None
+
+        mock_child = MagicMock()
+        mock_child.id = None
+        mock_child.parent = mock_parent
+
+        with (
+            patch.object(type(feed_settings_screen), "focused", new_callable=PropertyMock) as mock_focused,
+            patch.object(type(feed_settings_screen), "app", new_callable=PropertyMock) as mock_app_prop,
+        ):
+            mock_focused.return_value = mock_child
+            mock_app_prop.return_value = mock_app
+            feed_settings_screen.action_open_helper()
+
+            call_args = mock_app.push_screen.call_args
+            screen = call_args[0][0]
+            assert screen.rule_type == "scraper_rules"

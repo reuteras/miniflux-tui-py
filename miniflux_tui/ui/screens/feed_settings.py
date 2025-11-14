@@ -11,6 +11,9 @@ from textual.containers import ScrollableContainer
 from textual.screen import Screen
 from textual.widgets import Button, Checkbox, Footer, Header, Input, Static, TextArea
 
+from miniflux_tui.docs_cache import DocsCache
+from miniflux_tui.ui.screens.rules_helper import RulesHelperScreen
+
 if TYPE_CHECKING:
     from miniflux_tui.api.client import MinifluxClient
     from miniflux_tui.api.models import Feed
@@ -150,6 +153,9 @@ class FeedSettingsScreen(Screen):
         self.feed_id = feed_id
         self.feed = feed
         self.client = client
+
+        # Documentation cache for helper screens
+        self.docs_cache = DocsCache()
 
         # Dirty state tracking
         self.dirty_fields: dict[str, bool] = {}
@@ -487,9 +493,54 @@ class FeedSettingsScreen(Screen):
 
         This action opens appropriate helper screens based on
         which rule field is currently focused (if any).
-        To be implemented when helpers are added.
         """
-        self._show_message("Helper not yet available", severity="info")
+        # Map of rule field IDs to rule types
+        rule_field_mapping = {
+            "scraper-rules": "scraper_rules",
+            "rewrite-rules": "rewrite_rules",
+            "url-rewrite-rules": "url_rewrite_rules",
+            "blocking-rules": "blocking_rules",
+            "keep-rules": "keep_rules",
+        }
+
+        # Get currently focused widget
+        focused = self.focused
+        if focused is None:
+            self._show_message(
+                "No field focused. Focus a rule field and press 'x' for help.",
+                severity="info",
+            )
+            return
+
+        # Check if the focused widget or its parent is a rule field
+        widget = focused
+        rule_type = None
+
+        # Check the focused widget itself
+        if widget.id and widget.id in rule_field_mapping:
+            rule_type = rule_field_mapping[widget.id]
+        else:
+            # Check parent widgets
+            parent = widget.parent
+            while parent and not rule_type:
+                if parent.id and parent.id in rule_field_mapping:
+                    rule_type = rule_field_mapping[parent.id]
+                    break
+                parent = parent.parent
+
+        if not rule_type:
+            self._show_message(
+                "Focus a rule field to see help. Rule fields: Scraper, Rewrite, URL Rewrite, Blocking, Keep.",
+                severity="info",
+            )
+            return
+
+        # Open the helper screen with the appropriate rule type
+        helper_screen = RulesHelperScreen(
+            rule_type=rule_type,
+            docs_cache=self.docs_cache,
+        )
+        self.app.push_screen(helper_screen)
 
     async def action_delete_feed(self) -> None:
         """Delete the feed with confirmation.
