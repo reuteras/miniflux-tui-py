@@ -118,8 +118,8 @@ When in grouped mode (`g` to toggle):
 
 | Key       | Action                                       |
 |-----------|----------------------------------------------|
-| `l` / `→` | Expand the highlighted feed/category        |
-| `h` / `←` | Collapse the highlighted feed/category      |
+| `l` / `→` | Expand the highlighted feed/category         |
+| `h` / `←` | Collapse the highlighted feed/category       |
 | `Shift+G` | Enable grouping by feed and expand all feeds |
 | `Shift+Z` | Collapse all feeds/categories                |
 
@@ -202,10 +202,10 @@ There are two types of refresh operations:
 
 Tell the Miniflux server to fetch new content from RSS feeds:
 
-| Key       | Action                            |
-|-----------|-----------------------------------|
-| `r`       | Refresh current feed on server    |
-| `Shift+R` | Refresh all feeds on server       |
+| Key       | Action                         |
+|-----------|--------------------------------|
+| `r`       | Refresh current feed on server |
+| `Shift+R` | Refresh all feeds on server    |
 
 This tells the Miniflux server to check the RSS feeds for new articles. After refreshing, use `,` to sync.
 
@@ -213,8 +213,8 @@ This tells the Miniflux server to check the RSS feeds for new articles. After re
 
 Fetch the latest entries from your Miniflux server to the TUI:
 
-| Key | Action                              |
-|-----|-------------------------------------|
+| Key | Action                               |
+|-----|--------------------------------------|
 | `,` | Sync entries from server (fetch new) |
 
 The sync will:
@@ -252,17 +252,17 @@ When you open an entry with `Enter`:
 
 In the entry reader, you can also:
 
-| Key       | Action                               |
-|-----------|--------------------------------------|
-| `u`       | Mark the entry as unread             |
-| `*`       | Toggle star status                   |
-| `e`       | Save the entry                       |
-| `o`       | Open in your default browser         |
-| `f`       | Fetch the original article content   |
-| `Shift+X` | Open scraping rule helper for feed   |
-| `i`       | Show system status                   |
-| `Shift+S` | Show TUI settings                    |
-| `?`       | Show keyboard help                   |
+| Key       | Action                             |
+|-----------|------------------------------------|
+| `u`       | Mark the entry as unread           |
+| `*`       | Toggle star status                 |
+| `e`       | Save the entry                     |
+| `o`       | Open in your default browser       |
+| `f`       | Fetch the original article content |
+| `Shift+X` | Open scraping rule helper for feed |
+| `i`       | Show system status                 |
+| `Shift+S` | Show TUI settings                  |
+| `?`       | Show keyboard help                 |
 
 ## Tips and Tricks
 
