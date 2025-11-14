@@ -593,3 +593,168 @@ class TestNetworkSettingsIntegration:
             # Verify clean after save
             assert feed_settings_screen.is_dirty is False
             assert feed_settings_screen.dirty_fields == {}
+
+
+class TestRulesAndFilteringFields:
+    """Test Rules & Filtering field handling."""
+
+    def test_rules_field_mapping(self, feed_settings_screen):
+        """Test that rule widget IDs are correctly mapped to field names."""
+        with patch.object(feed_settings_screen, "query_one"):
+            # Test scraper rules mapping
+            feed_settings_screen._on_field_changed("scraper-rules", "div.content")
+            assert "scraper_rules" in feed_settings_screen.dirty_fields
+            assert feed_settings_screen._field_values["scraper_rules"] == "div.content"
+
+            # Test rewrite rules mapping
+            feed_settings_screen._on_field_changed("rewrite-rules", "regex pattern")
+            assert "rewrite_rules" in feed_settings_screen.dirty_fields
+            assert feed_settings_screen._field_values["rewrite_rules"] == "regex pattern"
+
+            # Test URL rewrite rules mapping
+            feed_settings_screen._on_field_changed("url-rewrite-rules", "url -> replacement")
+            assert "url_rewrite_rules" in feed_settings_screen.dirty_fields
+            assert feed_settings_screen._field_values["url_rewrite_rules"] == "url -> replacement"
+
+            # Test blocking rules mapping
+            feed_settings_screen._on_field_changed("blocking-rules", "block pattern")
+            assert "blocking_rules" in feed_settings_screen.dirty_fields
+            assert feed_settings_screen._field_values["blocking_rules"] == "block pattern"
+
+            # Test keep rules mapping
+            feed_settings_screen._on_field_changed("keep-rules", "keep pattern")
+            assert "keep_rules" in feed_settings_screen.dirty_fields
+            assert feed_settings_screen._field_values["keep_rules"] == "keep pattern"
+
+    def test_on_text_area_changed_event(self, feed_settings_screen):
+        """Test on_text_area_changed event handler."""
+        mock_textarea = MagicMock()
+        mock_textarea.id = "scraper-rules"
+        mock_textarea.text = "div.article"
+
+        event = MagicMock()
+        event.text_area = mock_textarea
+
+        with patch.object(feed_settings_screen, "query_one"):
+            feed_settings_screen.on_text_area_changed(event)
+
+        assert feed_settings_screen.is_dirty is True
+        assert "scraper_rules" in feed_settings_screen.dirty_fields
+
+    def test_collect_rule_field_values(self, feed_settings_screen):
+        """Test that _collect_field_values returns rule field names."""
+        with patch.object(feed_settings_screen, "query_one"):
+            feed_settings_screen._on_field_changed("scraper-rules", "div.post")
+            feed_settings_screen._on_field_changed("rewrite-rules", "replace_pattern")
+            feed_settings_screen._on_field_changed("blocking-rules", "ad_pattern")
+
+        updates = feed_settings_screen._collect_field_values()
+        assert updates["scraper_rules"] == "div.post"
+        assert updates["rewrite_rules"] == "replace_pattern"
+        assert updates["blocking_rules"] == "ad_pattern"
+        assert len(updates) == 3
+
+    def test_empty_rule_fields_not_collected(self, feed_settings_screen):
+        """Test that empty rule fields are not collected if not modified."""
+        # Don't modify any rule fields
+        updates = feed_settings_screen._collect_field_values()
+        # Should have no rule fields since nothing was modified
+        assert "scraper_rules" not in updates
+        assert "rewrite_rules" not in updates
+        assert "url_rewrite_rules" not in updates
+        assert "blocking_rules" not in updates
+        assert "keep_rules" not in updates
+
+    def test_partial_rules_edit(self, feed_settings_screen):
+        """Test workflow when only some rule fields are modified."""
+        with patch.object(feed_settings_screen, "query_one"):
+            # Only modify scraper and blocking rules
+            feed_settings_screen._on_field_changed("scraper-rules", "article.main")
+            feed_settings_screen._on_field_changed("blocking-rules", "spam_regex")
+
+        updates = feed_settings_screen._collect_field_values()
+        assert len(updates) == 2
+        assert updates["scraper_rules"] == "article.main"
+        assert updates["blocking_rules"] == "spam_regex"
+        # rewrite and keep rules should not be in updates
+        assert "rewrite_rules" not in updates
+        assert "keep_rules" not in updates
+
+    def test_multiline_rule_content(self, feed_settings_screen):
+        """Test handling of multiline rule content."""
+        multiline_rules = "line1\nline2\nline3"
+        with patch.object(feed_settings_screen, "query_one"):
+            feed_settings_screen._on_field_changed("scraper-rules", multiline_rules)
+
+        updates = feed_settings_screen._collect_field_values()
+        assert updates["scraper_rules"] == multiline_rules
+        assert "\n" in updates["scraper_rules"]
+
+
+class TestRulesAndFilteringIntegration:
+    """Integration tests for Rules & Filtering workflow."""
+
+    @pytest.mark.asyncio
+    async def test_rules_and_filtering_full_workflow(self, feed_settings_screen):
+        """Test complete workflow for editing all Rules & Filtering fields."""
+        with patch.object(feed_settings_screen, "query_one"):
+            # Simulate user edits for all rule fields
+            feed_settings_screen._on_field_changed("scraper-rules", "div.content")
+            feed_settings_screen._on_field_changed("rewrite-rules", "pattern1 -> replacement1")
+            feed_settings_screen._on_field_changed("url-rewrite-rules", "old.url -> new.url")
+            feed_settings_screen._on_field_changed("blocking-rules", "ads|spam")
+            feed_settings_screen._on_field_changed("keep-rules", "important|urgent")
+
+            # Verify dirty state
+            assert feed_settings_screen.is_dirty is True
+            assert len(feed_settings_screen.dirty_fields) == 5
+
+            # Collect values
+            updates = feed_settings_screen._collect_field_values()
+            assert updates["scraper_rules"] == "div.content"
+            assert updates["rewrite_rules"] == "pattern1 -> replacement1"
+            assert updates["url_rewrite_rules"] == "old.url -> new.url"
+            assert updates["blocking_rules"] == "ads|spam"
+            assert updates["keep_rules"] == "important|urgent"
+
+    @pytest.mark.asyncio
+    async def test_combined_all_sections_edit(self, feed_settings_screen):
+        """Test workflow when fields from all sections are modified."""
+        with patch.object(feed_settings_screen, "query_one"):
+            # Modify fields from each section
+            feed_settings_screen._on_field_changed("feed-title", "New Title")  # General
+            feed_settings_screen._on_field_changed("auth-username", "user1")  # Network
+            feed_settings_screen._on_field_changed("scraper-rules", "div")  # Rules
+
+        updates = feed_settings_screen._collect_field_values()
+        # Should have 3 updates total
+        assert len(updates) == 3
+        assert updates["title"] == "New Title"
+        assert updates["username"] == "user1"
+        assert updates["scraper_rules"] == "div"
+
+    @pytest.mark.asyncio
+    async def test_rules_save_workflow(self, feed_settings_screen):
+        """Test save workflow with rules changes."""
+        with patch.object(feed_settings_screen, "query_one"):
+            # Modify rules
+            feed_settings_screen._on_field_changed("scraper-rules", "main.article")
+            feed_settings_screen._on_field_changed("blocking-rules", "\\badv\\b")
+
+            # Verify dirty before save
+            assert feed_settings_screen.is_dirty is True
+
+            # Prepare for save
+            feed_settings_screen._collect_field_values = MagicMock(
+                return_value={
+                    "scraper_rules": "main.article",
+                    "blocking_rules": "\\badv\\b",
+                }
+            )
+
+            # Save
+            await feed_settings_screen.action_save_changes()
+
+            # Verify clean after save
+            assert feed_settings_screen.is_dirty is False
+            assert feed_settings_screen.dirty_fields == {}

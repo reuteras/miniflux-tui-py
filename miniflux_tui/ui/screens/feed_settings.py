@@ -9,7 +9,7 @@ from textual.app import ComposeResult
 from textual.binding import Binding
 from textual.containers import ScrollableContainer
 from textual.screen import Screen
-from textual.widgets import Button, Checkbox, Footer, Header, Input, Static
+from textual.widgets import Button, Checkbox, Footer, Header, Input, Static, TextArea
 
 if TYPE_CHECKING:
     from miniflux_tui.api.client import MinifluxClient
@@ -267,8 +267,50 @@ class FeedSettingsScreen(Screen):
                     classes="field-value",
                 )
 
+            # Rules & Filtering Section
+            yield Static("Rules & Filtering", classes="section-title")
+            with Static(classes="section"):
+                # Scraper Rules
+                yield Static("Scraper Rules (optional)", classes="field-label")
+                yield TextArea(
+                    text="",
+                    id="scraper-rules",
+                    classes="field-value",
+                )
+
+                # Rewrite Rules
+                yield Static("Rewrite Rules (optional)", classes="field-label")
+                yield TextArea(
+                    text="",
+                    id="rewrite-rules",
+                    classes="field-value",
+                )
+
+                # URL Rewrite Rules
+                yield Static("URL Rewrite Rules (optional)", classes="field-label")
+                yield TextArea(
+                    text="",
+                    id="url-rewrite-rules",
+                    classes="field-value",
+                )
+
+                # Blocking Rules
+                yield Static("Blocking Rules (optional)", classes="field-label")
+                yield TextArea(
+                    text="",
+                    id="blocking-rules",
+                    classes="field-value",
+                )
+
+                # Keep Rules
+                yield Static("Keep Rules (optional)", classes="field-label")
+                yield TextArea(
+                    text="",
+                    id="keep-rules",
+                    classes="field-value",
+                )
+
             # Placeholder for other sections
-            yield Static("Rules & Filtering - TBD", classes="section")
             yield Static("Feed Information - TBD", classes="section")
             yield Static("Danger Zone - TBD", classes="section")
 
@@ -307,6 +349,15 @@ class FeedSettingsScreen(Screen):
         """
         if event.checkbox.id:
             self._on_field_changed(event.checkbox.id, event.value)
+
+    def on_text_area_changed(self, event: TextArea.Changed) -> None:
+        """Handle text area content changes.
+
+        Args:
+            event: TextArea change event
+        """
+        if event.text_area.id:
+            self._on_field_changed(event.text_area.id, event.text_area.text)
 
     async def action_focus_next(self) -> None:
         """Focus next focusable widget."""
@@ -408,6 +459,12 @@ class FeedSettingsScreen(Screen):
             "user-agent": "user_agent",
             "proxy-url": "proxy_url",
             "ignore-https-errors": "ignore_https_errors",
+            # Rules & Filtering
+            "scraper-rules": "scraper_rules",
+            "rewrite-rules": "rewrite_rules",
+            "url-rewrite-rules": "url_rewrite_rules",
+            "blocking-rules": "blocking_rules",
+            "keep-rules": "keep_rules",
         }
 
         field_name = field_mapping.get(widget_id, widget_id)
