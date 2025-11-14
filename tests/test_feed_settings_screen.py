@@ -1,0 +1,269 @@
+# SPDX-License-Identifier: MIT
+"""Tests for the FeedSettingsScreen."""
+
+from __future__ import annotations
+
+from unittest.mock import AsyncMock, MagicMock, patch
+
+import pytest
+
+from miniflux_tui.api.models import Feed
+from miniflux_tui.ui.screens.feed_settings import FeedSettingsScreen
+
+
+@pytest.fixture
+def mock_client():
+    """Create a mock MinifluxClient."""
+    client = AsyncMock()
+    client.update_feed = AsyncMock()
+    client.delete_feed = AsyncMock()
+    client.get_feed = AsyncMock()
+    return client
+
+
+@pytest.fixture
+def sample_feed():
+    """Create a sample Feed for testing."""
+    return Feed(
+        id=1,
+        title="Test Feed",
+        site_url="https://example.com",
+        feed_url="https://example.com/feed.xml",
+        category_id=1,
+        checked_at="2024-11-14T12:00:00Z",
+        disabled=False,
+    )
+
+
+@pytest.fixture
+def feed_settings_screen(sample_feed, mock_client):
+    """Create a FeedSettingsScreen instance for testing."""
+    return FeedSettingsScreen(
+        feed_id=sample_feed.id,
+        feed=sample_feed,
+        client=mock_client,
+    )
+
+
+class TestFeedSettingsScreenInitialization:
+    """Test FeedSettingsScreen initialization."""
+
+    def test_init_stores_parameters(self, sample_feed, mock_client):
+        """Test that __init__ properly stores all parameters."""
+        screen = FeedSettingsScreen(
+            feed_id=sample_feed.id,
+            feed=sample_feed,
+            client=mock_client,
+        )
+
+        assert screen.feed_id == sample_feed.id
+        assert screen.feed == sample_feed
+        assert screen.client == mock_client
+
+    def test_init_initializes_dirty_state(self, feed_settings_screen):
+        """Test that dirty state is initialized to clean."""
+        assert feed_settings_screen.is_dirty is False
+        assert feed_settings_screen.dirty_fields == {}
+        assert feed_settings_screen.original_values == {}
+
+    def test_init_initializes_status(self, feed_settings_screen):
+        """Test that status message is initialized."""
+        assert feed_settings_screen.status_message == ""
+        assert feed_settings_screen.status_severity == "info"
+
+    def test_bindings_defined(self):
+        """Test that BINDINGS are defined."""
+        assert hasattr(FeedSettingsScreen, "BINDINGS")
+        assert len(FeedSettingsScreen.BINDINGS) > 0
+
+    def test_default_css_defined(self):
+        """Test that DEFAULT_CSS is defined."""
+        assert hasattr(FeedSettingsScreen, "DEFAULT_CSS")
+        assert isinstance(FeedSettingsScreen.DEFAULT_CSS, str)
+
+
+class TestDirtyStateTracking:
+    """Test dirty state tracking functionality."""
+
+    def test_on_field_changed_marks_dirty(self, feed_settings_screen):
+        """Test that _on_field_changed marks screen as dirty."""
+        with patch.object(feed_settings_screen, "query_one"):
+            feed_settings_screen._on_field_changed("title", "New Title")
+
+        assert feed_settings_screen.is_dirty is True
+        assert "title" in feed_settings_screen.dirty_fields
+        assert feed_settings_screen.dirty_fields["title"] is True
+
+    def test_on_field_changed_stores_original_value(self, feed_settings_screen):
+        """Test that original values are stored on first change."""
+        with patch.object(feed_settings_screen, "query_one"):
+            feed_settings_screen._on_field_changed("title", "New Title")
+
+        assert "title" in feed_settings_screen.original_values
+        assert feed_settings_screen.original_values["title"] == "Test Feed"
+
+    def test_on_field_changed_multiple_fields(self, feed_settings_screen):
+        """Test tracking multiple field changes."""
+        with patch.object(feed_settings_screen, "query_one"):
+            feed_settings_screen._on_field_changed("title", "New Title")
+            feed_settings_screen._on_field_changed("category_id", 2)
+
+        assert feed_settings_screen.is_dirty is True
+        assert len(feed_settings_screen.dirty_fields) == 2
+        assert "title" in feed_settings_screen.dirty_fields
+        assert "category_id" in feed_settings_screen.dirty_fields
+
+    def test_on_field_changed_does_not_re_store_original(self, feed_settings_screen):
+        """Test that original value is only stored once per field."""
+        with patch.object(feed_settings_screen, "query_one"):
+            feed_settings_screen._on_field_changed("title", "New Title 1")
+            original_value_1 = feed_settings_screen.original_values["title"]
+
+            feed_settings_screen._on_field_changed("title", "New Title 2")
+            original_value_2 = feed_settings_screen.original_values["title"]
+
+        assert original_value_1 == original_value_2
+        assert original_value_2 == "Test Feed"
+
+
+class TestSaveAction:
+    """Test save action functionality."""
+
+    @pytest.mark.asyncio
+    async def test_save_calls_api_when_dirty(self, feed_settings_screen):
+        """Test that save calls API when there are changes."""
+        with patch.object(feed_settings_screen, "query_one"):
+            feed_settings_screen._on_field_changed("title", "New Title")
+
+        feed_settings_screen._collect_field_values = MagicMock(return_value={})
+
+        with patch.object(feed_settings_screen, "query_one"):
+            await feed_settings_screen.action_save_changes()
+
+        feed_settings_screen.client.update_feed.assert_called_once()
+
+    @pytest.mark.asyncio
+    async def test_save_does_nothing_if_not_dirty(self, feed_settings_screen):
+        """Test that save does nothing when there are no changes."""
+        assert feed_settings_screen.is_dirty is False
+
+        with patch.object(feed_settings_screen, "query_one"):
+            await feed_settings_screen.action_save_changes()
+
+        feed_settings_screen.client.update_feed.assert_not_called()
+
+    @pytest.mark.asyncio
+    async def test_save_shows_success_message(self, feed_settings_screen):
+        """Test that success message is shown after save."""
+        with patch.object(feed_settings_screen, "query_one"):
+            feed_settings_screen._on_field_changed("title", "New Title")
+            feed_settings_screen._collect_field_values = MagicMock(return_value={})
+            await feed_settings_screen.action_save_changes()
+
+        assert "saved successfully" in feed_settings_screen.status_message.lower()
+        assert feed_settings_screen.status_severity == "success"
+
+    @pytest.mark.asyncio
+    async def test_save_handles_timeout_error(self, feed_settings_screen):
+        """Test that timeout errors are handled gracefully."""
+        with patch.object(feed_settings_screen, "query_one"):
+            feed_settings_screen._on_field_changed("title", "New Title")
+            feed_settings_screen._collect_field_values = MagicMock(return_value={})
+            feed_settings_screen.client.update_feed.side_effect = TimeoutError()
+            await feed_settings_screen.action_save_changes()
+
+        assert "timeout" in feed_settings_screen.status_message.lower()
+        assert feed_settings_screen.status_severity == "error"
+
+    @pytest.mark.asyncio
+    async def test_save_handles_connection_error(self, feed_settings_screen):
+        """Test that connection errors are handled gracefully."""
+        with patch.object(feed_settings_screen, "query_one"):
+            feed_settings_screen._on_field_changed("title", "New Title")
+            feed_settings_screen._collect_field_values = MagicMock(return_value={})
+            feed_settings_screen.client.update_feed.side_effect = ConnectionError()
+            await feed_settings_screen.action_save_changes()
+
+        assert "connection" in feed_settings_screen.status_message.lower()
+        assert feed_settings_screen.status_severity == "error"
+
+
+class TestCancelAction:
+    """Test cancel action functionality."""
+
+    @pytest.mark.asyncio
+    async def test_cancel_with_no_changes_closes_screen(self, feed_settings_screen):
+        """Test that cancel closes screen when no unsaved changes."""
+        assert feed_settings_screen.is_dirty is False
+
+        mock_app = MagicMock()
+        with patch("miniflux_tui.ui.screens.feed_settings.Screen.app", mock_app), patch.object(feed_settings_screen, "query_one"):
+            await feed_settings_screen.action_cancel_changes()
+
+        mock_app.pop_screen.assert_called_once()
+
+    @pytest.mark.asyncio
+    async def test_cancel_with_changes_shows_warning(self, feed_settings_screen):
+        """Test that cancel shows warning with unsaved changes."""
+        with patch.object(feed_settings_screen, "query_one"):
+            feed_settings_screen._on_field_changed("title", "New Title")
+        assert feed_settings_screen.is_dirty is True
+
+        with patch.object(feed_settings_screen, "query_one"):
+            await feed_settings_screen.action_cancel_changes()
+
+        assert feed_settings_screen.is_dirty is False
+        assert "discarded" in feed_settings_screen.status_message.lower()
+        assert feed_settings_screen.status_severity == "warning"
+
+
+class TestCollectFieldValues:
+    """Test field value collection."""
+
+    def test_collect_field_values_returns_dict(self, feed_settings_screen):
+        """Test that _collect_field_values returns a dictionary."""
+        result = feed_settings_screen._collect_field_values()
+        assert isinstance(result, dict)
+
+
+class TestStatusMessages:
+    """Test status message display."""
+
+    def test_show_message_updates_state(self, feed_settings_screen):
+        """Test that show_message updates state correctly."""
+        with patch.object(feed_settings_screen, "query_one"):
+            feed_settings_screen._show_message("Test", severity="info")
+
+        assert feed_settings_screen.status_message == "Test"
+        assert feed_settings_screen.status_severity == "info"
+
+    def test_show_message_all_severities(self, feed_settings_screen):
+        """Test show_message with all severity levels."""
+        severities = ["info", "success", "error", "warning"]
+
+        for severity in severities:
+            with patch.object(feed_settings_screen, "query_one"):
+                feed_settings_screen._show_message("Test", severity=severity)
+
+            assert feed_settings_screen.status_severity == severity
+
+
+class TestIntegration:
+    """Integration tests for complete workflows."""
+
+    @pytest.mark.asyncio
+    async def test_complete_edit_workflow(self, feed_settings_screen):
+        """Test complete workflow: change -> dirty -> save."""
+        with patch.object(feed_settings_screen, "query_one"):
+            # Mark field as changed
+            feed_settings_screen._on_field_changed("title", "Updated")
+            assert feed_settings_screen.is_dirty is True
+
+            # Prepare for save
+            feed_settings_screen._collect_field_values = MagicMock(return_value={})
+
+            # Save
+            await feed_settings_screen.action_save_changes()
+
+            # Verify clean
+            assert feed_settings_screen.is_dirty is False
