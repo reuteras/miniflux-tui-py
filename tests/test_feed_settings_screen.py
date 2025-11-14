@@ -3,7 +3,7 @@
 
 from __future__ import annotations
 
-from unittest.mock import AsyncMock, MagicMock, patch
+from unittest.mock import AsyncMock, MagicMock, PropertyMock, patch
 
 import pytest
 
@@ -851,3 +851,233 @@ class TestFeedInformationIntegration:
             # Verify clean after save
             assert feed_settings_screen.is_dirty is False
             assert feed_settings_screen.dirty_fields == {}
+
+
+class TestDeleteFeedFunctionality:
+    """Test delete feed functionality and error handling."""
+
+    @pytest.fixture
+    def feed_settings_with_app(self):
+        """Create feed settings screen with mock app."""
+        feed = Feed(
+            id=1,
+            title="Test Feed",
+            feed_url="https://example.com/feed",
+            site_url="https://example.com",
+            category_id=1,
+            disabled=False,
+            checked_at=None,
+            parsing_error_count=0,
+            parsing_error_message="",
+        )
+
+        return FeedSettingsScreen(feed_id=1, feed=feed, client=AsyncMock())
+
+    @pytest.mark.asyncio
+    async def test_delete_feed_requires_confirmation(self, feed_settings_with_app):
+        """Test that delete feed requires two button presses (confirmation)."""
+        screen = feed_settings_with_app
+        mock_app = MagicMock()
+        mock_app.client = AsyncMock()
+
+        with patch.object(type(screen), "app", new_callable=PropertyMock) as mock_app_prop, patch.object(screen, "query_one"):
+            mock_app_prop.return_value = mock_app
+            # First press - should show confirmation message, not delete
+            await screen.action_delete_feed()
+
+            # Verify confirmation message shown
+            assert screen._delete_confirmed is True
+            assert "confirm" in screen.status_message.lower()
+            assert "cannot be undone" in screen.status_message.lower()
+            assert screen.status_severity == "error"
+
+            # Verify client.delete_feed was NOT called yet
+            mock_app.client.delete_feed.assert_not_called()
+            mock_app.pop_screen.assert_not_called()
+
+    @pytest.mark.asyncio
+    async def test_delete_feed_successful_delete(self, feed_settings_with_app):
+        """Test successful feed deletion on second confirmation press."""
+        screen = feed_settings_with_app
+        mock_app = MagicMock()
+        mock_app.client = AsyncMock()
+        mock_app.client.delete_feed = AsyncMock()
+
+        with patch.object(type(screen), "app", new_callable=PropertyMock) as mock_app_prop, patch.object(screen, "query_one"):
+            mock_app_prop.return_value = mock_app
+            # First press - confirmation message
+            await screen.action_delete_feed()
+            assert screen._delete_confirmed is True
+
+            # Second press - actual deletion
+            await screen.action_delete_feed()
+
+            # Verify API was called
+            mock_app.client.delete_feed.assert_called_once_with(1)
+
+            # Verify success message
+            assert "deleted successfully" in screen.status_message.lower()
+            assert screen.status_severity == "success"
+
+            # Verify screen closed
+            mock_app.pop_screen.assert_called_once()
+
+    @pytest.mark.asyncio
+    async def test_delete_feed_no_client(self, feed_settings_with_app):
+        """Test error when API client is not available."""
+        screen = feed_settings_with_app
+        screen._delete_confirmed = True  # Skip confirmation
+        mock_app = MagicMock()
+        mock_app.client = None
+
+        with patch.object(type(screen), "app", new_callable=PropertyMock) as mock_app_prop, patch.object(screen, "query_one"):
+            mock_app_prop.return_value = mock_app
+            await screen.action_delete_feed()
+
+            # Verify error message
+            assert "API client not available" in screen.status_message
+            assert screen.status_severity == "error"
+
+            # Verify screen not closed
+            mock_app.pop_screen.assert_not_called()
+
+    @pytest.mark.asyncio
+    async def test_delete_feed_timeout_error(self, feed_settings_with_app):
+        """Test timeout error handling during deletion."""
+        screen = feed_settings_with_app
+        screen._delete_confirmed = True  # Skip confirmation
+        mock_app = MagicMock()
+        mock_app.client = AsyncMock()
+        mock_app.client.delete_feed = AsyncMock(side_effect=TimeoutError())
+
+        with patch.object(type(screen), "app", new_callable=PropertyMock) as mock_app_prop, patch.object(screen, "query_one"):
+            mock_app_prop.return_value = mock_app
+            await screen.action_delete_feed()
+
+            # Verify error message
+            assert "timeout" in screen.status_message.lower()
+            assert screen.status_severity == "error"
+
+            # Verify confirmation flag reset for retry
+            assert screen._delete_confirmed is False
+
+            # Verify screen not closed
+            mock_app.pop_screen.assert_not_called()
+
+    @pytest.mark.asyncio
+    async def test_delete_feed_connection_error(self, feed_settings_with_app):
+        """Test connection error handling during deletion."""
+        screen = feed_settings_with_app
+        screen._delete_confirmed = True  # Skip confirmation
+        mock_app = MagicMock()
+        mock_app.client = AsyncMock()
+        mock_app.client.delete_feed = AsyncMock(side_effect=ConnectionError())
+
+        with patch.object(type(screen), "app", new_callable=PropertyMock) as mock_app_prop, patch.object(screen, "query_one"):
+            mock_app_prop.return_value = mock_app
+            await screen.action_delete_feed()
+
+            # Verify error message
+            assert "connection failed" in screen.status_message.lower()
+            assert screen.status_severity == "error"
+
+            # Verify confirmation flag reset for retry
+            assert screen._delete_confirmed is False
+
+            # Verify screen not closed
+            mock_app.pop_screen.assert_not_called()
+
+    @pytest.mark.asyncio
+    async def test_delete_feed_generic_error(self, feed_settings_with_app):
+        """Test generic exception handling during deletion."""
+        screen = feed_settings_with_app
+        screen._delete_confirmed = True  # Skip confirmation
+        mock_app = MagicMock()
+        mock_app.client = AsyncMock()
+        mock_app.client.delete_feed = AsyncMock(side_effect=ValueError("Invalid feed"))
+
+        with patch.object(type(screen), "app", new_callable=PropertyMock) as mock_app_prop, patch.object(screen, "query_one"):
+            mock_app_prop.return_value = mock_app
+            await screen.action_delete_feed()
+
+            # Verify error message
+            assert "Error deleting feed" in screen.status_message
+            assert "Invalid feed" in screen.status_message
+            assert screen.status_severity == "error"
+
+            # Verify confirmation flag reset for retry
+            assert screen._delete_confirmed is False
+
+            # Verify screen not closed
+            mock_app.pop_screen.assert_not_called()
+
+    @pytest.mark.asyncio
+    async def test_delete_confirmation_reset_on_error(self, feed_settings_with_app):
+        """Test that confirmation flag is reset after error for safe retry."""
+        screen = feed_settings_with_app
+        mock_app = MagicMock()
+        mock_app.client = AsyncMock()
+        delete_feed_mock = AsyncMock(side_effect=TimeoutError())
+        mock_app.client.delete_feed = delete_feed_mock
+
+        with patch.object(type(screen), "app", new_callable=PropertyMock) as mock_app_prop, patch.object(screen, "query_one"):
+            mock_app_prop.return_value = mock_app
+            screen._delete_confirmed = True
+
+            # First attempt fails
+            await screen.action_delete_feed()
+            assert screen._delete_confirmed is False
+            assert delete_feed_mock.call_count == 1
+
+            # Reset for retry
+            screen._delete_confirmed = True
+            delete_feed_mock.side_effect = None  # Clear side_effect for success
+            delete_feed_mock.reset_mock()
+
+            # Second attempt should succeed
+            await screen.action_delete_feed()
+            assert delete_feed_mock.call_count == 1
+            mock_app.pop_screen.assert_called_once()
+
+
+class TestDangerZoneIntegration:
+    """Integration tests for Danger Zone section."""
+
+    @pytest.mark.asyncio
+    async def test_delete_feed_complete_workflow(self):
+        """Test complete delete feed workflow from confirmation to success."""
+        mock_app = MagicMock()
+        mock_app.pop_screen = MagicMock()
+        mock_app.client = AsyncMock()
+        mock_app.client.delete_feed = AsyncMock()
+
+        feed = Feed(
+            id=42,
+            title="Complex Feed Title",
+            feed_url="https://example.com/feed",
+            site_url="https://example.com",
+            category_id=5,
+            disabled=False,
+            checked_at=None,
+            parsing_error_count=0,
+            parsing_error_message="",
+        )
+
+        screen = FeedSettingsScreen(feed_id=42, feed=feed, client=AsyncMock())
+
+        with patch.object(type(screen), "app", new_callable=PropertyMock) as mock_app_prop, patch.object(screen, "query_one"):
+            mock_app_prop.return_value = mock_app
+            # Step 1: First delete press - confirmation
+            await screen.action_delete_feed()
+            assert screen._delete_confirmed is True
+            assert "confirm" in screen.status_message.lower()
+            assert screen.status_severity == "error"
+            mock_app.pop_screen.assert_not_called()
+
+            # Step 2: Second delete press - actual deletion
+            await screen.action_delete_feed()
+            assert mock_app.client.delete_feed.call_count == 1
+            assert mock_app.client.delete_feed.call_args[0][0] == 42
+            assert "deleted successfully" in screen.status_message.lower()
+            assert screen.status_severity == "success"
+            mock_app.pop_screen.assert_called_once()

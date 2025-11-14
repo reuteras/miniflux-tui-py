@@ -354,7 +354,18 @@ class FeedSettingsScreen(Screen):
                     classes="field-value",
                 )
 
-            yield Static("Danger Zone - TBD", classes="section")
+            # Danger Zone Section
+            yield Static("Danger Zone", classes="section-title")
+            with Static(classes="section"):
+                yield Static(
+                    "Delete this feed permanently. This action cannot be undone.",
+                    classes="field-label",
+                )
+                yield Button(
+                    "🗑️ Delete Feed",
+                    id="delete-feed-button",
+                    classes="danger-button",
+                )
 
         # Status message area
         yield Static(self.status_message, id="status-message")
@@ -479,6 +490,48 @@ class FeedSettingsScreen(Screen):
         To be implemented when helpers are added.
         """
         self._show_message("Helper not yet available", severity="info")
+
+    async def action_delete_feed(self) -> None:
+        """Delete the feed with confirmation.
+
+        Shows a confirmation message before deleting.
+        Requires pressing the button twice for safety.
+        """
+        # Check if this is a confirmation press
+        if not hasattr(self, "_delete_confirmed"):
+            self._delete_confirmed = False
+
+        if not self._delete_confirmed:
+            # First press - show confirmation
+            self._show_message(
+                "Press Delete Feed again to confirm. This action cannot be undone.",
+                severity="error",
+            )
+            self._delete_confirmed = True
+            return
+
+        # Second press - proceed with deletion
+        if not hasattr(self.app, "client") or not self.app.client:  # type: ignore[attr-defined]
+            self._show_message("Error: API client not available", severity="error")
+            return
+
+        try:
+            await self.app.client.delete_feed(self.feed_id)  # type: ignore[attr-defined]
+            self._show_message(
+                f"Feed '{self.feed.title}' deleted successfully",
+                severity="success",
+            )
+            # Close the screen after successful deletion
+            self.app.pop_screen()
+        except TimeoutError:
+            self._show_message("Request timeout while deleting feed", severity="error")
+            self._delete_confirmed = False
+        except ConnectionError:
+            self._show_message("Connection failed while deleting feed", severity="error")
+            self._delete_confirmed = False
+        except Exception as e:
+            self._show_message(f"Error deleting feed: {e}", severity="error")
+            self._delete_confirmed = False
 
     def _on_field_changed(self, widget_id: str, new_value: Any) -> None:
         """Mark a field as dirty when its value changes.
