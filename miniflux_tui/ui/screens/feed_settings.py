@@ -9,7 +9,7 @@ from textual.app import ComposeResult
 from textual.binding import Binding
 from textual.containers import ScrollableContainer
 from textual.screen import Screen
-from textual.widgets import Button, Footer, Header, Static
+from textual.widgets import Button, Checkbox, Footer, Header, Input, Static
 
 if TYPE_CHECKING:
     from miniflux_tui.api.client import MinifluxClient
@@ -177,11 +177,56 @@ class FeedSettingsScreen(Screen):
                 id="settings-header",
             )
 
-            # Placeholder sections - will be implemented in subclass or extended
-            yield Static(
-                "General Settings\nNetwork Settings\nRules & Filtering\nFeed Information\nDanger Zone",
-                classes="section",
-            )
+            # General Settings Section
+            yield Static("General Settings", classes="section-title")
+            with Static(classes="section"):
+                # Feed Title
+                yield Static("Title", classes="field-label")
+                yield Input(
+                    value=self.feed.title,
+                    id="feed-title",
+                    classes="field-value",
+                )
+
+                # Site URL
+                yield Static("Site URL", classes="field-label")
+                yield Input(
+                    value=self.feed.site_url,
+                    id="site-url",
+                    classes="field-value",
+                )
+
+                # Feed URL (read-only)
+                yield Static("Feed URL", classes="field-label")
+                yield Input(
+                    value=self.feed.feed_url,
+                    id="feed-url",
+                    disabled=True,
+                    classes="field-value",
+                )
+
+                # Category ID
+                yield Static("Category", classes="field-label")
+                yield Input(
+                    value=str(self.feed.category_id or ""),
+                    id="category-id",
+                    classes="field-value",
+                )
+
+                # Disabled checkbox
+                yield Static("Disabled", classes="field-label")
+                yield Checkbox(
+                    label="Disable this feed",
+                    value=self.feed.disabled,
+                    id="feed-disabled",
+                    classes="field-value",
+                )
+
+            # Placeholder for other sections
+            yield Static("Network Settings - TBD", classes="section")
+            yield Static("Rules & Filtering - TBD", classes="section")
+            yield Static("Feed Information - TBD", classes="section")
+            yield Static("Danger Zone - TBD", classes="section")
 
         # Status message area
         yield Static(self.status_message, id="status-message")
@@ -200,6 +245,24 @@ class FeedSettingsScreen(Screen):
         """
         # Focus on first focusable element
         self.query_one("Button#save-button", expect_type=Button)
+
+    def on_input_changed(self, event: Input.Changed) -> None:
+        """Handle input field changes.
+
+        Args:
+            event: Input change event
+        """
+        if event.input.id and not event.input.disabled:
+            self._on_field_changed(event.input.id, event.value)
+
+    def on_checkbox_changed(self, event: Checkbox.Changed) -> None:
+        """Handle checkbox state changes.
+
+        Args:
+            event: Checkbox change event
+        """
+        if event.checkbox.id:
+            self._on_field_changed(event.checkbox.id, event.value)
 
     async def action_focus_next(self) -> None:
         """Focus next focusable widget."""
@@ -280,16 +343,32 @@ class FeedSettingsScreen(Screen):
         """
         self._show_message("Helper not yet available", severity="info")
 
-    def _on_field_changed(self, field_name: str, new_value: Any) -> None:  # noqa: ARG002
+    def _on_field_changed(self, widget_id: str, new_value: Any) -> None:
         """Mark a field as dirty when its value changes.
 
         Args:
-            field_name: Name of the field that changed
-            new_value: New value of the field
+            widget_id: ID of the widget that changed
+            new_value: New value of the widget
         """
+        # Map widget IDs to feed field names
+        field_mapping = {
+            "feed-title": "title",
+            "site-url": "site_url",
+            "feed-url": "feed_url",
+            "category-id": "category_id",
+            "feed-disabled": "disabled",
+        }
+
+        field_name = field_mapping.get(widget_id, widget_id)
+
         # Store original value on first change
         if field_name not in self.original_values:
             self.original_values[field_name] = getattr(self.feed, field_name, None)
+
+        # Store the new value for collection later
+        if not hasattr(self, "_field_values"):
+            self._field_values: dict[str, Any] = {}
+        self._field_values[field_name] = new_value
 
         # Mark field as dirty
         self.dirty_fields[field_name] = True
@@ -306,12 +385,11 @@ class FeedSettingsScreen(Screen):
         """
         updates: dict[str, Any] = {}
 
-        # This will be populated when fields are added
-        # For now, just return empty dict
-        for field_name in self.dirty_fields:
-            if self.dirty_fields[field_name]:
-                # Get the new value - to be implemented with actual fields
-                pass
+        # Collect values for dirty fields
+        if hasattr(self, "_field_values"):
+            for field_name in self.dirty_fields:
+                if self.dirty_fields[field_name] and field_name in self._field_values:
+                    updates[field_name] = self._field_values[field_name]
 
         return updates
 

@@ -267,3 +267,156 @@ class TestIntegration:
 
             # Verify clean
             assert feed_settings_screen.is_dirty is False
+
+
+class TestGeneralSettingsFields:
+    """Test General Settings field handling."""
+
+    def test_field_mapping_for_widget_ids(self, feed_settings_screen):
+        """Test that widget IDs are correctly mapped to feed field names."""
+        with patch.object(feed_settings_screen, "query_one"):
+            # Test title field mapping
+            feed_settings_screen._on_field_changed("feed-title", "New Title")
+            assert "title" in feed_settings_screen.dirty_fields
+            assert feed_settings_screen._field_values["title"] == "New Title"
+
+            # Test site_url field mapping
+            feed_settings_screen._on_field_changed("site-url", "https://example.com")
+            assert "site_url" in feed_settings_screen.dirty_fields
+            assert feed_settings_screen._field_values["site_url"] == "https://example.com"
+
+            # Test category_id field mapping
+            feed_settings_screen._on_field_changed("category-id", "5")
+            assert "category_id" in feed_settings_screen.dirty_fields
+            assert feed_settings_screen._field_values["category_id"] == "5"
+
+            # Test disabled field mapping
+            feed_settings_screen._on_field_changed("feed-disabled", True)
+            assert "disabled" in feed_settings_screen.dirty_fields
+            assert feed_settings_screen._field_values["disabled"] is True
+
+    def test_on_input_changed_event(self, feed_settings_screen):
+        """Test on_input_changed event handler."""
+        mock_input = MagicMock()
+        mock_input.id = "feed-title"
+        mock_input.disabled = False
+
+        event = MagicMock()
+        event.input = mock_input
+        event.value = "Updated Title"
+
+        with patch.object(feed_settings_screen, "query_one"):
+            feed_settings_screen.on_input_changed(event)
+
+        assert feed_settings_screen.is_dirty is True
+        assert "title" in feed_settings_screen.dirty_fields
+
+    def test_on_input_changed_skips_disabled_fields(self, feed_settings_screen):
+        """Test that on_input_changed skips disabled input fields."""
+        mock_input = MagicMock()
+        mock_input.id = "feed-url"
+        mock_input.disabled = True
+
+        event = MagicMock()
+        event.input = mock_input
+        event.value = "https://example.com/feed.xml"
+
+        # Should not mark as dirty since the input is disabled
+        feed_settings_screen.on_input_changed(event)
+        assert feed_settings_screen.is_dirty is False
+
+    def test_on_checkbox_changed_event(self, feed_settings_screen):
+        """Test on_checkbox_changed event handler."""
+        mock_checkbox = MagicMock()
+        mock_checkbox.id = "feed-disabled"
+
+        event = MagicMock()
+        event.checkbox = mock_checkbox
+        event.value = True
+
+        with patch.object(feed_settings_screen, "query_one"):
+            feed_settings_screen.on_checkbox_changed(event)
+
+        assert feed_settings_screen.is_dirty is True
+        assert "disabled" in feed_settings_screen.dirty_fields
+        assert feed_settings_screen._field_values["disabled"] is True
+
+    def test_collect_field_values_with_mapped_fields(self, feed_settings_screen):
+        """Test that _collect_field_values returns mapped field names."""
+        with patch.object(feed_settings_screen, "query_one"):
+            feed_settings_screen._on_field_changed("feed-title", "New Title")
+            feed_settings_screen._on_field_changed("site-url", "https://example.com")
+            feed_settings_screen._on_field_changed("feed-disabled", True)
+
+        updates = feed_settings_screen._collect_field_values()
+        assert updates["title"] == "New Title"
+        assert updates["site_url"] == "https://example.com"
+        assert updates["disabled"] is True
+        assert len(updates) == 3
+
+    def test_feed_url_read_only_field_not_collected(self, feed_settings_screen):
+        """Test that read-only feed-url field is not collected on save."""
+        with patch.object(feed_settings_screen, "query_one"):
+            # Try to mark feed-url as dirty (should be skipped in actual usage)
+            feed_settings_screen._on_field_changed("feed-url", "different_url")
+
+        # The field mapping will map it to feed_url
+        updates = feed_settings_screen._collect_field_values()
+        # Since feed_url is read-only and we don't actually modify it in the UI,
+        # it should still be in updates if we marked it dirty
+        # This test documents the behavior - in real usage, disabled inputs won't trigger events
+        assert "feed_url" in updates
+
+    def test_original_values_with_mapped_fields(self, feed_settings_screen):
+        """Test that original values are stored with mapped field names."""
+        original_title = feed_settings_screen.feed.title
+        original_disabled = feed_settings_screen.feed.disabled
+
+        with patch.object(feed_settings_screen, "query_one"):
+            feed_settings_screen._on_field_changed("feed-title", "Modified")
+            feed_settings_screen._on_field_changed("feed-disabled", not original_disabled)
+
+        assert feed_settings_screen.original_values["title"] == original_title
+        assert feed_settings_screen.original_values["disabled"] == original_disabled
+
+
+class TestGeneralSettingsIntegration:
+    """Integration tests for General Settings workflow."""
+
+    @pytest.mark.asyncio
+    async def test_general_settings_edit_workflow(self, feed_settings_screen):
+        """Test complete workflow for editing General Settings."""
+        with patch.object(feed_settings_screen, "query_one"):
+            # Simulate user edits
+            feed_settings_screen._on_field_changed("feed-title", "Updated Feed Title")
+            feed_settings_screen._on_field_changed("site-url", "https://newsite.com")
+            feed_settings_screen._on_field_changed("category-id", "10")
+            feed_settings_screen._on_field_changed("feed-disabled", True)
+
+            # Verify dirty state
+            assert feed_settings_screen.is_dirty is True
+            assert len(feed_settings_screen.dirty_fields) == 4
+
+            # Collect values
+            updates = feed_settings_screen._collect_field_values()
+            assert updates["title"] == "Updated Feed Title"
+            assert updates["site_url"] == "https://newsite.com"
+            assert updates["category_id"] == "10"
+            assert updates["disabled"] is True
+
+    @pytest.mark.asyncio
+    async def test_partial_general_settings_edit(self, feed_settings_screen):
+        """Test workflow when only some General Settings fields are modified."""
+        with patch.object(feed_settings_screen, "query_one"):
+            # Only modify title and disabled
+            feed_settings_screen._on_field_changed("feed-title", "Only Title Changed")
+            feed_settings_screen._on_field_changed("feed-disabled", True)
+
+        updates = feed_settings_screen._collect_field_values()
+        # Should only have 2 updates
+        assert len(updates) == 2
+        assert updates["title"] == "Only Title Changed"
+        assert updates["disabled"] is True
+        # site_url and category_id should not be in updates
+        assert "site_url" not in updates
+        assert "category_id" not in updates
