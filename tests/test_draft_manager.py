@@ -4,6 +4,7 @@
 from __future__ import annotations
 
 import json
+import time
 from datetime import UTC, datetime, timedelta
 from unittest.mock import patch
 
@@ -223,21 +224,11 @@ class TestDraftManagerQueries:
 
     def test_list_drafts_sorted_by_timestamp(self, draft_manager):
         """Test that drafts are sorted by timestamp (newest first)."""
-        # Create drafts with specific timestamps
-        old_draft = Draft(
-            feed_id=1,
-            timestamp=datetime.now(tz=UTC) - timedelta(hours=2),
-            field_values={"old": True},
-        )
-        new_draft = Draft(
-            feed_id=2,
-            timestamp=datetime.now(tz=UTC),
-            field_values={"new": True},
-        )
-
-        # Save them in reverse order
-        draft_manager.save_draft(1, old_draft.field_values)
-        draft_manager.save_draft(2, new_draft.field_values)
+        # Save drafts with a delay between them to ensure different timestamps
+        # (save_draft creates new Draft with current timestamp)
+        draft_manager.save_draft(1, {"old": True})
+        time.sleep(0.01)  # 10ms delay to ensure timestamp difference
+        draft_manager.save_draft(2, {"new": True})
 
         drafts = draft_manager.list_drafts()
         assert drafts[0].feed_id == 2  # Newest first
