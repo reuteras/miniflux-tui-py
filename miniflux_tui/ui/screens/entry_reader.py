@@ -37,7 +37,7 @@ class EntryReaderScreen(Screen):
         Binding("e", "save_entry", "Save Entry"),
         Binding("o", "open_browser", "Open in Browser"),
         Binding("f", "fetch_original", "Fetch Original"),
-        Binding("X", "scraping_helper", "Scraping Helper"),
+        Binding("X", "feed_settings", "Feed Settings"),
         Binding("tab", "next_link", "Next Link", show=True),
         Binding("shift+tab", "previous_link", "Previous Link", show=True),
         Binding("n", "next_link", "Next Link", show=False),
@@ -602,6 +602,23 @@ class EntryReaderScreen(Screen):
             on_save_callback=save_scraper_rule,
         )
         # Type ignore because protocol only expects string, but actual app accepts Screen
+        self.app.push_screen(screen)  # type: ignore[arg-type]
+
+    async def action_feed_settings(self) -> None:
+        """Open feed settings screen for current entry's feed."""
+        # Import here to avoid circular dependency
+        from miniflux_tui.ui.screens.feed_settings import FeedSettingsScreen  # noqa: PLC0415
+
+        if not self.app.client:
+            self.notify("API client not available", severity="error")
+            return
+
+        # Push feed settings screen
+        screen = FeedSettingsScreen(
+            feed_id=self.entry.feed.id,
+            feed=self.entry.feed,
+            client=self.app.client,  # type: ignore[arg-type]
+        )
         self.app.push_screen(screen)  # type: ignore[arg-type]
 
     def action_show_help(self):
