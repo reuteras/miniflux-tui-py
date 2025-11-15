@@ -148,11 +148,12 @@ class TestApiCallContextManager:
 
         # Test that generic Exception is caught and handled
         error_msg = "Some error"
-        with api_call(mock_screen, "test operation") as _:
-            raise Exception(error_msg)
-
-        # Verify error was logged (generic exceptions are only logged, not notified)
-        mock_screen.log.assert_called()
+        try:
+            with api_call(mock_screen, "test operation") as _:
+                raise Exception(error_msg)
+        finally:
+            # Verify error was logged (generic exceptions are only logged, not notified)
+            mock_screen.log.assert_called()
 
     @pytest.mark.asyncio
     async def test_api_call_no_client_available(self):
