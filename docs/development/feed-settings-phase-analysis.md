@@ -255,7 +255,7 @@ Show what changed between current state and saved version
 Current Value  →  New Value      Status
 ─────────────────────────────────────
 Test Feed      →  Updated Feed   [modified]
-               →  (unchanged)    [not changed]
+                →  (unchanged)    [not changed]
 No Auth        →  user123        [modified]
 ```
 

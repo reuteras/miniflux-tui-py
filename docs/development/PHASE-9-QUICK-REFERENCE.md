@@ -10,16 +10,16 @@
 
 ## Phase 9 At A Glance
 
-| Aspect | Details |
-|--------|---------|
-| **Goal** | Auto-save drafts, recover from crashes |
-| **Timeline** | 85-128 hours (2-3 weeks) |
-| **Components** | 3 (Draft persistence, Recovery, Diff viewer) |
-| **New Tests** | 170+ tests (draft, recovery, diff) |
-| **New Files** | 3 (state_cache.py, recovery.py, change_viewer.py) |
-| **Modified Files** | 2 (feed_settings.py, app.py) |
-| **Risk Level** | Low (orthogonal to existing code) |
-| **Breaking Changes** | None |
+|  Aspect                |  Details                                            |
+| ---------------------- | --------------------------------------------------- |
+|  **Goal**              |  Auto-save drafts, recover from crashes             |
+|  **Timeline**          |  85-128 hours (2-3 weeks)                           |
+|  **Components**        |  3 (Draft persistence, Recovery, Diff viewer)       |
+|  **New Tests**         |  170+ tests (draft, recovery, diff)                 |
+|  **New Files**         |  3 (state_cache.py, recovery.py, change_viewer.py)  |
+|  **Modified Files**    |  2 (feed_settings.py, app.py)                       |
+|  **Risk Level**        |  Low (orthogonal to existing code)                  |
+|  **Breaking Changes**  |  None                                               |
 
 ## The 3 Components of Phase 9
 
@@ -109,20 +109,20 @@ Or continue editing with visual feedback
 ## File Changes Summary
 
 ### New Files
-| File | Purpose | Size (est.) |
-|------|---------|------------|
-| `miniflux_tui/state_cache.py` | Draft state persistence | 200-300 lines |
-| `miniflux_tui/recovery.py` | Recovery system | 200-250 lines |
-| `miniflux_tui/ui/screens/change_viewer.py` | Diff viewer | 250-350 lines |
-| `tests/test_state_cache.py` | State cache tests | 400-500 lines |
-| `tests/test_recovery.py` | Recovery tests | 300-400 lines |
-| `tests/test_change_viewer.py` | Diff viewer tests | 300-400 lines |
+|  File                                        |  Purpose                  |  Size (est.)    |
+| -------------------------------------------- | ------------------------- | --------------- |
+|  `miniflux_tui/state_cache.py`               |  Draft state persistence  |  200-300 lines  |
+|  `miniflux_tui/recovery.py`                  |  Recovery system          |  200-250 lines  |
+|  `miniflux_tui/ui/screens/change_viewer.py`  |  Diff viewer              |  250-350 lines  |
+|  `tests/test_state_cache.py`                 |  State cache tests        |  400-500 lines  |
+|  `tests/test_recovery.py`                    |  Recovery tests           |  300-400 lines  |
+|  `tests/test_change_viewer.py`               |  Diff viewer tests        |  300-400 lines  |
 
 ### Modified Files
-| File | Changes | Impact |
-|------|---------|--------|
-| `miniflux_tui/ui/screens/feed_settings.py` | Add auto-save, draft loading | +150-200 lines |
-| `miniflux_tui/ui/app.py` | Add recovery check on startup | +100-150 lines |
+|  File                                        |  Changes                        |  Impact          |
+| -------------------------------------------- | ------------------------------- | ---------------- |
+|  `miniflux_tui/ui/screens/feed_settings.py`  |  Add auto-save, draft loading   |  +150-200 lines  |
+|  `miniflux_tui/ui/app.py`                    |  Add recovery check on startup  |  +100-150 lines  |
 
 ## Key Implementation Details
 
@@ -243,13 +243,13 @@ class RecoveryDialog(Screen):
 
 ## Common Gotchas & Solutions
 
-| Gotcha | Solution |
-|--------|----------|
-| Auto-save on every keystroke = slow | Use 3-second debounce |
-| Drafts pile up over time | Auto-cleanup (>7 days) |
-| Recovery on every startup = slow | Cache recovery check results |
-| Concurrent save+load = corruption | Use atomic writes (temp file) |
-| User ignores recovery dialog = noise | Show only for recent crashes (<1h old) |
+|  Gotcha                                |  Solution                                |
+| -------------------------------------- | ---------------------------------------- |
+|  Auto-save on every keystroke = slow   |  Use 3-second debounce                   |
+|  Drafts pile up over time              |  Auto-cleanup (>7 days)                  |
+|  Recovery on every startup = slow      |  Cache recovery check results            |
+|  Concurrent save+load = corruption     |  Use atomic writes (temp file)           |
+|  User ignores recovery dialog = noise  |  Show only for recent crashes (<1h old)  |
 
 ## Alternative Approaches If Phase 9 Too Large
 

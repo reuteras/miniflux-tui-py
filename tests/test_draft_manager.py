@@ -302,15 +302,13 @@ class TestDraftManagerErrorHandling:
 
     def test_save_draft_io_error(self, draft_manager):
         """Test handling IO error when saving draft."""
-        # Make drafts directory read-only
-        draft_manager.drafts_dir.chmod(0o444)
+        # Mock the drafts_dir to raise OSError when writing (cross-platform approach)
+        with patch.object(draft_manager, "drafts_dir") as mock_drafts_dir:
+            mock_file = mock_drafts_dir / "draft_1.json"
+            mock_file.write_text.side_effect = OSError("Permission denied")
 
-        try:
             with pytest.raises(OSError, match="Failed to save draft"):
                 draft_manager.save_draft(1, {"field": "value"})
-        finally:
-            # Restore permissions for cleanup
-            draft_manager.drafts_dir.chmod(0o755)
 
     def test_load_invalid_feed_id(self, draft_manager):
         """Test loading with invalid feed ID."""
