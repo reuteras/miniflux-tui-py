@@ -9,7 +9,6 @@ from contextlib import suppress
 
 from textual.css.query import NoMatches
 from textual.dom import NoScreen
-from textual.events import Mount
 from textual.widgets._header import Header, HeaderTitle
 
 
@@ -37,13 +36,28 @@ class SafeHeader(Header):
         with suppress(NoMatches, NoScreen):
             self.query_one(HeaderTitle).update(self.format_title())
 
-    def _on_mount(self, _: Mount) -> None:
+    def _on_mount(self, _) -> None:
         """Called when the Header is mounted, with improved exception handling.
 
-        This override defers title setting to the next event loop iteration,
-        allowing HeaderTitle to be fully mounted before we try to query it.
-        This handles platform-specific timing issues on Windows Python 3.11+.
+        This override catches NoMatches in addition to NoScreen, fixing
+        Windows-specific timing issues where HeaderTitle isn't ready yet.
         """
-        # Defer title setting to next event loop iteration
-        # This ensures HeaderTitle is mounted and ready before we query it
-        self.call_later(self.set_title)
+
+        def set_title_safe() -> None:
+            """Set the title with comprehensive exception handling."""
+            # Suppress both NoMatches (Windows timing) and NoScreen (context issues)
+            # This handles cases where HeaderTitle hasn't been created yet
+            with suppress(NoMatches, NoScreen):
+                self.query_one(HeaderTitle).update(self.format_title())
+
+        # Set up watchers that call set_title_safe when title/sub_title changes
+        # Using a sync callback ensures it runs immediately when properties change
+        self.watch(self.app, "title", set_title_safe)
+        self.watch(self.app, "sub_title", set_title_safe)
+        self.watch(self.screen, "title", set_title_safe)
+        self.watch(self.screen, "sub_title", set_title_safe)
+
+        # Also try to set title on mount to ensure it's displayed
+        # This handles the initial title display
+        with suppress(NoMatches, NoScreen):
+            self.query_one(HeaderTitle).update(self.format_title())
