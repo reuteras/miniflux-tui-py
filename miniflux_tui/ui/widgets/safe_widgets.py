@@ -40,26 +40,15 @@ class SafeHeader(Header):
     def _on_mount(self, _: Mount) -> None:
         """Called when the Header is mounted, with improved exception handling.
 
-        This override calls the parent's _on_mount but wraps it in exception
-        handling to catch NoMatches errors that occur on Windows when HeaderTitle
-        isn't ready yet due to async timing differences.
+        We do NOT call super()._on_mount() because the parent Header creates
+        async callbacks in its _on_mount that trigger NoMatches exceptions
+        before HeaderTitle is ready. This is a platform-specific timing issue
+        on Windows Python 3.12.
 
-        The parent's _on_mount creates async callbacks that may raise NoMatches
-        before the child HeaderTitle widget is fully initialized. By catching
-        these exceptions here, we allow the Header to continue functioning.
+        Instead, we simply set the title directly using our safe method that
+        suppresses NoMatches and NoScreen exceptions.
         """
-        try:
-            # Call parent's _on_mount to set up standard watchers and callbacks
-            super()._on_mount(_)
-        except NoMatches:
-            # Suppress NoMatches that happen during initialization
-            # This can occur on Windows Python 3.12 due to async timing
-            pass
-        except NoScreen:
-            # Also suppress NoScreen errors that might occur during mount
-            pass
-
-        # Ensure initial title is set using our safe implementation
-        # This will catch any remaining NoMatches/NoScreen errors
+        # Set initial title using our safe implementation
+        # This suppresses NoMatches/NoScreen errors if HeaderTitle isn't ready
         with suppress(NoMatches, NoScreen):
             self.set_title()
