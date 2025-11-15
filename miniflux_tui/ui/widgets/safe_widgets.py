@@ -48,10 +48,12 @@ class SafeHeader(Header):
         but with comprehensive exception handling.
         """
 
-        def safe_on_title_change(_: str) -> None:
-            """Callback for when title changes."""
-            # Defer to next event loop iteration to ensure widget is ready
-            self.call_later(self.set_title)
+        def set_title_safe() -> None:
+            """Set the title with comprehensive exception handling."""
+            # Suppress both NoMatches (Windows timing) and NoScreen (context issues)
+            # This handles cases where HeaderTitle hasn't been created yet
+            with suppress(NoMatches, NoScreen):
+                self.query_one(HeaderTitle).update(self.format_title())
 
         # Watch app title/subtitle changes with safe handler
         # These are reactive watchers that will call set_title_safe when properties change
