@@ -33,15 +33,21 @@ class SafeHeader(Header):
         Windows-specific timing issues where HeaderTitle isn't ready yet.
         """
 
-        async def set_title() -> None:
+        def set_title() -> None:
             """Set the title with comprehensive exception handling."""
             # Suppress both NoMatches (Windows timing) and NoScreen (context issues)
+            # This handles cases where HeaderTitle hasn't been created yet
             with suppress(NoMatches, NoScreen):
                 self.query_one(HeaderTitle).update(self.format_title())
 
         # Set up watchers that call set_title when title/sub_title changes
-        # Use call_later with async function to handle timing issues
+        # Using a sync callback ensures it runs immediately when properties change
         self.watch(self.app, "title", set_title)
         self.watch(self.app, "sub_title", set_title)
         self.watch(self.screen, "title", set_title)
         self.watch(self.screen, "sub_title", set_title)
+
+        # Also try to set title on mount to ensure it's displayed
+        # This handles the initial title display
+        with suppress(NoMatches, NoScreen):
+            self.query_one(HeaderTitle).update(self.format_title())
