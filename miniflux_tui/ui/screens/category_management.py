@@ -9,13 +9,12 @@ from textual.app import ComposeResult
 from textual.binding import Binding
 from textual.containers import Container
 from textual.screen import Screen
-from textual.widgets import Footer, Label, ListItem, ListView
+from textual.widgets import Footer, Header, Label, ListItem, ListView
 
 from miniflux_tui.api.models import Category
 from miniflux_tui.security import sanitize_error_message
 from miniflux_tui.ui.screens.confirm_dialog import ConfirmDialog
 from miniflux_tui.ui.screens.input_dialog import InputDialog
-from miniflux_tui.ui.widgets.safe_widgets import SafeHeader
 from miniflux_tui.utils import api_call
 
 
@@ -98,7 +97,7 @@ class CategoryManagementScreen(Screen):
 
     def compose(self) -> ComposeResult:
         """Create child widgets."""
-        yield SafeHeader()
+        yield Header()
         list_view = ListView(id="category-list")
         self.list_view = list_view
         with Container():

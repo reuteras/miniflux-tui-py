@@ -12,12 +12,11 @@ from textual.app import ComposeResult
 from textual.binding import Binding
 from textual.containers import VerticalScroll
 from textual.screen import Screen
-from textual.widgets import Footer, Markdown, Static
+from textual.widgets import Footer, Header, Markdown, Static
 
 from miniflux_tui.api.models import Entry
 from miniflux_tui.constants import CONTENT_SEPARATOR
 from miniflux_tui.ui.protocols import EntryReaderAppProtocol
-from miniflux_tui.ui.widgets.safe_widgets import SafeHeader
 from miniflux_tui.utils import get_star_icon
 
 
@@ -78,7 +77,7 @@ class EntryReaderScreen(Screen):
 
     def compose(self) -> ComposeResult:
         """Create child widgets."""
-        yield SafeHeader()
+        yield Header()
 
         # Entry metadata
         star_icon = get_star_icon(self.entry.starred)
