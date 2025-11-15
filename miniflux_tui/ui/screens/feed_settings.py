@@ -69,13 +69,11 @@ class FeedSettingsScreen(Screen):
 
     FeedSettingsScreen > #status-message {
         height: auto;
-        dock: bottom;
         offset-y: -1;
     }
 
     FeedSettingsScreen > #button-container {
         height: auto;
-        dock: bottom;
     }
 
     #settings-header {

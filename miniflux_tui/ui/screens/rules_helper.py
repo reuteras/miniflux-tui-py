@@ -42,6 +42,7 @@ class RulesHelperScreen(Screen):
     RulesHelperScreen {
         background: $surface;
         color: $text;
+        layout: vertical;
     }
 
     RulesHelperScreen > Header {
@@ -55,6 +56,7 @@ class RulesHelperScreen(Screen):
     #helper-container {
         height: 1fr;
         width: 100%;
+        layout: vertical;
     }
 
     #helper-header {
