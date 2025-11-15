@@ -3,8 +3,6 @@
 
 from __future__ import annotations
 
-import pytest  # noqa: F401
-
 from miniflux_tui.form_persistence_manager import FormPersistenceManager
 
 

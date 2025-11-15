@@ -157,9 +157,12 @@ class TestDraftManagerSaveLoad:
 
     def test_draft_with_empty_field_values(self, draft_manager):
         """Test saving and loading draft with no field values."""
-        _draft = draft_manager.save_draft(1, {})
+        draft = draft_manager.save_draft(1, {})
         loaded = draft_manager.load_draft(1)
 
+        # Verify the saved draft matches the loaded draft
+        assert draft is not None
+        assert draft.feed_id == loaded.feed_id
         assert loaded is not None
         assert loaded.field_values == {}
 
