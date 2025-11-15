@@ -67,13 +67,24 @@ class FeedSettingsScreen(Screen):
         overflow: auto auto;
     }
 
-    FeedSettingsScreen > #status-message {
+    FeedSettingsScreen > #bottom-section {
         height: auto;
-        offset-y: -1;
+        width: 100%;
+        layout: vertical;
     }
 
-    FeedSettingsScreen > #button-container {
+    #bottom-section > #status-message {
         height: auto;
+        width: 100%;
+        padding: 1 2;
+        border-top: solid $primary 30%;
+    }
+
+    #bottom-section > #button-container {
+        height: auto;
+        width: 100%;
+        padding: 1 2;
+        layout: horizontal;
     }
 
     #settings-header {
@@ -175,14 +186,6 @@ class FeedSettingsScreen(Screen):
         color: $text;
     }
 
-    #button-container {
-        width: 100%;
-        height: auto;
-        padding: 1 2;
-        border-top: solid $primary 30%;
-        layout: horizontal;
-    }
-
     #button-container Button {
         margin-right: 2;
         min-width: 20;
@@ -261,13 +264,15 @@ class FeedSettingsScreen(Screen):
             yield from self._compose_feed_information()
             yield from self._compose_danger_zone()
 
-        # Status message area
-        yield Static(self.status_message, id="status-message")
+        # Bottom container for status message and buttons
+        with Static(id="bottom-section"):
+            # Status message area
+            yield Static(self.status_message, id="status-message")
 
-        # Button container
-        with Static(id="button-container"):
-            yield Button("Save", id="save-button", disabled=True)
-            yield Button("Cancel", id="cancel-button")
+            # Button container
+            with Static(id="button-container"):
+                yield Button("Save", id="save-button", disabled=True)
+                yield Button("Cancel", id="cancel-button")
 
         yield Footer()
 
