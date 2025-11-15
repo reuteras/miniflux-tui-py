@@ -39,30 +39,17 @@ class SafeHeader(Header):
     def _on_mount(self, _: object) -> None:
         """Called when the Header is mounted, with improved exception handling.
 
-        This override catches NoMatches in addition to NoScreen, fixing
-        Windows-specific timing issues where HeaderTitle isn't ready yet.
+        This override completely avoids calling the parent's _on_mount, which
+        creates async callbacks that can't properly catch NoMatches exceptions.
 
-        The original Textual Header._on_mount creates reactive watchers that
-        call set_title, but those watchers execute in async context where
-        exceptions aren't properly caught. We replicate the parent behavior
-        but with comprehensive exception handling.
+        Instead, we set up our own synchronous watchers that call our safe
+        set_title implementation.
         """
+        # Watch for title changes and call our safe set_title
+        self.watch(self.app, "title", lambda _: self.set_title())
+        self.watch(self.app, "sub_title", lambda _: self.set_title())
+        self.watch(self.screen, "title", lambda _: self.set_title())
+        self.watch(self.screen, "sub_title", lambda _: self.set_title())
 
-        def set_title_safe() -> None:
-            """Set the title with comprehensive exception handling."""
-            # Suppress both NoMatches (Windows timing) and NoScreen (context issues)
-            # This handles cases where HeaderTitle hasn't been created yet
-            with suppress(NoMatches, NoScreen):
-                self.query_one(HeaderTitle).update(self.format_title())
-
-        # Watch app title/subtitle changes with safe handler
-        # These are reactive watchers that will call set_title_safe when properties change
-        self.watch(self.app, "title", lambda _: set_title_safe())
-        self.watch(self.app, "sub_title", lambda _: set_title_safe())
-
-        # Watch screen title/subtitle changes with safe handler
-        self.watch(self.screen, "title", lambda _: set_title_safe())
-        self.watch(self.screen, "sub_title", lambda _: set_title_safe())
-
-        # Set initial title
-        set_title_safe()
+        # Set initial title using our safe implementation
+        self.set_title()
