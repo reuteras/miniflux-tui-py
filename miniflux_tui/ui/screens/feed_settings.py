@@ -228,7 +228,7 @@ class FeedSettingsScreen(Screen):
         # Auto-save debounce timer
         self._auto_save_handle = None
 
-    def compose(self) -> ComposeResult:  # noqa: PLR0915
+    def compose(self) -> ComposeResult:
         """Compose the feed settings screen layout.
 
         Yields:
@@ -244,195 +244,12 @@ class FeedSettingsScreen(Screen):
             )
             yield Static("", id="unsaved-indicator", classes="field-label")
 
-            # General Settings Section
-            yield Static("General Settings", classes="section-title")
-            with Static(classes="section"):
-                # Feed Title
-                yield Static("Title", classes="field-label")
-                yield Input(
-                    value=self.feed.title,
-                    id="feed-title",
-                    classes="field-value",
-                )
-
-                # Site URL
-                yield Static("Site URL", classes="field-label")
-                yield Input(
-                    value=self.feed.site_url,
-                    id="site-url",
-                    classes="field-value",
-                )
-
-                # Feed URL (read-only)
-                yield Static("Feed URL", classes="field-label")
-                yield Input(
-                    value=self.feed.feed_url,
-                    id="feed-url",
-                    disabled=True,
-                    classes="field-value",
-                )
-
-                # Category ID
-                yield Static("Category", classes="field-label")
-                yield Input(
-                    value=str(self.feed.category_id or ""),
-                    id="category-id",
-                    classes="field-value",
-                )
-
-                # Disabled checkbox
-                yield Static("Disabled", classes="field-label")
-                yield Checkbox(
-                    label="Disable this feed",
-                    value=self.feed.disabled,
-                    id="feed-disabled",
-                    classes="field-value",
-                )
-
-            # Network Settings Section
-            yield Static("Network Settings", classes="section-title")
-            with Static(classes="section"):
-                # Username
-                yield Static("Username (optional)", classes="field-label")
-                yield Input(
-                    value="",
-                    id="auth-username",
-                    classes="field-value",
-                )
-
-                # Password
-                yield Static("Password (optional)", classes="field-label")
-                yield Input(
-                    value="",
-                    id="auth-password",
-                    password=True,
-                    classes="field-value",
-                )
-
-                # User-Agent
-                yield Static("User-Agent (optional)", classes="field-label")
-                yield Input(
-                    value="",
-                    id="user-agent",
-                    classes="field-value",
-                )
-
-                # Proxy URL
-                yield Static("Proxy URL (optional)", classes="field-label")
-                yield Input(
-                    value="",
-                    id="proxy-url",
-                    classes="field-value",
-                )
-
-                # Ignore HTTPS errors
-                yield Static("HTTPS Settings", classes="field-label")
-                yield Checkbox(
-                    label="Ignore HTTPS certificate errors",
-                    value=False,
-                    id="ignore-https-errors",
-                    classes="field-value",
-                )
-
-            # Rules & Filtering Section
-            yield Static("Rules & Filtering", classes="section-title")
-            with Static(classes="section"):
-                # Scraper Rules
-                yield Static("Scraper Rules (optional)", classes="field-label")
-                with Container(classes="textarea-container"):
-                    yield TextArea(
-                        text="",
-                        id="scraper-rules",
-                    )
-
-                # Rewrite Rules
-                yield Static("Rewrite Rules (optional)", classes="field-label")
-                with Container(classes="textarea-container"):
-                    yield TextArea(
-                        text="",
-                        id="rewrite-rules",
-                    )
-
-                # URL Rewrite Rules
-                yield Static("URL Rewrite Rules (optional)", classes="field-label")
-                with Container(classes="textarea-container"):
-                    yield TextArea(
-                        text="",
-                        id="url-rewrite-rules",
-                    )
-
-                # Blocking Rules
-                yield Static("Blocking Rules (optional)", classes="field-label")
-                with Container(classes="textarea-container"):
-                    yield TextArea(
-                        text="",
-                        id="blocking-rules",
-                    )
-
-                # Keep Rules
-                yield Static("Keep Rules (optional)", classes="field-label")
-                with Container(classes="textarea-container"):
-                    yield TextArea(
-                        text="",
-                        id="keep-rules",
-                    )
-
-            # Feed Information Section
-            yield Static("Feed Information", classes="section-title")
-            with Static(classes="section"):
-                # Last Checked
-                yield Static("Last Checked", classes="field-label")
-                yield Static(
-                    self.feed.checked_at or "Never",
-                    id="last-checked",
-                    classes="field-value",
-                )
-
-                # Parsing Error Count
-                yield Static("Parsing Errors", classes="field-label")
-                yield Static(
-                    f"{self.feed.parsing_error_count} error(s)",
-                    id="error-count",
-                    classes="field-value",
-                )
-
-                # Parsing Error Message (if present)
-                if self.feed.parsing_error_message:
-                    yield Static("Error Message", classes="field-label")
-                    yield Static(
-                        self.feed.parsing_error_message,
-                        id="error-message",
-                        classes="field-value",
-                    )
-
-                # Check Interval
-                yield Static("Check Interval (minutes, optional)", classes="field-label")
-                yield Input(
-                    value="",
-                    id="check-interval",
-                    classes="field-value",
-                )
-
-                # Feed ID (read-only for reference)
-                yield Static("Feed ID", classes="field-label")
-                yield Static(
-                    str(self.feed.id),
-                    id="feed-id",
-                    classes="field-value",
-                )
-
-            # Danger Zone Section
-            yield Static("Danger Zone", classes="section-title")
-            with Static(classes="section"):
-                yield Static(
-                    "Delete this feed permanently. This action cannot be undone.",
-                    classes="field-label",
-                )
-                yield Button(
-                    "🗑️ Delete Feed",
-                    id="delete-feed-button",
-                    classes="danger-button",
-                )
+            # Yield each section
+            yield from self._compose_general_settings()
+            yield from self._compose_network_settings()
+            yield from self._compose_rules_and_filtering()
+            yield from self._compose_feed_information()
+            yield from self._compose_danger_zone()
 
         # Status message area
         yield Static(self.status_message, id="status-message")
@@ -443,6 +260,186 @@ class FeedSettingsScreen(Screen):
             yield Button("Cancel", id="cancel-button")
 
         yield Footer()
+
+    def _compose_general_settings(self) -> ComposeResult:
+        """Compose the General Settings section."""
+        yield Static("General Settings", classes="section-title")
+        with Static(classes="section"):
+            # Feed Title
+            yield Static("Title", classes="field-label")
+            yield Input(
+                value=self.feed.title,
+                id="feed-title",
+                classes="field-value",
+            )
+
+            # Site URL
+            yield Static("Site URL", classes="field-label")
+            yield Input(
+                value=self.feed.site_url,
+                id="site-url",
+                classes="field-value",
+            )
+
+            # Feed URL (read-only)
+            yield Static("Feed URL", classes="field-label")
+            yield Input(
+                value=self.feed.feed_url,
+                id="feed-url",
+                disabled=True,
+                classes="field-value",
+            )
+
+            # Category ID
+            yield Static("Category", classes="field-label")
+            yield Input(
+                value=str(self.feed.category_id or ""),
+                id="category-id",
+                classes="field-value",
+            )
+
+            # Disabled checkbox
+            yield Static("Disabled", classes="field-label")
+            yield Checkbox(
+                label="Disable this feed",
+                value=self.feed.disabled,
+                id="feed-disabled",
+                classes="field-value",
+            )
+
+    def _compose_network_settings(self) -> ComposeResult:
+        """Compose the Network Settings section."""
+        yield Static("Network Settings", classes="section-title")
+        with Static(classes="section"):
+            # Username
+            yield Static("Username (optional)", classes="field-label")
+            yield Input(
+                value="",
+                id="auth-username",
+                classes="field-value",
+            )
+
+            # Password
+            yield Static("Password (optional)", classes="field-label")
+            yield Input(
+                value="",
+                id="auth-password",
+                password=True,
+                classes="field-value",
+            )
+
+            # User-Agent
+            yield Static("User-Agent (optional)", classes="field-label")
+            yield Input(
+                value="",
+                id="user-agent",
+                classes="field-value",
+            )
+
+            # Proxy URL
+            yield Static("Proxy URL (optional)", classes="field-label")
+            yield Input(
+                value="",
+                id="proxy-url",
+                classes="field-value",
+            )
+
+            # Ignore HTTPS errors
+            yield Static("HTTPS Settings", classes="field-label")
+            yield Checkbox(
+                label="Ignore HTTPS certificate errors",
+                value=False,
+                id="ignore-https-errors",
+                classes="field-value",
+            )
+
+    def _compose_rules_and_filtering(self) -> ComposeResult:
+        """Compose the Rules & Filtering section."""
+        yield Static("Rules & Filtering", classes="section-title")
+        with Static(classes="section"):
+            # Scraper Rules
+            yield Static("Scraper Rules (optional)", classes="field-label")
+            with Container(classes="textarea-container"):
+                yield TextArea(text="", id="scraper-rules")
+
+            # Rewrite Rules
+            yield Static("Rewrite Rules (optional)", classes="field-label")
+            with Container(classes="textarea-container"):
+                yield TextArea(text="", id="rewrite-rules")
+
+            # URL Rewrite Rules
+            yield Static("URL Rewrite Rules (optional)", classes="field-label")
+            with Container(classes="textarea-container"):
+                yield TextArea(text="", id="url-rewrite-rules")
+
+            # Blocking Rules
+            yield Static("Blocking Rules (optional)", classes="field-label")
+            with Container(classes="textarea-container"):
+                yield TextArea(text="", id="blocking-rules")
+
+            # Keep Rules
+            yield Static("Keep Rules (optional)", classes="field-label")
+            with Container(classes="textarea-container"):
+                yield TextArea(text="", id="keep-rules")
+
+    def _compose_feed_information(self) -> ComposeResult:
+        """Compose the Feed Information section."""
+        yield Static("Feed Information", classes="section-title")
+        with Static(classes="section"):
+            # Last Checked
+            yield Static("Last Checked", classes="field-label")
+            yield Static(
+                self.feed.checked_at or "Never",
+                id="last-checked",
+                classes="field-value",
+            )
+
+            # Parsing Error Count
+            yield Static("Parsing Errors", classes="field-label")
+            yield Static(
+                f"{self.feed.parsing_error_count} error(s)",
+                id="error-count",
+                classes="field-value",
+            )
+
+            # Parsing Error Message (if present)
+            if self.feed.parsing_error_message:
+                yield Static("Error Message", classes="field-label")
+                yield Static(
+                    self.feed.parsing_error_message,
+                    id="error-message",
+                    classes="field-value",
+                )
+
+            # Check Interval
+            yield Static("Check Interval (minutes, optional)", classes="field-label")
+            yield Input(
+                value="",
+                id="check-interval",
+                classes="field-value",
+            )
+
+            # Feed ID (read-only for reference)
+            yield Static("Feed ID", classes="field-label")
+            yield Static(
+                str(self.feed.id),
+                id="feed-id",
+                classes="field-value",
+            )
+
+    def _compose_danger_zone(self) -> ComposeResult:
+        """Compose the Danger Zone section."""
+        yield Static("Danger Zone", classes="section-title")
+        with Static(classes="section"):
+            yield Static(
+                "Delete this feed permanently. This action cannot be undone.",
+                classes="field-label",
+            )
+            yield Button(
+                "🗑️ Delete Feed",
+                id="delete-feed-button",
+                classes="danger-button",
+            )
 
     def on_mount(self) -> None:
         """Called when screen is mounted.
