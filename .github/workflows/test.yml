@@ -307,7 +307,6 @@ jobs:
           # Run mutmut with pytest runner and save output
           set +e
           uvx mutmut run --runner="pytest -x -q"
-          MUTMUT_EXIT=$?
           set -e
 
           # Generate results
@@ -318,12 +317,14 @@ jobs:
           fi
 
           # Show summary
-          echo "" >> "$GITHUB_STEP_SUMMARY"
-          echo "### Summary" >> "$GITHUB_STEP_SUMMARY"
-          cat mutation-results.txt >> "$GITHUB_STEP_SUMMARY" || true
-          echo "" >> "$GITHUB_STEP_SUMMARY"
-          echo "📝 Full report available in artifacts" >> "$GITHUB_STEP_SUMMARY"
-          echo "**Note:** Mutation testing requires setup.cfg configuration" >> "$GITHUB_STEP_SUMMARY"
+          {
+            echo ""
+            echo "### Summary"
+            cat mutation-results.txt || true
+            echo ""
+            echo "📝 Full report available in artifacts"
+            echo "**Note:** Mutation testing requires setup.cfg configuration"
+          } >> "$GITHUB_STEP_SUMMARY"
 
       - name: Upload mutation report
         if: always()
