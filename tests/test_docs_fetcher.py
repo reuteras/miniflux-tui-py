@@ -300,14 +300,10 @@ class TestDocsFetcherIntegration:
     async def test_all_rule_types_are_valid(self) -> None:
         """Test that all rule types can be queried without validation error."""
         for rule_type in RULE_TYPES:
-            # Verify that the rule type is valid by checking it doesn't raise ValueError
-            # All rule types in RULE_TYPES should be recognized by the fetcher
-            try:
-                # Access the rule type to ensure it's a valid string
-                _ = rule_type
-                # If we got here without exception, the rule type is valid
-            except ValueError:
-                pytest.fail(f"Rule type {rule_type} should be valid")
+            # Verify the rule type exists in the mapping
+            assert rule_type in RULE_TYPES, f"Rule type {rule_type} should be valid"
+            # Verify it has a valid anchor
+            assert RULE_TYPES[rule_type], f"Rule type {rule_type} should have a valid anchor"
 
     def test_fetcher_timeout_is_positive(self, fetcher):
         """Test that fetcher has positive timeout."""
