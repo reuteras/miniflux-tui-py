@@ -9,11 +9,12 @@ from textual.app import ComposeResult
 from textual.binding import Binding
 from textual.containers import ScrollableContainer
 from textual.screen import Screen
-from textual.widgets import Button, Checkbox, Footer, Header, Input, Static, TextArea
+from textual.widgets import Button, Checkbox, Footer, Input, Static, TextArea
 
 from miniflux_tui.docs_cache import DocsCache
 from miniflux_tui.form_persistence_manager import FormPersistenceManager
 from miniflux_tui.ui.screens.rules_helper import RulesHelperScreen
+from miniflux_tui.ui.widgets.safe_widgets import SafeHeader
 
 if TYPE_CHECKING:
     from miniflux_tui.api.client import MinifluxClient
@@ -222,7 +223,7 @@ class FeedSettingsScreen(Screen):
         Yields:
             Composed widgets for the screen
         """
-        yield Header()
+        yield SafeHeader()
 
         with ScrollableContainer():
             # Settings header with unsaved indicator
