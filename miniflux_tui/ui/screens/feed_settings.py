@@ -127,6 +127,13 @@ class FeedSettingsScreen(Screen):
         margin: 0 0 1 0;
     }
 
+    TextArea {
+        width: 100%;
+        height: 8;
+        min-height: 8;
+        margin: 0 0 1 0;
+    }
+
     #status-message {
         width: 100%;
         height: auto;
