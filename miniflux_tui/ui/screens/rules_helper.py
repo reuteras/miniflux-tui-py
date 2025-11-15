@@ -9,9 +9,10 @@ from textual.app import ComposeResult
 from textual.binding import Binding
 from textual.containers import Container, VerticalScroll
 from textual.screen import Screen
-from textual.widgets import Footer, Header, Static
+from textual.widgets import Footer, Static
 
 from miniflux_tui.docs_fetcher import DocsFetcher
+from miniflux_tui.ui.widgets.safe_widgets import SafeHeader
 from miniflux_tui.utils import consolidate_blank_lines
 
 if TYPE_CHECKING:
@@ -136,7 +137,7 @@ class RulesHelperScreen(Screen):
         Yields:
             Composed widgets for the screen
         """
-        yield Header()
+        yield SafeHeader()
 
         with Container(id="helper-container"):
             yield Static(
