@@ -7,7 +7,7 @@ from typing import TYPE_CHECKING, Any, ClassVar
 
 from textual.app import ComposeResult
 from textual.binding import Binding
-from textual.containers import ScrollableContainer
+from textual.containers import Container, ScrollableContainer
 from textual.screen import Screen
 from textual.widgets import Button, Checkbox, Footer, Input, Static, TextArea
 
@@ -127,11 +127,16 @@ class FeedSettingsScreen(Screen):
         margin: 0 0 1 0;
     }
 
-    TextArea {
+    .textarea-container {
         width: 100%;
         height: 8;
+        border: solid $primary 50%;
+    }
+
+    TextArea {
+        width: 100%;
+        height: 100%;
         min-height: 8;
-        margin: 0 0 1 0;
     }
 
     #status-message {
@@ -335,43 +340,43 @@ class FeedSettingsScreen(Screen):
             with Static(classes="section"):
                 # Scraper Rules
                 yield Static("Scraper Rules (optional)", classes="field-label")
-                yield TextArea(
-                    text="",
-                    id="scraper-rules",
-                    classes="field-value",
-                )
+                with Container(classes="textarea-container"):
+                    yield TextArea(
+                        text="",
+                        id="scraper-rules",
+                    )
 
                 # Rewrite Rules
                 yield Static("Rewrite Rules (optional)", classes="field-label")
-                yield TextArea(
-                    text="",
-                    id="rewrite-rules",
-                    classes="field-value",
-                )
+                with Container(classes="textarea-container"):
+                    yield TextArea(
+                        text="",
+                        id="rewrite-rules",
+                    )
 
                 # URL Rewrite Rules
                 yield Static("URL Rewrite Rules (optional)", classes="field-label")
-                yield TextArea(
-                    text="",
-                    id="url-rewrite-rules",
-                    classes="field-value",
-                )
+                with Container(classes="textarea-container"):
+                    yield TextArea(
+                        text="",
+                        id="url-rewrite-rules",
+                    )
 
                 # Blocking Rules
                 yield Static("Blocking Rules (optional)", classes="field-label")
-                yield TextArea(
-                    text="",
-                    id="blocking-rules",
-                    classes="field-value",
-                )
+                with Container(classes="textarea-container"):
+                    yield TextArea(
+                        text="",
+                        id="blocking-rules",
+                    )
 
                 # Keep Rules
                 yield Static("Keep Rules (optional)", classes="field-label")
-                yield TextArea(
-                    text="",
-                    id="keep-rules",
-                    classes="field-value",
-                )
+                with Container(classes="textarea-container"):
+                    yield TextArea(
+                        text="",
+                        id="keep-rules",
+                    )
 
             # Feed Information Section
             yield Static("Feed Information", classes="section-title")
