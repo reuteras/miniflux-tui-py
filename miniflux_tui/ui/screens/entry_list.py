@@ -203,7 +203,7 @@ class EntryListScreen(Screen):
         Binding("asterisk", "toggle_star", "Toggle Star"),
         Binding("e", "save_entry", "Save Entry"),
         Binding("s", "cycle_sort", "Cycle Sort"),
-        Binding("X", "scraping_helper", "Scraping Helper"),
+        Binding("X", "feed_settings", "Feed Settings"),
         Binding("g", "toggle_group_feed", "Group by Feed"),
         Binding("c", "toggle_group_category", "Group by Category"),
         Binding("M", "manage_categories", "Manage Categories"),
@@ -1703,12 +1703,10 @@ class EntryListScreen(Screen):
             self.app.log(f"Error pushing history screen: {type(e).__name__}: {e}")
             self.app.notify(f"Failed to show history: {e}", severity="error")
 
-    async def action_scraping_helper(self) -> None:
-        """Open scraping helper for selected entry."""
+    async def action_feed_settings(self) -> None:
+        """Open feed settings screen for selected entry's feed."""
         # Import here to avoid circular dependency
-        from miniflux_tui.ui.screens.scraping_helper import (  # noqa: PLC0415
-            ScrapingHelperScreen,
-        )
+        from miniflux_tui.ui.screens.feed_settings import FeedSettingsScreen  # noqa: PLC0415
 
         # Get the currently selected item
         if not self.list_view or not self.list_view.highlighted_child:
@@ -1723,33 +1721,18 @@ class EntryListScreen(Screen):
 
         entry = selected_item.entry
 
-        # Create callback for saving scraper rules
-        async def save_scraper_rule(feed_id: int, selector: str) -> None:
-            """Save scraper rule to feed settings."""
-            if not self.app.client:
-                msg = "API client not available"
-                raise RuntimeError(msg)
+        if not self.app.client:
+            self.notify("API client not available", severity="error")
+            return
 
-            # Update feed with scraper rules
-            await self.app.client.update_feed(
-                feed_id,
-                scraper_rules=selector,
-            )
-
-            self.notify(
-                f"Scraper rule saved for feed: {entry.feed.title}",
-                severity="information",
-            )
-
-        # Push scraping helper screen
-        screen = ScrapingHelperScreen(
-            entry_url=entry.url,
-            feed_id=entry.feed_id,
-            feed_title=entry.feed.title,
-            on_save_callback=save_scraper_rule,
+        # Push feed settings screen
+        screen = FeedSettingsScreen(
+            feed_id=entry.feed.id,
+            feed=entry.feed,
+            client=self.app.client,  # type: ignore[arg-type]
         )
 
-        self.app.push_screen(screen)
+        self.app.push_screen(screen)  # type: ignore[arg-type]
 
     def action_quit(self):
         """Quit the application."""
