@@ -123,6 +123,114 @@ When in grouped mode (`g` to toggle):
 | `Shift+G` | Enable grouping by feed and expand all feeds |
 | `Shift+Z` | Collapse all feeds/categories                |
 
+## Feed Settings
+
+### Accessing Feed Settings
+
+From the entry list, you can edit individual feed settings by pressing `X` (uppercase). This opens the Feed Settings screen where you can comprehensively configure a feed.
+
+### Feed Configuration Sections
+
+The Feed Settings screen is organized into several sections:
+
+#### General Settings
+- **Title** - Custom name for the feed
+- **Site URL** - URL to the website the feed covers
+- **Feed URL** - Read-only feed URL (for reference)
+- **Category** - Organize feeds by category
+- **Disabled** - Temporarily disable feed from checking
+
+#### Network Settings
+- **Username** - HTTP authentication username (optional)
+- **Password** - HTTP authentication password (optional)
+- **User-Agent** - Custom User-Agent header (optional)
+- **Proxy URL** - Proxy server for feed requests (optional)
+- **HTTPS Settings** - Toggle HTTPS certificate verification
+
+#### Rules & Filtering
+Configure how Miniflux processes feed content:
+
+- **Scraper Rules** - Custom CSS selectors to extract article content
+- **Rewrite Rules** - Regex patterns to modify fetched content
+- **URL Rewrite Rules** - Rewrite URLs in articles
+- **Blocking Rules** - Exclude articles matching patterns
+- **Keep Rules** - Keep articles matching patterns (whitelist mode)
+
+For detailed documentation on rule syntax, focus on any rule field and press `x` to open the helper screen.
+
+#### Feed Information
+- **Last Checked** - Timestamp of the last successful fetch
+- **Parsing Errors** - Count of recent parsing errors
+- **Error Message** - Details of the last parsing error (if any)
+- **Check Interval** - Custom refresh interval in minutes (optional)
+- **Feed ID** - Unique identifier for the feed
+
+#### Danger Zone
+- **Delete Feed** - Permanently delete this feed (with confirmation)
+
+### Editing Feed Settings
+
+#### Making Changes
+
+When you modify any field:
+- An **unsaved indicator** appears showing the number of changed fields
+- Changes are **auto-saved** to a local draft every second
+- Your changes are preserved even if the app closes unexpectedly
+
+#### Keyboard Shortcuts in Feed Settings
+
+| Key         | Action                               |
+|-------------|--------------------------------------|
+| `Tab`       | Move to next field                   |
+| `Shift+Tab` | Move to previous field               |
+| `x`         | Show help for the focused rule field |
+| `Enter`     | Save all changes                     |
+| `Escape`    | Cancel editing                       |
+
+#### Saving Changes
+
+Press `Enter` to save all changes to your Miniflux server.
+
+- A saving indicator appears while the request is in progress
+- On success, a confirmation message displays with a ✓ icon
+- On error, you'll see an error message and changes stay in the draft
+- Drafts are cleared only after successful save
+
+#### Canceling Changes
+
+Press `Escape` to cancel editing:
+
+- First press shows a warning message
+- Second press confirms and discards all changes
+- If you had a recovery draft from a previous session, it's discarded too
+
+#### Recovering Previous Changes
+
+If the application crashes or closes while editing:
+1. Open the feed settings again
+2. A recovery dialog appears asking if you want to recover the previous session
+3. Choose to **Recover** (restore previous changes), **Discard** (start fresh), or **Cancel** (stay in recovery mode)
+
+### Rule Help
+
+Each rule field has an associated help screen. To view help:
+1. Focus on a rule field (Scraper, Rewrite, URL Rewrite, Blocking, or Keep Rules)
+2. Press `x` to open the help screen
+3. Review the rule syntax and examples
+4. Press `Escape` to close the help screen
+
+The help screen provides:
+- Complete rule syntax documentation
+- Common patterns and examples
+- Best practices for rule creation
+
+### Deleting a Feed
+
+To delete a feed:
+1. Navigate to the "Danger Zone" section (scroll down)
+2. Press the delete button twice (first press shows confirmation)
+3. The feed is permanently removed from Miniflux
+
 ## Category Management
 
 ### Accessing Category Management

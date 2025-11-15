@@ -73,15 +73,15 @@ miniflux-tui-py/
 
 ### Core Files
 
-| File | Purpose |
-|------|---------|
-| `main.py` | CLI entry point; handles `--init`, `--check-config`; runs async app |
-| `config.py` | Config loading/saving with platform-specific paths (XDG, macOS, Windows) |
-| `api/client.py` | Async wrapper around official miniflux Python library with retry logic |
-| `api/models.py` | Dataclasses: `Category`, `Entry`, `Feed` with helper properties |
-| `ui/app.py` | Main `MinifluxTuiApp` Textual App; screen management; entry loading |
-| `ui/screens/entry_list.py` | Entry list screen with sorting, grouping, navigation |
-| `ui/screens/entry_reader.py` | Entry detail view with HTML→Markdown conversion |
+| File                         | Purpose                                                                  |
+|------------------------------|--------------------------------------------------------------------------|
+| `main.py`                    | CLI entry point; handles `--init`, `--check-config`; runs async app      |
+| `config.py`                  | Config loading/saving with platform-specific paths (XDG, macOS, Windows) |
+| `api/client.py`              | Async wrapper around official miniflux Python library with retry logic   |
+| `api/models.py`              | Dataclasses: `Category`, `Entry`, `Feed` with helper properties          |
+| `ui/app.py`                  | Main `MinifluxTuiApp` Textual App; screen management; entry loading      |
+| `ui/screens/entry_list.py`   | Entry list screen with sorting, grouping, navigation                     |
+| `ui/screens/entry_reader.py` | Entry detail view with HTML→Markdown conversion                          |
 
 ### Recent Modifications (Key Behaviors)
 

@@ -246,6 +246,7 @@ To create a token:
 | Shift+Z    | Collapse all feeds/categories (when grouped)     |
 | h or ←     | Collapse individual feed/category (when grouped) |
 | l or →     | Expand individual feed/category (when grouped)   |
+| X          | Open feed settings (when on a feed)              |
 | r          | Refresh current feed on server                   |
 | Shift+R    | Refresh all feeds on server                      |
 | ,          | Sync entries from server (fetch new)             |

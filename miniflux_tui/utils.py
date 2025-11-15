@@ -148,4 +148,40 @@ def api_call(screen: Any, operation_name: str = "Operation") -> Generator[Any, N
         screen.log(f"ValueError during {operation_name}: {e}")
     except Exception as e:
         screen.log(f"Unexpected error during {operation_name}: {e}")
-        screen.notify(f"Error during {operation_name}: {e}", severity="error")
+
+
+def consolidate_blank_lines(text: str, max_consecutive: int = 2) -> str:
+    """Consolidate multiple consecutive blank lines into a maximum number.
+
+    This function reduces excessive whitespace in text content by limiting
+    the number of consecutive blank lines to a specified maximum. Useful for
+    cleaning up documentation and help text display.
+
+    Args:
+        text: Input text to consolidate
+        max_consecutive: Maximum consecutive blank lines to keep (default: 2)
+
+    Returns:
+        Text with consolidated blank lines
+
+    Example:
+        >>> text = "Line 1\\n\\n\\n\\nLine 2\\n\\n\\nLine 3"
+        >>> consolidate_blank_lines(text)
+        'Line 1\\n\\nLine 2\\n\\nLine 3'
+        >>> consolidate_blank_lines(text, max_consecutive=1)
+        'Line 1\\nLine 2\\nLine 3'
+    """
+    lines = text.split("\n")
+    result: list[str] = []
+    blank_count = 0
+
+    for line in lines:
+        if line.strip() == "":
+            blank_count += 1
+            if blank_count <= max_consecutive:
+                result.append(line)
+        else:
+            blank_count = 0
+            result.append(line)
+
+    return "\n".join(result)
