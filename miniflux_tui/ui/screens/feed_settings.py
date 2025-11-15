@@ -50,6 +50,7 @@ class FeedSettingsScreen(Screen):
     FeedSettingsScreen {
         background: $surface;
         color: $text;
+        layout: vertical;
     }
 
     FeedSettingsScreen > Header {
@@ -64,6 +65,17 @@ class FeedSettingsScreen(Screen):
         height: 1fr;
         width: 100%;
         overflow: auto auto;
+    }
+
+    FeedSettingsScreen > #status-message {
+        height: auto;
+        dock: bottom;
+        offset-y: -1;
+    }
+
+    FeedSettingsScreen > #button-container {
+        height: auto;
+        dock: bottom;
     }
 
     #settings-header {
