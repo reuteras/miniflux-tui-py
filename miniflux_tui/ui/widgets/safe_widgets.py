@@ -34,16 +34,26 @@ class SafeHeader(Header):
         that occur on Windows when HeaderTitle isn't ready yet.
         """
         # Suppress both NoMatches (Windows timing) and NoScreen (context issues)
+        # This handles the case where the parent's async watchers fire before
+        # HeaderTitle is fully initialized, particularly on Windows Python 3.12
         with suppress(NoMatches, NoScreen):
             self.query_one(HeaderTitle).update(self.format_title())
 
     def _on_mount(self, _: Mount) -> None:
         """Called when the Header is mounted, with improved exception handling.
 
-        This override defers title setting to the next event loop iteration,
-        allowing HeaderTitle to be fully mounted before we try to query it.
-        This handles platform-specific timing issues on Windows Python 3.11+.
+        The parent Header's _on_mount sets up async watchers that can raise
+        NoMatches exceptions before HeaderTitle is ready on Windows. We call
+        the parent's _on_mount but suppress all exceptions, since our safe
+        set_title method handles the actual title updates.
         """
-        # Defer title setting to next event loop iteration
-        # This ensures HeaderTitle is mounted and ready before we query it
+        # Call parent's _on_mount which sets up watchers
+        # These may raise exceptions on Windows Python 3.12 before
+        # HeaderTitle is initialized, but we suppress them since
+        # our set_title() override handles exceptions safely
+        with suppress(Exception):
+            super()._on_mount(_)
+
+        # Ensure title is set safely after parent setup
+        # Use call_later to defer to next event loop iteration
         self.call_later(self.set_title)
