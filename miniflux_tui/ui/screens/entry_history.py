@@ -20,7 +20,7 @@ class EntryHistoryScreen(EntryListScreen):
         """Called when screen is mounted - load history instead of normal entries."""
         super().on_mount()
         self.app.log("EntryHistoryScreen.on_mount called")
-        self.run_worker(self._load_history(), exclusive=True)
+        self.run_worker(self._load_history, exclusive=True)
 
     async def _load_history(self) -> None:
         """Load history entries asynchronously."""
