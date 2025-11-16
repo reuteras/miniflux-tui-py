@@ -4,11 +4,49 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
-## [0.6.4] - 2025-11-14
+## [0.6.5] - 2025-11-16
+
+### BUG FIXES
+
+- Enhance scorecard workflow to properly detect branch protection rules (#558)
+- Fix unawaited coroutine in EntryHistoryScreen causing non-deterministic test failures (#559)
+- Add missing Scorecard configuration file (#560)
+- Connect FeedSettingsScreen to entry reader X key binding (#562)
+- Make mutation testing failures visible without blocking pytest (#563)
+- Implement comprehensive SafeHeader watcher-based exception handling for Windows Python 3.11+ (#566)
+- Resolve CodeQL alert about unreachable code in test_api_call_handles_generic_exception (#565)
+- Fix unreachable code in test_api_call_handles_generic_exception (CodeQL alert #309) (#567)
+- Fix TextArea visibility in FeedSettingsScreen (#568)
+- Fix mutation testing configuration and workflow (#571)
+- Replace SafeHeader with standard Header in all screens (#572)
+- Return error code 1 when --check-config password command fails (#577)
+
+### FEATURES
+
+- Phase 11 - UX Polish & Documentation (Full Scope) (#557)
+
+### MAINTENANCE
+
+- Disable automatic container builds on every commit (#570)
+
+
+
+#### Contributors
+
+Thank you to everyone who contributed to this release!
+
+**Humans:** 👤 Peter Reuterås
+
+**AI & Automation:** 🤖 Claude (AI Assistant)
+## [v0.6.4] - 2025-11-14
 
 ### BUG FIXES
 
 - Apply SafeHeader to all screens that use Header widget (#536)
+
+### MAINTENANCE
+
+- Release v0.6.4 (#537)
 
 
 
@@ -1432,3 +1470,4 @@ Thank you to everyone who contributed to this release!
 **Humans:** 👤 Peter Reuterås
 
 **AI & Automation:** 🤖 Claude (AI Assistant)
+
