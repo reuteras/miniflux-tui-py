@@ -643,6 +643,40 @@ class FeedSettingsScreen(Screen):
         except Exception as e:
             self._show_message(f"✗ Error saving settings: {e}", severity="error")
 
+    def _collect_original_values(self) -> dict[str, Any]:
+        """Collect current UI widget values as original values.
+
+        This is used after a successful save to reset the baseline for change detection.
+
+        Returns:
+            Dictionary mapping field names to their current UI values
+        """
+        # Map field names to their widget IDs and default values
+        field_map = {
+            "title": ("feed-title", ""),
+            "site_url": ("site-url", ""),
+            "feed_url": ("feed-url", ""),
+            "category_id": ("category-id", ""),
+            "description": ("feed-description", ""),
+            "hide_globally": ("hide-globally", False),
+            "no_media_player": ("no-media-player", False),
+            "disabled": ("feed-disabled", False),
+            "username": ("auth-username", ""),
+            "password": ("auth-password", ""),
+            "user_agent": ("user-agent", ""),
+            "proxy_url": ("proxy-url", ""),
+            "crawler": ("crawler", False),
+            "ignore_http_cache": ("ignore-http-cache", False),
+            "ignore_https_errors": ("ignore-https-errors", False),
+            "scraper_rules": ("scraper-rules", ""),
+            "rewrite_rules": ("rewrite-rules", ""),
+            "blocklist_rules": ("blocklist-rules", ""),
+            "keeplist_rules": ("keeplist-rules", ""),
+            "check_interval": ("check-interval", ""),
+        }
+
+        return {name: self._get_widget_value_for_field(widget_id) or default for name, (widget_id, default) in field_map.items()}
+
     def _handle_save_success(self, updated_feed: Feed) -> None:
         """Handle successful feed settings save.
 
@@ -657,28 +691,7 @@ class FeedSettingsScreen(Screen):
 
         # Reset original values to match current UI state
         # Use UI widget values, not API response, to avoid inconsistencies
-        self.original_values = {
-            "title": self._get_widget_value_for_field("feed-title") or "",
-            "site_url": self._get_widget_value_for_field("site-url") or "",
-            "feed_url": self._get_widget_value_for_field("feed-url") or "",
-            "category_id": self._get_widget_value_for_field("category-id") or "",
-            "description": self._get_widget_value_for_field("feed-description") or "",
-            "hide_globally": self._get_widget_value_for_field("hide-globally") or False,
-            "no_media_player": self._get_widget_value_for_field("no-media-player") or False,
-            "disabled": self._get_widget_value_for_field("feed-disabled") or False,
-            "username": self._get_widget_value_for_field("auth-username") or "",
-            "password": self._get_widget_value_for_field("auth-password") or "",
-            "user_agent": self._get_widget_value_for_field("user-agent") or "",
-            "proxy_url": self._get_widget_value_for_field("proxy-url") or "",
-            "crawler": self._get_widget_value_for_field("crawler") or False,
-            "ignore_http_cache": self._get_widget_value_for_field("ignore-http-cache") or False,
-            "ignore_https_errors": self._get_widget_value_for_field("ignore-https-errors") or False,
-            "scraper_rules": self._get_widget_value_for_field("scraper-rules") or "",
-            "rewrite_rules": self._get_widget_value_for_field("rewrite-rules") or "",
-            "blocklist_rules": self._get_widget_value_for_field("blocklist-rules") or "",
-            "keeplist_rules": self._get_widget_value_for_field("keeplist-rules") or "",
-            "check_interval": self._get_widget_value_for_field("check-interval") or "",
-        }
+        self.original_values = self._collect_original_values()
 
         # Clear persistence state after successful save
         self.persistence.clear_session(self.feed_id)
