@@ -7,7 +7,7 @@ from typing import TYPE_CHECKING, Any, ClassVar
 
 from textual.app import ComposeResult
 from textual.binding import Binding
-from textual.containers import Container, ScrollableContainer
+from textual.containers import Container, VerticalScroll
 from textual.screen import Screen
 from textual.widgets import Button, Checkbox, Footer, Header, Input, Static, TextArea
 
@@ -61,10 +61,10 @@ class FeedSettingsScreen(Screen):
         dock: bottom;
     }
 
-    FeedSettingsScreen > ScrollableContainer {
+    FeedSettingsScreen > VerticalScroll {
         height: 1fr;
         width: 100%;
-        overflow: auto auto;
+        overflow: auto y;
     }
 
     FeedSettingsScreen > #bottom-section {
@@ -249,7 +249,7 @@ class FeedSettingsScreen(Screen):
         """
         yield Header()
 
-        with ScrollableContainer():
+        with VerticalScroll(id="settings-scroll"):
             # Settings header with unsaved indicator
             yield Static(
                 f"Feed Settings: {self.feed.title}",
