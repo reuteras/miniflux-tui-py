@@ -1724,6 +1724,15 @@ class EntryListScreen(Screen):
             self.notify("API client not available", severity="error")
             return
 
+        # Save the entry position for restoration when returning from feed settings
+        # This matches the behavior in _open_entry()
+        self.last_highlighted_feed = entry.feed.title
+        self.last_highlighted_entry_id = entry.id
+
+        # Save the cursor index in the list view
+        if self.list_view and self.list_view.index is not None:
+            self.last_cursor_index = self.list_view.index
+
         # Push feed settings screen
         screen = FeedSettingsScreen(
             feed_id=entry.feed.id,
