@@ -1013,11 +1013,78 @@ class FeedSettingsScreen(Screen):
         self._show_message(message, severity="warning")
         self._recovery_pending = recovery
 
+    def _count_changed_fields(self) -> int:
+        """Count how many fields have actually changed from their original values.
+
+        This counts FIELDS that have changed, not change EVENTS.
+        Typing multiple characters in a field counts as 1 change, not N changes.
+
+        Returns:
+            Number of fields with changed values
+        """
+        changed_count = 0
+
+        # Get current values from all widgets
+        current_values = self._get_current_field_values()
+
+        # Map widget IDs to field names (same mapping as _on_field_changed)
+        field_mapping = {
+            "feed-title": "title",
+            "site-url": "site_url",
+            "feed-url": "feed_url",
+            "category-id": "category_id",
+            "feed-description": "description",
+            "hide-globally": "hide_globally",
+            "no-media-player": "no_media_player",
+            "feed-disabled": "disabled",
+            "auth-username": "username",
+            "auth-password": "password",
+            "user-agent": "user_agent",
+            "proxy-url": "proxy_url",
+            "ignore-https-errors": "ignore_https_errors",
+            "scraper-rules": "scraper_rules",
+            "rewrite-rules": "rewrite_rules",
+            "blocklist-rules": "blocklist_rules",
+            "keeplist-rules": "keeplist_rules",
+            "check-interval": "check_interval",
+        }
+
+        # Check each field for changes
+        for widget_id, field_name in field_mapping.items():
+            if widget_id not in current_values:
+                continue
+
+            current_value = current_values[widget_id]
+            original_value = self.original_values.get(field_name)
+
+            # Type-aware comparison (same logic as _on_field_changed)
+            if original_value is not None:
+                if isinstance(original_value, str):
+                    current_cmp = str(current_value) if current_value is not None else ""
+                elif isinstance(original_value, bool):
+                    current_cmp = current_value
+                elif isinstance(original_value, int):
+                    try:
+                        current_cmp = int(current_value) if current_value else None
+                    except (ValueError, TypeError):
+                        current_cmp = current_value
+                else:
+                    current_cmp = current_value
+            else:
+                current_cmp = current_value
+
+            # If values differ, count this field as changed
+            if current_cmp != original_value:
+                changed_count += 1
+
+        return changed_count
+
     def _update_unsaved_indicator(self) -> None:
         """Update the unsaved changes indicator in the header."""
         try:
             indicator = self.query_one("#unsaved-indicator", expect_type=Static)
-            change_count = self.persistence.get_change_count(self.feed_id)
+            # Count fields with actual changes, not change events
+            change_count = self._count_changed_fields()
 
             if change_count > 0:
                 indicator.update(f"● Unsaved changes: {change_count} field(s)")
