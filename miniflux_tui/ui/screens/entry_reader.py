@@ -12,7 +12,7 @@ from textual.app import ComposeResult
 from textual.binding import Binding
 from textual.containers import VerticalScroll
 from textual.screen import Screen
-from textual.widgets import Footer, Header, Markdown, Static
+from textual.widgets import Footer, Header, Static
 
 from miniflux_tui.api.models import Entry
 from miniflux_tui.constants import CONTENT_SEPARATOR
@@ -122,7 +122,7 @@ class EntryReaderScreen(Screen):
             # Extract links from content
             self.links = self._extract_links(content)
 
-            yield Markdown(content, classes="entry-content")
+            yield Static(content, classes="entry-content")
 
             # Link navigation indicator
             link_indicator = Static("", id="link-indicator", classes="link-indicator")
@@ -569,7 +569,7 @@ class EntryReaderScreen(Screen):
         self.links = self._extract_links(content)
         self.focused_link_index = None  # Reset link focus on new content
 
-        scroll.mount(Markdown(content, classes="entry-content"))
+        scroll.mount(Static(content, classes="entry-content"))
 
         # Mount or update link indicator
         if not self.link_indicator:
