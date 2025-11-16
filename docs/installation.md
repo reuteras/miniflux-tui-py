@@ -2,7 +2,7 @@
 
 ## Prerequisites
 
-- Python 3.11 or later
+- Python 3.13 or later
 - [uv](https://docs.astral.sh/uv/) package manager (recommended) or pip
 - A running Miniflux instance (see [miniflux.app](https://miniflux.app))
 

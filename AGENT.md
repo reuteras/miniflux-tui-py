@@ -6,7 +6,7 @@ This document provides context about the miniflux-tui-py project for coding agen
 
 **miniflux-tui-py** is a Python Terminal User Interface (TUI) client for [Miniflux](https://miniflux.app) - a self-hosted RSS reader. It provides a keyboard-driven interface to browse, read, and manage RSS feeds directly from the terminal.
 
-- **Language**: Python 3.11+
+- **Language**: Python 3.13+
 - **Framework**: Textual (TUI framework)
 - **Status**: Beta (v0.4.0) | v0.5.0 in development
 - **License**: MIT
@@ -52,7 +52,7 @@ miniflux-tui-py/
 │       └── screens.md
 ├── .github/
 │   ├── workflows/
-│   │   ├── test.yml                 # Run tests on push (Python 3.11-3.13)
+│   │   ├── test.yml                 # Run tests on push (Python 3.13-3.14)
 │   │   ├── publish.yml              # Publish to PyPI on git tags
 │   │   └── docs-deploy.yml          # Deploy docs to GitHub Pages
 │   ├── dependabot.yml               # Automated dependency updates
@@ -440,7 +440,7 @@ async def action_do_something(self):
 - `textual>=0.82.0` - TUI framework
 - `miniflux>=0.0.11` - Official Miniflux API client
 - `html2text>=2024.2.26` - HTML to Markdown conversion
-- `tomli>=2.0.1` - TOML parsing (Python <3.11)
+- `tomli>=2.0.1` - TOML parsing (Python <3.13)
 
 **Development** (included with `uv sync`):
 - `ruff>=0.6.0` - Fast linter & formatter
@@ -489,7 +489,7 @@ Major improvements in October 2025:
 - **PyPI package infrastructure**: Published to PyPI with OIDC secure publishing
 - **Comprehensive documentation**: MkDocs site with installation, usage, and API reference
 - **GitHub Actions CI/CD**:
-  - Automated testing on Python 3.11, 3.12, 3.13
+  - Automated testing on Python 3.13, 3.14 with 3.15 preview
   - Type checking with pyright
   - Test coverage tracking with codecov
   - Auto-deploy docs to GitHub Pages
@@ -507,7 +507,7 @@ Major improvements in October 2025:
 ## Testing & Quality Assurance
 
 - **Automated CI/CD**: GitHub Actions runs on every push
-  - Tests Python 3.11, 3.12, 3.13
+  - Tests Python 3.13, 3.14 with 3.15 preview
   - Minimum 60% test coverage required
   - Type checking with pyright
   - Linting with ruff

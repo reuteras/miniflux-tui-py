@@ -3,7 +3,7 @@ name = "miniflux-tui-py"
 version = "0.6.4"
 description = "A Python TUI client for Miniflux RSS reader with feed sorting capabilities"
 readme = "README.md"
-requires-python = ">=3.11"
+requires-python = ">=3.13"
 authors = [
     {name = "Peter Reuterås", email = "peter@reuteras.net"}
 ]
@@ -17,8 +17,6 @@ classifiers = [
     "Natural Language :: English",
     "Operating System :: OS Independent",
     "Programming Language :: Python :: 3",
-    "Programming Language :: Python :: 3.11",
-    "Programming Language :: Python :: 3.12",
     "Programming Language :: Python :: 3.13",
     "Programming Language :: Python :: 3.14",
     "Programming Language :: Python :: 3.15",
@@ -34,7 +32,7 @@ dependencies = [
     "textual>=6.4.0",
     "miniflux>=1.1.4",
     "html2text>=2025.4.15",
-    "tomli>=2.0.1; python_version < '3.11'",
+    "tomli>=2.0.1; python_version < '3.13'",
     "beautifulsoup4>=4.14.2",
     "html5lib>=1.1",
     "bleach>=6.3.0",
@@ -109,7 +107,7 @@ managed = true
 
 [tool.ruff]
 line-length = 140
-target-version = "py311"
+target-version = "py313"
 
 [tool.ruff.lint]
 # Enable common linting rules
@@ -174,7 +172,7 @@ relative_files = true
 include = ["miniflux_tui", "tests"]
 exclude = ["**/node_modules", "**/__pycache__"]
 typeCheckingMode = "standard"
-pythonVersion = "3.11"
+pythonVersion = "3.13"
 reportMissingImports = true
 reportMissingTypeStubs = false
 reportPrivateUsage = false
