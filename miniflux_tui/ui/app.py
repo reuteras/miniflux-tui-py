@@ -179,12 +179,22 @@ class MinifluxTuiApp(App):
 
     async def _load_data(self) -> None:
         """Load data after loading screen is displayed."""
-        # Initialize API client - this may block on password command
-        self.client = MinifluxClient(
-            base_url=self.config.server_url,
-            api_key=self.config.api_key,
-            allow_invalid_certs=self.config.allow_invalid_certs,
-        )
+        try:
+            # Initialize API client - this may block on password command
+            self.client = MinifluxClient(
+                base_url=self.config.server_url,
+                api_key=self.config.api_key,
+                allow_invalid_certs=self.config.allow_invalid_certs,
+            )
+        except RuntimeError as exc:
+            # Password command failed - dismiss loading screen and show error
+            self.pop_screen()
+            self.notify(
+                f"Failed to retrieve API token: {exc}",
+                severity="error",
+                timeout=None,
+            )
+            return
 
         entry_list_cls: type[EntryListScreen] = _load_entry_list_screen_cls()
         self._entry_list_screen_cls = entry_list_cls

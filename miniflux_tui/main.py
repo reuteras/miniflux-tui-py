@@ -22,15 +22,21 @@ from .config import (
 from .ui.app import run_tui
 
 
-def _print_config_summary(config: Config) -> None:
-    """Display configuration values without revealing secrets."""
+def _print_config_summary(config: Config) -> bool:
+    """Display configuration values without revealing secrets.
+
+    Returns:
+        True if all configuration checks passed, False if validation failed.
+    """
     print("Configuration loaded successfully!")
     print(f"\nServer URL: {config.server_url}")
     print("Password command: (hidden)")
+    validation_passed = True
     try:
         config.get_api_key(refresh=True)
     except RuntimeError as exc:
         print(f"API token retrieval: FAILED ({exc})")
+        validation_passed = False
     else:
         print("API token retrieval: success")
     print(f"Allow Invalid Certs: {config.allow_invalid_certs}")
@@ -40,6 +46,7 @@ def _print_config_summary(config: Config) -> None:
     print("\nSorting:")
     print(f"  Default Sort: {config.default_sort}")
     print(f"  Group by Feed: {config.default_group_by_feed}")
+    return validation_passed
 
 
 def _handle_init() -> int:
@@ -96,8 +103,8 @@ def _handle_check_config() -> int:
         print("Error: Configuration could not be loaded.")
         return 1
 
-    _print_config_summary(config)
-    return 0
+    validation_passed = _print_config_summary(config)
+    return 0 if validation_passed else 1
 
 
 def _auto_create_codespace_config() -> bool:
@@ -233,6 +240,16 @@ def _run_application() -> int:
         config_path = get_config_file_path()
         print(f"Error: Config file not found at {config_path}")
         print("\nRun 'miniflux-tui --init' to create a default configuration.")
+        return 1
+
+    # Validate password command works before starting TUI
+    try:
+        config.get_api_key(refresh=True)
+    except RuntimeError as exc:
+        print("Error: Failed to retrieve API token from password command")
+        print(f"Details: {exc}")
+        print("\nVerify your password command is correct by running:")
+        print("  miniflux-tui --check-config")
         return 1
 
     # Start the TUI application
