@@ -52,7 +52,16 @@ class EntryReaderScreen(Screen):
 
     app: EntryReaderAppProtocol
 
-    # CSS is inherited from app.py only - no custom overrides
+    DEFAULT_CSS = """
+    EntryReaderScreen > VerticalScroll {
+        height: 1fr;
+    }
+
+    .entry-content {
+        height: auto;
+        border: none;
+    }
+    """
 
     def __init__(
         self,
