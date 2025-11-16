@@ -5,7 +5,7 @@
 </div>
 
 [![PyPI version](https://img.shields.io/pypi/v/miniflux-tui-py.svg)](https://pypi.org/project/miniflux-tui-py/)
-[![Python 3.11+ | 3.12 | 3.13 | 3.14 | 3.15](https://img.shields.io/badge/python-3.11%20%7C%203.12%20%7C%203.13%20%7C%203.14%20%7C%203.15-blue)](https://pypi.org/project/miniflux-tui-py/)
+[![Python 3.13+ | 3.14 | 3.15](https://img.shields.io/badge/python-3.13%20%7C%203.14%20%7C%203.15-blue)](https://pypi.org/project/miniflux-tui-py/)
 [![Downloads](https://static.pepy.tech/badge/miniflux-tui-py/month)](https://pepy.tech/project/miniflux-tui-py)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 [![Test Status](https://github.com/reuteras/miniflux-tui-py/workflows/Test/badge.svg)](https://github.com/reuteras/miniflux-tui-py/actions/workflows/test.yml)
@@ -140,7 +140,7 @@ Full documentation is available at [reuteras.github.io/miniflux-tui-py](https://
 GitHub Codespaces provides a preconfigured, browser-accessible development
 environment that works well with the terminal-based interface of
 `miniflux-tui-py`. This repository includes a `.devcontainer/devcontainer.json`
-so every Codespace starts from a Python 3.11 image, installs `uv`, and runs
+so every Codespace starts from a Python 3.13+ image, installs `uv`, and runs
 `uv sync --locked --all-groups` automatically. After the first boot you can launch the
 TUI with the same commands documented in the
 [From Source](#from-source-for-developers) section:

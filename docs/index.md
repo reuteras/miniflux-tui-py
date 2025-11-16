@@ -74,7 +74,7 @@ See the [Installation Guide](installation.md) for more options including pip and
 
 ## Requirements
 
-- Python 3.11 or later
+- Python 3.13 or later
 - A running Miniflux instance
 - Terminal with 24+ colors (for best experience)
 

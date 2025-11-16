@@ -145,11 +145,11 @@ jobs:
           } >> "$GITHUB_STEP_SUMMARY"
 
       - name: Copy coverage file for comment action
-        if: github.event_name == 'pull_request' && matrix.os == 'ubuntu-latest' && matrix.python-version == '3.13'
+        if: github.event_name == 'pull_request' && matrix.os == 'ubuntu-latest' && matrix.python-version == '3.11'
         run: cp .coverage.${{ matrix.os }}-py${{ matrix.python-version }} .coverage
 
       - name: Coverage comment on PR
-        if: github.event_name == 'pull_request' && matrix.os == 'ubuntu-latest' && matrix.python-version == '3.13'
+        if: github.event_name == 'pull_request' && matrix.os == 'ubuntu-latest' && matrix.python-version == '3.11'
         uses: py-cov-action/python-coverage-comment-action@e623398c19eb3853a5572d4a516e10b15b5cefbc # v3.39
         with:
           GITHUB_TOKEN: ${{ github.token }}

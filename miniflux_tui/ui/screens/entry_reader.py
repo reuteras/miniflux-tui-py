@@ -10,14 +10,14 @@ from urllib.parse import urlparse
 import html2text
 from textual.app import ComposeResult
 from textual.binding import Binding
-from textual.containers import VerticalScroll
+
+# No longer using VerticalScroll - Markdown is the scrollable container
 from textual.screen import Screen
-from textual.widgets import Footer, Markdown, Static
+from textual.widgets import Footer, Header, Markdown, Static
 
 from miniflux_tui.api.models import Entry
 from miniflux_tui.constants import CONTENT_SEPARATOR
 from miniflux_tui.ui.protocols import EntryReaderAppProtocol
-from miniflux_tui.ui.widgets.safe_widgets import SafeHeader
 from miniflux_tui.utils import get_star_icon
 
 
@@ -53,6 +53,37 @@ class EntryReaderScreen(Screen):
 
     app: EntryReaderAppProtocol
 
+    DEFAULT_CSS = """
+    EntryReaderScreen {
+        layout: vertical;
+    }
+
+    .entry-title {
+        height: auto;
+    }
+
+    .entry-meta {
+        height: auto;
+    }
+
+    .entry-url {
+        height: auto;
+    }
+
+    .separator {
+        height: auto;
+    }
+
+    .entry-content {
+        height: 1fr;
+        overflow: auto;
+    }
+
+    #link-indicator {
+        height: auto;
+    }
+    """
+
     def __init__(
         self,
         entry: Entry,
@@ -78,61 +109,114 @@ class EntryReaderScreen(Screen):
 
     def compose(self) -> ComposeResult:
         """Create child widgets."""
-        yield SafeHeader()
+        yield Header()
 
         # Entry metadata
         star_icon = get_star_icon(self.entry.starred)
 
-        # Create scrollable container with entry content
-        with VerticalScroll():
-            # Title and metadata
-            yield Static(
-                f"[bold cyan]{star_icon} {self.entry.title}[/bold cyan]",
-                classes="entry-title",
-            )
-            yield Static(
-                f"[dim]{self.entry.feed.title} | {self.entry.published_at.strftime('%Y-%m-%d %H:%M')}[/dim]",
-                classes="entry-meta",
-            )
+        # Title and metadata (fixed height)
+        yield Static(
+            f"[bold cyan]{star_icon} {self.entry.title}[/bold cyan]",
+            classes="entry-title",
+        )
+        yield Static(
+            f"[dim]{self.entry.feed.title} | {self.entry.published_at.strftime('%Y-%m-%d %H:%M')}[/dim]",
+            classes="entry-meta",
+        )
 
-            # Add group statistics if available
-            group_stats_text = self._get_group_stats_text()
-            if group_stats_text:
-                group_stats_widget = Static(group_stats_text, classes="entry-meta")
-                self.group_stats_widget = group_stats_widget
-                yield group_stats_widget
+        # Add group statistics if available
+        group_stats_text = self._get_group_stats_text()
+        if group_stats_text:
+            group_stats_widget = Static(group_stats_text, classes="entry-meta")
+            self.group_stats_widget = group_stats_widget
+            yield group_stats_widget
 
-            yield Static(f"[dim]{self.entry.url}[/dim]", classes="entry-url")
-            yield Static(CONTENT_SEPARATOR, classes="separator")
+        yield Static(f"[dim]{self.entry.url}[/dim]", classes="entry-url")
+        yield Static(CONTENT_SEPARATOR, classes="separator")
 
-            # Convert HTML content to markdown for better display
-            content = self._html_to_markdown(self.entry.content)
+        # Convert HTML content to markdown for better display
+        content = self._html_to_markdown(self.entry.content)
 
-            # Extract links from content
-            self.links = self._extract_links(content)
+        # Extract links from content
+        self.links = self._extract_links(content)
 
-            yield Markdown(content, classes="entry-content")
+        # Scrollable markdown content (takes remaining height)
+        yield Markdown(content, classes="entry-content")
 
-            # Link navigation indicator
-            link_indicator = Static("", id="link-indicator", classes="link-indicator")
-            self.link_indicator = link_indicator
-            yield link_indicator
+        # Link navigation indicator (fixed height)
+        link_indicator = Static("", id="link-indicator", classes="link-indicator")
+        self.link_indicator = link_indicator
+        yield link_indicator
 
         yield Footer()
 
     async def on_mount(self) -> None:
         """Called when screen is mounted."""
-        # Get reference to the scroll container after mount
-        self.scroll_container = self.query_one(VerticalScroll)
+        # Get reference to the Markdown widget (now the scrollable container)
+        self.scroll_container = self.query_one(Markdown)
 
         # Set title to just the application name (no feed name or entry title)
         self.title = ""
         # Clear subtitle (remove counts from there)
         self.sub_title = ""
 
+        # Check terminal size constraints
+        self._check_terminal_size()
+
         # Mark entry as read when opened
         if self.entry.is_unread:
             await self._mark_entry_as_read()
+
+    def _check_terminal_size(self) -> None:
+        """Check if terminal meets minimum size requirements.
+
+        Validates:
+        - Minimum 60 columns for readable content
+        - Minimum 10 rows for Markdown content (plus ~2-3 rows for header/footer/metadata)
+
+        Emits warning notifications if constraints aren't met.
+        """
+        # Get terminal size from app
+        terminal_width = self.app.size.width  # type: ignore[attr-defined]
+        terminal_height = self.app.size.height  # type: ignore[attr-defined]
+
+        # Calculate available space for content (excluding header, footer, and metadata)
+        # Header: 1 row
+        # Footer: 1 row
+        # Title: 1 row
+        # Metadata: 1-2 rows
+        # Separator: 1 row
+        # Link indicator: 1 row
+        # Total non-content rows: ~6-7 rows
+        min_content_rows = 10
+        min_content_width = 60
+        min_total_rows = min_content_rows + 6
+
+        warnings = []
+
+        if terminal_height < min_total_rows:
+            available_content_rows = max(1, terminal_height - 6)
+            warnings.append(
+                f"Terminal height ({terminal_height} rows) is below recommended minimum ({min_total_rows} rows). "
+                f"Content area will have only ~{available_content_rows} rows for scrolling."
+            )
+
+        if terminal_width < min_content_width:
+            warnings.append(
+                f"Terminal width ({terminal_width} columns) is below recommended minimum ({min_content_width} columns). "
+                f"Text may wrap awkwardly."
+            )
+
+        # Emit warnings
+        for warning in warnings:
+            self.notify(warning, severity="warning")
+
+    def on_resize(self) -> None:
+        """Handle terminal resize events.
+
+        Re-checks terminal size constraints when terminal is resized.
+        """
+        self._check_terminal_size()
 
     def _resolve_app(self) -> EntryReaderAppProtocol | None:
         """Return the parent TUI app if it satisfies the expected protocol."""
@@ -317,18 +401,18 @@ class EntryReaderScreen(Screen):
 
         return links
 
-    def _ensure_scroll_container(self) -> VerticalScroll:
-        """Ensure scroll container is initialized and return it.
+    def _ensure_scroll_container(self) -> Markdown:
+        """Ensure markdown widget (scrollable container) is initialized and return it.
 
-        Lazily initializes the scroll container reference if not already set.
+        Lazily initializes the markdown widget reference if not already set.
         This eliminates the repeated pattern of checking and initializing
-        the scroll container across multiple scroll action methods.
+        the markdown widget across multiple scroll action methods.
 
         Returns:
-            The VerticalScroll container widget
+            The Markdown widget
         """
         if not self.scroll_container:
-            self.scroll_container = self.query_one(VerticalScroll)
+            self.scroll_container = self.query_one(Markdown)
         return self.scroll_container
 
     def action_scroll_down(self):
@@ -482,90 +566,60 @@ class EntryReaderScreen(Screen):
         self._update_sub_title()
 
     async def refresh_screen(self):
-        """Refresh the screen with current entry."""
-        scroll = self._get_scroll_container()
-        self._clear_scroll_content(scroll)
-        self._mount_entry_content(scroll)
-        scroll.scroll_home(animate=False)
+        """Refresh the screen with current entry.
+
+        Updates all entry content widgets with the new entry's information
+        and scrolls back to the top.
+        """
+        # Update title widget
+        title_widgets = self.query(".entry-title")
+        if title_widgets:
+            star_icon = get_star_icon(self.entry.starred)
+            title_widgets[0].update(f"[bold cyan]{star_icon} {self.entry.title}[/bold cyan]")  # type: ignore[union-attr]
+
+        # Update metadata widget (feed name and date)
+        meta_widgets = self.query(".entry-meta")
+        if meta_widgets:
+            meta_widgets[0].update(f"[dim]{self.entry.feed.title} | {self.entry.published_at.strftime('%Y-%m-%d %H:%M')}[/dim]")  # type: ignore[union-attr]
+
+        # Update group stats if available (second meta widget if it exists)
+        group_stats_text = self._get_group_stats_text()
+        if group_stats_text:
+            if len(meta_widgets) > 1:
+                meta_widgets[1].update(group_stats_text)  # type: ignore[union-attr]
+                self.group_stats_widget = meta_widgets[1]  # type: ignore[assignment]
+            else:
+                # Create new group stats widget if it doesn't exist
+                title_widget = title_widgets[0] if title_widgets else None
+                if title_widget and title_widget.parent:
+                    group_stats = Static(group_stats_text, classes="entry-meta")
+                    self.group_stats_widget = group_stats
+                    # Insert after first meta widget
+                    title_widget.parent.mount(group_stats, before=meta_widgets[0] if meta_widgets else None)  # type: ignore[union-attr]
+
+        # Update URL widget
+        url_widgets = self.query(".entry-url")
+        if url_widgets:
+            url_widgets[0].update(f"[dim]{self.entry.url}[/dim]")  # type: ignore[union-attr]
+
+        # Update content (Markdown widget)
+        markdown_widgets = self.query_one("#entry-content", expect_type=Markdown)  # type: ignore[arg-type]
+        content = self._html_to_markdown(self.entry.content)
+        markdown_widgets.update(content)
+
+        # Extract links from new content
+        self.links = self._extract_links(content)
+        self.focused_link_index = None  # Reset link focus on new content
+
+        # Update link indicator
+        self._update_link_indicator()
+
+        # Scroll back to top
+        markdown_widgets.scroll_home(animate=False)
 
         # Mark as read after displaying
         if self.entry.is_unread:
             await self._mark_entry_as_read()
-
-    def _get_scroll_container(self) -> VerticalScroll:
-        """Get scroll container widget.
-
-        Deprecated: Use _ensure_scroll_container() instead. This method
-        is kept for backward compatibility and delegates to the new helper.
-        """
-        return self._ensure_scroll_container()
-
-    @staticmethod
-    def _clear_scroll_content(scroll: VerticalScroll):
-        """Remove all children from scroll container."""
-        for child in scroll.children:
-            child.remove()
-
-    def _mount_entry_content(self, scroll: VerticalScroll):
-        """Mount entry content widgets (title, metadata, URL, content)."""
-        self._mount_title(scroll)
-        self._mount_metadata(scroll)
-        self._mount_url(scroll)
-        self._mount_separator(scroll)
-        self._mount_content(scroll)
-
-    def _mount_title(self, scroll: VerticalScroll):
-        """Mount entry title widget with star icon."""
-        star_icon = get_star_icon(self.entry.starred)
-        scroll.mount(
-            Static(
-                f"[bold cyan]{star_icon} {self.entry.title}[/bold cyan]",
-                classes="entry-title",
-            )
-        )
-
-    def _mount_metadata(self, scroll: VerticalScroll):
-        """Mount entry metadata widget (feed name and published date)."""
-        scroll.mount(
-            Static(
-                f"[dim]{self.entry.feed.title} | {self.entry.published_at.strftime('%Y-%m-%d %H:%M')}[/dim]",
-                classes="entry-meta",
-            )
-        )
-
-        # Add group statistics if available
-        group_stats_text = self._get_group_stats_text()
-        if group_stats_text:
-            group_stats_widget = Static(group_stats_text, classes="entry-meta")
-            self.group_stats_widget = group_stats_widget
-            scroll.mount(group_stats_widget)
-
-    def _mount_url(self, scroll: VerticalScroll):
-        """Mount entry URL widget."""
-        scroll.mount(Static(f"[dim]{self.entry.url}[/dim]", classes="entry-url"))
-
-    @staticmethod
-    def _mount_separator(scroll: VerticalScroll):
-        """Mount visual separator widget."""
-        scroll.mount(Static(CONTENT_SEPARATOR, classes="separator"))
-
-    def _mount_content(self, scroll: VerticalScroll):
-        """Mount entry content widget (converted HTML to Markdown)."""
-        # Mount text content
-        content = self._html_to_markdown(self.entry.content)
-
-        # Extract links from content
-        self.links = self._extract_links(content)
-        self.focused_link_index = None  # Reset link focus on new content
-
-        scroll.mount(Markdown(content, classes="entry-content"))
-
-        # Mount or update link indicator
-        if not self.link_indicator:
-            self.link_indicator = Static("", id="link-indicator", classes="link-indicator")
-            scroll.mount(self.link_indicator)
-        else:
-            self._update_link_indicator()
 
     async def action_feed_settings(self) -> None:
         """Open feed settings screen for current entry's feed."""

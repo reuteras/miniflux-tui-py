@@ -61,10 +61,30 @@ class Feed:
     site_url: str
     feed_url: str
     category_id: int | None = None
+    description: str = ""  # User-provided description or notes for the feed
     parsing_error_message: str = ""
     parsing_error_count: int = 0
     checked_at: str | None = None
     disabled: bool = False
+    # Network settings
+    username: str = ""
+    password: str = ""
+    user_agent: str = ""
+    proxy_url: str = ""
+    ignore_https_errors: bool = False
+    # Rules & filtering (API uses blocklist_rules and keeplist_rules, not blocking_rules and keep_rules)
+    scraper_rules: str = ""
+    rewrite_rules: str = ""
+    blocklist_rules: str = ""
+    keeplist_rules: str = ""
+    # Feed behavior options
+    hide_globally: bool = False
+    no_media_player: bool = False
+    # Additional feed settings
+    crawler: bool = False
+    ignore_http_cache: bool = False
+    fetch_via_proxy: bool = False
+    check_interval: int | None = None
 
     @classmethod
     def from_dict(cls, data: dict) -> "Feed":
@@ -75,10 +95,26 @@ class Feed:
             site_url=data["site_url"],
             feed_url=data["feed_url"],
             category_id=data.get("category_id"),
+            description=data.get("description", ""),
             parsing_error_message=data.get("parsing_error_message", ""),
             parsing_error_count=data.get("parsing_error_count", 0),
             checked_at=data.get("checked_at"),
             disabled=data.get("disabled", False),
+            username=data.get("username", ""),
+            password=data.get("password", ""),
+            user_agent=data.get("user_agent", ""),
+            proxy_url=data.get("proxy_url", ""),
+            ignore_https_errors=data.get("ignore_https_errors", False),
+            scraper_rules=data.get("scraper_rules", ""),
+            rewrite_rules=data.get("rewrite_rules", ""),
+            blocklist_rules=data.get("blocklist_rules", ""),
+            keeplist_rules=data.get("keeplist_rules", ""),
+            hide_globally=data.get("hide_globally", False),
+            no_media_player=data.get("no_media_player", False),
+            crawler=data.get("crawler", False),
+            ignore_http_cache=data.get("ignore_http_cache", False),
+            fetch_via_proxy=data.get("fetch_via_proxy", False),
+            check_interval=data.get("check_interval"),
         )
 
     @property

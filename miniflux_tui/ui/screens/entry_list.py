@@ -16,7 +16,6 @@ from miniflux_tui.constants import (
     SORT_MODES,
 )
 from miniflux_tui.performance import ScreenRefreshOptimizer
-from miniflux_tui.ui.widgets.safe_widgets import SafeHeader
 from miniflux_tui.utils import api_call, get_star_icon, get_status_icon
 
 if TYPE_CHECKING:
@@ -323,7 +322,7 @@ class EntryListScreen(Screen):
 
     def compose(self) -> ComposeResult:
         """Create child widgets."""
-        header = SafeHeader()
+        header = Header()
         list_view = CollapsibleListView()
         footer = Footer()
 
@@ -1724,6 +1723,15 @@ class EntryListScreen(Screen):
         if not self.app.client:
             self.notify("API client not available", severity="error")
             return
+
+        # Save the entry position for restoration when returning from feed settings
+        # This matches the behavior in _open_entry()
+        self.last_highlighted_feed = entry.feed.title
+        self.last_highlighted_entry_id = entry.id
+
+        # Save the cursor index in the list view
+        if self.list_view and self.list_view.index is not None:
+            self.last_cursor_index = self.list_view.index
 
         # Push feed settings screen
         screen = FeedSettingsScreen(

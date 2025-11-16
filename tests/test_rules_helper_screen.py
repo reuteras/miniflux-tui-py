@@ -37,12 +37,12 @@ class TestRulesHelperScreenInitialization:
 
     def test_init_without_docs_cache(self):
         """Test initialization without docs cache."""
-        screen = RulesHelperScreen(rule_type="blocking_rules")
+        screen = RulesHelperScreen(rule_type="blocklist_rules")
         assert screen.docs_cache is None
 
     def test_init_creates_fetcher(self):
         """Test that DocsFetcher is created."""
-        screen = RulesHelperScreen(rule_type="keep_rules")
+        screen = RulesHelperScreen(rule_type="keeplist_rules")
         assert screen.fetcher is not None
 
     def test_bindings_defined(self):
@@ -66,9 +66,8 @@ class TestRulesHelperScreenTitles:
         [
             ("scraper_rules", "Scraper Rules"),
             ("rewrite_rules", "Rewrite Rules"),
-            ("url_rewrite_rules", "URL Rewrite Rules"),
-            ("blocking_rules", "Blocking Rules"),
-            ("keep_rules", "Keep Rules"),
+            ("blocklist_rules", "Blocklist Rules"),
+            ("keeplist_rules", "Keeplist Rules"),
         ],
     )
     def test_get_rule_title(self, rule_type, expected_title):
@@ -170,7 +169,7 @@ class TestRulesHelperScreenErrorHandling:
     @pytest.mark.asyncio
     async def test_on_mount_generic_error(self):
         """Test on_mount with generic exception."""
-        screen = RulesHelperScreen(rule_type="blocking_rules")
+        screen = RulesHelperScreen(rule_type="blocklist_rules")
 
         fetcher_mock = AsyncMock()
         fetcher_mock.fetch_snippet.side_effect = Exception("Unknown error")

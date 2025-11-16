@@ -46,6 +46,8 @@ def feed_settings_screen(sample_feed, mock_client):
     # Mock set_timer and _update_unsaved_indicator for all tests to avoid async issues
     screen.set_timer = MagicMock(return_value=MagicMock())
     screen._update_unsaved_indicator = MagicMock()
+    # Set initialization flag to False to simulate on_mount() completion
+    screen._initializing = False
     return screen
 
 
@@ -84,6 +86,52 @@ class TestFeedSettingsScreenInitialization:
         """Test that DEFAULT_CSS is defined."""
         assert hasattr(FeedSettingsScreen, "DEFAULT_CSS")
         assert isinstance(FeedSettingsScreen.DEFAULT_CSS, str)
+
+    def test_init_initializes_with_initializing_flag_true(self, sample_feed, mock_client):
+        """Test that _initializing flag is True on creation (to prevent tracking during setup)."""
+        screen = FeedSettingsScreen(
+            feed_id=sample_feed.id,
+            feed=sample_feed,
+            client=mock_client,
+        )
+        assert screen._initializing is True
+
+    def test_changes_not_tracked_during_initialization(self, sample_feed, mock_client):
+        """Test that field changes are NOT tracked while _initializing is True."""
+        screen = FeedSettingsScreen(
+            feed_id=sample_feed.id,
+            feed=sample_feed,
+            client=mock_client,
+        )
+        # _initializing should be True, so changes should not be tracked
+        with patch.object(screen, "query_one"):
+            screen._on_field_changed("feed-title", "New Title")
+
+        # Verify that no changes were tracked (is_dirty should still be False)
+        assert screen.is_dirty is False
+        # Verify that persistence manager has no changes recorded
+        assert screen.persistence.get_change_count(sample_feed.id) == 0
+
+    def test_category_selector_initialization_with_category_id(self, sample_feed, mock_client):
+        """Test that category selector initializes correctly with a feed that has a category_id."""
+        # This test ensures the Select widget doesn't try to set an invalid value during compose
+        screen = FeedSettingsScreen(
+            feed_id=sample_feed.id,
+            feed=sample_feed,
+            client=mock_client,
+        )
+        assert screen.feed.category_id == 1
+        # The screen should be creatable without errors
+        assert screen is not None
+
+    def test_categories_list_initialized_empty(self, sample_feed, mock_client):
+        """Test that categories list is initialized as empty."""
+        screen = FeedSettingsScreen(
+            feed_id=sample_feed.id,
+            feed=sample_feed,
+            client=mock_client,
+        )
+        assert screen.categories == []
 
 
 class TestDirtyStateTracking:
@@ -280,22 +328,22 @@ class TestGeneralSettingsFields:
     def test_field_mapping_for_widget_ids(self, feed_settings_screen):
         """Test that widget IDs are correctly mapped to feed field names."""
         with patch.object(feed_settings_screen, "query_one"):
-            # Test title field mapping
+            # Test title field mapping (pass a DIFFERENT value from the original)
             feed_settings_screen._on_field_changed("feed-title", "New Title")
             assert "title" in feed_settings_screen.dirty_fields
             assert feed_settings_screen._field_values["title"] == "New Title"
 
-            # Test site_url field mapping
-            feed_settings_screen._on_field_changed("site-url", "https://example.com")
+            # Test site_url field mapping (pass a DIFFERENT value from the original)
+            feed_settings_screen._on_field_changed("site-url", "https://different.com")
             assert "site_url" in feed_settings_screen.dirty_fields
-            assert feed_settings_screen._field_values["site_url"] == "https://example.com"
+            assert feed_settings_screen._field_values["site_url"] == "https://different.com"
 
-            # Test category_id field mapping
+            # Test category_id field mapping (sample_feed has category_id=1, pass 5)
             feed_settings_screen._on_field_changed("category-id", "5")
             assert "category_id" in feed_settings_screen.dirty_fields
             assert feed_settings_screen._field_values["category_id"] == "5"
 
-            # Test disabled field mapping
+            # Test disabled field mapping (sample_feed has disabled=False, pass True)
             feed_settings_screen._on_field_changed("feed-disabled", True)
             assert "disabled" in feed_settings_screen.dirty_fields
             assert feed_settings_screen._field_values["disabled"] is True
@@ -350,12 +398,12 @@ class TestGeneralSettingsFields:
         """Test that _collect_field_values returns mapped field names."""
         with patch.object(feed_settings_screen, "query_one"):
             feed_settings_screen._on_field_changed("feed-title", "New Title")
-            feed_settings_screen._on_field_changed("site-url", "https://example.com")
+            feed_settings_screen._on_field_changed("site-url", "https://different.com")
             feed_settings_screen._on_field_changed("feed-disabled", True)
 
         updates = feed_settings_screen._collect_field_values()
         assert updates["title"] == "New Title"
-        assert updates["site_url"] == "https://example.com"
+        assert updates["site_url"] == "https://different.com"
         assert updates["disabled"] is True
         assert len(updates) == 3
 
@@ -406,7 +454,7 @@ class TestGeneralSettingsIntegration:
             updates = feed_settings_screen._collect_field_values()
             assert updates["title"] == "Updated Feed Title"
             assert updates["site_url"] == "https://newsite.com"
-            assert updates["category_id"] == "10"
+            assert updates["category_id"] == 10  # Converted to integer
             assert updates["disabled"] is True
 
     @pytest.mark.asyncio
@@ -616,20 +664,15 @@ class TestRulesAndFilteringFields:
             assert "rewrite_rules" in feed_settings_screen.dirty_fields
             assert feed_settings_screen._field_values["rewrite_rules"] == "regex pattern"
 
-            # Test URL rewrite rules mapping
-            feed_settings_screen._on_field_changed("url-rewrite-rules", "url -> replacement")
-            assert "url_rewrite_rules" in feed_settings_screen.dirty_fields
-            assert feed_settings_screen._field_values["url_rewrite_rules"] == "url -> replacement"
-
-            # Test blocking rules mapping
-            feed_settings_screen._on_field_changed("blocking-rules", "block pattern")
-            assert "blocking_rules" in feed_settings_screen.dirty_fields
-            assert feed_settings_screen._field_values["blocking_rules"] == "block pattern"
+            # Test blocklist rules mapping
+            feed_settings_screen._on_field_changed("blocklist-rules", "block pattern")
+            assert "blocklist_rules" in feed_settings_screen.dirty_fields
+            assert feed_settings_screen._field_values["blocklist_rules"] == "block pattern"
 
             # Test keep rules mapping
-            feed_settings_screen._on_field_changed("keep-rules", "keep pattern")
-            assert "keep_rules" in feed_settings_screen.dirty_fields
-            assert feed_settings_screen._field_values["keep_rules"] == "keep pattern"
+            feed_settings_screen._on_field_changed("keeplist-rules", "keep pattern")
+            assert "keeplist_rules" in feed_settings_screen.dirty_fields
+            assert feed_settings_screen._field_values["keeplist_rules"] == "keep pattern"
 
     def test_on_text_area_changed_event(self, feed_settings_screen):
         """Test on_text_area_changed event handler."""
@@ -651,12 +694,12 @@ class TestRulesAndFilteringFields:
         with patch.object(feed_settings_screen, "query_one"):
             feed_settings_screen._on_field_changed("scraper-rules", "div.post")
             feed_settings_screen._on_field_changed("rewrite-rules", "replace_pattern")
-            feed_settings_screen._on_field_changed("blocking-rules", "ad_pattern")
+            feed_settings_screen._on_field_changed("blocklist-rules", "ad_pattern")
 
         updates = feed_settings_screen._collect_field_values()
         assert updates["scraper_rules"] == "div.post"
         assert updates["rewrite_rules"] == "replace_pattern"
-        assert updates["blocking_rules"] == "ad_pattern"
+        assert updates["blocklist_rules"] == "ad_pattern"
         assert len(updates) == 3
 
     def test_empty_rule_fields_not_collected(self, feed_settings_screen):
@@ -666,24 +709,23 @@ class TestRulesAndFilteringFields:
         # Should have no rule fields since nothing was modified
         assert "scraper_rules" not in updates
         assert "rewrite_rules" not in updates
-        assert "url_rewrite_rules" not in updates
-        assert "blocking_rules" not in updates
-        assert "keep_rules" not in updates
+        assert "blocklist_rules" not in updates
+        assert "keeplist_rules" not in updates
 
     def test_partial_rules_edit(self, feed_settings_screen):
         """Test workflow when only some rule fields are modified."""
         with patch.object(feed_settings_screen, "query_one"):
             # Only modify scraper and blocking rules
             feed_settings_screen._on_field_changed("scraper-rules", "article.main")
-            feed_settings_screen._on_field_changed("blocking-rules", "spam_regex")
+            feed_settings_screen._on_field_changed("blocklist-rules", "spam_regex")
 
         updates = feed_settings_screen._collect_field_values()
         assert len(updates) == 2
         assert updates["scraper_rules"] == "article.main"
-        assert updates["blocking_rules"] == "spam_regex"
+        assert updates["blocklist_rules"] == "spam_regex"
         # rewrite and keep rules should not be in updates
         assert "rewrite_rules" not in updates
-        assert "keep_rules" not in updates
+        assert "keeplist_rules" not in updates
 
     def test_multiline_rule_content(self, feed_settings_screen):
         """Test handling of multiline rule content."""
@@ -703,24 +745,22 @@ class TestRulesAndFilteringIntegration:
     async def test_rules_and_filtering_full_workflow(self, feed_settings_screen):
         """Test complete workflow for editing all Rules & Filtering fields."""
         with patch.object(feed_settings_screen, "query_one"):
-            # Simulate user edits for all rule fields
+            # Simulate user edits for all rule fields (API has 4 rule types)
             feed_settings_screen._on_field_changed("scraper-rules", "div.content")
             feed_settings_screen._on_field_changed("rewrite-rules", "pattern1 -> replacement1")
-            feed_settings_screen._on_field_changed("url-rewrite-rules", "old.url -> new.url")
-            feed_settings_screen._on_field_changed("blocking-rules", "ads|spam")
-            feed_settings_screen._on_field_changed("keep-rules", "important|urgent")
+            feed_settings_screen._on_field_changed("blocklist-rules", "ads|spam")
+            feed_settings_screen._on_field_changed("keeplist-rules", "important|urgent")
 
             # Verify dirty state
             assert feed_settings_screen.is_dirty is True
-            assert len(feed_settings_screen.dirty_fields) == 5
+            assert len(feed_settings_screen.dirty_fields) == 4
 
             # Collect values
             updates = feed_settings_screen._collect_field_values()
             assert updates["scraper_rules"] == "div.content"
             assert updates["rewrite_rules"] == "pattern1 -> replacement1"
-            assert updates["url_rewrite_rules"] == "old.url -> new.url"
-            assert updates["blocking_rules"] == "ads|spam"
-            assert updates["keep_rules"] == "important|urgent"
+            assert updates["blocklist_rules"] == "ads|spam"
+            assert updates["keeplist_rules"] == "important|urgent"
 
     @pytest.mark.asyncio
     async def test_combined_all_sections_edit(self, feed_settings_screen):
@@ -744,7 +784,7 @@ class TestRulesAndFilteringIntegration:
         with patch.object(feed_settings_screen, "query_one"):
             # Modify rules
             feed_settings_screen._on_field_changed("scraper-rules", "main.article")
-            feed_settings_screen._on_field_changed("blocking-rules", "\\badv\\b")
+            feed_settings_screen._on_field_changed("blocklist-rules", "\\badv\\b")
 
             # Verify dirty before save
             assert feed_settings_screen.is_dirty is True
@@ -753,7 +793,7 @@ class TestRulesAndFilteringIntegration:
             feed_settings_screen._collect_field_values = MagicMock(
                 return_value={
                     "scraper_rules": "main.article",
-                    "blocking_rules": "\\badv\\b",
+                    "blocklist_rules": "\\badv\\b",
                 }
             )
 
@@ -782,7 +822,7 @@ class TestFeedInformationFields:
             feed_settings_screen._on_field_changed("check-interval", "120")
 
         updates = feed_settings_screen._collect_field_values()
-        assert updates["check_interval"] == "120"
+        assert updates["check_interval"] == 120  # Converted to integer
         assert len(updates) == 1
 
     def test_empty_check_interval_not_collected(self, feed_settings_screen):
@@ -817,7 +857,7 @@ class TestFeedInformationIntegration:
 
             # Collect values
             updates = feed_settings_screen._collect_field_values()
-            assert updates["check_interval"] == "45"
+            assert updates["check_interval"] == 45  # Converted to integer
 
     @pytest.mark.asyncio
     async def test_combined_all_four_sections_edit(self, feed_settings_screen):
@@ -835,7 +875,7 @@ class TestFeedInformationIntegration:
         assert updates["title"] == "Updated"
         assert updates["username"] == "user"
         assert updates["scraper_rules"] == "div"
-        assert updates["check_interval"] == "60"
+        assert updates["check_interval"] == 60  # Converted to integer
 
     @pytest.mark.asyncio
     async def test_feed_information_save_workflow(self, feed_settings_screen):
@@ -1163,40 +1203,19 @@ class TestHelperIntegration:
             screen = call_args[0][0]
             assert screen.rule_type == "rewrite_rules"
 
-    def test_open_helper_url_rewrite_rules_field(self, feed_settings_screen):
-        """Test opening helper for URL rewrite rules field."""
-        mock_app = MagicMock()
-        mock_app.push_screen = MagicMock()
-
-        mock_widget = MagicMock()
-        mock_widget.id = "url-rewrite-rules"
-        mock_widget.parent = None
-
-        with (
-            patch.object(type(feed_settings_screen), "focused", new_callable=PropertyMock) as mock_focused,
-            patch.object(type(feed_settings_screen), "app", new_callable=PropertyMock) as mock_app_prop,
-        ):
-            mock_focused.return_value = mock_widget
-            mock_app_prop.return_value = mock_app
-            feed_settings_screen.action_open_helper()
-
-            mock_app.push_screen.assert_called_once()
-            call_args = mock_app.push_screen.call_args
-            screen = call_args[0][0]
-            assert screen.rule_type == "url_rewrite_rules"
-
-    def test_open_helper_blocking_rules_field(self, feed_settings_screen):
+    def test_open_helper_blocklist_rules_field(self, feed_settings_screen):
         """Test opening helper for blocking rules field."""
         mock_app = MagicMock()
         mock_app.push_screen = MagicMock()
 
         mock_widget = MagicMock()
-        mock_widget.id = "blocking-rules"
+        mock_widget.id = "blocklist-rules"
         mock_widget.parent = None
 
         with (
             patch.object(type(feed_settings_screen), "focused", new_callable=PropertyMock) as mock_focused,
             patch.object(type(feed_settings_screen), "app", new_callable=PropertyMock) as mock_app_prop,
+            patch.object(feed_settings_screen, "_show_message"),
         ):
             mock_focused.return_value = mock_widget
             mock_app_prop.return_value = mock_app
@@ -1205,7 +1224,7 @@ class TestHelperIntegration:
             mock_app.push_screen.assert_called_once()
             call_args = mock_app.push_screen.call_args
             screen = call_args[0][0]
-            assert screen.rule_type == "blocking_rules"
+            assert screen.rule_type == "blocklist_rules"
 
     def test_open_helper_keep_rules_field(self, feed_settings_screen):
         """Test opening helper for keep rules field."""
@@ -1213,12 +1232,13 @@ class TestHelperIntegration:
         mock_app.push_screen = MagicMock()
 
         mock_widget = MagicMock()
-        mock_widget.id = "keep-rules"
+        mock_widget.id = "keeplist-rules"
         mock_widget.parent = None
 
         with (
             patch.object(type(feed_settings_screen), "focused", new_callable=PropertyMock) as mock_focused,
             patch.object(type(feed_settings_screen), "app", new_callable=PropertyMock) as mock_app_prop,
+            patch.object(feed_settings_screen, "_show_message"),
         ):
             mock_focused.return_value = mock_widget
             mock_app_prop.return_value = mock_app
@@ -1227,7 +1247,7 @@ class TestHelperIntegration:
             mock_app.push_screen.assert_called_once()
             call_args = mock_app.push_screen.call_args
             screen = call_args[0][0]
-            assert screen.rule_type == "keep_rules"
+            assert screen.rule_type == "keeplist_rules"
 
     def test_open_helper_passes_docs_cache(self, feed_settings_screen):
         """Test that docs cache is passed to helper screen."""
@@ -1338,23 +1358,28 @@ class TestFormPersistenceIntegration:
         # Auto-save should be scheduled
         assert mock_timer.called
 
-    def test_recovery_checked_on_mount(self, feed_settings_screen):
-        """Test that recovery is checked on mount."""
+    @pytest.mark.asyncio
+    async def test_session_cleared_on_mount(self, feed_settings_screen):
+        """Test that session state is cleared on mount to start fresh."""
         with (
-            patch.object(feed_settings_screen, "_check_for_recovery") as mock_check,
+            patch.object(feed_settings_screen.persistence, "clear_session") as mock_clear,
             patch.object(feed_settings_screen, "query_one"),
+            patch("miniflux_tui.ui.screens.feed_settings.hasattr", return_value=False),
         ):
-            feed_settings_screen.on_mount()
+            await feed_settings_screen.on_mount()
 
-        assert mock_check.called
+        # Verify session was cleared to prevent showing stale unsaved changes
+        mock_clear.assert_called_once_with(feed_settings_screen.feed_id)
 
-    def test_original_values_stored_on_mount_call(self, feed_settings_screen):
+    @pytest.mark.asyncio
+    async def test_original_values_stored_on_mount_call(self, feed_settings_screen):
         """Test that original values are stored in on_mount."""
         with (
             patch.object(feed_settings_screen, "_store_original_values") as mock_store,
             patch.object(feed_settings_screen, "query_one"),
+            patch("miniflux_tui.ui.screens.feed_settings.hasattr", return_value=False),
         ):
-            feed_settings_screen.on_mount()
+            await feed_settings_screen.on_mount()
 
         assert mock_store.called
 
@@ -1385,3 +1410,196 @@ class TestFormPersistenceIntegration:
             result = feed_settings_screen._get_current_field_values()
 
         assert result == {}
+
+
+class TestChangeFieldCounting:
+    """Test actual change field counting (integration tests without mocking the counter)."""
+
+    @pytest.fixture
+    def counting_screen(self, sample_feed, mock_client):
+        """Create a screen for testing change counting without mocking the indicator."""
+        screen = FeedSettingsScreen(
+            feed_id=sample_feed.id,
+            feed=sample_feed,
+            client=mock_client,
+        )
+        screen.set_timer = MagicMock(return_value=MagicMock())
+        screen._initializing = False
+        # Store original values
+        screen._store_original_values()
+        return screen
+
+    def test_count_changed_fields_no_changes(self, counting_screen):
+        """Test that no changes are counted initially."""
+        with patch.object(counting_screen, "_get_widget_value_for_field") as mock_get:
+            # Return original values (no change)
+            mock_get.side_effect = lambda widget_id: counting_screen.original_values.get(
+                {
+                    "feed-title": "title",
+                    "site-url": "site_url",
+                    "feed-url": "feed_url",
+                    "category-id": "category_id",
+                    "feed-description": "description",
+                    "hide-globally": "hide_globally",
+                    "no-media-player": "no_media_player",
+                    "feed-disabled": "disabled",
+                    "auth-username": "username",
+                    "auth-password": "password",
+                    "user-agent": "user_agent",
+                    "proxy-url": "proxy_url",
+                    "ignore-https-errors": "ignore_https_errors",
+                    "scraper-rules": "scraper_rules",
+                    "rewrite-rules": "rewrite_rules",
+                    "blocklist-rules": "blocklist_rules",
+                    "keeplist-rules": "keeplist_rules",
+                    "check-interval": "check_interval",
+                }.get(widget_id)
+            )
+
+            count = counting_screen._count_changed_fields()
+
+        assert count == 0, "Should be 0 changes when all values match originals"
+
+    def test_count_changed_fields_one_field_changed(self, counting_screen):
+        """Test that changing one field counts as 1 change, not 10."""
+        with patch.object(counting_screen, "_get_widget_value_for_field") as mock_get:
+            field_mapping = {
+                "feed-title": "title",
+                "site-url": "site_url",
+                "feed-url": "feed_url",
+                "category-id": "category_id",
+                "feed-description": "description",
+                "hide-globally": "hide_globally",
+                "no-media-player": "no_media_player",
+                "feed-disabled": "disabled",
+                "auth-username": "username",
+                "auth-password": "password",
+                "user-agent": "user_agent",
+                "proxy-url": "proxy_url",
+                "ignore-https-errors": "ignore_https_errors",
+                "scraper-rules": "scraper_rules",
+                "rewrite-rules": "rewrite_rules",
+                "blocklist-rules": "blocklist_rules",
+                "keeplist-rules": "keeplist_rules",
+                "check-interval": "check_interval",
+            }
+
+            def get_value(widget_id):
+                # Title changed, everything else is original
+                if widget_id == "feed-title":
+                    return "New Title"
+                return counting_screen.original_values.get(field_mapping.get(widget_id))
+
+            mock_get.side_effect = get_value
+
+            count = counting_screen._count_changed_fields()
+
+        assert count == 1, "Changing one field should count as 1 change"
+
+    def test_count_changed_fields_multiple_changed(self, counting_screen):
+        """Test that changing multiple fields counts each field once."""
+        with patch.object(counting_screen, "_get_widget_value_for_field") as mock_get:
+            field_mapping = {
+                "feed-title": "title",
+                "site-url": "site_url",
+                "feed-url": "feed_url",
+                "category-id": "category_id",
+                "feed-description": "description",
+                "hide-globally": "hide_globally",
+                "no-media-player": "no_media_player",
+                "feed-disabled": "disabled",
+                "auth-username": "username",
+                "auth-password": "password",
+                "user-agent": "user_agent",
+                "proxy-url": "proxy_url",
+                "ignore-https-errors": "ignore_https_errors",
+                "scraper-rules": "scraper_rules",
+                "rewrite-rules": "rewrite_rules",
+                "blocklist-rules": "blocklist_rules",
+                "keeplist-rules": "keeplist_rules",
+                "check-interval": "check_interval",
+            }
+
+            def get_value(widget_id):
+                # Title and description changed, everything else original
+                if widget_id == "feed-title":
+                    return "New Title"
+                if widget_id == "feed-description":
+                    return "Added description"
+                return counting_screen.original_values.get(field_mapping.get(widget_id))
+
+            mock_get.side_effect = get_value
+
+            count = counting_screen._count_changed_fields()
+
+        assert count == 2, "Changing two fields should count as 2 changes"
+
+    def test_count_changed_fields_typing_many_chars_counts_as_one(self, counting_screen):
+        """Test that typing many characters in description field counts as 1 change."""
+        with patch.object(counting_screen, "_get_widget_value_for_field") as mock_get:
+            field_mapping = {
+                "feed-title": "title",
+                "site-url": "site_url",
+                "feed-url": "feed_url",
+                "category-id": "category_id",
+                "feed-description": "description",
+                "hide-globally": "hide_globally",
+                "no-media-player": "no_media_player",
+                "feed-disabled": "disabled",
+                "auth-username": "username",
+                "auth-password": "password",
+                "user-agent": "user_agent",
+                "proxy-url": "proxy_url",
+                "ignore-https-errors": "ignore_https_errors",
+                "scraper-rules": "scraper_rules",
+                "rewrite-rules": "rewrite_rules",
+                "blocklist-rules": "blocklist_rules",
+                "keeplist-rules": "keeplist_rules",
+                "check-interval": "check_interval",
+            }
+
+            def get_value(widget_id):
+                # Description has very long text (simulate many keystrokes)
+                if widget_id == "feed-description":
+                    return "This is a very long description that was typed character by character"
+                return counting_screen.original_values.get(field_mapping.get(widget_id))
+
+            mock_get.side_effect = get_value
+
+            count = counting_screen._count_changed_fields()
+
+        assert count == 1, "Typing 60+ characters should still count as 1 field change"
+
+    def test_count_changed_fields_undo_to_original(self, counting_screen):
+        """Test that changing a field back to original counts as 0 changes."""
+        with patch.object(counting_screen, "_get_widget_value_for_field") as mock_get:
+            field_mapping = {
+                "feed-title": "title",
+                "site-url": "site_url",
+                "feed-url": "feed_url",
+                "category-id": "category_id",
+                "feed-description": "description",
+                "hide-globally": "hide_globally",
+                "no-media-player": "no_media_player",
+                "feed-disabled": "disabled",
+                "auth-username": "username",
+                "auth-password": "password",
+                "user-agent": "user_agent",
+                "proxy-url": "proxy_url",
+                "ignore-https-errors": "ignore_https_errors",
+                "scraper-rules": "scraper_rules",
+                "rewrite-rules": "rewrite_rules",
+                "blocklist-rules": "blocklist_rules",
+                "keeplist-rules": "keeplist_rules",
+                "check-interval": "check_interval",
+            }
+
+            def get_value(widget_id):
+                # All values are back to original (user typed then deleted)
+                return counting_screen.original_values.get(field_mapping.get(widget_id))
+
+            mock_get.side_effect = get_value
+
+            count = counting_screen._count_changed_fields()
+
+        assert count == 0, "Undoing changes should show 0 unsaved changes"

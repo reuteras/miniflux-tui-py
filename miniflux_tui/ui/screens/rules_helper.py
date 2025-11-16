@@ -9,10 +9,9 @@ from textual.app import ComposeResult
 from textual.binding import Binding
 from textual.containers import Container, VerticalScroll
 from textual.screen import Screen
-from textual.widgets import Footer, Static
+from textual.widgets import Footer, Header, Static
 
 from miniflux_tui.docs_fetcher import DocsFetcher
-from miniflux_tui.ui.widgets.safe_widgets import SafeHeader
 from miniflux_tui.utils import consolidate_blank_lines
 
 if TYPE_CHECKING:
@@ -43,6 +42,7 @@ class RulesHelperScreen(Screen):
     RulesHelperScreen {
         background: $surface;
         color: $text;
+        layout: vertical;
     }
 
     RulesHelperScreen > Header {
@@ -56,6 +56,7 @@ class RulesHelperScreen(Screen):
     #helper-container {
         height: 1fr;
         width: 100%;
+        layout: vertical;
     }
 
     #helper-header {
@@ -137,7 +138,7 @@ class RulesHelperScreen(Screen):
         Yields:
             Composed widgets for the screen
         """
-        yield SafeHeader()
+        yield Header()
 
         with Container(id="helper-container"):
             yield Static(
@@ -198,9 +199,8 @@ class RulesHelperScreen(Screen):
         titles = {
             "scraper_rules": "Scraper Rules",
             "rewrite_rules": "Rewrite Rules",
-            "url_rewrite_rules": "URL Rewrite Rules",
-            "blocking_rules": "Blocking Rules",
-            "keep_rules": "Keep Rules",
+            "blocklist_rules": "Blocklist Rules",
+            "keeplist_rules": "Keeplist Rules",
         }
         return titles.get(self.rule_type, self.rule_type)
 

@@ -143,6 +143,23 @@ Features will leverage the [Miniflux Python client](https://github.com/miniflux/
 - `get_user()` - User settings
 - `get_server_info()` - Server version
 
+### API-Dependent Features (When Available)
+These features are planned pending upstream Miniflux API support:
+
+- **Disable HTTP/2 to avoid fingerprinting** - Not yet available in Miniflux API
+  - Will be added to Feed Settings when the Miniflux server provides this option
+  - UI component already prepared for future implementation
+
+- **Entry Filtering Rules** - Internal support exists in Miniflux, not yet exposed via API
+  - Entry Blocking Rules - Filter entries by date, title, URL, content, author, tags
+  - Entry Allow Rules - Keep only entries matching specified criteria
+  - Would support regex patterns for flexible filtering
+  - Requires Miniflux API enhancement to expose feed-level entry filter configuration
+
+- **URL Rewrite Rules** - Not yet available in Miniflux API
+  - Separate from Content Rewrite Rules for manipulating entry URLs
+  - Requires Miniflux API enhancement
+
 ### Data Model Updates
 - Add `Category` model
 - Extend `Feed` model with status/error info
