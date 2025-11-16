@@ -89,7 +89,22 @@ This document outlines the planned features and improvements for the miniflux-tu
 - **Issue**: [#TBD](https://github.com/reuteras/miniflux-tui-py/issues)
 - **Status**: 📋 Planned
 
-## Version 0.7.0 - Advanced Features
+## Version 0.7.0 - Themes & Performance 🔄
+
+### UI/UX Improvements - Dark/Light Theme (🚀 High Priority)
+- [ ] Dark theme preset with optimized colors
+- [ ] Light theme preset with optimized colors
+- [ ] Theme toggle keybinding ('t' or similar)
+- [ ] Theme preference persistence in config
+- [ ] Runtime theme switching without restart
+- **Status**: 🔄 In Progress
+
+### Performance & Optimization (💡 Low Priority)
+- [ ] Incremental feed sync
+- [ ] Background refresh with notifications
+- [ ] Memory optimization for large feed lists
+
+## Version 0.8.0 - Advanced Features (Planned)
 
 ### Search & Discovery (📋 Planned)
 - [ ] Full-text search across all entries
@@ -97,14 +112,7 @@ This document outlines the planned features and improvements for the miniflux-tu
 - [ ] Save search queries (current session only - in-memory)
 - [ ] Search history (current session only)
 
-### Performance & Optimization (💡 Low Priority)
-- [ ] Incremental feed sync
-- [ ] Background refresh with notifications
-- [ ] Memory optimization for large feed lists
-
 ### UI/UX Improvements (⭐ Medium Priority)
-- [ ] Dark/light theme toggle (🚀 High Priority)
-- [ ] Sidebar for category/feed navigation
 - [ ] Bookmark/clipboard integration
 - [ ] Export entries to various formats
 - [ ] Customizable keybindings (💡 Low Priority)
@@ -178,8 +186,9 @@ These features are planned pending upstream Miniflux API support:
 
 - **v0.4.0** ✅ Released - Search & Theme support
 - **v0.5.0** ✅ Released (2025-11-01) - Categories & Feed Management
-- **v0.6.0** 📋 Planned (Q1 2026) - History & User Settings
-- **v0.7.0** 📋 Planned (Q2 2026) - Advanced Features
+- **v0.6.0** ✅ Released (2025-11-14) - History & User Settings
+- **v0.7.0** 🔄 In Progress - Themes & Performance Optimization
+- **v0.8.0** 📋 Planned (Q2 2026) - Advanced Features (Search, Integrations)
 
 ## Contributing
 
@@ -201,6 +210,6 @@ Have ideas for new features? Please:
 
 ---
 
-**Last Updated**: November 6, 2025
-**Current Version**: v0.5.10
-**Next Milestone**: v0.6.0 (User Settings & Advanced Features)
+**Last Updated**: November 16, 2025
+**Current Version**: v0.6.4
+**Next Milestone**: v0.7.0 (Themes & Performance Optimization)
