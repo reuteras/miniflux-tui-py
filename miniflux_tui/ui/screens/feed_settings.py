@@ -51,6 +51,7 @@ class FeedSettingsScreen(Screen):
         background: $surface;
         color: $text;
         layout: vertical;
+        overflow: hidden;
     }
 
     FeedSettingsScreen > Header {

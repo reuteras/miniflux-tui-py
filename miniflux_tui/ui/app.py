@@ -61,6 +61,7 @@ class MinifluxTuiApp(App):
     CSS = """
     Screen {
         background: $surface;
+        overflow: hidden;
     }
 
     Header {

@@ -53,6 +53,10 @@ class EntryReaderScreen(Screen):
     app: EntryReaderAppProtocol
 
     DEFAULT_CSS = """
+    EntryReaderScreen {
+        overflow: hidden;
+    }
+
     EntryReaderScreen > VerticalScroll {
         height: 1fr;
         width: 100%;
