@@ -31,7 +31,7 @@ jobs:
         uses: renovatebot/github-action@a3c115cd6676c8a5bc72f9715f108759e570daf5 # v43.0.19
         with:
           configurationFile: .renovaterc.json
-          token: ${{ secrets.BOT_TOKEN }}
+          token: ${{ secrets.GITHUB_TOKEN }}
         env:
           LOG_LEVEL: 'debug'
           RENOVATE_REPOSITORIES: 'reuteras/miniflux-tui-py'

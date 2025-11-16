@@ -10,7 +10,7 @@ This document describes the branch protection rules for the `main` branch.
 
 ### Pull Request Requirements
 - ✅ Require pull request before merging
-- ✅ **Require 1 approving review** (automated via reuteras-review bot)
+- ✅ **Require 1 approving review** (from the maintainer)
 - ✅ Dismiss stale reviews when new commits are pushed
 - ✅ **Require last push approval** (prevents self-approval)
 - ✅ Enforce restrictions for administrators
