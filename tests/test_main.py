@@ -214,6 +214,7 @@ class TestMainNormalStartup:
     def test_normal_startup_with_valid_config(self):
         """Test normal startup with valid configuration."""
         mock_config = MagicMock()
+        mock_config.get_api_key.return_value = TEST_TOKEN
 
         with (
             patch("miniflux_tui.main.load_config") as mock_load,
@@ -224,7 +225,24 @@ class TestMainNormalStartup:
                 result = main()
 
         assert result == 0
+        mock_config.get_api_key.assert_called_once_with(refresh=True)
         mock_run.assert_awaited_once_with(mock_config)
+
+    def test_startup_password_command_fails(self, capsys):
+        """Test startup fails gracefully when password command fails."""
+        mock_config = MagicMock()
+        mock_config.get_api_key.side_effect = RuntimeError("Password command exited with status 1")
+
+        with patch("miniflux_tui.main.load_config") as mock_load:
+            mock_load.return_value = mock_config
+            with patch.object(sys, "argv", ["miniflux-tui"]):
+                result = main()
+
+        captured = capsys.readouterr()
+        assert "Error: Failed to retrieve API token from password command" in captured.out
+        assert "Password command exited with status 1" in captured.out
+        assert "--check-config" in captured.out
+        assert result == 1
 
     def test_startup_missing_config(self, capsys):
         """Test startup when config file doesn't exist."""

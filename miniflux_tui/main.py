@@ -242,6 +242,16 @@ def _run_application() -> int:
         print("\nRun 'miniflux-tui --init' to create a default configuration.")
         return 1
 
+    # Validate password command works before starting TUI
+    try:
+        config.get_api_key(refresh=True)
+    except RuntimeError as exc:
+        print("Error: Failed to retrieve API token from password command")
+        print(f"Details: {exc}")
+        print("\nVerify your password command is correct by running:")
+        print("  miniflux-tui --check-config")
+        return 1
+
     # Start the TUI application
 
     try:
