@@ -62,6 +62,10 @@ class EntryReaderScreen(Screen):
         width: 100%;
         overflow: hidden auto;
     }
+
+    .entry-content {
+        overflow: hidden;
+    }
     """
 
     def __init__(
