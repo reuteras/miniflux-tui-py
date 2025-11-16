@@ -52,6 +52,14 @@ class EntryReaderScreen(Screen):
 
     app: EntryReaderAppProtocol
 
+    DEFAULT_CSS = """
+    EntryReaderScreen > VerticalScroll {
+        height: 1fr;
+        width: 100%;
+        overflow: hidden auto;
+    }
+    """
+
     def __init__(
         self,
         entry: Entry,

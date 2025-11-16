@@ -64,7 +64,7 @@ class FeedSettingsScreen(Screen):
     FeedSettingsScreen > VerticalScroll {
         height: 1fr;
         width: 100%;
-        overflow: auto auto;
+        overflow: hidden auto;
     }
 
     FeedSettingsScreen > #bottom-section {
