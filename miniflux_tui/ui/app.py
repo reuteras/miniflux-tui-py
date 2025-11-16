@@ -61,7 +61,6 @@ class MinifluxTuiApp(App):
     CSS = """
     Screen {
         background: $surface;
-        overflow: hidden;
     }
 
     Header {
@@ -71,32 +70,23 @@ class MinifluxTuiApp(App):
     .entry-title {
         padding: 1 2;
         background: $boost;
-        overflow: hidden;
     }
 
     .entry-meta {
         padding: 0 2;
-        overflow: hidden;
     }
 
     .entry-url {
         padding: 0 2 1 2;
-        overflow: hidden;
     }
 
     .separator {
         padding: 0 2;
         color: $border;
-        overflow: hidden;
     }
 
     .entry-content {
         padding: 1 2;
-        overflow: hidden;
-    }
-
-    #link-indicator {
-        overflow: hidden;
     }
 
     ListView {
