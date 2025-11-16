@@ -1013,6 +1013,53 @@ class FeedSettingsScreen(Screen):
         self._show_message(message, severity="warning")
         self._recovery_pending = recovery
 
+    def _get_widget_value_for_field(self, widget_id: str) -> Any:
+        """Get value from a widget, handling different widget types.
+
+        Args:
+            widget_id: ID of the widget
+
+        Returns:
+            Current value or None if widget not found
+        """
+        try:
+            # Input widgets (title, URLs, usernames, intervals)
+            input_widgets = {
+                "feed-title",
+                "site-url",
+                "feed-url",
+                "auth-username",
+                "auth-password",
+                "user-agent",
+                "proxy-url",
+                "check-interval",
+            }
+            if widget_id in input_widgets:
+                return self.query_one(f"#{widget_id}", Input).value
+
+            # Select widget (category)
+            if widget_id == "category-id":
+                value = self.query_one("#category-id", Select).value
+                return str(value) if value else ""
+
+            # TextArea widgets (description and rules)
+            if widget_id == "feed-description" or widget_id.endswith("-rules"):
+                return self.query_one(f"#{widget_id}", TextArea).text
+
+            # Checkbox widgets (flags)
+            checkbox_widgets = {
+                "hide-globally",
+                "no-media-player",
+                "feed-disabled",
+                "ignore-https-errors",
+            }
+            if widget_id in checkbox_widgets:
+                return self.query_one(f"#{widget_id}", Checkbox).value
+        except Exception:  # noqa: S110  # nosec: B110
+            pass
+
+        return None
+
     def _count_changed_fields(self) -> int:
         """Count how many fields have actually changed from their original values.
 
@@ -1023,9 +1070,6 @@ class FeedSettingsScreen(Screen):
             Number of fields with changed values
         """
         changed_count = 0
-
-        # Get current values from all widgets
-        current_values = self._get_current_field_values()
 
         # Map widget IDs to field names (same mapping as _on_field_changed)
         field_mapping = {
@@ -1051,10 +1095,11 @@ class FeedSettingsScreen(Screen):
 
         # Check each field for changes
         for widget_id, field_name in field_mapping.items():
-            if widget_id not in current_values:
+            current_value = self._get_widget_value_for_field(widget_id)
+            if current_value is None:
+                # Widget not found, skip
                 continue
 
-            current_value = current_values[widget_id]
             original_value = self.original_values.get(field_name)
 
             # Type-aware comparison (same logic as _on_field_changed)
