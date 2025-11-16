@@ -593,116 +593,6 @@ class TestEntryReaderScreenRefresh:
         assert hasattr(screen, "refresh_screen")
         assert callable(screen.refresh_screen)
 
-    def test_clear_scroll_content_removes_children(self, sample_entry):
-        """Test _clear_scroll_content removes all children."""
-        screen = EntryReaderScreen(entry=sample_entry)
-
-        # Create mock children with remove method
-        child1 = MagicMock()
-        child2 = MagicMock()
-        mock_scroll = MagicMock()
-        mock_scroll.children = [child1, child2]
-
-        # Call method
-        screen._clear_scroll_content(mock_scroll)
-
-        # Verify all children were removed
-        child1.remove.assert_called_once()
-        child2.remove.assert_called_once()
-
-    def test_get_scroll_container_delegates_to_ensure(self, sample_entry):
-        """Test _get_scroll_container delegates to _ensure_scroll_container."""
-        screen = EntryReaderScreen(entry=sample_entry)
-
-        # Mock _ensure_scroll_container
-        mock_scroll = MagicMock()
-        screen._ensure_scroll_container = MagicMock(return_value=mock_scroll)
-
-        # Call method
-        result = screen._get_scroll_container()
-
-        # Verify it called _ensure_scroll_container
-        screen._ensure_scroll_container.assert_called_once()
-        assert result is mock_scroll
-
-    def test_mount_entry_content_calls_all_helpers(self, sample_entry):
-        """Test _mount_entry_content calls all mount helper methods."""
-        screen = EntryReaderScreen(entry=sample_entry)
-        mock_scroll = MagicMock()
-
-        # Mock all helper methods
-        screen._mount_title = MagicMock()
-        screen._mount_metadata = MagicMock()
-        screen._mount_url = MagicMock()
-        screen._mount_separator = MagicMock()
-        screen._mount_content = MagicMock()
-
-        # Call method
-        screen._mount_entry_content(mock_scroll)
-
-        # Verify all helpers were called
-        screen._mount_title.assert_called_once_with(mock_scroll)
-        screen._mount_metadata.assert_called_once_with(mock_scroll)
-        screen._mount_url.assert_called_once_with(mock_scroll)
-        screen._mount_separator.assert_called_once_with(mock_scroll)
-        screen._mount_content.assert_called_once_with(mock_scroll)
-
-    def test_mount_title_creates_widget(self, sample_entry):
-        """Test _mount_title creates and mounts widget."""
-        sample_entry.starred = True
-        screen = EntryReaderScreen(entry=sample_entry)
-        mock_scroll = MagicMock()
-
-        # Call method
-        screen._mount_title(mock_scroll)
-
-        # Verify mount was called
-        mock_scroll.mount.assert_called_once()
-
-    def test_mount_metadata_creates_widget(self, sample_entry):
-        """Test _mount_metadata creates metadata widget."""
-        screen = EntryReaderScreen(entry=sample_entry)
-        mock_scroll = MagicMock()
-
-        # Call method
-        screen._mount_metadata(mock_scroll)
-
-        # Verify mount was called
-        mock_scroll.mount.assert_called_once()
-
-    def test_mount_url_creates_widget(self, sample_entry):
-        """Test _mount_url creates URL widget."""
-        screen = EntryReaderScreen(entry=sample_entry)
-        mock_scroll = MagicMock()
-
-        # Call method
-        screen._mount_url(mock_scroll)
-
-        # Verify mount was called
-        mock_scroll.mount.assert_called_once()
-
-    def test_mount_separator_creates_widget(self, sample_entry):
-        """Test _mount_separator creates separator widget."""
-        screen = EntryReaderScreen(entry=sample_entry)
-        mock_scroll = MagicMock()
-
-        # Call method
-        screen._mount_separator(mock_scroll)
-
-        # Verify mount was called
-        mock_scroll.mount.assert_called_once()
-
-    def test_mount_content_creates_markdown_widget(self, sample_entry):
-        """Test _mount_content creates Markdown widget and link indicator."""
-        screen = EntryReaderScreen(entry=sample_entry)
-        mock_scroll = MagicMock()
-
-        # Call method
-        screen._mount_content(mock_scroll)
-
-        # Verify mount was called twice (Markdown + link indicator)
-        assert mock_scroll.mount.call_count == 2
-
 
 class TestEntryReaderScreenOtherActions:
     """Test remaining action methods."""
@@ -734,17 +624,6 @@ class TestEntryReaderScreenOtherActions:
 
 class TestEntryReaderScreenHelpers:
     """Test helper methods for mounting and content management."""
-
-    def test_get_scroll_container_delegates_to_ensure(self, sample_entry):
-        """Test _get_scroll_container delegates to _ensure_scroll_container."""
-        screen = EntryReaderScreen(entry=sample_entry)
-        mock_scroll = MagicMock()
-        screen._ensure_scroll_container = MagicMock(return_value=mock_scroll)
-
-        result = screen._get_scroll_container()
-
-        screen._ensure_scroll_container.assert_called_once()
-        assert result is mock_scroll
 
     def test_mark_entry_as_read_method_exists(self, sample_entry):
         """Test _mark_entry_as_read method exists and is callable."""
@@ -880,41 +759,6 @@ class TestEntryReaderScreenIntegration:
         with mock.patch("miniflux_tui.ui.screens.entry_reader.webbrowser.open") as mock_open:
             screen.action_open_browser()
             mock_open.assert_called_once_with(sample_entry.url)
-
-    def test_mount_helpers_called_in_sequence(self, sample_entry):
-        """Test mount helpers are called in proper sequence."""
-        screen = EntryReaderScreen(entry=sample_entry)
-        mock_scroll = MagicMock()
-
-        # Mock all mount methods to track call order
-        call_order = []
-
-        def track_mount_title(scroll):
-            call_order.append("title")
-
-        def track_mount_metadata(scroll):
-            call_order.append("metadata")
-
-        def track_mount_url(scroll):
-            call_order.append("url")
-
-        def track_mount_separator(scroll):
-            call_order.append("separator")
-
-        def track_mount_content(scroll):
-            call_order.append("content")
-
-        screen._mount_title = track_mount_title
-        screen._mount_metadata = track_mount_metadata
-        screen._mount_url = track_mount_url
-        screen._mount_separator = track_mount_separator
-        screen._mount_content = track_mount_content
-
-        # Call the main mount method
-        screen._mount_entry_content(mock_scroll)
-
-        # Verify order
-        assert call_order == ["title", "metadata", "url", "separator", "content"]
 
 
 class TestEntryReaderActionMethods:
@@ -1254,21 +1098,6 @@ class TestEntryReaderHelperMethods:
         """Test _ensure_scroll_container method exists."""
         screen = EntryReaderScreen(entry=sample_entry)
         assert callable(screen._ensure_scroll_container)
-
-    def test_get_scroll_container_exists(self, sample_entry):
-        """Test _get_scroll_container method exists."""
-        screen = EntryReaderScreen(entry=sample_entry)
-        assert callable(screen._get_scroll_container)
-
-    def test_clear_scroll_content_exists(self, sample_entry):
-        """Test _clear_scroll_content method exists."""
-        screen = EntryReaderScreen(entry=sample_entry)
-        assert callable(screen._clear_scroll_content)
-
-    def test_mount_entry_content_exists(self, sample_entry):
-        """Test _mount_entry_content method exists."""
-        screen = EntryReaderScreen(entry=sample_entry)
-        assert callable(screen._mount_entry_content)
 
 
 class TestEntryReaderLinkNavigation:

@@ -199,9 +199,8 @@ class RulesHelperScreen(Screen):
         titles = {
             "scraper_rules": "Scraper Rules",
             "rewrite_rules": "Rewrite Rules",
-            "url_rewrite_rules": "URL Rewrite Rules",
-            "blocking_rules": "Blocking Rules",
-            "keep_rules": "Keep Rules",
+            "blocklist_rules": "Blocklist Rules",
+            "keeplist_rules": "Keeplist Rules",
         }
         return titles.get(self.rule_type, self.rule_type)
 

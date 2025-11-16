@@ -7,9 +7,9 @@ from typing import TYPE_CHECKING, Any, ClassVar
 
 from textual.app import ComposeResult
 from textual.binding import Binding
-from textual.containers import Container, VerticalScroll
+from textual.containers import Container, ScrollableContainer
 from textual.screen import Screen
-from textual.widgets import Button, Checkbox, Footer, Header, Input, Static, TextArea
+from textual.widgets import Button, Checkbox, Footer, Header, Input, Select, Static, TextArea
 
 from miniflux_tui.docs_cache import DocsCache
 from miniflux_tui.form_persistence_manager import FormPersistenceManager
@@ -17,7 +17,7 @@ from miniflux_tui.ui.screens.rules_helper import RulesHelperScreen
 
 if TYPE_CHECKING:
     from miniflux_tui.api.client import MinifluxClient
-    from miniflux_tui.api.models import Feed
+    from miniflux_tui.api.models import Category, Feed
 
 
 class FeedSettingsScreen(Screen):
@@ -62,13 +62,21 @@ class FeedSettingsScreen(Screen):
         dock: bottom;
     }
 
-    FeedSettingsScreen > VerticalScroll {
+    #content-wrapper {
+        layout: vertical;
         height: 1fr;
         width: 100%;
-        overflow: hidden auto;
+        overflow: hidden hidden;
     }
 
-    FeedSettingsScreen > #bottom-section {
+    #content-wrapper > ScrollableContainer {
+        height: 1fr;
+        width: 100%;
+        overflow-x: hidden;
+        overflow-y: auto;
+    }
+
+    #content-wrapper > #bottom-section {
         height: auto;
         width: 100%;
         layout: vertical;
@@ -97,6 +105,7 @@ class FeedSettingsScreen(Screen):
         content-align: left middle;
         text-style: bold;
         color: $text;
+        overflow: hidden;
     }
 
     #unsaved-indicator {
@@ -106,6 +115,7 @@ class FeedSettingsScreen(Screen):
         margin-bottom: 1;
         color: $warning;
         text-style: dim;
+        overflow: hidden;
     }
 
     .section {
@@ -114,6 +124,7 @@ class FeedSettingsScreen(Screen):
         padding: 2 2;
         margin-bottom: 2;
         border-bottom: solid $primary 30%;
+        overflow: hidden;
     }
 
     .section-title {
@@ -158,6 +169,7 @@ class FeedSettingsScreen(Screen):
         width: 100%;
         height: 100%;
         min-height: 8;
+        overflow: hidden;
     }
 
     #status-message {
@@ -242,6 +254,12 @@ class FeedSettingsScreen(Screen):
         # Auto-save debounce timer
         self._auto_save_handle = None
 
+        # Categories for dropdown
+        self.categories: list[Category] = []
+
+        # Initialization flag to prevent tracking changes during widget setup
+        self._initializing = True
+
     def compose(self) -> ComposeResult:
         """Compose the feed settings screen layout.
 
@@ -250,36 +268,39 @@ class FeedSettingsScreen(Screen):
         """
         yield Header()
 
-        with VerticalScroll(id="settings-scroll"):
-            # Settings header with unsaved indicator
-            yield Static(
-                f"Feed Settings: {self.feed.title}",
-                id="settings-header",
-            )
-            yield Static("", id="unsaved-indicator", classes="field-label")
+        # Wrapper to manage layout: ScrollableContainer gets space after bottom-section is sized
+        with Container(id="content-wrapper"):
+            # ScrollableContainer for form content - only this should scroll
+            with ScrollableContainer(id="settings-scroll"):
+                # Settings header with unsaved indicator
+                yield Static(
+                    f"Feed Settings: {self.feed.title}",
+                    id="settings-header",
+                )
+                yield Static("", id="unsaved-indicator", classes="field-label")
 
-            # Yield each section
-            yield from self._compose_general_settings()
-            yield from self._compose_network_settings()
-            yield from self._compose_rules_and_filtering()
-            yield from self._compose_feed_information()
-            yield from self._compose_danger_zone()
+                # Yield each section
+                yield from self._compose_general_settings()
+                yield from self._compose_network_settings()
+                yield from self._compose_rules_and_filtering()
+                yield from self._compose_feed_information()
+                yield from self._compose_danger_zone()
 
-        # Bottom container for status message and buttons
-        with Static(id="bottom-section"):
-            # Status message area
-            yield Static(self.status_message, id="status-message")
+            # Bottom container for status message and buttons (stays fixed at bottom)
+            with Static(id="bottom-section"):
+                # Status message area
+                yield Static(self.status_message, id="status-message")
 
-            # Button container
-            with Static(id="button-container"):
-                yield Button("Save", id="save-button", disabled=True)
-                yield Button("Cancel", id="cancel-button")
+                # Button container
+                with Static(id="button-container"):
+                    yield Button("Save", id="save-button", disabled=True)
+                    yield Button("Cancel", id="cancel-button")
 
         yield Footer()
 
     def _compose_general_settings(self) -> ComposeResult:
         """Compose the General Settings section."""
-        yield Static("General Settings", classes="section-title")
+        yield Static("General", classes="section-title")
         with Static(classes="section"):
             # Feed Title
             yield Static("Title", classes="field-label")
@@ -306,18 +327,41 @@ class FeedSettingsScreen(Screen):
                 classes="field-value",
             )
 
-            # Category ID
+            # Category (dropdown selector for available categories)
             yield Static("Category", classes="field-label")
-            yield Input(
-                value=str(self.feed.category_id or ""),
+            # Will be populated with categories in on_mount()
+            yield Select(
+                options=[("Loading...", "")],
                 id="category-id",
+                classes="field-value",
+                allow_blank=True,
+            )
+
+            # Description (optional notes/description for this feed)
+            yield Static("Description (optional)", classes="field-label")
+            yield TextArea(
+                text=self.feed.description,
+                id="feed-description",
                 classes="field-value",
             )
 
-            # Disabled checkbox
-            yield Static("Disabled", classes="field-label")
+            # Feed behavior options (checkboxes without extra labels)
             yield Checkbox(
-                label="Disable this feed",
+                label="Hide entries in global unread list",
+                value=self.feed.hide_globally,
+                id="hide-globally",
+                classes="field-value",
+            )
+
+            yield Checkbox(
+                label="No media player (audio/video)",
+                value=self.feed.no_media_player,
+                id="no-media-player",
+                classes="field-value",
+            )
+
+            yield Checkbox(
+                label="Do not refresh this feed",
                 value=self.feed.disabled,
                 id="feed-disabled",
                 classes="field-value",
@@ -330,7 +374,7 @@ class FeedSettingsScreen(Screen):
             # Username
             yield Static("Username (optional)", classes="field-label")
             yield Input(
-                value="",
+                value=self.feed.username or "",
                 id="auth-username",
                 classes="field-value",
             )
@@ -338,7 +382,7 @@ class FeedSettingsScreen(Screen):
             # Password
             yield Static("Password (optional)", classes="field-label")
             yield Input(
-                value="",
+                value=self.feed.password or "",
                 id="auth-password",
                 password=True,
                 classes="field-value",
@@ -347,7 +391,7 @@ class FeedSettingsScreen(Screen):
             # User-Agent
             yield Static("User-Agent (optional)", classes="field-label")
             yield Input(
-                value="",
+                value=self.feed.user_agent or "",
                 id="user-agent",
                 classes="field-value",
             )
@@ -355,7 +399,7 @@ class FeedSettingsScreen(Screen):
             # Proxy URL
             yield Static("Proxy URL (optional)", classes="field-label")
             yield Input(
-                value="",
+                value=self.feed.proxy_url or "",
                 id="proxy-url",
                 classes="field-value",
             )
@@ -364,7 +408,7 @@ class FeedSettingsScreen(Screen):
             yield Static("HTTPS Settings", classes="field-label")
             yield Checkbox(
                 label="Ignore HTTPS certificate errors",
-                value=False,
+                value=self.feed.ignore_https_errors,
                 id="ignore-https-errors",
                 classes="field-value",
             )
@@ -376,27 +420,22 @@ class FeedSettingsScreen(Screen):
             # Scraper Rules
             yield Static("Scraper Rules (optional)", classes="field-label")
             with Container(classes="textarea-container"):
-                yield TextArea(text="", id="scraper-rules")
+                yield TextArea(text=self.feed.scraper_rules or "", id="scraper-rules")
 
             # Rewrite Rules
             yield Static("Rewrite Rules (optional)", classes="field-label")
             with Container(classes="textarea-container"):
-                yield TextArea(text="", id="rewrite-rules")
+                yield TextArea(text=self.feed.rewrite_rules or "", id="rewrite-rules")
 
-            # URL Rewrite Rules
-            yield Static("URL Rewrite Rules (optional)", classes="field-label")
+            # Blocklist Rules (renamed from blocking_rules)
+            yield Static("Blocklist Rules (optional)", classes="field-label")
             with Container(classes="textarea-container"):
-                yield TextArea(text="", id="url-rewrite-rules")
+                yield TextArea(text=self.feed.blocklist_rules or "", id="blocklist-rules")
 
-            # Blocking Rules
-            yield Static("Blocking Rules (optional)", classes="field-label")
+            # Keeplist Rules (renamed from keep_rules)
+            yield Static("Keeplist Rules (optional)", classes="field-label")
             with Container(classes="textarea-container"):
-                yield TextArea(text="", id="blocking-rules")
-
-            # Keep Rules
-            yield Static("Keep Rules (optional)", classes="field-label")
-            with Container(classes="textarea-container"):
-                yield TextArea(text="", id="keep-rules")
+                yield TextArea(text=self.feed.keeplist_rules or "", id="keeplist-rules")
 
     def _compose_feed_information(self) -> ComposeResult:
         """Compose the Feed Information section."""
@@ -430,7 +469,7 @@ class FeedSettingsScreen(Screen):
             # Check Interval
             yield Static("Check Interval (minutes, optional)", classes="field-label")
             yield Input(
-                value="",
+                value=str(self.feed.check_interval or ""),
                 id="check-interval",
                 classes="field-value",
             )
@@ -457,19 +496,34 @@ class FeedSettingsScreen(Screen):
                 classes="danger-button",
             )
 
-    def on_mount(self) -> None:
+    async def on_mount(self) -> None:
         """Called when screen is mounted.
 
-        Initialize screen state, check for recovery, and load feed data.
+        Initialize screen state, load categories, and load feed data.
         """
+        # Clear all session state from previous invocations
+        # (change tracker, recovery drafts, etc.) to start fresh
+        # This ensures we don't show stale unsaved changes if the server data changed
+        self.persistence.clear_session(self.feed_id)
+
         # Store original field values for change tracking
         self._store_original_values()
 
-        # Check for recovery from previous session
-        self._check_for_recovery()
+        # Load categories from API
+        try:
+            if hasattr(self.app, "client") and self.app.client:  # type: ignore[attr-defined]
+                self.categories = await self.app.client.get_categories()  # type: ignore[attr-defined]
+                # Update the Select widget with loaded categories
+                self._update_category_selector()
+        except Exception:  # noqa: S110  # nosec: B110
+            # If categories fail to load, just continue with empty list
+            pass
 
         # Focus on first focusable element
         self.query_one("Button#save-button", expect_type=Button)
+
+        # Initialization complete - now track actual user changes
+        self._initializing = False
 
     def on_input_changed(self, event: Input.Changed) -> None:
         """Handle input field changes.
@@ -497,6 +551,17 @@ class FeedSettingsScreen(Screen):
         """
         if event.text_area.id:
             self._on_field_changed(event.text_area.id, event.text_area.text)
+
+    def on_select_changed(self, event: Select.Changed) -> None:
+        """Handle select/dropdown changes.
+
+        Args:
+            event: Select change event
+        """
+        if event.select.id:
+            # Convert empty string to None for category_id
+            value = event.value if event.value else None
+            self._on_field_changed(event.select.id, value)
 
     async def action_focus_next(self) -> None:
         """Focus next focusable widget."""
@@ -603,9 +668,8 @@ class FeedSettingsScreen(Screen):
         rule_field_mapping = {
             "scraper-rules": "scraper_rules",
             "rewrite-rules": "rewrite_rules",
-            "url-rewrite-rules": "url_rewrite_rules",
-            "blocking-rules": "blocking_rules",
-            "keep-rules": "keep_rules",
+            "blocklist-rules": "blocklist_rules",
+            "keeplist-rules": "keeplist_rules",
         }
 
         # Get currently focused widget
@@ -635,7 +699,7 @@ class FeedSettingsScreen(Screen):
 
         if not rule_type:
             self._show_message(
-                "Focus a rule field to see help. Rule fields: Scraper, Rewrite, URL Rewrite, Blocking, Keep.",
+                "Focus a rule field to see help. Rule fields: Scraper, Rewrite, Blocklist, Keeplist.",
                 severity="info",
             )
             return
@@ -706,6 +770,10 @@ class FeedSettingsScreen(Screen):
             widget_id: ID of the widget that changed
             new_value: New value of the widget
         """
+        # Skip change tracking during initialization (widgets fire events during setup)
+        if self._initializing:
+            return
+
         # Map widget IDs to feed field names
         field_mapping = {
             # General Settings
@@ -713,6 +781,9 @@ class FeedSettingsScreen(Screen):
             "site-url": "site_url",
             "feed-url": "feed_url",
             "category-id": "category_id",
+            "feed-description": "description",
+            "hide-globally": "hide_globally",
+            "no-media-player": "no_media_player",
             "feed-disabled": "disabled",
             # Network Settings
             "auth-username": "username",
@@ -723,18 +794,44 @@ class FeedSettingsScreen(Screen):
             # Rules & Filtering
             "scraper-rules": "scraper_rules",
             "rewrite-rules": "rewrite_rules",
-            "url-rewrite-rules": "url_rewrite_rules",
-            "blocking-rules": "blocking_rules",
-            "keep-rules": "keep_rules",
+            "blocklist-rules": "blocklist_rules",
+            "keeplist-rules": "keeplist_rules",
             # Feed Information
             "check-interval": "check_interval",
         }
 
         field_name = field_mapping.get(widget_id, widget_id)
 
-        # Store original value on first change
+        # Store original value on first change (if not already stored)
+        # This handles cases where _store_original_values() wasn't called yet
         if field_name not in self.original_values:
             self.original_values[field_name] = getattr(self.feed, field_name, None)
+
+        # Get the original value for comparison
+        original_value = self.original_values[field_name]
+
+        # CRITICAL FIX: Only track if the value has actually changed
+        # Convert new_value to the same type as original_value for comparison
+        # This prevents false positives from widget initialization
+        if original_value is not None:
+            # Convert new_value to match original_value type for comparison
+            if isinstance(original_value, str):
+                new_value_cmp = str(new_value) if new_value is not None else ""
+            elif isinstance(original_value, bool):
+                new_value_cmp = new_value
+            elif isinstance(original_value, int):
+                try:
+                    new_value_cmp = int(new_value) if new_value else None
+                except (ValueError, TypeError):
+                    new_value_cmp = new_value
+            else:
+                new_value_cmp = new_value
+        else:
+            new_value_cmp = new_value
+
+        # If the value hasn't actually changed from the original, skip tracking
+        if new_value_cmp == original_value:
+            return
 
         # Store the new value for collection later
         if not hasattr(self, "_field_values"):
@@ -742,12 +839,11 @@ class FeedSettingsScreen(Screen):
         self._field_values[field_name] = new_value
 
         # Track change with persistence manager
-        old_value = self.original_values.get(field_name)
         self.persistence.track_field_change(
             feed_id=self.feed_id,
             field_id=widget_id,
             field_name=field_name,
-            before_value=old_value,
+            before_value=original_value,
             after_value=new_value,
         )
 
@@ -767,6 +863,8 @@ class FeedSettingsScreen(Screen):
     def _collect_field_values(self) -> dict[str, Any]:
         """Collect all modified field values for API update.
 
+        Handles type conversions for specific fields (e.g., check_interval to int).
+
         Returns:
             Dictionary of field_name: new_value for dirty fields
         """
@@ -776,7 +874,21 @@ class FeedSettingsScreen(Screen):
         if hasattr(self, "_field_values"):
             for field_name in self.dirty_fields:
                 if self.dirty_fields[field_name] and field_name in self._field_values:
-                    updates[field_name] = self._field_values[field_name]
+                    value = self._field_values[field_name]
+
+                    # Type conversions for specific fields
+                    if field_name in {"check_interval", "category_id"}:
+                        # Convert to int or None
+                        if value and str(value).strip():
+                            try:
+                                value = int(str(value).strip())
+                            except ValueError:
+                                # If not a valid integer, skip this update
+                                continue
+                        else:
+                            value = None
+
+                    updates[field_name] = value
 
         return updates
 
@@ -815,29 +927,63 @@ class FeedSettingsScreen(Screen):
             status_widget.add_class("info")
 
     def _store_original_values(self) -> None:
-        """Store original field values for change tracking."""
+        """Store original field values for change tracking.
+
+        Note: Store values as they appear in widgets (strings for numeric fields)
+        to ensure proper comparison when tracking changes.
+        """
         self.original_values = {
             # General Settings
             "title": self.feed.title,
             "site_url": self.feed.site_url,
             "feed_url": self.feed.feed_url,
-            "category_id": self.feed.category_id,
+            # Convert category_id to string to match Select widget value type
+            "category_id": str(self.feed.category_id) if self.feed.category_id else "",
+            "description": self.feed.description or "",
+            "hide_globally": self.feed.hide_globally,
+            "no_media_player": self.feed.no_media_player,
             "disabled": self.feed.disabled,
             # Network Settings
-            "username": "",
-            "password": "",
-            "user_agent": "",
-            "proxy_url": "",
-            "ignore_https_errors": False,
+            "username": self.feed.username or "",
+            "password": self.feed.password or "",
+            "user_agent": self.feed.user_agent or "",
+            "proxy_url": self.feed.proxy_url or "",
+            "ignore_https_errors": self.feed.ignore_https_errors,
             # Rules & Filtering
-            "scraper_rules": "",
-            "rewrite_rules": "",
-            "url_rewrite_rules": "",
-            "blocking_rules": "",
-            "keep_rules": "",
+            "scraper_rules": self.feed.scraper_rules or "",
+            "rewrite_rules": self.feed.rewrite_rules or "",
+            "blocklist_rules": self.feed.blocklist_rules or "",
+            "keeplist_rules": self.feed.keeplist_rules or "",
             # Feed Information
-            "check_interval": "",
+            # Convert check_interval to string to match Input widget value type
+            "check_interval": str(self.feed.check_interval) if self.feed.check_interval else "",
         }
+
+    def _update_category_selector(self) -> None:
+        """Update the category Select widget with loaded categories."""
+        try:
+            # Build options list with (category_title, category_id)
+            options: list[tuple[str, str]] = []
+
+            # Add "No category" option
+            options.append(("No category", ""))
+
+            # Add loaded categories
+            for category in self.categories:
+                options.append((category.title, str(category.id)))
+
+            # Get the Select widget and update its options
+            category_select = self.query_one("#category-id", expect_type=Select)
+            category_select.set_options(options)
+
+            # Set the current value if feed has a category
+            if self.feed.category_id:
+                category_select.value = str(self.feed.category_id)
+            else:
+                category_select.value = ""
+        except Exception:  # noqa: S110  # nosec: B110
+            # If update fails, the Select widget will remain with its default options
+            pass
 
     def _check_for_recovery(self) -> None:
         """Check and handle recovery from previous session."""
@@ -926,6 +1072,11 @@ class FeedSettingsScreen(Screen):
             for textarea in self.query(TextArea):
                 if textarea.id:
                     field_values[textarea.id] = textarea.text
+
+            # Collect from Select fields
+            for select in self.query(Select):
+                if select.id:
+                    field_values[select.id] = select.value
         except Exception:  # noqa: S110  # nosec: B110
             pass
 
