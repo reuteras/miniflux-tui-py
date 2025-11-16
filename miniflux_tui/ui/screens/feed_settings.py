@@ -658,47 +658,8 @@ class FeedSettingsScreen(Screen):
             updated_feed = await self.client.update_feed(self.feed_id, **updates)
             _change_logger.info(f"API call succeeded, updated_feed.description={updated_feed.description!r}")
 
-            # Update internal state
-            self.feed = updated_feed
-            self.is_dirty = False
-            self.dirty_fields.clear()
-            # Reset original values to match current UI state
-            # Use UI widget values, not API response, to avoid inconsistencies
-            # The API response might contain incomplete data
-            self.original_values = {
-                "title": self._get_widget_value_for_field("feed-title") or "",
-                "site_url": self._get_widget_value_for_field("site-url") or "",
-                "feed_url": self._get_widget_value_for_field("feed-url") or "",
-                "category_id": self._get_widget_value_for_field("category-id") or "",
-                "description": self._get_widget_value_for_field("feed-description") or "",
-                "hide_globally": self._get_widget_value_for_field("hide-globally") or False,
-                "no_media_player": self._get_widget_value_for_field("no-media-player") or False,
-                "disabled": self._get_widget_value_for_field("feed-disabled") or False,
-                "username": self._get_widget_value_for_field("auth-username") or "",
-                "password": self._get_widget_value_for_field("auth-password") or "",
-                "user_agent": self._get_widget_value_for_field("user-agent") or "",
-                "proxy_url": self._get_widget_value_for_field("proxy-url") or "",
-                "crawler": self._get_widget_value_for_field("crawler") or False,
-                "ignore_http_cache": self._get_widget_value_for_field("ignore-http-cache") or False,
-                "ignore_https_errors": self._get_widget_value_for_field("ignore-https-errors") or False,
-                "scraper_rules": self._get_widget_value_for_field("scraper-rules") or "",
-                "rewrite_rules": self._get_widget_value_for_field("rewrite-rules") or "",
-                "blocklist_rules": self._get_widget_value_for_field("blocklist-rules") or "",
-                "keeplist_rules": self._get_widget_value_for_field("keeplist-rules") or "",
-                "check_interval": self._get_widget_value_for_field("check-interval") or "",
-            }
-
-            # Clear persistence state after successful save
-            self.persistence.clear_session(self.feed_id)
-
-            # Clear unsaved indicator
-            self._update_unsaved_indicator()
-
-            # Show success message with confirmation
-            self._show_message(
-                "✓ Feed settings saved successfully",
-                severity="success",
-            )
+            # Update internal state and reset tracking
+            self._handle_save_success(updated_feed)
 
         except TimeoutError:
             self._show_message("✗ Request timeout while saving", severity="error")
@@ -708,6 +669,55 @@ class FeedSettingsScreen(Screen):
             self._show_message(f"✗ Invalid input: {e}", severity="error")
         except Exception as e:
             self._show_message(f"✗ Error saving settings: {e}", severity="error")
+
+    def _handle_save_success(self, updated_feed: Feed) -> None:
+        """Handle successful feed settings save.
+
+        Updates internal state, resets original values, and shows confirmation.
+
+        Args:
+            updated_feed: The updated feed object from the API
+        """
+        self.feed = updated_feed
+        self.is_dirty = False
+        self.dirty_fields.clear()
+
+        # Reset original values to match current UI state
+        # Use UI widget values, not API response, to avoid inconsistencies
+        self.original_values = {
+            "title": self._get_widget_value_for_field("feed-title") or "",
+            "site_url": self._get_widget_value_for_field("site-url") or "",
+            "feed_url": self._get_widget_value_for_field("feed-url") or "",
+            "category_id": self._get_widget_value_for_field("category-id") or "",
+            "description": self._get_widget_value_for_field("feed-description") or "",
+            "hide_globally": self._get_widget_value_for_field("hide-globally") or False,
+            "no_media_player": self._get_widget_value_for_field("no-media-player") or False,
+            "disabled": self._get_widget_value_for_field("feed-disabled") or False,
+            "username": self._get_widget_value_for_field("auth-username") or "",
+            "password": self._get_widget_value_for_field("auth-password") or "",
+            "user_agent": self._get_widget_value_for_field("user-agent") or "",
+            "proxy_url": self._get_widget_value_for_field("proxy-url") or "",
+            "crawler": self._get_widget_value_for_field("crawler") or False,
+            "ignore_http_cache": self._get_widget_value_for_field("ignore-http-cache") or False,
+            "ignore_https_errors": self._get_widget_value_for_field("ignore-https-errors") or False,
+            "scraper_rules": self._get_widget_value_for_field("scraper-rules") or "",
+            "rewrite_rules": self._get_widget_value_for_field("rewrite-rules") or "",
+            "blocklist_rules": self._get_widget_value_for_field("blocklist-rules") or "",
+            "keeplist_rules": self._get_widget_value_for_field("keeplist-rules") or "",
+            "check_interval": self._get_widget_value_for_field("check-interval") or "",
+        }
+
+        # Clear persistence state after successful save
+        self.persistence.clear_session(self.feed_id)
+
+        # Clear unsaved indicator
+        self._update_unsaved_indicator()
+
+        # Show success message with confirmation
+        self._show_message(
+            "✓ Feed settings saved successfully",
+            severity="success",
+        )
 
     async def action_cancel_changes(self) -> None:
         """Cancel changes and close screen.
