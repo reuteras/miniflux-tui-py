@@ -113,7 +113,7 @@ def get_status_icon(is_unread: bool) -> str:
 
 
 @contextmanager
-def api_call(screen: Any, operation_name: str = "Operation") -> Generator[Any]:
+def api_call(screen: Any, operation_name: str = "Operation") -> Generator[Any, None, None]:
     """Context manager for safe API calls with error handling.
 
     Usage:
