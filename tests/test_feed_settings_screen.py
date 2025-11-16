@@ -1410,3 +1410,196 @@ class TestFormPersistenceIntegration:
             result = feed_settings_screen._get_current_field_values()
 
         assert result == {}
+
+
+class TestChangeFieldCounting:
+    """Test actual change field counting (integration tests without mocking the counter)."""
+
+    @pytest.fixture
+    def counting_screen(self, sample_feed, mock_client):
+        """Create a screen for testing change counting without mocking the indicator."""
+        screen = FeedSettingsScreen(
+            feed_id=sample_feed.id,
+            feed=sample_feed,
+            client=mock_client,
+        )
+        screen.set_timer = MagicMock(return_value=MagicMock())
+        screen._initializing = False
+        # Store original values
+        screen._store_original_values()
+        return screen
+
+    def test_count_changed_fields_no_changes(self, counting_screen):
+        """Test that no changes are counted initially."""
+        with patch.object(counting_screen, "_get_widget_value_for_field") as mock_get:
+            # Return original values (no change)
+            mock_get.side_effect = lambda widget_id: counting_screen.original_values.get(
+                {
+                    "feed-title": "title",
+                    "site-url": "site_url",
+                    "feed-url": "feed_url",
+                    "category-id": "category_id",
+                    "feed-description": "description",
+                    "hide-globally": "hide_globally",
+                    "no-media-player": "no_media_player",
+                    "feed-disabled": "disabled",
+                    "auth-username": "username",
+                    "auth-password": "password",
+                    "user-agent": "user_agent",
+                    "proxy-url": "proxy_url",
+                    "ignore-https-errors": "ignore_https_errors",
+                    "scraper-rules": "scraper_rules",
+                    "rewrite-rules": "rewrite_rules",
+                    "blocklist-rules": "blocklist_rules",
+                    "keeplist-rules": "keeplist_rules",
+                    "check-interval": "check_interval",
+                }.get(widget_id)
+            )
+
+            count = counting_screen._count_changed_fields()
+
+        assert count == 0, "Should be 0 changes when all values match originals"
+
+    def test_count_changed_fields_one_field_changed(self, counting_screen):
+        """Test that changing one field counts as 1 change, not 10."""
+        with patch.object(counting_screen, "_get_widget_value_for_field") as mock_get:
+            field_mapping = {
+                "feed-title": "title",
+                "site-url": "site_url",
+                "feed-url": "feed_url",
+                "category-id": "category_id",
+                "feed-description": "description",
+                "hide-globally": "hide_globally",
+                "no-media-player": "no_media_player",
+                "feed-disabled": "disabled",
+                "auth-username": "username",
+                "auth-password": "password",
+                "user-agent": "user_agent",
+                "proxy-url": "proxy_url",
+                "ignore-https-errors": "ignore_https_errors",
+                "scraper-rules": "scraper_rules",
+                "rewrite-rules": "rewrite_rules",
+                "blocklist-rules": "blocklist_rules",
+                "keeplist-rules": "keeplist_rules",
+                "check-interval": "check_interval",
+            }
+
+            def get_value(widget_id):
+                # Title changed, everything else is original
+                if widget_id == "feed-title":
+                    return "New Title"
+                return counting_screen.original_values.get(field_mapping.get(widget_id))
+
+            mock_get.side_effect = get_value
+
+            count = counting_screen._count_changed_fields()
+
+        assert count == 1, "Changing one field should count as 1 change"
+
+    def test_count_changed_fields_multiple_changed(self, counting_screen):
+        """Test that changing multiple fields counts each field once."""
+        with patch.object(counting_screen, "_get_widget_value_for_field") as mock_get:
+            field_mapping = {
+                "feed-title": "title",
+                "site-url": "site_url",
+                "feed-url": "feed_url",
+                "category-id": "category_id",
+                "feed-description": "description",
+                "hide-globally": "hide_globally",
+                "no-media-player": "no_media_player",
+                "feed-disabled": "disabled",
+                "auth-username": "username",
+                "auth-password": "password",
+                "user-agent": "user_agent",
+                "proxy-url": "proxy_url",
+                "ignore-https-errors": "ignore_https_errors",
+                "scraper-rules": "scraper_rules",
+                "rewrite-rules": "rewrite_rules",
+                "blocklist-rules": "blocklist_rules",
+                "keeplist-rules": "keeplist_rules",
+                "check-interval": "check_interval",
+            }
+
+            def get_value(widget_id):
+                # Title and description changed, everything else original
+                if widget_id == "feed-title":
+                    return "New Title"
+                if widget_id == "feed-description":
+                    return "Added description"
+                return counting_screen.original_values.get(field_mapping.get(widget_id))
+
+            mock_get.side_effect = get_value
+
+            count = counting_screen._count_changed_fields()
+
+        assert count == 2, "Changing two fields should count as 2 changes"
+
+    def test_count_changed_fields_typing_many_chars_counts_as_one(self, counting_screen):
+        """Test that typing many characters in description field counts as 1 change."""
+        with patch.object(counting_screen, "_get_widget_value_for_field") as mock_get:
+            field_mapping = {
+                "feed-title": "title",
+                "site-url": "site_url",
+                "feed-url": "feed_url",
+                "category-id": "category_id",
+                "feed-description": "description",
+                "hide-globally": "hide_globally",
+                "no-media-player": "no_media_player",
+                "feed-disabled": "disabled",
+                "auth-username": "username",
+                "auth-password": "password",
+                "user-agent": "user_agent",
+                "proxy-url": "proxy_url",
+                "ignore-https-errors": "ignore_https_errors",
+                "scraper-rules": "scraper_rules",
+                "rewrite-rules": "rewrite_rules",
+                "blocklist-rules": "blocklist_rules",
+                "keeplist-rules": "keeplist_rules",
+                "check-interval": "check_interval",
+            }
+
+            def get_value(widget_id):
+                # Description has very long text (simulate many keystrokes)
+                if widget_id == "feed-description":
+                    return "This is a very long description that was typed character by character"
+                return counting_screen.original_values.get(field_mapping.get(widget_id))
+
+            mock_get.side_effect = get_value
+
+            count = counting_screen._count_changed_fields()
+
+        assert count == 1, "Typing 60+ characters should still count as 1 field change"
+
+    def test_count_changed_fields_undo_to_original(self, counting_screen):
+        """Test that changing a field back to original counts as 0 changes."""
+        with patch.object(counting_screen, "_get_widget_value_for_field") as mock_get:
+            field_mapping = {
+                "feed-title": "title",
+                "site-url": "site_url",
+                "feed-url": "feed_url",
+                "category-id": "category_id",
+                "feed-description": "description",
+                "hide-globally": "hide_globally",
+                "no-media-player": "no_media_player",
+                "feed-disabled": "disabled",
+                "auth-username": "username",
+                "auth-password": "password",
+                "user-agent": "user_agent",
+                "proxy-url": "proxy_url",
+                "ignore-https-errors": "ignore_https_errors",
+                "scraper-rules": "scraper_rules",
+                "rewrite-rules": "rewrite_rules",
+                "blocklist-rules": "blocklist_rules",
+                "keeplist-rules": "keeplist_rules",
+                "check-interval": "check_interval",
+            }
+
+            def get_value(widget_id):
+                # All values are back to original (user typed then deleted)
+                return counting_screen.original_values.get(field_mapping.get(widget_id))
+
+            mock_get.side_effect = get_value
+
+            count = counting_screen._count_changed_fields()
+
+        assert count == 0, "Undoing changes should show 0 unsaved changes"
