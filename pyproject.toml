@@ -154,8 +154,9 @@ ignore = [
 "tests/**/*.py" = ["S101", "PLR2004", "ARG001", "PLR6301"]
 # Allow subprocess calls in scripts (they use hardcoded commands)
 "scripts/**/*.py" = ["S603", "S607"]
-# Allow password command execution helpers to import subprocess and run trusted commands
+# Allow password command execution helpers and git version detection to import subprocess and run trusted commands
 "miniflux_tui/config.py" = ["S404", "S603"]
+"miniflux_tui/utils.py" = ["S404", "S603"]
 
 [tool.ruff.format]
 # Use black-compatible formatting

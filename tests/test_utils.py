@@ -182,12 +182,17 @@ class TestGetAppVersion:
     def test_get_app_version_uses_package_metadata(self, monkeypatch):
         """Version information comes from package metadata when available."""
 
+        # Mock git version to return None so we test metadata fallback
+        monkeypatch.setattr(utils, "_get_git_version", lambda: None)
         monkeypatch.setattr(utils.metadata, "version", lambda _: "9.9.9")
 
         assert utils.get_app_version() == "9.9.9"
 
     def test_get_app_version_falls_back_to_pyproject(self, monkeypatch):
         """If metadata is missing, fall back to reading pyproject.toml."""
+
+        # Mock git version to return None so we test pyproject fallback
+        monkeypatch.setattr(utils, "_get_git_version", lambda: None)
 
         def raise_not_found(_: str) -> str:
             raise utils.metadata.PackageNotFoundError
@@ -202,6 +207,9 @@ class TestGetAppVersion:
 
     def test_get_app_version_tries_alternative_distribution_names(self, monkeypatch):
         """Lookup falls back to alternative distributions that provide the package."""
+
+        # Mock git version to return None so we test metadata fallback
+        monkeypatch.setattr(utils, "_get_git_version", lambda: None)
 
         calls = []
 
@@ -227,6 +235,9 @@ class TestGetAppVersion:
     def test_get_app_version_handles_metadata_errors(self, monkeypatch):
         """Unexpected metadata errors still fall back to the file lookup."""
 
+        # Mock git version to return None so we test metadata error fallback
+        monkeypatch.setattr(utils, "_get_git_version", lambda: None)
+
         def raise_runtime_error(_: str) -> str:
             message = "boom"
             raise RuntimeError(message)
@@ -241,6 +252,9 @@ class TestGetAppVersion:
 
     def test_get_app_version_recovers_from_metadata_error_with_other_candidates(self, monkeypatch):
         """Continue trying alternative distributions after metadata errors."""
+
+        # Mock git version to return None so we test metadata error handling
+        monkeypatch.setattr(utils, "_get_git_version", lambda: None)
 
         calls = []
 
@@ -272,6 +286,9 @@ class TestGetAppVersion:
     def test_get_app_version_returns_unknown_when_version_missing(self, monkeypatch, tmp_path):
         """Missing metadata and pyproject should return "unknown"."""
 
+        # Mock git version to return None so we test unknown fallback
+        monkeypatch.setattr(utils, "_get_git_version", lambda: None)
+
         def raise_not_found(_: str) -> str:
             raise utils.metadata.PackageNotFoundError
 
@@ -279,3 +296,30 @@ class TestGetAppVersion:
         monkeypatch.setattr(utils, "PYPROJECT_PATH", tmp_path / "pyproject.toml", raising=False)
 
         assert utils.get_app_version() == "unknown"
+
+    def test_get_app_version_returns_git_info_when_in_repo(self, monkeypatch):
+        """When running from a git repo, version shows branch/commit."""
+
+        monkeypatch.setattr(utils, "_get_git_version", lambda: "main/abc123de")
+
+        assert utils.get_app_version() == "main/abc123de"
+
+    def test_get_git_version_returns_none_when_not_in_repo(self, monkeypatch):
+        """_get_git_version returns None when not in a git repository."""
+
+        # Mock the git directory check to return False
+        def mock_exists(self):
+            return False
+
+        monkeypatch.setattr("pathlib.Path.exists", mock_exists)
+
+        result = utils._get_git_version()
+        assert result is None
+
+    def test_get_git_version_returns_none_when_git_not_found(self, monkeypatch):
+        """_get_git_version returns None when git executable is not found."""
+
+        monkeypatch.setattr(utils.shutil, "which", lambda _: None)
+
+        result = utils._get_git_version()
+        assert result is None
