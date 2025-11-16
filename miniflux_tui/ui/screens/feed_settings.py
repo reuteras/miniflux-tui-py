@@ -3,8 +3,6 @@
 
 from __future__ import annotations
 
-import logging
-from pathlib import Path
 from typing import TYPE_CHECKING, Any, ClassVar
 
 from textual.app import ComposeResult
@@ -16,17 +14,6 @@ from textual.widgets import Button, Checkbox, Footer, Header, Input, Select, Sta
 from miniflux_tui.docs_cache import DocsCache
 from miniflux_tui.form_persistence_manager import FormPersistenceManager
 from miniflux_tui.ui.screens.rules_helper import RulesHelperScreen
-
-# Set up file logging for debugging change tracking
-_log_dir = Path.home() / ".miniflux-tui" / "logs"
-_log_dir.mkdir(parents=True, exist_ok=True)
-_change_logger = logging.getLogger("miniflux_tui.change_tracking")
-_change_logger.setLevel(logging.DEBUG)
-if not _change_logger.handlers:
-    _handler = logging.FileHandler(_log_dir / "change_tracking.log")
-    _formatter = logging.Formatter("%(asctime)s - %(name)s - %(levelname)s - %(message)s")
-    _handler.setFormatter(_formatter)
-    _change_logger.addHandler(_handler)
 
 if TYPE_CHECKING:
     from miniflux_tui.api.client import MinifluxClient
@@ -551,9 +538,6 @@ class FeedSettingsScreen(Screen):
 
         Initialize screen state, load categories, and load feed data.
         """
-        _change_logger.info("=== ON MOUNT START ===")
-        _change_logger.debug(f"Feed: {self.feed.title} (ID: {self.feed.id})")
-        _change_logger.debug(f"_initializing = {self._initializing}")
 
         # Clear all session state from previous invocations
         # (change tracker, recovery drafts, etc.) to start fresh
@@ -575,7 +559,6 @@ class FeedSettingsScreen(Screen):
 
         # Initialization complete - now track actual user changes
         self._initializing = False
-        _change_logger.info("=== ON MOUNT END - _initializing set to False ===")
 
     def on_input_changed(self, event: Input.Changed) -> None:
         """Handle input field changes.
@@ -584,7 +567,6 @@ class FeedSettingsScreen(Screen):
             event: Input change event
         """
         if event.input.id and not event.input.disabled:
-            _change_logger.debug(f"[on_input_changed] {event.input.id}: value={event.value!r}")
             self._on_field_changed(event.input.id, event.value)
 
     def on_checkbox_changed(self, event: Checkbox.Changed) -> None:
@@ -594,7 +576,6 @@ class FeedSettingsScreen(Screen):
             event: Checkbox change event
         """
         if event.checkbox.id:
-            _change_logger.debug(f"[on_checkbox_changed] {event.checkbox.id}: value={event.value!r}")
             self._on_field_changed(event.checkbox.id, event.value)
 
     def on_text_area_changed(self, event: TextArea.Changed) -> None:
@@ -604,7 +585,6 @@ class FeedSettingsScreen(Screen):
             event: TextArea change event
         """
         if event.text_area.id:
-            _change_logger.debug(f"[on_text_area_changed] {event.text_area.id}: len={len(event.text_area.text)}")
             self._on_field_changed(event.text_area.id, event.text_area.text)
 
     def on_select_changed(self, event: Select.Changed) -> None:
@@ -616,7 +596,6 @@ class FeedSettingsScreen(Screen):
         if event.select.id:
             # Convert empty string to None for category_id
             value = event.value if event.value else None
-            _change_logger.debug(f"[on_select_changed] {event.select.id}: raw_value={event.value!r}, converted={value!r}")
             self._on_field_changed(event.select.id, value)
 
     async def action_focus_next(self) -> None:
@@ -637,9 +616,6 @@ class FeedSettingsScreen(Screen):
         4. Clears persistence state on success
         5. Shows success/error message with visual feedback
         """
-        _change_logger.info("=== ACTION SAVE START ===")
-        _change_logger.debug(f"is_dirty={self.is_dirty}")
-        _change_logger.debug(f"dirty_fields={self.dirty_fields}")
 
         if not self.is_dirty:
             self._show_message("No changes to save", severity="info")
@@ -651,12 +627,9 @@ class FeedSettingsScreen(Screen):
         try:
             # Collect field values
             updates = self._collect_field_values()
-            _change_logger.info(f"Collected updates: {updates}")
 
             # Call API to update feed
-            _change_logger.info(f"Calling update_feed API with: {updates}")
             updated_feed = await self.client.update_feed(self.feed_id, **updates)
-            _change_logger.info(f"API call succeeded, updated_feed.description={updated_feed.description!r}")
 
             # Update internal state and reset tracking
             self._handle_save_success(updated_feed)
@@ -863,10 +836,7 @@ class FeedSettingsScreen(Screen):
         """
         # Skip change tracking during initialization (widgets fire events during setup)
         if self._initializing:
-            _change_logger.debug(f"[_on_field_changed] {widget_id}: Skipping (initializing)")
             return
-
-        _change_logger.debug(f"[_on_field_changed] {widget_id}: Event fired with new_value={new_value!r}")
 
         # Map widget IDs to feed field names
         field_mapping = {
@@ -902,7 +872,6 @@ class FeedSettingsScreen(Screen):
         # This handles cases where _store_original_values() wasn't called yet
         if field_name not in self.original_values:
             self.original_values[field_name] = getattr(self.feed, field_name, None)
-            _change_logger.debug(f"  [{field_name}] Original value not stored, storing: {self.original_values[field_name]!r}")
 
         # Get the original value for comparison
         original_value = self.original_values[field_name]
@@ -926,17 +895,12 @@ class FeedSettingsScreen(Screen):
         else:
             new_value_cmp = new_value
 
-        _change_logger.debug(f"  [{field_name}] original={original_value!r}, converted={new_value_cmp!r}")
-
         # If the value hasn't actually changed from the original, skip tracking
         if new_value_cmp == original_value:
-            _change_logger.debug(f"  [{field_name}] No actual change, skipping")
             # CRITICAL: Still need to update the indicator because another field might have changed
             # We need to recount all fields to get accurate total
             self._update_unsaved_indicator()
             return
-
-        _change_logger.info(f"  [{field_name}] ACTUAL CHANGE DETECTED: {original_value!r} -> {new_value_cmp!r}")
 
         # Store the new value for collection later
         if not hasattr(self, "_field_values"):
@@ -970,49 +934,32 @@ class FeedSettingsScreen(Screen):
         Returns:
             Dictionary of field_name: new_value for dirty fields
         """
-        _change_logger.info("=== COLLECT FIELD VALUES ===")
-        _change_logger.debug(f"_field_values exists: {hasattr(self, '_field_values')}")
-        if hasattr(self, "_field_values"):
-            _change_logger.debug(f"_field_values dict: {self._field_values}")
-        _change_logger.debug(f"dirty_fields: {self.dirty_fields}")
-
         updates: dict[str, Any] = {}
 
         # Collect values for dirty fields
         if hasattr(self, "_field_values"):
             for field_name in self.dirty_fields:
-                if self.dirty_fields[field_name]:
-                    _change_logger.debug(f"  Checking field_name={field_name}")
-                    if field_name in self._field_values:
-                        value = self._field_values[field_name]
-                        _change_logger.debug(f"    Found in _field_values: {value!r}")
+                if self.dirty_fields[field_name] and field_name in self._field_values:
+                    value = self._field_values[field_name]
 
-                        # Type conversions for specific fields
-                        if field_name in {"check_interval", "category_id"}:
-                            # Convert to int or None
-                            if value and str(value).strip():
-                                try:
-                                    value = int(str(value).strip())
-                                except ValueError:
-                                    # If not a valid integer, skip this update
-                                    _change_logger.debug("    Skipping: invalid integer")
-                                    continue
-                            else:
-                                value = None
-                        elif field_name == "description" and isinstance(value, str) and value == "":
-                            # Miniflux doesn't accept empty string for description
-                            # Use single space as workaround to "clear" the description
-                            value = " "
-                            _change_logger.debug("    Normalized empty description to single space")
+                    # Type conversions for specific fields
+                    if field_name in {"check_interval", "category_id"}:
+                        # Convert to int or None
+                        if value and str(value).strip():
+                            try:
+                                value = int(str(value).strip())
+                            except ValueError:
+                                # If not a valid integer, skip this update
+                                continue
+                        else:
+                            value = None
+                    elif field_name == "description" and isinstance(value, str) and value == "":
+                        # Miniflux doesn't accept empty string for description
+                        # Use single space as workaround to "clear" the description
+                        value = " "
 
-                        updates[field_name] = value
-                        _change_logger.info(f"    Added to updates: {field_name}={value!r}")
-                    else:
-                        _change_logger.debug(f"    NOT in _field_values (available: {list(self._field_values.keys())})")
-        else:
-            _change_logger.debug("  No _field_values dict found")
+                    updates[field_name] = value
 
-        _change_logger.info(f"=== END COLLECT - Total updates: {updates} ===")
         return updates
 
     def _show_message(
@@ -1055,9 +1002,6 @@ class FeedSettingsScreen(Screen):
         Note: Store values as they appear in widgets (strings for numeric fields)
         to ensure proper comparison when tracking changes.
         """
-        _change_logger.info("=== STORE ORIGINAL VALUES ===")
-        _change_logger.debug(f"self.feed.title = {self.feed.title!r}")
-        _change_logger.debug(f"self.feed.category_id = {self.feed.category_id!r}")
 
         self.original_values = {
             # General Settings
@@ -1087,10 +1031,6 @@ class FeedSettingsScreen(Screen):
             # Convert check_interval to string to match Input widget value type
             "check_interval": str(self.feed.check_interval) if self.feed.check_interval else "",
         }
-
-        _change_logger.debug(f"Stored original_values['title'] = {self.original_values['title']!r}")
-        _change_logger.debug(f"Stored original_values['category_id'] = {self.original_values['category_id']!r}")
-        _change_logger.info("=== END STORE ORIGINAL VALUES ===")
 
     def _update_category_selector(self) -> None:
         """Update the category Select widget with loaded categories."""
@@ -1168,23 +1108,16 @@ class FeedSettingsScreen(Screen):
                 "check-interval",
             }
             if widget_id in input_widgets:
-                value = self.query_one(f"#{widget_id}", Input).value
-                _change_logger.debug(f"[INPUT] {widget_id}: retrieved value={value!r}")
-                return value
+                return self.query_one(f"#{widget_id}", Input).value
 
             # Select widget (category)
             if widget_id == "category-id":
                 select_widget = self.query_one("#category-id", Select)
-                value = select_widget.value
-                value_str = str(value) if value else ""
-                _change_logger.debug(f"[SELECT] {widget_id}: raw_value={value!r}, str_value={value_str!r}")
-                return value_str
+                return str(select_widget.value) if select_widget.value else ""
 
             # TextArea widgets (description and rules)
             if widget_id == "feed-description" or widget_id.endswith("-rules"):
-                value = self.query_one(f"#{widget_id}", TextArea).text
-                _change_logger.debug(f"[TEXTAREA] {widget_id}: len={len(value)}, value={value[:50]!r}")
-                return value
+                return self.query_one(f"#{widget_id}", TextArea).text
 
             # Checkbox widgets (flags)
             checkbox_widgets = {
@@ -1196,13 +1129,10 @@ class FeedSettingsScreen(Screen):
                 "ignore-https-errors",
             }
             if widget_id in checkbox_widgets:
-                value = self.query_one(f"#{widget_id}", Checkbox).value
-                _change_logger.debug(f"[CHECKBOX] {widget_id}: value={value!r}")
-                return value
+                return self.query_one(f"#{widget_id}", Checkbox).value
 
-            _change_logger.debug(f"[UNKNOWN] {widget_id}: No handler found")
-        except Exception as e:  # nosec: B110
-            _change_logger.error(f"[ERROR] {widget_id}: Exception getting value: {type(e).__name__}: {e}")
+        except Exception:  # noqa: S110 - Intentional: widget not found is non-critical  # nosec: B110
+            pass
 
         return None
 
@@ -1215,7 +1145,6 @@ class FeedSettingsScreen(Screen):
         Returns:
             Number of fields with changed values
         """
-        _change_logger.info("=== START _count_changed_fields() ===")
         changed_count = 0
 
         # Map widget IDs to field names (same mapping as _on_field_changed)
@@ -1247,11 +1176,9 @@ class FeedSettingsScreen(Screen):
             current_value = self._get_widget_value_for_field(widget_id)
             if current_value is None:
                 # Widget not found, skip
-                _change_logger.debug(f"  [{field_name}] Widget {widget_id} not found, skipping")
                 continue
 
             original_value = self.original_values.get(field_name)
-            _change_logger.debug(f"  [{field_name}] original={original_value!r}, current={current_value!r}")
 
             # Type-aware comparison (same logic as _on_field_changed)
             if original_value is not None:
@@ -1269,21 +1196,14 @@ class FeedSettingsScreen(Screen):
             else:
                 current_cmp = current_value
 
-            _change_logger.debug(f"  [{field_name}] After type conversion: original={original_value!r}, compared={current_cmp!r}")
-
             # If values differ, count this field as changed
             if current_cmp != original_value:
-                _change_logger.info(f"  [{field_name}] CHANGED: {original_value!r} != {current_cmp!r}")
                 changed_count += 1
-            else:
-                _change_logger.debug(f"  [{field_name}] No change")
 
-        _change_logger.info(f"=== END _count_changed_fields() - Total changed: {changed_count} ===")
         return changed_count
 
     def _update_unsaved_indicator(self) -> None:
         """Update the unsaved changes indicator in the header."""
-        _change_logger.debug("_update_unsaved_indicator() called")
         try:
             indicator = self.query_one("#unsaved-indicator", expect_type=Static)
             # Count fields with actual changes, not change events
@@ -1292,13 +1212,11 @@ class FeedSettingsScreen(Screen):
             if change_count > 0:
                 indicator.update(f"● Unsaved changes: {change_count} field(s)")
                 indicator.styles.color = "yellow"
-                _change_logger.info(f"Indicator updated: {change_count} unsaved changes")
             else:
                 indicator.update("")
                 indicator.styles.color = "$text-muted"
-                _change_logger.info("Indicator cleared: no unsaved changes")
-        except Exception as e:  # nosec: B110
-            _change_logger.error(f"Error updating indicator: {type(e).__name__}: {e}")
+        except Exception:  # noqa: S110 - Intentional: widget not found is non-critical  # nosec: B110
+            pass
 
     def _schedule_auto_save(self) -> None:
         """Schedule auto-save with debouncing (1 second delay)."""
