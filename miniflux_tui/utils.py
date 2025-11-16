@@ -3,6 +3,8 @@
 
 from __future__ import annotations
 
+import shutil
+import subprocess  # nosec B404
 import tomllib
 from collections.abc import Generator, Iterator
 from contextlib import contextmanager
@@ -11,21 +13,31 @@ from pathlib import Path
 from typing import Any
 
 PYPROJECT_PATH = Path(__file__).resolve().parent.parent / "pyproject.toml"
+REPO_ROOT = PYPROJECT_PATH.parent
 
 
 def get_app_version() -> str:
     """Return the application version.
 
-    The preferred source for the version is the installed package metadata. This
-    works both for editable installs and when the project is installed from a
-    wheel. When the metadata isn't available (for example when running the
-    source tree directly without installing), the function falls back to reading
-    the version from ``pyproject.toml``.
+    When running from a git repository, returns branch and commit hash.
+    When running an installed package (release), returns the version number.
+
+    The preferred source for installed packages is the package metadata.
+    This works both for editable installs and when installed from a wheel.
+    When metadata isn't available, falls back to reading from pyproject.toml.
 
     Returns:
-        Version string if it can be determined, otherwise ``"unknown"``.
+        - "branch/commit-hash" if running from a git repo
+        - "version" if running an installed package
+        - "unknown" if version cannot be determined
     """
 
+    # Check if running from a git repository
+    git_version = _get_git_version()
+    if git_version:
+        return git_version
+
+    # If not in a git repo, try to get the installed package version
     last_metadata_error: Exception | None = None
 
     for distribution_name in _iter_distribution_candidates():
@@ -43,6 +55,60 @@ def get_app_version() -> str:
         return _get_version_from_pyproject()
 
     return _get_version_from_pyproject()
+
+
+def _get_git_version() -> str | None:
+    """Get version from git repository if running from checked-out source.
+
+    Returns:
+        - "branch/short-commit-hash" if in a git repo
+        - None if not in a git repo or git is unavailable
+    """
+
+    try:
+        # Check if .git directory exists
+        git_dir = REPO_ROOT / ".git"
+        if not git_dir.exists():
+            return None
+
+        # Find git executable in PATH
+        git_executable = shutil.which("git")
+        if not git_executable:
+            return None
+
+        # Get current branch name
+        branch = subprocess.run(  # nosec B603
+            [git_executable, "-C", str(REPO_ROOT), "rev-parse", "--abbrev-ref", "HEAD"],
+            capture_output=True,
+            text=True,
+            timeout=2,
+            check=False,
+        )
+
+        if branch.returncode != 0:
+            return None
+
+        branch_name = branch.stdout.strip()
+
+        # Get short commit hash
+        commit = subprocess.run(  # nosec B603
+            [git_executable, "-C", str(REPO_ROOT), "rev-parse", "--short", "HEAD"],
+            capture_output=True,
+            text=True,
+            timeout=2,
+            check=False,
+        )
+
+        if commit.returncode != 0:
+            return None
+
+        commit_hash = commit.stdout.strip()
+
+        return f"{branch_name}/{commit_hash}"
+
+    except (OSError, subprocess.TimeoutExpired, FileNotFoundError):
+        # git command not found or timeout - not in a git repo or git unavailable
+        return None
 
 
 def _get_version_from_pyproject() -> str:

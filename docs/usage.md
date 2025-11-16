@@ -141,9 +141,9 @@ The Feed Settings screen is organized into several sections:
 - **Disabled** - Temporarily disable feed from checking
 
 #### Network Settings
-- **Username** - HTTP authentication username (optional)
-- **Password** - HTTP authentication password (optional)
-- **User-Agent** - Custom User-Agent header (optional)
+- **Feed Username** - HTTP authentication username for feed server (optional)
+- **Feed Password** - HTTP authentication password for feed server (optional)
+- **Override Default User Agent** - Custom User-Agent header to use for requests (optional)
 - **Proxy URL** - Proxy server for feed requests (optional)
 - **HTTPS Settings** - Toggle HTTPS certificate verification
 
