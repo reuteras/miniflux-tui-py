@@ -12,7 +12,6 @@ All contributors are tracked automatically via GitHub. See the [contributors pag
 
 ### Human Contributors
 - **[@reuteras](https://github.com/reuteras)** - Project creator and maintainer
-- **[@reuteras-review](https://github.com/reuteras-review)** - Code reviews
 - **claude** - AI assistant contributions
 
 ### Bot Contributors
