@@ -4,7 +4,11 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
-## [0.7.0] - 2025-11-17
+## [0.7.1] - 2025-11-17
+
+### BUG FIXES
+
+- Prevent immutable release error in publish workflow (#591)
 
 ### FEATURES
 
@@ -17,6 +21,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - bump step-security/harden-runner from 2.13.1 to 2.13.2 (#584) 🤖
 - Use uv tool install for pre-commit in workflow (#587)
 - pre-commit autoupdate (#588)
+- Release v0.7.0 (#589)
 
 
 
