@@ -68,6 +68,7 @@ class HelpScreen(Screen):
             yield Static("[bold white]Other Actions[/bold white]")
             yield Static("  M               Manage categories")
             yield Static("  X               Open scraping rule helper")
+            yield Static("  T               Toggle theme (dark/light)")
             yield Static("  ?               Show this help")
             yield Static("  i               Show system status")
             yield Static("  S               Show TUI settings")

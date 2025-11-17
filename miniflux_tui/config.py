@@ -624,6 +624,7 @@ allow_invalid_certs = false
 
 [theme]
 # Theme: "dark" or "light" (default: dark)
+# Press 'T' in the app to toggle between themes
 name = "dark"
 
 # Color for unread entries (default: cyan)
@@ -638,6 +639,9 @@ default_sort = "date"
 
 # Default grouping by feed (default: false)
 default_group_by_feed = false
+
+# Start with groups collapsed when grouping is enabled (default: false)
+group_collapsed = false
 
 [ui]
 # Show information messages (e.g., "Refreshing...", "Loaded N entries")
@@ -713,7 +717,8 @@ password = {env_command}
 allow_invalid_certs = false
 
 [theme]
-# Theme: "dark" or "light"
+# Theme: "dark" or "light" (default: dark)
+# Press 'T' in the app to toggle between themes
 name = "dark"
 
 # Color for unread entries
