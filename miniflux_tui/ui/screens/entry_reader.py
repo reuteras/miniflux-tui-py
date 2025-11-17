@@ -141,7 +141,7 @@ class EntryReaderScreen(Screen):
         self.links = self._extract_links(content)
 
         # Scrollable markdown content (takes remaining height)
-        yield Markdown(content, classes="entry-content")
+        yield Markdown(content, id="entry-content", classes="entry-content")
 
         # Link navigation indicator (fixed height)
         link_indicator = Static("", id="link-indicator", classes="link-indicator")
