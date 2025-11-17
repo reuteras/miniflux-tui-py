@@ -42,6 +42,10 @@ dependencies = [
 ]
 
 [project.optional-dependencies]
+gui = [
+    "toga>=0.5.0",
+    "briefcase>=0.3.0",
+]
 dev = [
     "pytest>=8.0.0",
     "pytest-asyncio>=0.23.0",
@@ -66,6 +70,7 @@ binary = [
 
 [project.scripts]
 miniflux-tui = "miniflux_tui.main:main"
+miniflux-gui = "miniflux_tui.gui.app:main"
 
 [project.urls]
 Homepage = "https://github.com/reuteras/miniflux-tui-py"
@@ -185,3 +190,59 @@ reportOptionalSubscript = false
 [tool.bandit]
 exclude_dirs = ["tests", "fuzz"]
 skips = ["B101"]  # Skip assert_used check (used in tests)
+
+# Briefcase configuration for iOS/Android/Desktop packaging
+[tool.briefcase]
+project_name = "Miniflux Reader"
+bundle = "com.reuteras"
+version = "0.6.5"
+url = "https://github.com/reuteras/miniflux-tui-py"
+license = "MIT License"
+author = "Peter Reuterås"
+author_email = "peter@reuteras.net"
+
+[tool.briefcase.app.miniflux-gui]
+formal_name = "Miniflux Reader"
+description = "A cross-platform GUI client for Miniflux RSS reader"
+long_description = """A native cross-platform application for reading RSS feeds via Miniflux.
+
+Features:
+- Browse unread and starred entries
+- Mark entries as read/unread
+- Star/unstar entries
+- Open articles in browser
+- Clean, native interface
+
+Built with BeeWare Toga framework."""
+sources = ["miniflux_tui"]
+requires = [
+    "toga>=0.5.0",
+    "miniflux>=1.1.4",
+    "html2text>=2025.4.15",
+    "beautifulsoup4>=4.14.2",
+    "html5lib>=1.1",
+    "bleach>=6.3.0",
+    "httpx>=0.28.1",
+]
+
+[tool.briefcase.app.miniflux-gui.macOS]
+requires = []
+
+[tool.briefcase.app.miniflux-gui.linux]
+requires = []
+system_requires = []
+
+[tool.briefcase.app.miniflux-gui.windows]
+requires = []
+
+[tool.briefcase.app.miniflux-gui.iOS]
+requires = []
+supported = true
+# iOS specific settings
+bundle_identifier = "com.reuteras.miniflux"
+
+[tool.briefcase.app.miniflux-gui.android]
+requires = []
+supported = true
+# Android specific settings
+package_name = "com.reuteras.miniflux"
