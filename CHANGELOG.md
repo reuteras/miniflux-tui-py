@@ -4,7 +4,30 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
-## [0.6.5] - 2025-11-16
+## [0.7.0] - 2025-11-17
+
+### FEATURES
+
+- Dark/Light theme toggle for v0.7.0 (#579)
+
+### MAINTENANCE
+
+- bump actions/dependency-review-action (#580) 🤖
+- bump docker/setup-qemu-action from 3.6.0 to 3.7.0 (#582) 🤖
+- bump step-security/harden-runner from 2.13.1 to 2.13.2 (#584) 🤖
+- Use uv tool install for pre-commit in workflow (#587)
+- pre-commit autoupdate (#588)
+
+
+
+#### Contributors
+
+Thank you to everyone who contributed to this release!
+
+**Humans:** 👤 Peter Reuterås
+
+**AI & Automation:** 🤖 Claude (AI Assistant), dependabot[bot] (Dependencies)
+## [v0.6.5] - 2025-11-16
 
 ### BUG FIXES
 
@@ -28,6 +51,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### MAINTENANCE
 
 - Disable automatic container builds on every commit (#570)
+- Release v0.6.5 (#578)
 
 
 
