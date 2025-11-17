@@ -382,11 +382,11 @@ jobs:
           fi
 
           if ! gh release view "${TAG}" --repo "${REPO}" >/dev/null 2>&1; then
-            echo "Release ${TAG} does not exist yet. Creating a release before uploading assets."
+            echo "Release ${TAG} does not exist yet. Creating a draft release before uploading assets."
             # Extract release notes from CHANGELOG.md for this version
             VERSION="${TAG#v}"
             RELEASE_NOTES="See [CHANGELOG.md](https://github.com/${REPO}/blob/main/CHANGELOG.md#${VERSION//.}) for details."
-            gh release create "${TAG}" --verify-tag --title "${TAG}" --notes "${RELEASE_NOTES}" --latest --repo "${REPO}"
+            gh release create "${TAG}" --draft --verify-tag --title "${TAG}" --notes "${RELEASE_NOTES}" --latest --repo "${REPO}"
           fi
 
           for required_dir in dist sbom; do
@@ -457,3 +457,6 @@ jobs:
           printf '  %s\n' "${upload_files[@]}"
 
           gh release upload "${TAG}" "${upload_files[@]}" --clobber --repo "${REPO}"
+
+          echo "Publishing the release ${TAG}..."
+          gh release edit "${TAG}" --draft=false --repo "${REPO}"
