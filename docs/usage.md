@@ -335,6 +335,31 @@ The sync will:
 2. Wait a moment for server to fetch RSS content
 3. Press `,` to sync new entries to your TUI
 
+## Appearance
+
+### Theme Toggle
+
+Press `Shift+T` to toggle between dark and light themes:
+
+| Key | Action                                  |
+|-----|-----------------------------------------|
+| `T` | Toggle theme (dark/light, applies next) |
+
+- **Dark Theme** - Dracula-inspired high contrast theme (default)
+- **Light Theme** - Solarized-inspired light theme
+
+When you toggle the theme:
+1. Your preference is saved to the config file
+2. A notification displays the selected theme
+3. Restart the application for the theme to take effect
+
+You can also set your preferred theme in the config file:
+
+```toml
+[theme]
+name = "dark"  # or "light"
+```
+
 ## Getting Help
 
 | Key | Action                       |

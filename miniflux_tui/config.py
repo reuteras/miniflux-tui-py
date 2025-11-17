@@ -4,6 +4,7 @@
 from __future__ import annotations
 
 import os
+import re
 import shlex
 import subprocess  # nosec B404
 import sys
@@ -156,6 +157,7 @@ class Config:
         default_group_by_feed: bool = False,
         group_collapsed: bool = False,
         show_info_messages: bool = True,
+        theme_name: str = "dark",
     ):
         self.server_url = server_url
         self._password_command = _normalize_command(password)
@@ -167,6 +169,7 @@ class Config:
         self.default_group_by_feed = default_group_by_feed
         self.group_collapsed = group_collapsed
         self.show_info_messages = show_info_messages
+        self.theme_name = theme_name
 
     @property
     def password_command(self) -> tuple[str, ...]:
@@ -347,7 +350,55 @@ class Config:
             default_group_by_feed=settings["default_group_by_feed"],
             group_collapsed=settings["group_collapsed"],
             show_info_messages=settings["show_info_messages"],
+            theme_name=settings["theme_name"],
         )
+
+    def save_theme_preference(self, config_path: Path | None = None) -> None:
+        """Save current theme preference to config file.
+
+        Args:
+            config_path: Path to config file. If None, uses default location.
+        """
+        if config_path is None:
+            config_path = get_config_file_path()
+
+        if not config_path.exists():
+            return  # Can't save if file doesn't exist
+
+        # Read current file content
+        content = config_path.read_text()
+
+        # Update theme name using regex to preserve file formatting
+        # Pattern to match theme.name setting (handles various formats)
+        pattern = r'(\[theme\].*?)^name\s*=\s*["\'].*?["\']'
+        replacement = rf'\1name = "{self.theme_name}"'
+
+        # Use MULTILINE flag to match ^ at start of line
+        updated_content = re.sub(
+            pattern,
+            replacement,
+            content,
+            flags=re.MULTILINE | re.DOTALL,
+            count=1,
+        )
+
+        # If no match found (theme section might not exist), add it
+        if updated_content == content:
+            # Add theme section with name setting if it doesn't exist
+            if "[theme]" not in content:
+                # Add theme section at the beginning
+                updated_content = f'[theme]\nname = "{self.theme_name}"\n\n{content}'
+            else:
+                # Theme section exists but name is missing, add it after [theme]
+                updated_content = re.sub(
+                    r"(\[theme\]\n)",
+                    rf'\1name = "{self.theme_name}"\n',
+                    content,
+                    count=1,
+                )
+
+        # Write back to file
+        config_path.write_text(updated_content)
 
 
 def _load_toml_file(path: Path) -> dict:
@@ -443,6 +494,7 @@ def _extract_config_settings(data: dict) -> dict:
     theme: dict = data.get("theme", {})
     unread_color: str = theme.get("unread_color", "cyan")
     read_color: str = theme.get("read_color", "gray")
+    theme_name: str = theme.get("name", "dark")
 
     # Sorting settings
     sorting: dict = data.get("sorting", {})
@@ -457,6 +509,7 @@ def _extract_config_settings(data: dict) -> dict:
     return {
         "unread_color": unread_color,
         "read_color": read_color,
+        "theme_name": theme_name,
         "default_sort": default_sort,
         "default_group_by_feed": default_group_by_feed,
         "group_collapsed": group_collapsed,
@@ -570,6 +623,10 @@ password = ["op", "read", "op://Personal/Miniflux/API Token"]
 allow_invalid_certs = false
 
 [theme]
+# Theme: "dark" or "light" (default: dark)
+# Press 'T' in the app to toggle between themes
+name = "dark"
+
 # Color for unread entries (default: cyan)
 unread_color = "cyan"
 
@@ -582,6 +639,9 @@ default_sort = "date"
 
 # Default grouping by feed (default: false)
 default_group_by_feed = false
+
+# Start with groups collapsed when grouping is enabled (default: false)
+group_collapsed = false
 
 [ui]
 # Show information messages (e.g., "Refreshing...", "Loaded N entries")
@@ -657,6 +717,10 @@ password = {env_command}
 allow_invalid_certs = false
 
 [theme]
+# Theme: "dark" or "light" (default: dark)
+# Press 'T' in the app to toggle between themes
+name = "dark"
+
 # Color for unread entries
 unread_color = "cyan"
 

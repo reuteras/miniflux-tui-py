@@ -14,6 +14,7 @@ from miniflux_tui.api.client import MinifluxClient
 from miniflux_tui.api.models import Category, Entry, Feed
 from miniflux_tui.config import Config
 from miniflux_tui.constants import DEFAULT_ENTRY_LIMIT
+from miniflux_tui.themes import get_available_themes, get_theme
 
 from .screens.help import HelpScreen
 from .screens.loading import LoadingScreen
@@ -58,66 +59,81 @@ def _load_history_screen_cls() -> type[EntryHistoryScreen]:  # nosec: CWE-1047 -
 class MinifluxTuiApp(App):
     """A Textual TUI application for Miniflux."""
 
-    CSS = """
-    Screen {
-        background: $surface;
-    }
+    CSS = ""  # Will be set in __init__ based on theme preference
 
-    Header {
+    def _generate_css(self, theme_name: str = "dark") -> str:
+        """Generate CSS with theme-specific colors.
+
+        Args:
+            theme_name: Name of the theme to use
+
+        Returns:
+            CSS string with theme variables defined
+        """
+        theme = get_theme(theme_name)
+        # Map theme colors to CSS variables for Textual
+        colors = theme.colors
+
+        return f"""
+    Screen {{
+        background: {colors["surface"]};
+    }}
+
+    Header {{
         align: left top;
-    }
+    }}
 
-    .entry-title {
+    .entry-title {{
         padding: 1 2;
-        background: $boost;
-    }
+        background: {colors["boost"]};
+    }}
 
-    .entry-meta {
+    .entry-meta {{
         padding: 0 2;
-    }
+    }}
 
-    .entry-url {
+    .entry-url {{
         padding: 0 2 1 2;
-    }
+    }}
 
-    .separator {
+    .separator {{
         padding: 0 2;
-        color: $border;
-    }
+        color: {colors["border"]};
+    }}
 
-    .entry-content {
+    .entry-content {{
         padding: 1 2;
-    }
+    }}
 
-    ListView {
-        background: $surface;
-        color: $text;
-    }
+    ListView {{
+        background: {colors["surface"]};
+        color: {colors["text"]};
+    }}
 
-    ListItem {
+    ListItem {{
         padding: 0 1;
-    }
+    }}
 
-    ListItem:hover {
-        background: $boost;
-    }
+    ListItem:hover {{
+        background: {colors["boost"]};
+    }}
 
-    ListItem.-active {
-        background: $accent;
-    }
+    ListItem.-active {{
+        background: {colors["accent"]};
+    }}
 
     /* Hide collapsed entries */
-    ListItem.collapsed {
+    ListItem.collapsed {{
         display: none;
-    }
+    }}
 
     /* Help screen logo styling */
-    .help-logo {
+    .help-logo {{
         max-height: 10;
         width: auto;
         margin: 1 0;
         content-align: center middle;
-    }
+    }}
     """
 
     def __init__(
@@ -136,6 +152,11 @@ class MinifluxTuiApp(App):
             css_path: Path to custom CSS file
             watch_css: Whether to watch CSS file for changes
         """
+        # Theme management - set CSS on class before super().__init__
+        self._current_theme = config.theme_name
+        # Generate and set CSS based on theme preference
+        MinifluxTuiApp.CSS = self._generate_css(self._current_theme)
+
         super().__init__(
             driver_class=driver_class,
             css_path=css_path,
@@ -167,6 +188,47 @@ class MinifluxTuiApp(App):
         self.show_info_messages = not self.show_info_messages
         status = "enabled" if self.show_info_messages else "disabled"
         self.notify(f"Information messages {status}", severity="information")
+
+    def toggle_theme(self) -> None:
+        """Toggle between dark and light themes and save preference."""
+        available_themes = get_available_themes()
+        current_index = available_themes.index(self._current_theme)
+        next_index = (current_index + 1) % len(available_themes)
+        new_theme = available_themes[next_index]
+        self.set_theme(new_theme)
+
+    def set_theme(self, theme_name: str) -> None:
+        """Set the current theme and save to config.
+
+        Args:
+            theme_name: Name of the theme to set ("dark" or "light")
+
+        Raises:
+            ValueError: If theme name is invalid
+        """
+        # Validate theme exists
+        _ = get_theme(theme_name)
+
+        # Update current theme
+        self._current_theme = theme_name
+        self.config.theme_name = theme_name
+
+        # Save theme preference to config file
+        try:
+            self.config.save_theme_preference()
+        except Exception as e:
+            self.log(f"Failed to save theme preference: {e}")
+
+        # Note: Dynamic CSS updates in Textual are complex. The theme toggle saves
+        # the preference for the next session. This is acceptable for MVP.
+        # Users can restart the app to see the new theme colors.
+
+        # Notify user
+        theme = get_theme(theme_name)
+        self.notify(
+            f"Theme: {theme.display_name} (applies on restart)",
+            severity="information",
+        )
 
     async def on_mount(self) -> None:
         """Called when app is mounted."""

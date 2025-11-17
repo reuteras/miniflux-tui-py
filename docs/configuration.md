@@ -22,9 +22,18 @@ allow_invalid_certs = false
 
 ```toml
 [theme]
+name = "dark"
 unread_color = "cyan"
 read_color = "gray"
 ```
+
+- **name**: Choose between `"dark"` or `"light"` theme (default: `"dark"`)
+  - `"dark"` - Dracula-inspired dark theme with high contrast
+  - `"light"` - Solarized-inspired light theme
+  - Press `T` in the app to toggle between themes (applies on restart)
+
+- **unread_color**: Color for unread entries (default: `"cyan"`)
+- **read_color**: Color for read entries (default: `"gray"`)
 
 Available colors depend on your terminal, but common options include:
 - `black`, `red`, `green`, `yellow`, `blue`, `magenta`, `cyan`, `white`
@@ -37,6 +46,7 @@ Available colors depend on your terminal, but common options include:
 [sorting]
 default_sort = "date"
 default_group_by_feed = false
+group_collapsed = false
 ```
 
 - **default_sort**: Default sort mode on startup
@@ -48,6 +58,21 @@ default_group_by_feed = false
   - `false` - Show flat list (default)
   - `true` - Show grouped by feed
 
+- **group_collapsed**: Whether groups start collapsed when grouping is enabled
+  - `false` - Groups start expanded (default)
+  - `true` - Groups start collapsed
+
+### UI Settings
+
+```toml
+[ui]
+show_info_messages = true
+```
+
+- **show_info_messages**: Control information message display
+  - `true` - Show all messages including info (default)
+  - `false` - Show only warnings and errors
+
 ## Example Configuration
 
 ```toml
@@ -56,12 +81,17 @@ password = ["op", "read", "op://Personal/Miniflux/API Token"]
 allow_invalid_certs = false
 
 [theme]
+name = "dark"
 unread_color = "cyan"
 read_color = "gray"
 
 [sorting]
 default_sort = "date"
-default_group_by_feed = true
+default_group_by_feed = false
+group_collapsed = false
+
+[ui]
+show_info_messages = true
 ```
 
 ### Retrieving your API token securely

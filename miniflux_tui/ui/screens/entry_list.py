@@ -222,6 +222,7 @@ class EntryListScreen(Screen):
         Binding("i", "show_status", "Status"),
         Binding("S", "show_settings", "Settings"),
         Binding("H", "show_history", "History"),
+        Binding("T", "toggle_theme", "Toggle Theme"),
         Binding("q", "quit", "Quit"),
     ]
 
@@ -1741,6 +1742,10 @@ class EntryListScreen(Screen):
         )
 
         self.app.push_screen(screen)  # type: ignore[arg-type]
+
+    def action_toggle_theme(self) -> None:
+        """Toggle between dark and light themes."""
+        self.app.toggle_theme()
 
     def action_quit(self):
         """Quit the application."""
