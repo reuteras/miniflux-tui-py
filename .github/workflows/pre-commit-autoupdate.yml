@@ -37,7 +37,7 @@ jobs:
         run: uv python install 3.11
 
       - name: Install pre-commit
-        run: uv pip install pre-commit
+        run: uv tool install pre-commit
 
       - name: Run pre-commit autoupdate
         run: uv run pre-commit autoupdate
