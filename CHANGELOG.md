@@ -4,7 +4,22 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
-## [0.7.1] - 2025-11-17
+## [0.7.2] - 2025-11-17
+
+### BUG FIXES
+
+- Add missing ID to Markdown widget to fix NoMatches error (#594)
+
+
+
+#### Contributors
+
+Thank you to everyone who contributed to this release!
+
+**Humans:** 👤 Peter Reuterås
+
+**AI & Automation:** 🤖 Claude (AI Assistant)
+## [v0.7.1] - 2025-11-17
 
 ### BUG FIXES
 
@@ -22,6 +37,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Use uv tool install for pre-commit in workflow (#587)
 - pre-commit autoupdate (#588)
 - Release v0.7.0 (#589)
+- Release v0.7.1 (#592)
 
 
 
@@ -1499,4 +1515,3 @@ Thank you to everyone who contributed to this release!
 **Humans:** 👤 Peter Reuterås
 
 **AI & Automation:** 🤖 Claude (AI Assistant)
-
