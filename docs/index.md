@@ -84,20 +84,20 @@ See the [Installation Guide](installation.md) for more options including pip and
 | `*`       | Toggle star          |
 | `s`       | Cycle sort mode      |
 | `g`       | Toggle group by feed |
-| `l` / `h`   | Expand/collapse feed     |
-| `r`         | Refresh current feed     |
-| `Shift+R`   | Refresh all feeds        |
-| `,`         | Sync from server         |
-| `u`         | Show unread entries      |
-| `t`         | Show starred entries     |
-| `/`         | Search entries           |
-| `Shift+M`   | Manage categories        |
-| `Shift+H`   | Toggle history view      |
-| `X`         | Open feed settings       |
-| `Shift+T`   | Toggle theme             |
-| `?`         | Show help                |
-| `i`         | Show system status       |
-| `q`         | Quit                     |
+| `l` / `h` | Expand/collapse feed |
+| `r`       | Refresh current feed |
+| `Shift+R` | Refresh all feeds    |
+| `,`       | Sync from server     |
+| `u`       | Show unread entries  |
+| `t`       | Show starred entries |
+| `/`       | Search entries       |
+| `Shift+M` | Manage categories    |
+| `Shift+H` | Toggle history view  |
+| `X`       | Open feed settings   |
+| `Shift+T` | Toggle theme         |
+| `?`       | Show help            |
+| `i`       | Show system status   |
+| `q`       | Quit                 |
 
 ## Documentation
 
