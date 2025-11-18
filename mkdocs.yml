@@ -57,6 +57,9 @@ nav:
   - Installation: installation.md
   - Configuration: configuration.md
   - Usage: usage.md
+  - Features:
+      - Overview: features/overview.md
+      - Scraping Helper: features/scraping-helper.md
   - GitHub Codespaces: codespaces.md
   - Keyboard Workflows: workflows.md
   - Contributing: contributing.md

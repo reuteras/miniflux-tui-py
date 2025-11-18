@@ -6,16 +6,36 @@ This document provides context about the miniflux-tui-py project for coding agen
 
 **miniflux-tui-py** is a Python Terminal User Interface (TUI) client for [Miniflux](https://miniflux.app) - a self-hosted RSS reader. It provides a keyboard-driven interface to browse, read, and manage RSS feeds directly from the terminal.
 
-- **Language**: Python 3.13+
+- **Language**: Python 3.11+
+- **Supported Python Versions**: 3.11, 3.12, 3.13, 3.14, 3.15 (preview)
 - **Framework**: Textual (TUI framework)
-- **Status**: Beta (v0.4.0) | v0.5.0 in development
+- **Status**: Production/Stable (v0.7.2)
+- **Development Status**: 5 - Production/Stable (PyPI classifier)
 - **License**: MIT
 - **Author**: Peter Reuterås
 - **PyPI**: Available at <https://pypi.org/project/miniflux-tui-py/>
 - **Docs**: <https://reuteras.github.io/miniflux-tui-py/>
-- **Roadmap**: See [ROADMAP.md](ROADMAP.md) for v0.5.0-v0.7.0 features
+- **Roadmap**: See [ROADMAP.md](ROADMAP.md) for v0.7.0+ features
+- **Security**: OpenSSF Best Practices, Scorecard, SLSA attestation
 
 This is a Python reimplementation of [cliflux](https://github.com/spencerwi/cliflux) (original Rust implementation).
+
+## Project Maturity
+
+The project has reached **Production/Stable** status with:
+- ✅ Comprehensive feature set (categories, feeds, settings, history)
+- ✅ Robust CI/CD with 15+ GitHub Actions workflows
+- ✅ High test coverage (>60%) with async support
+- ✅ Multiple security scanning tools (CodeQL, Semgrep, OSV, CIFuzz, Malcontent)
+- ✅ Performance benchmarking and optimization
+- ✅ Container builds with SLSA attestation
+- ✅ OpenSSF Best Practices badge
+- ✅ OpenSSF Scorecard monitoring
+- ✅ Professional documentation (MkDocs Material)
+- ✅ Automated release workflow with signed commits
+- ✅ PyPI Trusted Publisher (OIDC)
+- ✅ Multi-platform support (Linux, macOS, Windows)
+- ✅ Python 3.11-3.15 support
 
 ## Directory Structure
 
@@ -36,7 +56,19 @@ miniflux-tui-py/
 │       └── screens/
 │           ├── entry_list.py        # Entry list with sorting/grouping
 │           ├── entry_reader.py      # Entry detail view
-│           └── help.py              # Help/keyboard shortcuts
+│           ├── entry_history.py     # Entry history view
+│           ├── category_management.py # Category management
+│           ├── feed_management.py   # Feed management
+│           ├── feed_settings.py     # Feed settings editor
+│           ├── settings_management.py # User settings
+│           ├── status.py            # Status/error dashboard
+│           ├── help.py              # Help/keyboard shortcuts
+│           ├── confirm_dialog.py    # Confirmation dialog
+│           ├── input_dialog.py      # Input dialog
+│           ├── settings_edit_dialog.py # Settings editor dialog
+│           ├── scraping_helper.py   # Scraping rules helper
+│           ├── rules_helper.py      # Filter rules helper
+│           └── loading.py           # Loading screen
 ├── tests/                           # Test suite
 │   ├── conftest.py
 │   ├── test_*.py                    # Test files
@@ -52,9 +84,22 @@ miniflux-tui-py/
 │       └── screens.md
 ├── .github/
 │   ├── workflows/
-│   │   ├── test.yml                 # Run tests on push (Python 3.13-3.14)
+│   │   ├── test.yml                 # Run tests on push (Python 3.11-3.15)
+│   │   ├── release.yml              # Automated release workflow
 │   │   ├── publish.yml              # Publish to PyPI on git tags
-│   │   └── docs-deploy.yml          # Deploy docs to GitHub Pages
+│   │   ├── docs-deploy.yml          # Deploy docs to GitHub Pages
+│   │   ├── codeql.yml               # CodeQL security analysis
+│   │   ├── semgrep.yml              # Semgrep SAST scanning
+│   │   ├── osv-scanner.yml          # OSV vulnerability scanning
+│   │   ├── cifuzz.yml               # Fuzz testing
+│   │   ├── malcontent-pr.yml        # Malware detection
+│   │   ├── linter.yml               # MegaLinter
+│   │   ├── performance.yml          # Performance benchmarking
+│   │   ├── container-image.yml      # Container builds
+│   │   ├── dependency-review.yml    # Dependency review
+│   │   ├── license-check.yml        # License validation
+│   │   ├── zizmor.yml               # Workflow security
+│   │   └── scorecard.yml            # OpenSSF Scorecard
 │   ├── dependabot.yml               # Automated dependency updates
 │   └── CODEOWNERS                   # Code review requirements
 ├── pyproject.toml                   # Project metadata & dependencies
@@ -73,15 +118,24 @@ miniflux-tui-py/
 
 ### Core Files
 
-| File                         | Purpose                                                                  |
-|------------------------------|--------------------------------------------------------------------------|
-| `main.py`                    | CLI entry point; handles `--init`, `--check-config`; runs async app      |
-| `config.py`                  | Config loading/saving with platform-specific paths (XDG, macOS, Windows) |
-| `api/client.py`              | Async wrapper around official miniflux Python library with retry logic   |
-| `api/models.py`              | Dataclasses: `Category`, `Entry`, `Feed` with helper properties          |
-| `ui/app.py`                  | Main `MinifluxTuiApp` Textual App; screen management; entry loading      |
-| `ui/screens/entry_list.py`   | Entry list screen with sorting, grouping, navigation                     |
-| `ui/screens/entry_reader.py` | Entry detail view with HTML→Markdown conversion                          |
+| File                                | Purpose                                                                  |
+|-------------------------------------|--------------------------------------------------------------------------|
+| `main.py`                           | CLI entry point; handles `--init`, `--check-config`; runs async app      |
+| `config.py`                         | Config loading/saving with platform-specific paths (XDG, macOS, Windows) |
+| `constants.py`                      | Application constants and configuration                                  |
+| `performance.py`                    | Performance optimization utilities                                       |
+| `utils.py`                          | Helper utilities                                                         |
+| `api/client.py`                     | Async wrapper around official miniflux Python library with retry logic   |
+| `api/models.py`                     | Dataclasses: `Category`, `Entry`, `Feed` with helper properties          |
+| `ui/app.py`                         | Main `MinifluxTuiApp` Textual App; screen management; entry loading      |
+| `ui/screens/entry_list.py`          | Entry list screen with sorting, grouping, navigation                     |
+| `ui/screens/entry_reader.py`        | Entry detail view with HTML→Markdown conversion                          |
+| `ui/screens/entry_history.py`       | Entry history browsing                                                   |
+| `ui/screens/category_management.py` | Category CRUD operations                                                 |
+| `ui/screens/feed_management.py`     | Feed discovery and management                                            |
+| `ui/screens/feed_settings.py`       | Feed settings editor                                                     |
+| `ui/screens/settings_management.py` | User settings management                                                 |
+| `ui/screens/status.py`              | Status dashboard for problematic feeds                                   |
 
 ### Recent Modifications (Key Behaviors)
 
@@ -113,7 +167,44 @@ miniflux-tui-py/
 - **Display**: Shows entry title, feed name, publish date, URL, and HTML content (converted to Markdown)
 - **Navigation**: `J/K` (uppercase) to navigate between entries in current list order
 - **Actions**: Mark unread, toggle starred, open in browser, fetch original content
+- **Feed settings**: `X` key to open feed settings editor
 - **Critical fix**: Uses `entry_list` parameter passed from entry_list screen for correct navigation order
+
+#### category_management.py
+- **CRUD operations**: Create, rename, delete categories
+- **Feed assignment**: Move feeds between categories
+- **Validation**: Prevents deletion of categories with feeds
+- **Integration**: Seamlessly updates entry list when categories change
+
+#### feed_management.py
+- **Feed discovery**: Auto-discover feeds from URLs
+- **Feed creation**: Add new feeds to categories
+- **Settings preview**: Quick access to feed settings
+
+#### feed_settings.py
+- **Comprehensive editor**: Edit all feed settings
+- **Scraping rules**: Configure content extraction
+- **Rewrite rules**: URL and content rewriting
+- **Fetch settings**: Full content fetching, user agent, cookies
+- **Blocklist rules**: Entry filtering by title, URL, content
+- **Allow rules**: Entry whitelisting
+
+#### entry_history.py
+- **History browsing**: View last read entries
+- **Date filtering**: Filter by date range
+- **Feed filtering**: Filter by specific feed
+- **Search**: Search through history
+
+#### settings_management.py
+- **User settings**: View and edit global settings
+- **Integration status**: Display enabled integrations
+- **Web UI links**: Quick access to advanced settings
+
+#### status.py
+- **Feed status**: Display problematic feeds
+- **Error indicators**: SSL issues, bot protection, timeouts
+- **Server info**: Show Miniflux server version and URL
+- **Direct links**: Open feed settings in web UI
 
 ## Architecture Patterns
 
@@ -142,7 +233,7 @@ config.py (load/validate)
 
 #### Option 1: From PyPI (Recommended for users)
 ```bash
-uv pip install miniflux-tui-py
+uv tool install miniflux-tui-py
 
 # Create config
 miniflux-tui --init
@@ -372,12 +463,24 @@ default_group_by_feed = false
 - **Line length**: 140 characters
 - **Indentation**: 4 spaces
 - **Quotes**: Double quotes
-- **Linting**: ruff (fast Python linter & formatter)
-- **Type checking**: pyright (strict type checking)
-- **Testing**: pytest with coverage tracking
+- **Target Python**: 3.11+
+- **Linting**: ruff (fast Python linter & formatter) with extensive rule set:
+  - pycodestyle (E, W)
+  - pyflakes (F)
+  - isort (I)
+  - pep8-naming (N)
+  - pyupgrade (UP)
+  - flake8-bugbear (B)
+  - flake8-bandit security (S)
+  - flake8-comprehensions (C4)
+  - And many more (see pyproject.toml)
+- **Type checking**: pyright (standard mode) on all code and tests
+- **Security**: bandit SAST scanning
+- **Testing**: pytest with coverage tracking (minimum 60%)
 - **Pre-commit hooks**: Enforces syntax, security checks, formatting, and type checking
-- **CI/CD**: GitHub Actions runs all checks on push (not PR)
+- **CI/CD**: GitHub Actions runs all checks on push
 - **Documentation**: MkDocs with Material theme, auto-deployed to GitHub Pages
+- **Commit signing**: Required (SSH with 1Password)
 
 ## Important Implementation Details
 
@@ -432,10 +535,14 @@ async def action_do_something(self):
 ## Dependencies
 
 **Runtime**:
-- `textual>=0.82.0` - TUI framework
-- `miniflux>=0.0.11` - Official Miniflux API client
-- `html2text>=2024.2.26` - HTML to Markdown conversion
-- `tomli>=2.0.1` - TOML parsing (Python <3.13)
+- `textual>=6.4.0` - TUI framework
+- `miniflux>=1.1.4` - Official Miniflux API client
+- `html2text>=2025.4.15` - HTML to Markdown conversion
+- `tomli>=2.0.1` - TOML parsing (Python <3.11)
+- `beautifulsoup4>=4.14.2` - HTML parsing
+- `html5lib>=1.1` - HTML5 parsing
+- `bleach>=6.3.0` - HTML sanitization
+- `httpx>=0.28.1` - HTTP client
 
 **Development** (included with `uv sync`):
 - `ruff>=0.6.0` - Fast linter & formatter
@@ -443,12 +550,18 @@ async def action_do_something(self):
 - `pytest>=8.0.0` - Testing framework
 - `pytest-asyncio>=0.23.0` - Async test support
 - `pytest-cov>=4.0.0` - Coverage reporting
+- `pytest-benchmark>=4.0.0` - Performance benchmarking
 - `pylint>=4.0.2` - Additional code linting
+- `bandit[toml]>=1.7.5` - Security linting
 
-**Documentation** (included with `uv sync` or `pip install .[docs]`):
-- `mkdocs>=1.5.0` - Documentation generator
-- `mkdocs-material>=9.4.0` - Material theme for MkDocs
-- `mkdocstrings[python]>=0.23.0` - Auto-generate API docs from docstrings
+**Documentation** (included with `uv sync` or via docs dependency group):
+- `mkdocs>=1.6.1` - Documentation generator
+- `mkdocs-material>=9.6.22` - Material theme for MkDocs
+- `mkdocstrings[python]>=0.30.1` - Auto-generate API docs from docstrings
+
+**Optional**:
+- `atheris>=2.3.0` - Fuzzing support (fuzz dependency group)
+- `pyinstaller>=6.10.0` - Binary packaging (binary dependency group)
 
 ## Known Patterns & Conventions
 
@@ -475,24 +588,52 @@ async def action_mark_read(self):
 - Call API to persist changes
 - Call `_populate_list()` or `refresh_screen()` to update UI
 
-## Recent Changes (v0.1.1)
+## Recent Changes (v0.7.x)
 
-Major improvements in October 2025:
-- **Grouped mode navigation fixed**: CSS-based hiding instead of list rebuilding
-  - Cursor position now preserved during expand/collapse
-  - j/k navigation automatically skips hidden entries
-- **PyPI package infrastructure**: Published to PyPI with OIDC secure publishing
+Latest releases (November 2025):
+
+### v0.7.2 (2025-11-17)
+- **Bug fix**: Added missing ID to Markdown widget to fix NoMatches error
+
+### v0.7.1 (2025-11-17)
+- **Feature**: Dark/Light theme toggle support
+- **Bug fix**: Prevented immutable release error in publish workflow
+
+### v0.6.5 (2025-11-16)
+- **Feature**: Phase 11 - UX Polish & Documentation
+- **Bug fixes**:
+  - Enhanced scorecard workflow
+  - Fixed unawaited coroutine in EntryHistoryScreen
+  - Connected FeedSettingsScreen to entry reader X key binding
+  - Comprehensive SafeHeader exception handling for Windows Python 3.11+
+  - Fixed TextArea visibility in FeedSettingsScreen
+  - Return error code 1 when --check-config password command fails
+
+### v0.5.0-v0.6.0 (September-November 2025)
+Major feature additions:
+- **Category support**: Full CRUD operations for categories
+- **Feed management**: Create, discover, edit feeds
+- **Feed settings editor**: Comprehensive feed configuration
+- **Entry history**: Browse reading history with date/feed filters
+- **User settings**: View and edit global feed settings
+- **Status dashboard**: View problematic feeds and errors
+- **Grouped mode navigation**: CSS-based hiding with preserved cursor position
+- **PyPI package infrastructure**: OIDC secure publishing
 - **Comprehensive documentation**: MkDocs site with installation, usage, and API reference
 - **GitHub Actions CI/CD**:
-  - Automated testing on Python 3.13, 3.14 with 3.15 preview
+  - Automated testing on Python 3.11, 3.12, 3.13, 3.14, 3.15 preview
   - Type checking with pyright
-  - Test coverage tracking with codecov
+  - Security scanning (CodeQL, Semgrep, OSV Scanner, CIFuzz)
+  - Test coverage tracking with coveralls
   - Auto-deploy docs to GitHub Pages
   - Auto-publish to PyPI on version tags
+  - Container builds with SLSA attestation
 - **Professional tooling**:
   - Pre-commit hooks with pyright type checking
   - Standard community files (CHANGELOG, CONTRIBUTING, CODE_OF_CONDUCT, SECURITY)
   - Dependabot for automated dependency updates
+  - MegaLinter for code quality
+  - Performance benchmarking
 - **Code quality**:
   - Added constants.py for centralized configuration
   - Added performance.py for optimization tracking
@@ -502,17 +643,28 @@ Major improvements in October 2025:
 ## Testing & Quality Assurance
 
 - **Automated CI/CD**: GitHub Actions runs on every push
-  - Tests Python 3.13, 3.14 with 3.15 preview
-  - Minimum 60% test coverage required
+  - Tests Python 3.11, 3.12, 3.13, 3.14 with 3.15 preview
+  - Minimum 60% test coverage required (tracked with coveralls)
   - Type checking with pyright
   - Linting with ruff
+  - Security scanning:
+    - CodeQL (static analysis)
+    - Semgrep (SAST)
+    - OSV Scanner (vulnerability scanning)
+    - CIFuzz (fuzz testing)
+    - Malcontent (malware detection)
+    - Bandit (Python security linter)
+  - Dependency review and license checking
+  - MegaLinter for comprehensive code quality
+  - Performance benchmarking
+  - Container builds with SLSA attestation
 - **Pre-commit hooks**: Enforces quality before commit
   - ruff linting and formatting
   - pyright type checking
   - YAML validation
   - Security checks
 - **Manual testing**: Test with different Miniflux instances and feed sizes
-- **Test suite**: Basic pytest coverage in tests/ directory
+- **Test suite**: Comprehensive pytest coverage in tests/ directory with async support
 
 ## Release Process for AI Agents
 
@@ -682,6 +834,53 @@ test: Add integration tests for feed refresh
 - [.github/workflows/release.yml](.github/workflows/release.yml) - Automated release workflow
 - [cliff.toml](cliff.toml) - git-cliff configuration for changelog generation
 
+## Common Development Patterns
+
+### Adding a New Feed Setting
+1. Check if the Miniflux API supports the setting (check miniflux Python client)
+2. Add field to `Feed` model in `api/models.py`
+3. Add UI widget in `feed_settings.py` compose method
+4. Add save logic in `action_save()` method
+5. Test with real Miniflux server
+
+### Adding a New Screen
+1. Create new file in `ui/screens/`
+2. Import required Textual widgets and components
+3. Define `BINDINGS` for keyboard shortcuts
+4. Implement `compose()` for UI layout
+5. Add action methods for bindings
+6. Add screen to app routing in `ui/app.py`
+7. Add tests in `tests/`
+
+### Working with Dialogs
+Use existing dialog components:
+- `ConfirmDialog` - Yes/No confirmations
+- `InputDialog` - Text input
+- `SettingsEditDialog` - Settings editor
+
+Push dialog and await result:
+```python
+result = await self.app.push_screen_wait(ConfirmDialog("Are you sure?"))
+if result:
+    # User confirmed
+```
+
+### API Error Handling
+Always wrap API calls in try/except:
+```python
+try:
+    result = await self.app.client.some_api_call()
+except Exception as e:
+    self.app.notify(f"Error: {e}", severity="error")
+    return
+```
+
+### Performance Considerations
+- Use `@work` decorator for long-running operations
+- Display loading screens for slow operations
+- Cache frequently accessed data
+- Use incremental updates when possible
+
 ## Troubleshooting
 
 **Keys don't work**: Check bindings list in screen class - must have matching `action_*` method.
@@ -692,10 +891,78 @@ test: Add integration tests for feed refresh
 
 **API errors**: Check network connectivity and API key in config; verify Miniflux server is accessible.
 
+**Pre-commit hooks fail**: Run `uv run ruff format .` and `uv run ruff check . --fix` to auto-fix most issues.
+
+**Type checking errors**: Run `uv run pyright` locally to see full error details. Add type hints or use `# type: ignore` with comment explaining why.
+
+**Tests fail**: Ensure you're using the right Python version (3.11+) and have synced dependencies with `uv sync --all-groups`.
+
+**Container build fails**: Check that all dependencies are properly declared in `pyproject.toml` and that the Dockerfile is using the correct base image.
+
+**Commit signing fails**: Stop and wait for maintainer.
+
+**Coverage too low**: Add more tests in `tests/` directory. Aim for >60% coverage. Use `uv run pytest --cov=miniflux_tui --cov-report=html` to see coverage report.
+
+## Key Features (as of v0.7.2)
+
+### Core Functionality
+- ✅ Browse and read RSS entries with keyboard navigation
+- ✅ Mark entries as read/unread, starred/unstarred
+- ✅ Save entries to third-party services (Pocket, Instapaper, etc.)
+- ✅ Open entries in browser
+- ✅ Fetch original content for truncated entries
+- ✅ HTML to Markdown conversion for readable display
+
+### Organization & Filtering
+- ✅ Sort by date (newest first), feed (alphabetical), or status (unread first)
+- ✅ Group entries by feed with expand/collapse
+- ✅ Filter by unread only or starred only
+- ✅ Search through entries
+- ✅ Category-based organization
+- ✅ Feed-based filtering
+
+### Feed Management
+- ✅ Auto-discover feeds from URLs
+- ✅ Create/edit/delete feeds
+- ✅ Configure feed settings (scraping rules, rewrite rules, fetch settings)
+- ✅ Refresh individual feeds or all feeds
+- ✅ View feed status and errors
+- ✅ Configure entry filtering (blocklist/allowlist rules)
+
+### Category Management
+- ✅ Create/rename/delete categories
+- ✅ Move feeds between categories
+- ✅ Category-based grouping
+
+### User Settings
+- ✅ View and edit global feed settings
+- ✅ View enabled integrations
+- ✅ Configure theme (dark/light mode)
+- ✅ Customize colors and appearance
+
+### History & Status
+- ✅ Browse reading history
+- ✅ Filter history by date range or feed
+- ✅ Search through history
+- ✅ View problematic feeds and errors
+- ✅ Display server version and URL
+
+### Advanced Features
+- ✅ Keyboard-driven interface with extensive shortcuts
+- ✅ Async API calls for responsive UI
+- ✅ Configuration via TOML file
+- ✅ Platform-specific config paths (XDG, macOS, Windows)
+- ✅ Password command support for secure credential storage
+- ✅ Dark/Light theme support
+
 ## References
 
 - [Textual Documentation](https://textual.textualize.io/)
 - [Miniflux Project](https://miniflux.app)
+- [Miniflux Python Client](https://github.com/miniflux/python-client)
 - [Original cliflux (Rust)](https://github.com/spencerwi/cliflux)
-- Commits to GitHub should be signed with ssh key
-- No bare urls in Markdown files.
+- [uv Package Manager](https://docs.astral.sh/uv/)
+- [OpenSSF Best Practices](https://www.bestpractices.dev/projects/11362)
+- [OpenSSF Scorecard](https://securityscorecards.dev/viewer/?uri=github.com/reuteras/miniflux-tui-py)
+- Commits to GitHub should be signed with SSH key
+- No bare URLs in Markdown files
