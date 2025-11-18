@@ -6,14 +6,41 @@
 
 A Python Terminal User Interface (TUI) client for [Miniflux](https://miniflux.app) - a self-hosted RSS reader. This tool provides a keyboard-driven interface to browse, read, and manage RSS feeds directly from the terminal.
 
+## Status
+
+**Production/Stable** - v0.7.2 (November 2025)
+
+This project has reached production stability with comprehensive features, robust CI/CD, and high test coverage across Python 3.11-3.15.
+
 ## Features
 
-- **Keyboard-driven navigation** - Vim-style keybindings for efficient browsing
-- **Multiple view modes** - Group by feed, sort by date/feed/status
-- **Feed management** - Mark entries as read/unread, star/unstar favorites
-- **Collapsible feed groups** - Expand/collapse feeds to focus on what matters
-- **Responsive layout** - Optimized for terminal viewing
-- **Secure configuration** - Support for self-signed certificates and custom API keys
+### Core Functionality
+- 📖 **Browse and read** RSS entries with keyboard navigation
+- ✓ **Mark entries** as read/unread, starred/unstarred
+- 💾 **Save entries** to third-party services (Pocket, Instapaper, etc.)
+- 🌐 **Open in browser** or fetch original content for truncated entries
+- 📝 **HTML to Markdown** conversion for readable display
+
+### Organization & Filtering
+- 🗂️ **Multiple sort modes** - date (newest first), feed (alphabetical), or status (unread first)
+- 📁 **Group by feed** or category with expand/collapse
+- 🔍 **Filter by status** - unread only or starred only
+- 🔎 **Search** through entries by title or content
+- 🏷️ **Category management** - organize feeds into categories
+
+### Feed Management
+- 🔄 **Auto-discover** feeds from URLs
+- ⚙️ **Configure feeds** - scraping rules, rewrite rules, fetch settings, blocklist/allowlist
+- 🔁 **Refresh feeds** - individual feeds or all feeds
+- 📊 **Feed status** - view problematic feeds and errors
+- 🛠️ **Feed settings editor** - comprehensive feed configuration
+
+### User Experience
+- ⌨️ **Keyboard-driven** - extensive Vim-style shortcuts
+- 🎨 **Theme support** - dark/light mode toggle
+- 📚 **Reading history** - browse your 200 most recently read entries
+- 🔐 **Password manager** integration for secure credential storage
+- 📦 **Multi-platform** - Linux, macOS, Windows support
 
 ## Quick Start
 
@@ -57,12 +84,20 @@ See the [Installation Guide](installation.md) for more options including pip and
 | `*`       | Toggle star          |
 | `s`       | Cycle sort mode      |
 | `g`       | Toggle group by feed |
-| `l` / `h` | Expand/collapse feed |
-| `r`       | Refresh entries      |
-| `u`       | Show unread entries  |
-| `t`       | Show starred entries |
-| `?`       | Show help            |
-| `q`       | Quit                 |
+| `l` / `h`   | Expand/collapse feed     |
+| `r`         | Refresh current feed     |
+| `Shift+R`   | Refresh all feeds        |
+| `,`         | Sync from server         |
+| `u`         | Show unread entries      |
+| `t`         | Show starred entries     |
+| `/`         | Search entries           |
+| `Shift+M`   | Manage categories        |
+| `Shift+H`   | Toggle history view      |
+| `X`         | Open feed settings       |
+| `Shift+T`   | Toggle theme             |
+| `?`         | Show help                |
+| `i`         | Show system status       |
+| `q`         | Quit                     |
 
 ## Documentation
 
@@ -74,7 +109,7 @@ See the [Installation Guide](installation.md) for more options including pip and
 
 ## Requirements
 
-- Python 3.13 or later
+- Python 3.11 or later (tested on 3.11, 3.12, 3.13, 3.14, 3.15 preview)
 - A running Miniflux instance
 - Terminal with 24+ colors (for best experience)
 

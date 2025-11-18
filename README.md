@@ -5,7 +5,7 @@
 </div>
 
 [![PyPI version](https://img.shields.io/pypi/v/miniflux-tui-py.svg)](https://pypi.org/project/miniflux-tui-py/)
-[![Python 3.13+ | 3.14 | 3.15](https://img.shields.io/badge/python-3.13%20%7C%203.14%20%7C%203.15-blue)](https://pypi.org/project/miniflux-tui-py/)
+[![Python 3.11+ | 3.12 | 3.13 | 3.14 | 3.15](https://img.shields.io/badge/python-3.11%20%7C%203.12%20%7C%203.13%20%7C%203.14%20%7C%203.15-blue)](https://pypi.org/project/miniflux-tui-py/)
 [![Downloads](https://static.pepy.tech/badge/miniflux-tui-py/month)](https://pepy.tech/project/miniflux-tui-py)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 [![Test Status](https://github.com/reuteras/miniflux-tui-py/workflows/Test/badge.svg)](https://github.com/reuteras/miniflux-tui-py/actions/workflows/test.yml)
@@ -29,7 +29,49 @@
 [![OpenSSF Scorecard](https://api.securityscorecards.dev/projects/github.com/reuteras/miniflux-tui-py/badge)](https://securityscorecards.dev/viewer/?uri=github.com/reuteras/miniflux-tui-py)
 [![OpenSSF Best Practices](https://www.bestpractices.dev/projects/11362/badge?t=2025)](https://www.bestpractices.dev/projects/11362)
 
-A [Python](https://www.python.org) TUI (Terminal User Interface) client for the Miniflux self-hosted RSS reader built with [textual](https://github.com/textualize/textual/).
+A [Python](https://www.python.org) TUI (Terminal User Interface) client for the [Miniflux](https://miniflux.app) self-hosted RSS reader built with [Textual](https://github.com/textualize/textual/).
+
+## Status
+
+**Production/Stable** - v0.7.2
+
+This project has reached production stability with:
+- ✅ Comprehensive feature set (categories, feeds, settings, history, theme support)
+- ✅ Robust CI/CD with 15+ security and quality workflows
+- ✅ High test coverage (>60%) across Python 3.11-3.15
+- ✅ OpenSSF Best Practices badge and Scorecard monitoring
+- ✅ Container builds with SLSA attestation
+- ✅ Professional documentation and API reference
+
+## Features
+
+### Core Functionality
+- 📖 **Browse and read** RSS entries with keyboard navigation
+- ✓ **Mark entries** as read/unread, starred/unstarred
+- 💾 **Save entries** to third-party services (Pocket, Instapaper, etc.)
+- 🌐 **Open in browser** or fetch original content for truncated entries
+- 📝 **HTML to Markdown** conversion for readable display
+
+### Organization & Filtering
+- 🗂️ **Multiple sort modes** - date (newest first), feed (alphabetical), or status (unread first)
+- 📁 **Group by feed** or category with expand/collapse
+- 🔍 **Filter by status** - unread only or starred only
+- 🔎 **Search** through entries by title or content
+- 🏷️ **Category management** - organize feeds into categories
+
+### Feed Management
+- 🔄 **Auto-discover** feeds from URLs
+- ⚙️ **Configure feeds** - scraping rules, rewrite rules, fetch settings, blocklist/allowlist
+- 🔁 **Refresh feeds** - individual feeds or all feeds
+- 📊 **Feed status** - view problematic feeds and errors
+- 🛠️ **Feed settings editor** - comprehensive feed configuration
+
+### User Experience
+- ⌨️ **Keyboard-driven** - extensive Vim-style shortcuts
+- 🎨 **Theme support** - dark/light mode toggle
+- 📚 **Reading history** - browse your 200 most recently read entries
+- 🔐 **Password manager** integration for secure credential storage
+- 📦 **Multi-platform** - Linux, macOS, Windows support
 
 ## Installation
 
@@ -256,6 +298,7 @@ To create a token:
 | Shift+M    | Manage categories                                |
 | Shift+H    | Toggle reading history view                      |
 | Shift+X    | Open scraping rule helper                        |
+| Shift+T    | Toggle theme (dark/light)                        |
 | ?          | Show keyboard help                               |
 | i          | Show system status                               |
 | Shift+S    | Show TUI settings                                |
@@ -274,6 +317,7 @@ To create a token:
 | e               | Save entry to third-party service |
 | o               | Open in browser                   |
 | f               | Fetch original content            |
+| X               | Open feed settings                |
 | Shift+X         | Open scraping rule helper         |
 | b or Esc        | Back to list                      |
 | ?               | Show keyboard help                |
