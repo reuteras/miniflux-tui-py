@@ -640,7 +640,9 @@ default_sort = "date"
 # Default grouping by feed (default: false)
 default_group_by_feed = false
 
-# Start with groups collapsed when grouping is enabled (default: false)
+# Default expand/collapse state when toggling group mode
+# true = groups start collapsed, false = groups start expanded (default: false)
+# Applies to both feed grouping (g key) and category grouping (c key)
 group_collapsed = false
 
 [ui]
@@ -734,7 +736,9 @@ default_sort = "date"
 # Start in grouped mode (recommended for Codespaces)
 default_group_by_feed = true
 
-# Start with groups collapsed (optional)
+# Default expand/collapse state when toggling group mode
+# true = groups start collapsed, false = groups start expanded (default: false)
+# Applies to both feed grouping (g key) and category grouping (c key)
 group_collapsed = false
 
 [ui]
