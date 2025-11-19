@@ -97,46 +97,46 @@ class TestEntryListKeyBindings:
         assert h_binding.action == "show_history"  # type: ignore[attr-defined]
         assert "History" in h_binding.description  # type: ignore[attr-defined]
 
-    def test_group_by_feed_starts_collapsed(self, sample_entries, sample_categories, monkeypatch):
-        """Test that enabling group by feed starts with groups collapsed."""
-        screen = EntryListScreen(sample_entries, sample_categories)
+    def test_group_by_feed_respects_config(self, sample_entries, sample_categories, monkeypatch):
+        """Test that enabling group by feed respects the group_collapsed config."""
+        screen = EntryListScreen(sample_entries, sample_categories, group_collapsed=False)
 
         # Mock notify to avoid NoActiveAppError
         monkeypatch.setattr(screen, "notify", lambda *_args, **_kwargs: None)
         monkeypatch.setattr(screen, "_populate_list", lambda: None)
 
-        # Initially not grouped
+        # Initially not grouped, with config group_collapsed=False
         assert not screen.group_by_feed
         assert not screen.group_collapsed
 
         # Simulate pressing 'g' to enable grouping
         screen.action_toggle_group_feed()
 
-        # Should be grouped and collapsed
+        # Should be grouped, and group_collapsed should retain config value (False)
         assert screen.group_by_feed
-        assert screen.group_collapsed
+        assert not screen.group_collapsed
 
         # Feed fold state should be cleared
         assert len(screen.feed_fold_state) == 0
 
-    def test_group_by_category_starts_collapsed(self, sample_entries, sample_categories, monkeypatch):
-        """Test that enabling group by category starts with groups collapsed."""
-        screen = EntryListScreen(sample_entries, sample_categories)
+    def test_group_by_category_respects_config(self, sample_entries, sample_categories, monkeypatch):
+        """Test that enabling group by category respects the group_collapsed config."""
+        screen = EntryListScreen(sample_entries, sample_categories, group_collapsed=False)
 
         # Mock notify to avoid NoActiveAppError
         monkeypatch.setattr(screen, "notify", lambda *_args, **_kwargs: None)
         monkeypatch.setattr(screen, "_populate_list", lambda: None)
 
-        # Initially not grouped
+        # Initially not grouped, with config group_collapsed=False
         assert not screen.group_by_category
         assert not screen.group_collapsed
 
         # Simulate pressing 'c' to enable grouping
         screen.action_toggle_group_category()
 
-        # Should be grouped and collapsed
+        # Should be grouped, and group_collapsed should retain config value (False)
         assert screen.group_by_category
-        assert screen.group_collapsed
+        assert not screen.group_collapsed
 
         # Category fold state should be cleared
         assert len(screen.category_fold_state) == 0
