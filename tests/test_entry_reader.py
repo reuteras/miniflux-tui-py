@@ -1512,138 +1512,154 @@ class TestEntryReaderLinkWidgets:
 
 
 class TestEntryReaderLinkHighlighting:
-    """Test visual link highlighting functionality using CSS styles on Link widgets."""
+    """Test visual link highlighting functionality in Markdown content."""
 
-    def test_apply_link_highlighting_no_focus(self, sample_entry):
-        """Test _apply_link_highlighting clears all highlighting when no link is focused."""
+    def test_render_content_with_highlight_no_focus(self, sample_entry):
+        """Test _render_content_with_highlight returns original content when no link is focused."""
         screen = EntryReaderScreen(entry=sample_entry)
+        screen.original_content = "Test content with [link](http://localhost:8080)"
         screen.links = [{"text": "link", "url": "http://localhost:8080"}]
         screen.focused_link_index = None
 
-        # Mock link widgets
-        mock_link = MagicMock()
-        mock_link.styles = MagicMock()
+        result = screen._render_content_with_highlight()
 
-        with mock.patch.object(screen, "_get_markdown_link_widgets", return_value=[mock_link]):
-            screen._apply_link_highlighting()
+        assert result == screen.original_content
 
-            # Should clear all styles
-            assert mock_link.styles.background == ""
-            assert mock_link.styles.color == ""
-            assert mock_link.styles.text_style == ""
-
-    def test_apply_link_highlighting_no_links(self, sample_entry):
-        """Test _apply_link_highlighting handles no links gracefully."""
+    def test_render_content_with_highlight_no_links(self, sample_entry):
+        """Test _render_content_with_highlight returns original content when no links exist."""
         screen = EntryReaderScreen(entry=sample_entry)
+        screen.original_content = "Test content without links"
         screen.links = []
         screen.focused_link_index = None
 
-        with mock.patch.object(screen, "_get_markdown_link_widgets", return_value=[]):
-            # Should not raise exception
-            screen._apply_link_highlighting()
+        result = screen._render_content_with_highlight()
 
-    def test_apply_link_highlighting_single_link(self, sample_entry):
-        """Test _apply_link_highlighting highlights single focused link."""
+        assert result == screen.original_content
+
+    def test_render_content_with_highlight_markdown_link(self, sample_entry):
+        """Test _render_content_with_highlight highlights markdown-style link."""
         screen = EntryReaderScreen(entry=sample_entry)
+        screen.original_content = "Test [link text](http://localhost:8080) content"
         screen.links = [{"text": "link text", "url": "http://localhost:8080"}]
         screen.focused_link_index = 0
 
-        # Mock link widget
-        mock_link = MagicMock()
-        mock_link.styles = MagicMock()
+        result = screen._render_content_with_highlight()
 
-        with mock.patch.object(screen, "_get_markdown_link_widgets", return_value=[mock_link]):
-            screen._apply_link_highlighting()
+        # Should contain color-based markup with default colors
+        assert "[bold #282a36 on #ff79c6]link text[/bold]" in result
+        # Should preserve the URL
+        assert "(http://localhost:8080)" in result
 
-            # Should apply default colors to the link
-            assert mock_link.styles.background == "#ff79c6"  # Default pink
-            assert mock_link.styles.color == "#282a36"  # Default dark
-            assert mock_link.styles.text_style == "bold"
-
-    def test_apply_link_highlighting_multiple_links_first_focused(self, sample_entry):
-        """Test _apply_link_highlighting highlights only the first link when focused."""
+    def test_render_content_with_highlight_plain_url(self, sample_entry):
+        """Test _render_content_with_highlight highlights plain URL when markdown pattern not found."""
         screen = EntryReaderScreen(entry=sample_entry)
-        screen.links = [
-            {"text": "Link 1", "url": "http://localhost:8080/1"},
-            {"text": "Link 2", "url": "http://localhost:8080/2"},
-        ]
+        screen.original_content = "Visit http://localhost:8080 for more"
+        screen.links = [{"text": "http://localhost:8080", "url": "http://localhost:8080"}]
         screen.focused_link_index = 0
 
-        # Mock link widgets
-        mock_link1 = MagicMock()
-        mock_link1.styles = MagicMock()
-        mock_link2 = MagicMock()
-        mock_link2.styles = MagicMock()
+        result = screen._render_content_with_highlight()
 
-        with mock.patch.object(screen, "_get_markdown_link_widgets", return_value=[mock_link1, mock_link2]):
-            screen._apply_link_highlighting()
+        # Should contain highlighted URL with default colors
+        assert "[bold #282a36 on #ff79c6]http://localhost:8080[/bold]" in result
 
-            # First link should be highlighted
-            assert mock_link1.styles.background == "#ff79c6"
-            assert mock_link1.styles.color == "#282a36"
-            assert mock_link1.styles.text_style == "bold"
-
-            # Second link should not be highlighted
-            assert mock_link2.styles.background == ""
-            assert mock_link2.styles.color == ""
-            assert mock_link2.styles.text_style == ""
-
-    def test_apply_link_highlighting_multiple_links_second_focused(self, sample_entry):
-        """Test _apply_link_highlighting highlights only the second link when focused."""
+    def test_render_content_with_highlight_text_only(self, sample_entry):
+        """Test _render_content_with_highlight highlights link text when URL not in content."""
         screen = EntryReaderScreen(entry=sample_entry)
+        screen.original_content = "Click on this link to continue"
+        screen.links = [{"text": "this link", "url": "http://localhost:8080"}]
+        screen.focused_link_index = 0
+
+        result = screen._render_content_with_highlight()
+
+        # Should contain highlighted text with default colors
+        assert "[bold #282a36 on #ff79c6]this link[/bold]" in result
+
+    def test_render_content_with_highlight_no_match_graceful_degradation(self, sample_entry):
+        """Test _render_content_with_highlight returns original when link not found (graceful degradation)."""
+        screen = EntryReaderScreen(entry=sample_entry)
+        screen.original_content = "Content without the link"
+        screen.links = [{"text": "missing link", "url": "http://localhost:8080"}]
+        screen.focused_link_index = 0
+
+        result = screen._render_content_with_highlight()
+
+        # Should return original content unchanged
+        assert result == screen.original_content
+
+    def test_render_content_with_highlight_first_occurrence_only(self, sample_entry):
+        """Test _render_content_with_highlight only highlights first occurrence of duplicate links."""
+        screen = EntryReaderScreen(entry=sample_entry)
+        screen.original_content = "[link](http://localhost:8080) and [link](http://localhost:8080)"
+        screen.links = [{"text": "link", "url": "http://localhost:8080"}]
+        screen.focused_link_index = 0
+
+        result = screen._render_content_with_highlight()
+
+        # Should contain one highlighted occurrence with default colors
+        assert result.count("[bold #282a36 on #ff79c6]link[/bold]") == 1
+        # Should still have one unhighlighted occurrence
+        assert "[link](http://localhost:8080)" in result
+
+    def test_render_content_with_highlight_multiple_links(self, sample_entry):
+        """Test _render_content_with_highlight highlights only the focused link."""
+        screen = EntryReaderScreen(entry=sample_entry)
+        screen.original_content = "[Link 1](http://localhost:8080/1) and [Link 2](http://localhost:8080/2)"
         screen.links = [
             {"text": "Link 1", "url": "http://localhost:8080/1"},
             {"text": "Link 2", "url": "http://localhost:8080/2"},
         ]
         screen.focused_link_index = 1  # Focus on second link
 
-        # Mock link widgets
-        mock_link1 = MagicMock()
-        mock_link1.styles = MagicMock()
-        mock_link2 = MagicMock()
-        mock_link2.styles = MagicMock()
+        result = screen._render_content_with_highlight()
 
-        with mock.patch.object(screen, "_get_markdown_link_widgets", return_value=[mock_link1, mock_link2]):
-            screen._apply_link_highlighting()
+        # First link should not be highlighted
+        assert "[Link 1](http://localhost:8080/1)" in result
+        # Second link should be highlighted with default colors
+        assert "[bold #282a36 on #ff79c6]Link 2[/bold]" in result
 
-            # First link should not be highlighted
-            assert mock_link1.styles.background == ""
-            assert mock_link1.styles.color == ""
-            assert mock_link1.styles.text_style == ""
-
-            # Second link should be highlighted
-            assert mock_link2.styles.background == "#ff79c6"
-            assert mock_link2.styles.color == "#282a36"
-            assert mock_link2.styles.text_style == "bold"
-
-    def test_apply_link_highlighting_exception_handling(self, sample_entry):
-        """Test _apply_link_highlighting handles exceptions gracefully."""
+    def test_update_markdown_display_updates_widget(self, sample_entry):
+        """Test _update_markdown_display updates the markdown widget."""
         screen = EntryReaderScreen(entry=sample_entry)
+        screen.original_content = "[link](http://localhost:8080)"
         screen.links = [{"text": "link", "url": "http://localhost:8080"}]
         screen.focused_link_index = 0
 
-        # Mock _get_markdown_link_widgets to raise exception
-        with mock.patch.object(screen, "_get_markdown_link_widgets", side_effect=Exception("Widget not found")):
-            # Should not raise exception (silent failure for graceful degradation)
-            screen._apply_link_highlighting()
+        # Mock markdown widget
+        mock_markdown = MagicMock()
 
-    def test_apply_link_highlighting_invalid_index(self, sample_entry):
-        """Test _apply_link_highlighting handles invalid index gracefully."""
+        with mock.patch.object(screen, "query_one", return_value=mock_markdown):
+            screen._update_markdown_display()
+
+            # Should call update with highlighted content using default colors
+            mock_markdown.update.assert_called_once()
+            call_args = mock_markdown.update.call_args[0][0]
+            assert "[bold #282a36 on #ff79c6]link[/bold]" in call_args
+
+    def test_update_markdown_display_exception_handling(self, sample_entry):
+        """Test _update_markdown_display handles exceptions gracefully."""
         screen = EntryReaderScreen(entry=sample_entry)
+        screen.original_content = "[link](http://localhost:8080)"
         screen.links = [{"text": "link", "url": "http://localhost:8080"}]
-        screen.focused_link_index = 999  # Invalid index
+        screen.focused_link_index = 0
 
-        mock_link = MagicMock()
-        mock_link.styles = MagicMock()
+        # Mock query_one to raise exception
+        with mock.patch.object(screen, "query_one", side_effect=Exception("Widget not found")):
+            # Should not raise exception (silent failure for graceful degradation)
+            screen._update_markdown_display()
 
-        with mock.patch.object(screen, "_get_markdown_link_widgets", return_value=[mock_link]):
-            # Should not raise exception
-            screen._apply_link_highlighting()
-            # Should not apply any highlighting
-            assert mock_link.styles.background != "#ff79c6"
+    def test_update_markdown_display_no_widget(self, sample_entry):
+        """Test _update_markdown_display handles missing widget gracefully."""
+        screen = EntryReaderScreen(entry=sample_entry)
+        screen.original_content = "[link](http://localhost:8080)"
+        screen.links = [{"text": "link", "url": "http://localhost:8080"}]
+        screen.focused_link_index = 0
 
-    def test_action_next_link_calls_apply_link_highlighting(self, sample_entry):
-        """Test action_next_link calls _apply_link_highlighting."""
+        # Don't mock query_one - widget won't be found
+        # Should not raise exception
+        screen._update_markdown_display()
+
+    def test_action_next_link_calls_update_markdown_display(self, sample_entry):
+        """Test action_next_link calls _update_markdown_display."""
         screen = EntryReaderScreen(entry=sample_entry)
         screen.link_indicator = MagicMock()
         screen.links = [
@@ -1652,16 +1668,16 @@ class TestEntryReaderLinkHighlighting:
         ]
 
         with (
-            mock.patch.object(screen, "_apply_link_highlighting") as mock_highlight,
+            mock.patch.object(screen, "_update_markdown_display") as mock_update,
             mock.patch.object(screen, "_scroll_to_link"),
         ):
             screen.action_next_link()
 
-            # Should call _apply_link_highlighting
-            mock_highlight.assert_called_once()
+            # Should call _update_markdown_display
+            mock_update.assert_called_once()
 
-    def test_action_previous_link_calls_apply_link_highlighting(self, sample_entry):
-        """Test action_previous_link calls _apply_link_highlighting."""
+    def test_action_previous_link_calls_update_markdown_display(self, sample_entry):
+        """Test action_previous_link calls _update_markdown_display."""
         screen = EntryReaderScreen(entry=sample_entry)
         screen.link_indicator = MagicMock()
         screen.links = [
@@ -1670,27 +1686,27 @@ class TestEntryReaderLinkHighlighting:
         ]
 
         with (
-            mock.patch.object(screen, "_apply_link_highlighting") as mock_highlight,
+            mock.patch.object(screen, "_update_markdown_display") as mock_update,
             mock.patch.object(screen, "_scroll_to_link"),
         ):
             screen.action_previous_link()
 
-            # Should call _apply_link_highlighting
-            mock_highlight.assert_called_once()
+            # Should call _update_markdown_display
+            mock_update.assert_called_once()
 
-    def test_action_clear_link_focus_calls_apply_link_highlighting(self, sample_entry):
-        """Test action_clear_link_focus calls _apply_link_highlighting to remove highlighting."""
+    def test_action_clear_link_focus_calls_update_markdown_display(self, sample_entry):
+        """Test action_clear_link_focus calls _update_markdown_display to remove highlighting."""
         screen = EntryReaderScreen(entry=sample_entry)
         screen.link_indicator = MagicMock()
         screen.links = [{"text": "Link", "url": "http://localhost:8080"}]
         screen.focused_link_index = 0
         screen.notify = MagicMock()
 
-        with mock.patch.object(screen, "_apply_link_highlighting") as mock_highlight:
+        with mock.patch.object(screen, "_update_markdown_display") as mock_update:
             screen.action_clear_link_focus()
 
-            # Should call _apply_link_highlighting
-            mock_highlight.assert_called_once()
+            # Should call _update_markdown_display
+            mock_update.assert_called_once()
             # Should clear focused_link_index
             assert screen.focused_link_index is None
 
@@ -1708,54 +1724,51 @@ class TestEntryReaderLinkHighlighting:
     def test_highlighting_integration_next_link_sequence(self, sample_entry):
         """Test highlighting works correctly through a sequence of next_link calls."""
         screen = EntryReaderScreen(entry=sample_entry)
+        screen.original_content = "[Link 1](http://localhost:8080/1) and [Link 2](http://localhost:8080/2)"
         screen.link_indicator = MagicMock()
         screen.links = [
             {"text": "Link 1", "url": "http://localhost:8080/1"},
             {"text": "Link 2", "url": "http://localhost:8080/2"},
         ]
 
-        # Mock link widgets
-        mock_link1 = MagicMock()
-        mock_link1.styles = MagicMock()
-        mock_link2 = MagicMock()
-        mock_link2.styles = MagicMock()
+        mock_markdown = MagicMock()
 
         with (
-            mock.patch.object(screen, "_get_markdown_link_widgets", return_value=[mock_link1, mock_link2]),
+            mock.patch.object(screen, "query_one", return_value=mock_markdown),
             mock.patch.object(screen, "_scroll_to_link"),
         ):
-            # First next - should highlight Link 1
+            # First next - should highlight Link 1 with default colors
             screen.action_next_link()
             assert screen.focused_link_index == 0
-            assert mock_link1.styles.background == "#ff79c6"
-            assert mock_link1.styles.color == "#282a36"
+            first_call_content = mock_markdown.update.call_args_list[0][0][0]
+            assert "[bold #282a36 on #ff79c6]Link 1[/bold]" in first_call_content
 
-            # Second next - should highlight Link 2
+            # Second next - should highlight Link 2 with default colors
             screen.action_next_link()
             assert screen.focused_link_index == 1
-            assert mock_link2.styles.background == "#ff79c6"
-            assert mock_link2.styles.color == "#282a36"
+            second_call_content = mock_markdown.update.call_args_list[1][0][0]
+            assert "[bold #282a36 on #ff79c6]Link 2[/bold]" in second_call_content
 
     def test_highlighting_integration_clear_removes_highlight(self, sample_entry):
         """Test that clearing link focus removes all highlighting."""
         screen = EntryReaderScreen(entry=sample_entry)
+        screen.original_content = "[Link](http://localhost:8080)"
         screen.link_indicator = MagicMock()
         screen.notify = MagicMock()
         screen.links = [{"text": "Link", "url": "http://localhost:8080"}]
         screen.focused_link_index = 0
 
-        # Mock link widget
-        mock_link = MagicMock()
-        mock_link.styles = MagicMock()
+        mock_markdown = MagicMock()
 
-        with mock.patch.object(screen, "_get_markdown_link_widgets", return_value=[mock_link]):
+        with mock.patch.object(screen, "query_one", return_value=mock_markdown):
             # Clear focus
             screen.action_clear_link_focus()
 
-            # Should clear all styles
-            assert mock_link.styles.background == ""
-            assert mock_link.styles.color == ""
-            assert mock_link.styles.text_style == ""
+            # Should update with original content (no highlighting)
+            mock_markdown.update.assert_called_once()
+            call_content = mock_markdown.update.call_args[0][0]
+            assert call_content == screen.original_content
+            assert "[bold" not in call_content or "on #" not in call_content
 
     def test_custom_highlight_colors_dark_theme(self, sample_entry):
         """Test highlighting uses custom colors from dark theme."""
@@ -1764,20 +1777,14 @@ class TestEntryReaderLinkHighlighting:
             link_highlight_bg="#ff79c6",  # Pink
             link_highlight_fg="#282a36",  # Dark
         )
+        screen.original_content = "[link](http://localhost:8080)"
         screen.links = [{"text": "link", "url": "http://localhost:8080"}]
         screen.focused_link_index = 0
 
-        # Mock link widget
-        mock_link = MagicMock()
-        mock_link.styles = MagicMock()
+        result = screen._render_content_with_highlight()
 
-        with mock.patch.object(screen, "_get_markdown_link_widgets", return_value=[mock_link]):
-            screen._apply_link_highlighting()
-
-            # Should use custom dark theme colors
-            assert mock_link.styles.background == "#ff79c6"
-            assert mock_link.styles.color == "#282a36"
-            assert mock_link.styles.text_style == "bold"
+        # Should use custom dark theme colors
+        assert "[bold #282a36 on #ff79c6]link[/bold]" in result
 
     def test_custom_highlight_colors_light_theme(self, sample_entry):
         """Test highlighting uses custom colors from light theme."""
@@ -1786,20 +1793,14 @@ class TestEntryReaderLinkHighlighting:
             link_highlight_bg="#d33682",  # Magenta
             link_highlight_fg="#fdf6e3",  # Light
         )
+        screen.original_content = "[link](http://localhost:8080)"
         screen.links = [{"text": "link", "url": "http://localhost:8080"}]
         screen.focused_link_index = 0
 
-        # Mock link widget
-        mock_link = MagicMock()
-        mock_link.styles = MagicMock()
+        result = screen._render_content_with_highlight()
 
-        with mock.patch.object(screen, "_get_markdown_link_widgets", return_value=[mock_link]):
-            screen._apply_link_highlighting()
-
-            # Should use custom light theme colors
-            assert mock_link.styles.background == "#d33682"
-            assert mock_link.styles.color == "#fdf6e3"
-            assert mock_link.styles.text_style == "bold"
+        # Should use custom light theme colors
+        assert "[bold #fdf6e3 on #d33682]link[/bold]" in result
 
     def test_custom_highlight_colors_user_defined(self, sample_entry):
         """Test highlighting works with user-defined custom colors."""
@@ -1808,17 +1809,11 @@ class TestEntryReaderLinkHighlighting:
             link_highlight_bg="#00ff00",  # Green background
             link_highlight_fg="#000000",  # Black text
         )
+        screen.original_content = "[link](http://localhost:8080)"
         screen.links = [{"text": "link", "url": "http://localhost:8080"}]
         screen.focused_link_index = 0
 
-        # Mock link widget
-        mock_link = MagicMock()
-        mock_link.styles = MagicMock()
+        result = screen._render_content_with_highlight()
 
-        with mock.patch.object(screen, "_get_markdown_link_widgets", return_value=[mock_link]):
-            screen._apply_link_highlighting()
-
-            # Should use user's custom colors
-            assert mock_link.styles.background == "#00ff00"
-            assert mock_link.styles.color == "#000000"
-            assert mock_link.styles.text_style == "bold"
+        # Should use user's custom colors
+        assert "[bold #000000 on #00ff00]link[/bold]" in result
