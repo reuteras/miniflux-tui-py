@@ -710,9 +710,10 @@ class EntryReaderScreen(Screen):
                 # Fallback: estimate position based on markdown content
                 # This is an approximation since we don't have exact widget positions
                 self._estimate_and_scroll_to_link(link_index)
-        except Exception:
+        except Exception:  # nosec B110
             # Silently fail if scrolling isn't possible (e.g., screen not mounted)
             # This is expected in test contexts or when the widget isn't available
+            # Bandit B110: Intentional silent failure for graceful degradation
             pass
 
     def _estimate_and_scroll_to_link(self, link_index: int):
@@ -757,9 +758,10 @@ class EntryReaderScreen(Screen):
                     scroll_y = max(0, y_pos - offset)
 
                     markdown_widget.scroll_to(y=scroll_y, animate=True, duration=0.3)
-        except Exception:
+        except Exception:  # nosec B110
             # Silently fail if scrolling isn't possible (e.g., screen not mounted)
             # This is expected in test contexts or when the widget isn't available
+            # Bandit B110: Intentional silent failure for graceful degradation
             pass
 
     def _update_link_indicator(self):
