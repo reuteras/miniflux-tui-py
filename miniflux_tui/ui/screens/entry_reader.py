@@ -79,8 +79,25 @@ class EntryReaderScreen(Screen):
         overflow: auto;
     }
 
+    /* Highlight focused links within Markdown */
+    Markdown:focus-within {
+        border: tall $accent;
+    }
+
+    Markdown Link:focus {
+        background: $accent;
+        color: $text;
+        text-style: bold;
+    }
+
     #link-indicator {
         height: auto;
+    }
+
+    .link-highlight {
+        background: $accent;
+        color: $text;
+        text-style: bold;
     }
     """
 
@@ -656,6 +673,97 @@ class EntryReaderScreen(Screen):
         if app:
             app.push_screen("settings")
 
+    def _get_markdown_link_widgets(self) -> list:
+        """Get all link widgets from the Markdown widget.
+
+        Returns:
+            List of link widgets found in the Markdown content
+        """
+        try:
+            markdown_widget = self.query_one("#entry-content", expect_type=Markdown)
+            # Try to find link widgets within the Markdown widget
+            # Links in Markdown might be nested in various ways
+            return list(markdown_widget.query("Link"))
+        except Exception:
+            # If we can't query links, return empty list
+            return []
+
+    def _scroll_to_link(self, link_index: int):
+        """Scroll to make the focused link visible.
+
+        Args:
+            link_index: Index of the link in self.links to scroll to
+        """
+        if not self.links or link_index < 0 or link_index >= len(self.links):
+            return
+
+        try:
+            # Try to get link widgets from the Markdown widget
+            link_widgets = self._get_markdown_link_widgets()
+
+            if link_widgets and link_index < len(link_widgets):
+                # If we have actual link widgets, focus and scroll to the specific one
+                target_link = link_widgets[link_index]
+                target_link.focus()
+                target_link.scroll_visible(animate=True, duration=0.3, top=True)
+            else:
+                # Fallback: estimate position based on markdown content
+                # This is an approximation since we don't have exact widget positions
+                self._estimate_and_scroll_to_link(link_index)
+        except Exception:  # nosec B110  # noqa: S110
+            # Silently fail if scrolling isn't possible (e.g., screen not mounted)
+            # This is expected in test contexts or when the widget isn't available
+            # Intentional silent failure for graceful degradation
+            pass
+
+    def _estimate_and_scroll_to_link(self, link_index: int):
+        """Estimate link position and scroll there (fallback method).
+
+        Args:
+            link_index: Index of the link to scroll to
+        """
+        try:
+            markdown_widget = self.query_one("#entry-content", expect_type=Markdown)
+            link = self.links[link_index]
+
+            # Get the markdown content
+            content = self._html_to_markdown(self.entry.content)
+
+            # Find the position of the link in the content
+            # For markdown links: [text](url)
+            link_pattern = f"[{link['text']}]({link['url']})"
+            pos = content.find(link_pattern)
+
+            # If not found, try finding just the URL
+            if pos == -1:
+                pos = content.find(link["url"])
+
+            if pos != -1:
+                # Estimate the line number (rough approximation)
+                # Count newlines before the link position
+                lines_before = content[:pos].count("\n")
+
+                # Get terminal height to calculate scroll position
+                # Using screen size instead of app.size (which isn't in protocol)
+                terminal_height = self.screen.size.height if hasattr(self.screen, "size") else 24
+                content_height = markdown_widget.virtual_size.height
+
+                # Calculate approximate Y position
+                # This is rough - assumes even line distribution
+                if content_height > 0:
+                    y_pos = (lines_before / content.count("\n")) * content_height if content.count("\n") > 0 else 0
+
+                    # Scroll to position (centered if possible)
+                    offset = terminal_height // 3  # Show link in upper third of screen
+                    scroll_y = max(0, y_pos - offset)
+
+                    markdown_widget.scroll_to(y=scroll_y, animate=True, duration=0.3)
+        except Exception:  # nosec B110  # noqa: S110
+            # Silently fail if scrolling isn't possible (e.g., screen not mounted)
+            # This is expected in test contexts or when the widget isn't available
+            # Intentional silent failure for graceful degradation
+            pass
+
     def _update_link_indicator(self):
         """Update the link indicator widget with current focused link info."""
         if not self.link_indicator:
@@ -697,6 +805,8 @@ class EntryReaderScreen(Screen):
             self.focused_link_index = (self.focused_link_index + 1) % len(self.links)
 
         self._update_link_indicator()
+        # Scroll to make the focused link visible
+        self._scroll_to_link(self.focused_link_index)
 
     def action_previous_link(self):
         """Navigate to the previous link in the content."""
@@ -712,6 +822,8 @@ class EntryReaderScreen(Screen):
             self.focused_link_index = (self.focused_link_index - 1) % len(self.links)
 
         self._update_link_indicator()
+        # Scroll to make the focused link visible
+        self._scroll_to_link(self.focused_link_index)
 
     def action_open_focused_link(self):
         """Open the currently focused link in the browser."""
