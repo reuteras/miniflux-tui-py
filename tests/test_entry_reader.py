@@ -1545,8 +1545,8 @@ class TestEntryReaderLinkHighlighting:
 
         result = screen._render_content_with_highlight()
 
-        # Should contain reverse markup
-        assert "[reverse][bold]link text[/bold][/reverse]" in result
+        # Should contain color-based markup with default colors
+        assert "[bold #282a36 on #ff79c6]link text[/bold]" in result
         # Should preserve the URL
         assert "(http://localhost:8080)" in result
 
@@ -1559,8 +1559,8 @@ class TestEntryReaderLinkHighlighting:
 
         result = screen._render_content_with_highlight()
 
-        # Should contain highlighted URL
-        assert "[reverse][bold]http://localhost:8080[/bold][/reverse]" in result
+        # Should contain highlighted URL with default colors
+        assert "[bold #282a36 on #ff79c6]http://localhost:8080[/bold]" in result
 
     def test_render_content_with_highlight_text_only(self, sample_entry):
         """Test _render_content_with_highlight highlights link text when URL not in content."""
@@ -1571,8 +1571,8 @@ class TestEntryReaderLinkHighlighting:
 
         result = screen._render_content_with_highlight()
 
-        # Should contain highlighted text
-        assert "[reverse][bold]this link[/bold][/reverse]" in result
+        # Should contain highlighted text with default colors
+        assert "[bold #282a36 on #ff79c6]this link[/bold]" in result
 
     def test_render_content_with_highlight_no_match_graceful_degradation(self, sample_entry):
         """Test _render_content_with_highlight returns original when link not found (graceful degradation)."""
@@ -1595,8 +1595,8 @@ class TestEntryReaderLinkHighlighting:
 
         result = screen._render_content_with_highlight()
 
-        # Should contain one highlighted occurrence
-        assert result.count("[reverse][bold]link[/bold][/reverse]") == 1
+        # Should contain one highlighted occurrence with default colors
+        assert result.count("[bold #282a36 on #ff79c6]link[/bold]") == 1
         # Should still have one unhighlighted occurrence
         assert "[link](http://localhost:8080)" in result
 
@@ -1614,8 +1614,8 @@ class TestEntryReaderLinkHighlighting:
 
         # First link should not be highlighted
         assert "[Link 1](http://localhost:8080/1)" in result
-        # Second link should be highlighted
-        assert "[reverse][bold]Link 2[/bold][/reverse]" in result
+        # Second link should be highlighted with default colors
+        assert "[bold #282a36 on #ff79c6]Link 2[/bold]" in result
 
     def test_update_markdown_display_updates_widget(self, sample_entry):
         """Test _update_markdown_display updates the markdown widget."""
@@ -1630,10 +1630,10 @@ class TestEntryReaderLinkHighlighting:
         with mock.patch.object(screen, "query_one", return_value=mock_markdown):
             screen._update_markdown_display()
 
-            # Should call update with highlighted content
+            # Should call update with highlighted content using default colors
             mock_markdown.update.assert_called_once()
             call_args = mock_markdown.update.call_args[0][0]
-            assert "[reverse][bold]link[/bold][/reverse]" in call_args
+            assert "[bold #282a36 on #ff79c6]link[/bold]" in call_args
 
     def test_update_markdown_display_exception_handling(self, sample_entry):
         """Test _update_markdown_display handles exceptions gracefully."""
@@ -1737,17 +1737,17 @@ class TestEntryReaderLinkHighlighting:
             mock.patch.object(screen, "query_one", return_value=mock_markdown),
             mock.patch.object(screen, "_scroll_to_link"),
         ):
-            # First next - should highlight Link 1
+            # First next - should highlight Link 1 with default colors
             screen.action_next_link()
             assert screen.focused_link_index == 0
             first_call_content = mock_markdown.update.call_args_list[0][0][0]
-            assert "[reverse][bold]Link 1[/bold][/reverse]" in first_call_content
+            assert "[bold #282a36 on #ff79c6]Link 1[/bold]" in first_call_content
 
-            # Second next - should highlight Link 2
+            # Second next - should highlight Link 2 with default colors
             screen.action_next_link()
             assert screen.focused_link_index == 1
             second_call_content = mock_markdown.update.call_args_list[1][0][0]
-            assert "[reverse][bold]Link 2[/bold][/reverse]" in second_call_content
+            assert "[bold #282a36 on #ff79c6]Link 2[/bold]" in second_call_content
 
     def test_highlighting_integration_clear_removes_highlight(self, sample_entry):
         """Test that clearing link focus removes all highlighting."""
@@ -1768,4 +1768,52 @@ class TestEntryReaderLinkHighlighting:
             mock_markdown.update.assert_called_once()
             call_content = mock_markdown.update.call_args[0][0]
             assert call_content == screen.original_content
-            assert "[reverse]" not in call_content
+            assert "[bold" not in call_content or "on #" not in call_content
+
+    def test_custom_highlight_colors_dark_theme(self, sample_entry):
+        """Test highlighting uses custom colors from dark theme."""
+        screen = EntryReaderScreen(
+            entry=sample_entry,
+            link_highlight_bg="#ff79c6",  # Pink
+            link_highlight_fg="#282a36",  # Dark
+        )
+        screen.original_content = "[link](http://localhost:8080)"
+        screen.links = [{"text": "link", "url": "http://localhost:8080"}]
+        screen.focused_link_index = 0
+
+        result = screen._render_content_with_highlight()
+
+        # Should use custom dark theme colors
+        assert "[bold #282a36 on #ff79c6]link[/bold]" in result
+
+    def test_custom_highlight_colors_light_theme(self, sample_entry):
+        """Test highlighting uses custom colors from light theme."""
+        screen = EntryReaderScreen(
+            entry=sample_entry,
+            link_highlight_bg="#d33682",  # Magenta
+            link_highlight_fg="#fdf6e3",  # Light
+        )
+        screen.original_content = "[link](http://localhost:8080)"
+        screen.links = [{"text": "link", "url": "http://localhost:8080"}]
+        screen.focused_link_index = 0
+
+        result = screen._render_content_with_highlight()
+
+        # Should use custom light theme colors
+        assert "[bold #fdf6e3 on #d33682]link[/bold]" in result
+
+    def test_custom_highlight_colors_user_defined(self, sample_entry):
+        """Test highlighting works with user-defined custom colors."""
+        screen = EntryReaderScreen(
+            entry=sample_entry,
+            link_highlight_bg="#00ff00",  # Green background
+            link_highlight_fg="#000000",  # Black text
+        )
+        screen.original_content = "[link](http://localhost:8080)"
+        screen.links = [{"text": "link", "url": "http://localhost:8080"}]
+        screen.focused_link_index = 0
+
+        result = screen._render_content_with_highlight()
+
+        # Should use user's custom colors
+        assert "[bold #000000 on #00ff00]link[/bold]" in result

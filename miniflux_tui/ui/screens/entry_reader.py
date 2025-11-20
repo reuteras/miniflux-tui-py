@@ -109,6 +109,8 @@ class EntryReaderScreen(Screen):
         unread_color: str = "cyan",
         read_color: str = "gray",
         group_info: dict[str, str | int] | None = None,
+        link_highlight_bg: str | None = None,
+        link_highlight_fg: str | None = None,
         **kwargs,
     ):
         super().__init__(**kwargs)
@@ -118,6 +120,8 @@ class EntryReaderScreen(Screen):
         self.unread_color = unread_color
         self.read_color = read_color
         self.group_info = group_info  # Contains: mode, name, total, unread
+        self.link_highlight_bg = link_highlight_bg or "#ff79c6"  # Default: pink/magenta
+        self.link_highlight_fg = link_highlight_fg or "#282a36"  # Default: dark text
         self.scroll_container = None
         self.group_stats_widget: Static | None = None  # Reference to group stats widget for updates
         self.links: list[dict[str, str]] = []  # List of {text: str, url: str}
@@ -807,26 +811,31 @@ class EntryReaderScreen(Screen):
         # Get the focused link
         focused_link = self.links[self.focused_link_index]
 
+        # Build highlight markup with configured colors
+        # Rich markup format: [color on background]text[/color on background]
+        highlight_start = f"[bold {self.link_highlight_fg} on {self.link_highlight_bg}]"
+        highlight_end = "[/bold]"
+
         # Try different patterns to find the link in the content
         content = self.original_content
 
         # Pattern 1: Markdown link format [text](url)
         link_pattern = f"[{focused_link['text']}]({focused_link['url']})"
         if link_pattern in content:
-            # Use reverse video for highlighting (background and foreground colors swap)
-            highlighted_pattern = f"[reverse][bold]{focused_link['text']}[/bold][/reverse]({focused_link['url']})"
+            # Highlight the link text with configured colors
+            highlighted_pattern = f"[{highlight_start}{focused_link['text']}{highlight_end}]({focused_link['url']})"
             return content.replace(link_pattern, highlighted_pattern, 1)
 
         # Pattern 2: Just the URL (plain URL in text)
         if focused_link["url"] in content:
             # Highlight just the URL
-            highlighted_url = f"[reverse][bold]{focused_link['url']}[/bold][/reverse]"
+            highlighted_url = f"{highlight_start}{focused_link['url']}{highlight_end}"
             return content.replace(focused_link["url"], highlighted_url, 1)
 
         # Pattern 3: Link text without URL (fallback)
         if focused_link["text"] in content and focused_link["text"] != focused_link["url"]:
             # Only highlight first occurrence
-            highlighted_text = f"[reverse][bold]{focused_link['text']}[/bold][/reverse]"
+            highlighted_text = f"{highlight_start}{focused_link['text']}{highlight_end}"
             return content.replace(focused_link["text"], highlighted_text, 1)
 
         # If no pattern matches, return original content (graceful degradation)

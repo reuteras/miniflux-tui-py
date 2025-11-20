@@ -48,6 +48,9 @@ DARK_THEME = Theme(
         # Custom colors for entries
         "unread": "#8be9fd",  # cyan
         "read": "#6272a4",  # muted
+        # Link highlighting
+        "link-highlight-bg": "#ff79c6",  # pink/magenta for visibility
+        "link-highlight-fg": "#282a36",  # dark text on bright background
     },
 )
 
@@ -69,6 +72,9 @@ LIGHT_THEME = Theme(
         # Custom colors for entries
         "unread": "#2aa198",  # cyan
         "read": "#93a1a1",  # muted
+        # Link highlighting
+        "link-highlight-bg": "#d33682",  # magenta for contrast
+        "link-highlight-fg": "#fdf6e3",  # light text on dark background
     },
 )
 
