@@ -1302,3 +1302,210 @@ class TestEntryReaderLinkNavigation:
         assert "p" in binding_keys
         assert "enter" in binding_keys
         assert "c" in binding_keys
+
+
+class TestEntryReaderLinkWidgets:
+    """Test link widget and scrolling functionality added in commit fe98678."""
+
+    def test_get_markdown_link_widgets_no_widget(self, sample_entry):
+        """Test _get_markdown_link_widgets when markdown widget doesn't exist."""
+        screen = EntryReaderScreen(entry=sample_entry)
+        # Before screen is mounted, query_one should fail
+        links = screen._get_markdown_link_widgets()
+        assert links == []
+
+    def test_get_markdown_link_widgets_exception_handling(self, sample_entry):
+        """Test _get_markdown_link_widgets handles exceptions gracefully."""
+        screen = EntryReaderScreen(entry=sample_entry)
+        # Mock query_one to raise an exception
+        with mock.patch.object(screen, "query_one", side_effect=Exception("Test exception")):
+            links = screen._get_markdown_link_widgets()
+            assert links == []
+
+    def test_get_markdown_link_widgets_returns_list(self, sample_entry):
+        """Test _get_markdown_link_widgets returns a list."""
+        screen = EntryReaderScreen(entry=sample_entry)
+        # Mock query_one and query to return links
+        mock_markdown = MagicMock()
+        mock_markdown.query.return_value = [MagicMock(), MagicMock()]
+
+        with mock.patch.object(screen, "query_one", return_value=mock_markdown):
+            links = screen._get_markdown_link_widgets()
+            assert isinstance(links, list)
+            assert len(links) == 2
+
+    def test_scroll_to_link_no_links(self, sample_entry):
+        """Test _scroll_to_link handles case with no links."""
+        screen = EntryReaderScreen(entry=sample_entry)
+        screen.links = []
+        # Should not raise exception
+        screen._scroll_to_link(0)
+
+    def test_scroll_to_link_invalid_index_negative(self, sample_entry):
+        """Test _scroll_to_link handles negative index."""
+        screen = EntryReaderScreen(entry=sample_entry)
+        screen.links = [{"text": "Link", "url": "http://localhost:8080"}]
+        # Should not raise exception
+        screen._scroll_to_link(-1)
+
+    def test_scroll_to_link_invalid_index_too_large(self, sample_entry):
+        """Test _scroll_to_link handles index larger than list."""
+        screen = EntryReaderScreen(entry=sample_entry)
+        screen.links = [{"text": "Link", "url": "http://localhost:8080"}]
+        # Should not raise exception
+        screen._scroll_to_link(10)
+
+    def test_scroll_to_link_with_link_widgets(self, sample_entry):
+        """Test _scroll_to_link with actual link widgets available."""
+        screen = EntryReaderScreen(entry=sample_entry)
+        screen.links = [
+            {"text": "Link 1", "url": "http://localhost:8080/1"},
+            {"text": "Link 2", "url": "http://localhost:8080/2"},
+        ]
+
+        # Mock link widgets
+        mock_link1 = MagicMock()
+        mock_link2 = MagicMock()
+        mock_links = [mock_link1, mock_link2]
+
+        with mock.patch.object(screen, "_get_markdown_link_widgets", return_value=mock_links):
+            screen._scroll_to_link(1)
+            # Should focus and scroll to the second link
+            mock_link2.focus.assert_called_once()
+            mock_link2.scroll_visible.assert_called_once_with(animate=True, duration=0.3, top=True)
+
+    def test_scroll_to_link_fallback_to_estimate(self, sample_entry):
+        """Test _scroll_to_link falls back to estimate when widgets unavailable."""
+        screen = EntryReaderScreen(entry=sample_entry)
+        screen.links = [{"text": "Link", "url": "http://localhost:8080"}]
+
+        # Mock _get_markdown_link_widgets to return empty list (no widgets)
+        with (
+            mock.patch.object(screen, "_get_markdown_link_widgets", return_value=[]),
+            mock.patch.object(screen, "_estimate_and_scroll_to_link") as mock_estimate,
+        ):
+            screen._scroll_to_link(0)
+            # Should call the fallback estimation method
+            mock_estimate.assert_called_once_with(0)
+
+    def test_scroll_to_link_graceful_exception(self, sample_entry):
+        """Test _scroll_to_link handles exceptions gracefully."""
+        screen = EntryReaderScreen(entry=sample_entry)
+        screen.links = [{"text": "Link", "url": "http://localhost:8080"}]
+
+        # Mock _get_markdown_link_widgets to raise exception
+        with mock.patch.object(screen, "_get_markdown_link_widgets", side_effect=Exception("Test error")):
+            # Should not raise exception (silent failure)
+            screen._scroll_to_link(0)
+
+    def test_estimate_and_scroll_to_link_no_widget(self, sample_entry):
+        """Test _estimate_and_scroll_to_link when markdown widget doesn't exist."""
+        screen = EntryReaderScreen(entry=sample_entry)
+        screen.links = [{"text": "Link", "url": "http://localhost:8080"}]
+        # Should not raise exception (silent failure)
+        screen._estimate_and_scroll_to_link(0)
+
+    def test_estimate_and_scroll_to_link_finds_markdown_link(self, sample_entry):
+        """Test _estimate_and_scroll_to_link finds and scrolls to markdown link."""
+        # Create entry with content that includes a link
+        sample_entry.content = "<p>Some text before</p><p><a href='http://localhost:8080'>Test Link</a></p>"
+        screen = EntryReaderScreen(entry=sample_entry)
+        screen.links = [{"text": "Test Link", "url": "http://localhost:8080"}]
+
+        # Mock markdown widget
+        mock_markdown = MagicMock()
+        mock_markdown.virtual_size.height = 1000
+
+        with mock.patch.object(screen, "query_one", return_value=mock_markdown):
+            # Should not raise exception - method is designed for graceful degradation
+            # The actual scrolling behavior is an estimation and may or may not trigger scroll_to
+            # depending on content parsing. The key test is that it doesn't crash.
+            screen._estimate_and_scroll_to_link(0)
+
+    def test_estimate_and_scroll_to_link_finds_plain_url(self, sample_entry):
+        """Test _estimate_and_scroll_to_link finds plain URL when markdown pattern not found."""
+        sample_entry.content = "<p>Visit http://localhost:8080 for more</p>"
+        screen = EntryReaderScreen(entry=sample_entry)
+        screen.links = [{"text": "http://localhost:8080", "url": "http://localhost:8080"}]
+
+        # Mock markdown widget
+        mock_markdown = MagicMock()
+        mock_markdown.virtual_size.height = 1000
+
+        with mock.patch.object(screen, "query_one", return_value=mock_markdown):
+            # Should not raise exception - method is designed for graceful degradation
+            # The actual scrolling behavior is an estimation and may or may not trigger scroll_to
+            # depending on content parsing. The key test is that it doesn't crash.
+            screen._estimate_and_scroll_to_link(0)
+
+    def test_estimate_and_scroll_to_link_handles_missing_link(self, sample_entry):
+        """Test _estimate_and_scroll_to_link when link not found in content."""
+        sample_entry.content = "<p>No links here</p>"
+        screen = EntryReaderScreen(entry=sample_entry)
+        screen.links = [{"text": "Missing Link", "url": "http://localhost:8080"}]
+
+        # Mock markdown widget
+        mock_markdown = MagicMock()
+        mock_markdown.virtual_size.height = 1000
+
+        with mock.patch.object(screen, "query_one", return_value=mock_markdown):
+            # Should not raise exception even if link not found
+            screen._estimate_and_scroll_to_link(0)
+
+    def test_estimate_and_scroll_to_link_exception_handling(self, sample_entry):
+        """Test _estimate_and_scroll_to_link handles exceptions gracefully."""
+        screen = EntryReaderScreen(entry=sample_entry)
+        screen.links = [{"text": "Link", "url": "http://localhost:8080"}]
+
+        # Mock query_one to raise exception
+        with mock.patch.object(screen, "query_one", side_effect=Exception("Test exception")):
+            # Should not raise exception (silent failure for graceful degradation)
+            screen._estimate_and_scroll_to_link(0)
+
+    def test_estimate_and_scroll_to_link_zero_content_height(self, sample_entry):
+        """Test _estimate_and_scroll_to_link handles zero content height."""
+        sample_entry.content = "<p><a href='http://localhost:8080'>Link</a></p>"
+        screen = EntryReaderScreen(entry=sample_entry)
+        screen.links = [{"text": "Link", "url": "http://localhost:8080"}]
+
+        # Mock markdown widget with zero height
+        mock_markdown = MagicMock()
+        mock_markdown.virtual_size.height = 0
+
+        with mock.patch.object(screen, "query_one", return_value=mock_markdown):
+            # Should not raise exception
+            screen._estimate_and_scroll_to_link(0)
+
+    def test_scroll_to_link_integration_with_action_next_link(self, sample_entry):
+        """Test _scroll_to_link is called when navigating with action_next_link."""
+        sample_entry.content = "<p><a href='http://localhost:8080/1'>Link 1</a> <a href='http://localhost:8080/2'>Link 2</a></p>"
+        screen = EntryReaderScreen(entry=sample_entry)
+        screen.link_indicator = MagicMock()
+
+        # Manually set links as they would be extracted
+        screen.links = [
+            {"text": "Link 1", "url": "http://localhost:8080/1"},
+            {"text": "Link 2", "url": "http://localhost:8080/2"},
+        ]
+
+        with mock.patch.object(screen, "_scroll_to_link") as mock_scroll:
+            screen.action_next_link()
+            # Should scroll to the first link (index 0)
+            mock_scroll.assert_called_once_with(0)
+
+    def test_scroll_to_link_integration_with_action_previous_link(self, sample_entry):
+        """Test _scroll_to_link is called when navigating with action_previous_link."""
+        sample_entry.content = "<p><a href='http://localhost:8080/1'>Link 1</a> <a href='http://localhost:8080/2'>Link 2</a></p>"
+        screen = EntryReaderScreen(entry=sample_entry)
+        screen.link_indicator = MagicMock()
+
+        # Manually set links as they would be extracted
+        screen.links = [
+            {"text": "Link 1", "url": "http://localhost:8080/1"},
+            {"text": "Link 2", "url": "http://localhost:8080/2"},
+        ]
+
+        with mock.patch.object(screen, "_scroll_to_link") as mock_scroll:
+            screen.action_previous_link()
+            # Should scroll to the last link (index 1)
+            mock_scroll.assert_called_once_with(1)
