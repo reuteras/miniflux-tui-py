@@ -84,12 +84,6 @@ class EntryReaderScreen(Screen):
         border: tall $accent;
     }
 
-    Markdown Link:focus {
-        background: $accent;
-        color: $text;
-        text-style: bold;
-    }
-
     #link-indicator {
         height: auto;
     }
@@ -799,65 +793,54 @@ class EntryReaderScreen(Screen):
 
         self.link_indicator.update(indicator_text)
 
-    def _render_content_with_highlight(self) -> str:
-        """Render markdown content with the focused link highlighted.
+    def _focus_link_widget(self) -> None:
+        """Focus the Link widget corresponding to the current focused_link_index.
 
-        Returns:
-            str: Markdown content with the focused link highlighted using Rich markup
+        This method uses Textual's built-in link focusing mechanism and applies
+        inline styles to highlight the link with the configured colors.
         """
         if self.focused_link_index is None or not self.links:
-            return self.original_content  # No highlighting
+            return
 
-        # Get the focused link
-        focused_link = self.links[self.focused_link_index]
-
-        # Build highlight markup with configured colors
-        # Rich markup format: [color on background]text[/color on background]
-        highlight_start = f"[bold {self.link_highlight_fg} on {self.link_highlight_bg}]"
-        highlight_end = "[/bold]"
-
-        # Try different patterns to find the link in the content
-        content = self.original_content
-
-        # Pattern 1: Markdown link format [text](url)
-        link_pattern = f"[{focused_link['text']}]({focused_link['url']})"
-        if link_pattern in content:
-            # Highlight the link text with configured colors
-            highlighted_pattern = f"[{highlight_start}{focused_link['text']}{highlight_end}]({focused_link['url']})"
-            return content.replace(link_pattern, highlighted_pattern, 1)
-
-        # Pattern 2: Just the URL (plain URL in text)
-        if focused_link["url"] in content:
-            # Highlight just the URL
-            highlighted_url = f"{highlight_start}{focused_link['url']}{highlight_end}"
-            return content.replace(focused_link["url"], highlighted_url, 1)
-
-        # Pattern 3: Link text without URL (fallback)
-        if focused_link["text"] in content and focused_link["text"] != focused_link["url"]:
-            # Only highlight first occurrence
-            highlighted_text = f"{highlight_start}{focused_link['text']}{highlight_end}"
-            return content.replace(focused_link["text"], highlighted_text, 1)
-
-        # If no pattern matches, return original content (graceful degradation)
-        return content
-
-    def _update_markdown_display(self):
-        """Update the Markdown widget with highlighted content.
-
-        This method updates the visual display of the markdown content
-        to highlight the currently focused link. It handles exceptions
-        gracefully to ensure the UI remains functional even if highlighting fails.
-        """
         try:
-            markdown_widget = self.query_one("#entry-content", expect_type=Markdown)
-            content = self._render_content_with_highlight()
-            markdown_widget.update(content)
+            # Get all link widgets from the Markdown widget
+            link_widgets = self._get_markdown_link_widgets()
+
+            if link_widgets and self.focused_link_index < len(link_widgets):
+                # Clear previous link styling
+                for i, link_widget in enumerate(link_widgets):
+                    if i != self.focused_link_index:
+                        # Reset to default styles (remove inline styles)
+                        link_widget.styles.clear()
+
+                # Focus and style the specific link widget at the focused index
+                target_link = link_widgets[self.focused_link_index]
+                target_link.focus()
+
+                # Apply inline styles with configured colors
+                target_link.styles.background = self.link_highlight_bg
+                target_link.styles.color = self.link_highlight_fg
+                target_link.styles.text_style = "bold"
+
+                # Scroll to make it visible
+                target_link.scroll_visible(animate=True, duration=0.3, top=True)
         except Exception:  # nosec B110  # noqa: S110
-            # Silently fail if updating isn't possible (e.g., widget not mounted)
+            # Silently fail if focusing isn't possible (e.g., screen not mounted)
             # This is expected in test contexts or when the widget isn't available
-            # The link indicator will still show the focused link info
             # Intentional silent failure for graceful degradation
             pass
+
+    def _update_markdown_display(self):
+        """Update the markdown display to highlight the currently focused link.
+
+        This method uses Textual's built-in link focusing mechanism
+        to apply CSS-based highlighting to the focused link. It handles
+        exceptions gracefully to ensure the UI remains functional even
+        if focusing fails.
+        """
+        # Focus the link widget using Textual's built-in focus system
+        # This will apply the CSS styles we defined in _apply_link_highlight_css()
+        self._focus_link_widget()
 
     def action_next_link(self):
         """Navigate to the next link in the content."""
@@ -873,10 +856,8 @@ class EntryReaderScreen(Screen):
             self.focused_link_index = (self.focused_link_index + 1) % len(self.links)
 
         self._update_link_indicator()
-        # Update markdown display with highlighting
+        # Update markdown display with highlighting (includes scrolling)
         self._update_markdown_display()
-        # Scroll to make the focused link visible
-        self._scroll_to_link(self.focused_link_index)
 
     def action_previous_link(self):
         """Navigate to the previous link in the content."""
@@ -892,10 +873,8 @@ class EntryReaderScreen(Screen):
             self.focused_link_index = (self.focused_link_index - 1) % len(self.links)
 
         self._update_link_indicator()
-        # Update markdown display with highlighting
+        # Update markdown display with highlighting (includes scrolling)
         self._update_markdown_display()
-        # Scroll to make the focused link visible
-        self._scroll_to_link(self.focused_link_index)
 
     def action_open_focused_link(self):
         """Open the currently focused link in the browser."""
@@ -921,10 +900,17 @@ class EntryReaderScreen(Screen):
 
     def action_clear_link_focus(self):
         """Clear the current link focus."""
+        # First blur the currently focused link widget if any
+        try:
+            link_widgets = self._get_markdown_link_widgets()
+            if link_widgets and self.focused_link_index is not None and self.focused_link_index < len(link_widgets):
+                link_widgets[self.focused_link_index].blur()
+        except Exception:  # nosec B110  # noqa: S110
+            # Intentional silent failure for graceful degradation
+            pass
+
         self.focused_link_index = None
         self._update_link_indicator()
-        # Remove highlighting from markdown display
-        self._update_markdown_display()
         self.notify("Link focus cleared")
 
     def action_quit(self):
