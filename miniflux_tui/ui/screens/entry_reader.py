@@ -109,6 +109,8 @@ class EntryReaderScreen(Screen):
         unread_color: str = "cyan",
         read_color: str = "gray",
         group_info: dict[str, str | int] | None = None,
+        link_highlight_bg: str | None = None,
+        link_highlight_fg: str | None = None,
         **kwargs,
     ):
         super().__init__(**kwargs)
@@ -118,11 +120,14 @@ class EntryReaderScreen(Screen):
         self.unread_color = unread_color
         self.read_color = read_color
         self.group_info = group_info  # Contains: mode, name, total, unread
+        self.link_highlight_bg = link_highlight_bg or "#ff79c6"  # Default: pink/magenta
+        self.link_highlight_fg = link_highlight_fg or "#282a36"  # Default: dark text
         self.scroll_container = None
         self.group_stats_widget: Static | None = None  # Reference to group stats widget for updates
         self.links: list[dict[str, str]] = []  # List of {text: str, url: str}
         self.focused_link_index: int | None = None  # Currently focused link index
         self.link_indicator: Static | None = None  # Widget to show focused link
+        self.original_content: str = ""  # Store original markdown content for highlighting
 
     def compose(self) -> ComposeResult:
         """Create child widgets."""
@@ -153,6 +158,9 @@ class EntryReaderScreen(Screen):
 
         # Convert HTML content to markdown for better display
         content = self._html_to_markdown(self.entry.content)
+
+        # Store original content for highlighting
+        self.original_content = content
 
         # Extract links from content
         self.links = self._extract_links(content)
@@ -791,6 +799,66 @@ class EntryReaderScreen(Screen):
 
         self.link_indicator.update(indicator_text)
 
+    def _render_content_with_highlight(self) -> str:
+        """Render markdown content with the focused link highlighted.
+
+        Returns:
+            str: Markdown content with the focused link highlighted using Rich markup
+        """
+        if self.focused_link_index is None or not self.links:
+            return self.original_content  # No highlighting
+
+        # Get the focused link
+        focused_link = self.links[self.focused_link_index]
+
+        # Build highlight markup with configured colors
+        # Rich markup format: [color on background]text[/color on background]
+        highlight_start = f"[bold {self.link_highlight_fg} on {self.link_highlight_bg}]"
+        highlight_end = "[/bold]"
+
+        # Try different patterns to find the link in the content
+        content = self.original_content
+
+        # Pattern 1: Markdown link format [text](url)
+        link_pattern = f"[{focused_link['text']}]({focused_link['url']})"
+        if link_pattern in content:
+            # Highlight the link text with configured colors
+            highlighted_pattern = f"[{highlight_start}{focused_link['text']}{highlight_end}]({focused_link['url']})"
+            return content.replace(link_pattern, highlighted_pattern, 1)
+
+        # Pattern 2: Just the URL (plain URL in text)
+        if focused_link["url"] in content:
+            # Highlight just the URL
+            highlighted_url = f"{highlight_start}{focused_link['url']}{highlight_end}"
+            return content.replace(focused_link["url"], highlighted_url, 1)
+
+        # Pattern 3: Link text without URL (fallback)
+        if focused_link["text"] in content and focused_link["text"] != focused_link["url"]:
+            # Only highlight first occurrence
+            highlighted_text = f"{highlight_start}{focused_link['text']}{highlight_end}"
+            return content.replace(focused_link["text"], highlighted_text, 1)
+
+        # If no pattern matches, return original content (graceful degradation)
+        return content
+
+    def _update_markdown_display(self):
+        """Update the Markdown widget with highlighted content.
+
+        This method updates the visual display of the markdown content
+        to highlight the currently focused link. It handles exceptions
+        gracefully to ensure the UI remains functional even if highlighting fails.
+        """
+        try:
+            markdown_widget = self.query_one("#entry-content", expect_type=Markdown)
+            content = self._render_content_with_highlight()
+            markdown_widget.update(content)
+        except Exception:  # nosec B110  # noqa: S110
+            # Silently fail if updating isn't possible (e.g., widget not mounted)
+            # This is expected in test contexts or when the widget isn't available
+            # The link indicator will still show the focused link info
+            # Intentional silent failure for graceful degradation
+            pass
+
     def action_next_link(self):
         """Navigate to the next link in the content."""
         if not self.links:
@@ -805,6 +873,8 @@ class EntryReaderScreen(Screen):
             self.focused_link_index = (self.focused_link_index + 1) % len(self.links)
 
         self._update_link_indicator()
+        # Update markdown display with highlighting
+        self._update_markdown_display()
         # Scroll to make the focused link visible
         self._scroll_to_link(self.focused_link_index)
 
@@ -822,6 +892,8 @@ class EntryReaderScreen(Screen):
             self.focused_link_index = (self.focused_link_index - 1) % len(self.links)
 
         self._update_link_indicator()
+        # Update markdown display with highlighting
+        self._update_markdown_display()
         # Scroll to make the focused link visible
         self._scroll_to_link(self.focused_link_index)
 
@@ -851,6 +923,8 @@ class EntryReaderScreen(Screen):
         """Clear the current link focus."""
         self.focused_link_index = None
         self._update_link_indicator()
+        # Remove highlighting from markdown display
+        self._update_markdown_display()
         self.notify("Link focus cleared")
 
     def action_quit(self):

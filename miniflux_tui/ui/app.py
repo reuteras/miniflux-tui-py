@@ -470,6 +470,11 @@ class MinifluxTuiApp(App):
         entry_reader_cls: type[EntryReaderScreen]
         entry_reader_cls = entry_reader_module.EntryReaderScreen
 
+        # Get link highlight colors from config or theme
+        theme = get_theme(self.config.theme_name)
+        link_highlight_bg = self.config.link_highlight_bg or theme.colors.get("link-highlight-bg", "#ff79c6")
+        link_highlight_fg = self.config.link_highlight_fg or theme.colors.get("link-highlight-fg", "#282a36")
+
         reader_screen: EntryReaderScreen = entry_reader_cls(
             entry=entry,
             entry_list=entry_list or self.entries,
@@ -477,6 +482,8 @@ class MinifluxTuiApp(App):
             unread_color=self.config.unread_color,
             read_color=self.config.read_color,
             group_info=group_info,
+            link_highlight_bg=link_highlight_bg,
+            link_highlight_fg=link_highlight_fg,
         )
         self.push_screen(reader_screen)
 
