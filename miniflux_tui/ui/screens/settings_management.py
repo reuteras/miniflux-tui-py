@@ -26,6 +26,12 @@ class SettingsScreen(Screen):
         Binding("i", "toggle_info_messages", "Toggle Info Messages"),
     ]
 
+    CSS = """
+    SettingsScreen {
+        overflow-y: hidden;
+    }
+    """
+
     def __init__(self, **kwargs):
         """Initialize settings screen."""
         super().__init__(**kwargs)
