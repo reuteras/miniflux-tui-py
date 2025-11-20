@@ -60,6 +60,11 @@ class TestSettingsScreenInitialization:
 class TestSettingsScreenComposition:
     """Test SettingsScreen composition and rendering."""
 
+    def test_settings_screen_css(self) -> None:
+        """Test that SettingsScreen has the correct CSS."""
+        screen = SettingsScreen()
+        assert "overflow-y: hidden;" in screen.CSS
+
     async def test_screen_composes_with_header_and_footer(self) -> None:
         """Test that SettingsScreen composes with header and footer."""
         app = SettingsTestApp()
