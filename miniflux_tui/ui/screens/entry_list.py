@@ -13,6 +13,7 @@ from textual.widgets import Footer, Header, Label, ListItem, ListView
 
 from miniflux_tui.api.models import Category, Entry
 from miniflux_tui.constants import (
+    DEFAULT_ENTRY_LIMIT,
     FOLD_COLLAPSED,
     FOLD_EXPANDED,
     SORT_MODES,
@@ -1763,27 +1764,132 @@ class EntryListScreen(Screen):
             # Always stop the loading animation
             self._stop_loading_animation()
 
+    def _remove_entry_from_ui(self, entry_id: int) -> None:
+        """Remove an entry from the UI by ID.
+
+        Args:
+            entry_id: The ID of the entry to remove
+        """
+        self.entries = [e for e in self.entries if e.id != entry_id]
+        self.sorted_entries = [e for e in self.sorted_entries if e.id != entry_id]
+        if entry_id in self.entry_item_map:
+            del self.entry_item_map[entry_id]
+
+    def _add_entry_to_ui(self, entry: Entry) -> None:
+        """Add an entry to the UI.
+
+        Args:
+            entry: The entry to add
+        """
+        self.entries.append(entry)
+        list_item = EntryListItem(
+            entry=entry,
+            unread_color=self.unread_color,
+            read_color=self.read_color,
+        )
+        self.entry_item_map[entry.id] = list_item
+
+    async def _perform_incremental_sync(self) -> tuple[int, int, int]:
+        """Perform incremental sync of entries from the server.
+
+        Fetches new entries from the server and dynamically updates the UI by:
+        - Adding new entries to the list
+        - Removing entries that were marked read elsewhere
+        - Preserving UI state (cursor position, sort order, etc.)
+
+        Returns:
+            Tuple of (new_count, removed_count, updated_count)
+        """
+        if not hasattr(self.app, "client") or not self.app.client:
+            self.notify("API client not initialized", severity="error")
+            return (0, 0, 0)
+
+        # Get current entry IDs before sync
+        current_ids = {entry.id for entry in self.entries}
+
+        # Fetch fresh data from server based on current view
+        try:
+            if self.app.current_view == "starred":
+                new_entries = await self.app.client.get_starred_entries(limit=DEFAULT_ENTRY_LIMIT)
+            else:
+                new_entries = await self.app.client.get_unread_entries(limit=DEFAULT_ENTRY_LIMIT)
+        except Exception as e:
+            self.notify(f"Error fetching entries: {e}", severity="error")
+            return (0, 0, 0)
+
+        # Rebuild category mapping for fresh data
+        if hasattr(self.app, "_build_entry_category_mapping"):
+            self.app.entry_category_map = await self.app._build_entry_category_mapping()
+
+        # Enrich new entries with category information
+        if self.app.entry_category_map:
+            for entry in new_entries:
+                if entry.id in self.app.entry_category_map:
+                    entry.feed.category_id = self.app.entry_category_map[entry.id]
+
+        new_ids = {entry.id for entry in new_entries}
+
+        # Track changes
+        added_ids = new_ids - current_ids
+        removed_ids = current_ids - new_ids
+        new_count = len(added_ids)
+        removed_count = len(removed_ids)
+
+        # If no changes, return early
+        if not added_ids and not removed_ids:
+            return (0, 0, 0)
+
+        # Build map of new entries for quick lookup
+        new_entry_map = {entry.id: entry for entry in new_entries}
+
+        # Remove entries that are no longer in the view
+        for entry_id in removed_ids:
+            self._remove_entry_from_ui(entry_id)
+
+        # Add new entries
+        for entry_id in added_ids:
+            self._add_entry_to_ui(new_entry_map[entry_id])
+
+        # Update app state
+        self.app.entries = self.entries
+
+        # Re-sort entries to maintain proper order
+        self.sorted_entries = self._sort_entries(self.entries)
+
+        # Refresh the list view to show changes
+        if self.list_view:
+            self._populate_list()
+
+        return (new_count, removed_count, 0)
+
     async def action_sync_entries(self):
         """Sync/reload entries from server without refreshing feeds.
 
         This fetches the latest entries that already exist on the Miniflux server
         without telling the server to fetch new content from RSS feeds.
         Use this to get entries that were added elsewhere or by another client.
-        """
-        if not hasattr(self.app, "load_entries"):
-            self.notify("Cannot sync entries", severity="error")
-            return
 
+        Uses incremental sync to dynamically add/remove entries without UI lockup.
+        """
         try:
             # Start loading animation in header
             self._start_loading_animation("Syncing entries...")
 
-            # Rebuild category mapping for fresh data
-            if hasattr(self.app, "_build_entry_category_mapping"):
-                self.app.entry_category_map = await self.app._build_entry_category_mapping()
-            # Reload entries without refreshing feeds
-            await self.app.load_entries(self.app.current_view)
-            # load_entries will show the result message
+            # Perform incremental sync
+            new_count, removed_count, _ = await self._perform_incremental_sync()
+
+            # Show summary message
+            if new_count == 0 and removed_count == 0:
+                self.notify("Entries are up to date", severity="information", timeout=2)
+            else:
+                details = []
+                if new_count > 0:
+                    details.append(f"+{new_count} new")
+                if removed_count > 0:
+                    details.append(f"-{removed_count} removed")
+                summary = ", ".join(details)
+                self.notify(f"Synced entries: {summary}", severity="information")
+
         except (ConnectionError, TimeoutError) as e:
             self.notify(f"Network error syncing entries: {e}", severity="error")
         except Exception as e:

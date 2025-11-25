@@ -198,7 +198,7 @@ class MinifluxTuiApp(App):
         self.set_theme(new_theme)
 
     def set_theme(self, theme_name: str) -> None:
-        """Set the current theme and save to config.
+        """Set the current theme and save to config with runtime CSS update.
 
         Args:
             theme_name: Name of the theme to set ("dark" or "light")
@@ -219,14 +219,15 @@ class MinifluxTuiApp(App):
         except Exception as e:
             self.log(f"Failed to save theme preference: {e}")
 
-        # Note: Dynamic CSS updates in Textual are complex. The theme toggle saves
-        # the preference for the next session. This is acceptable for MVP.
-        # Users can restart the app to see the new theme colors.
+        # Update CSS dynamically by regenerating and applying it
+        new_css = self._generate_css(theme_name)
+        MinifluxTuiApp.CSS = new_css
+        self.stylesheet.parse(new_css)  # type: ignore[call-arg]
 
         # Notify user
         theme = get_theme(theme_name)
         self.notify(
-            f"Theme: {theme.display_name} (applies on restart)",
+            f"Theme: {theme.display_name}",
             severity="information",
         )
 
