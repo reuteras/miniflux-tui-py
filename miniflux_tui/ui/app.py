@@ -543,7 +543,7 @@ class MinifluxTuiApp(App):
             CategoryManagementScreen,
         )
 
-        management_screen = CategoryManagementScreen(categories=categories)
+        management_screen = CategoryManagementScreen(categories=categories, entries=self.entries)
         self.push_screen(management_screen)
 
     async def on_unmount(self) -> None:

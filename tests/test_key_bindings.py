@@ -59,28 +59,28 @@ class TestEntryListKeyBindings:
     """Test key bindings for EntryListScreen."""
 
     def test_has_group_by_feed_binding(self, sample_entries):
-        """Test that 'g' key binding exists for group by feed."""
+        """Test that 'w' key binding exists for group by feed."""
         screen = EntryListScreen(sample_entries)
 
-        # Check binding exists
+        # Check binding exists (now uses 'w' instead of 'g' since 'g' is for g-prefix mode)
         binding_keys = [b.key for b in screen.BINDINGS]  # type: ignore[attr-defined]
-        assert "g" in binding_keys
+        assert "w" in binding_keys
 
         # Check it maps to correct action
-        g_binding = next(b for b in screen.BINDINGS if b.key == "g")  # type: ignore[attr-defined]
-        assert g_binding.action == "toggle_group_feed"  # type: ignore[attr-defined]
-        assert "Group by Feed" in g_binding.description  # type: ignore[attr-defined]
+        w_binding = next(b for b in screen.BINDINGS if b.key == "w")  # type: ignore[attr-defined]
+        assert w_binding.action == "toggle_group_feed"  # type: ignore[attr-defined]
+        assert "Group by Feed" in w_binding.description  # type: ignore[attr-defined]
 
     def test_has_group_by_category_binding(self, sample_entries):
-        """Test that 'c' key binding exists for group by category."""
+        """Test that 'C' (Shift+C) key binding exists for group by category."""
         screen = EntryListScreen(sample_entries)
 
-        # Check binding exists
+        # Check binding exists (now uses 'C' instead of 'c' since 'g+c' is for g-prefix mode)
         binding_keys = [b.key for b in screen.BINDINGS]  # type: ignore[attr-defined]
-        assert "c" in binding_keys
+        assert "C" in binding_keys
 
         # Check it maps to correct action
-        c_binding = next(b for b in screen.BINDINGS if b.key == "c")  # type: ignore[attr-defined]
+        c_binding = next(b for b in screen.BINDINGS if b.key == "C")  # type: ignore[attr-defined]
         assert c_binding.action == "toggle_group_category"  # type: ignore[attr-defined]
         assert "Group by Category" in c_binding.description  # type: ignore[attr-defined]
 
@@ -246,9 +246,10 @@ class TestHistoryScreen:
         # Should have all the same bindings as EntryListScreen
         binding_keys = [b.key for b in screen.BINDINGS]  # type: ignore[attr-defined]
 
-        # Check key bindings exist
-        assert "g" in binding_keys  # Group by feed
-        assert "c" in binding_keys  # Group by category
+        # Check key bindings exist (updated for new g-prefix mode)
+        assert "g" in binding_keys  # g-prefix mode (for g+u, g+b, g+h, g+c, g+f, g+s)
+        assert "w" in binding_keys  # Group by feed (moved from 'g')
+        assert "C" in binding_keys  # Group by category (moved from 'c')
         assert "j" in binding_keys or "down" in binding_keys  # Navigation
         assert "k" in binding_keys or "up" in binding_keys  # Navigation
         assert "enter" in binding_keys  # Open entry
