@@ -25,30 +25,38 @@ class EntryReaderScreen(Screen):
     """Screen for reading a single feed entry."""
 
     BINDINGS: list[Binding] = [  # noqa: RUF012
+        # Scrolling
         Binding("j", "scroll_down", "Scroll Down", show=False),
         Binding("k", "scroll_up", "Scroll Up", show=False),
-        Binding("J", "next_entry", "Next Entry", show=True),
-        Binding("K", "previous_entry", "Previous Entry", show=True),
         Binding("pagedown", "page_down", "Page Down"),
         Binding("pageup", "page_up", "Page Up"),
-        Binding("b", "back", "Back to List"),
+        # Entry navigation (matches web interface)
+        Binding("J", "next_entry", "Next Entry", show=True),
+        Binding("K", "previous_entry", "Previous Entry", show=True),
+        # Entry actions
+        Binding("m", "mark_read", "Mark Read", show=False),
         Binding("u", "mark_unread", "Mark Unread"),
-        Binding("asterisk", "toggle_star", "Toggle Star"),
+        Binding("f", "toggle_star", "Toggle Starred"),
         Binding("e", "save_entry", "Save Entry"),
         Binding("o", "open_browser", "Open in Browser"),
-        Binding("f", "fetch_original", "Fetch Original"),
-        Binding("X", "feed_settings", "Feed Settings"),
+        Binding("v", "open_browser", "Open URL", show=False),
+        Binding("d", "fetch_original", "Download Original"),
+        # Link navigation
         Binding("tab", "next_link", "Next Link", show=True),
         Binding("shift+tab", "previous_link", "Previous Link", show=True),
         Binding("n", "next_link", "Next Link", show=False),
         Binding("p", "previous_link", "Previous Link", show=False),
         Binding("enter", "open_focused_link", "Open Link", show=True),
         Binding("c", "clear_link_focus", "Clear Link", show=True),
+        # Navigation and settings
+        Binding("b", "back", "Back to List"),
+        Binding("escape", "back", "Back", show=False),
+        Binding("X", "feed_settings", "Feed Settings"),
+        # Help and status
         Binding("question_mark", "show_help", "Help"),
         Binding("i", "show_status", "Status"),
         Binding("S", "show_settings", "Settings"),
         Binding("q", "quit", "Quit"),
-        Binding("escape", "back", "Back", show=False),
     ]
 
     app: EntryReaderAppProtocol
@@ -456,6 +464,11 @@ class EntryReaderScreen(Screen):
         if app:
             app.pop_screen()
 
+    async def action_mark_read(self):
+        """Mark entry as read."""
+        await self._mark_entry_as_read()
+        self.notify("Marked as read")
+
     async def action_mark_unread(self):
         """Mark entry as unread."""
         app = self._resolve_app()
@@ -793,17 +806,56 @@ class EntryReaderScreen(Screen):
 
         self.link_indicator.update(indicator_text)
 
+    def _generate_highlighted_markdown(self, original_content: str) -> str:
+        """Generate markdown with visual highlight for the focused link.
+
+        This method re-renders the original markdown to add visual highlighting
+        around the currently focused link using markdown formatting that the
+        Markdown widget will interpret.
+
+        Args:
+            original_content: The original markdown content
+
+        Returns:
+            Markdown content with highlighting added for the focused link
+        """
+        if self.focused_link_index is None or not self.links or self.focused_link_index >= len(self.links):
+            return original_content
+
+        try:
+            content = original_content
+            focused_link = self.links[self.focused_link_index]
+            link_url = focused_link["url"].strip()
+            link_text = focused_link["text"].strip()
+
+            # Find and replace the markdown link pattern with a highlighted version
+            # Pattern: [text](url)
+            # Use markdown's bold (**) and code block style for background effect
+            # We'll wrap it with visual markers that work in terminal: ***text***
+            markdown_pattern = rf"\[{re.escape(link_text)}\]\({re.escape(link_url)}\)"
+
+            # Use markdown's emphasis to make it stand out: ***bold italic***
+            # Or use code styling: `[text](url)` for monospace/highlight effect
+            # Since we can't easily do background colors in markdown, we'll use
+            # bold + inversion via combining multiple emphasis styles
+            replacement = f"***[{link_text}]({link_url})***"
+
+            return re.sub(markdown_pattern, replacement, content, count=1)
+        except Exception:  # nosec B110
+            # Silently fail and return original content if highlighting fails
+            return original_content
+
     def _focus_link_widget(self) -> None:
         """Focus the Link widget corresponding to the current focused_link_index.
 
-        This method uses Textual's built-in link focusing mechanism and applies
-        inline styles to highlight the link with the configured colors.
+        This method attempts to manipulate link widgets if available, and falls back
+        to re-rendering markdown with visual highlighting.
         """
         if self.focused_link_index is None or not self.links:
             return
 
         try:
-            # Get all link widgets from the Markdown widget
+            # Try the widget approach first (may not work in all cases)
             link_widgets = self._get_markdown_link_widgets()
 
             if link_widgets and self.focused_link_index < len(link_widgets):
@@ -833,13 +885,26 @@ class EntryReaderScreen(Screen):
     def _update_markdown_display(self):
         """Update the markdown display to highlight the currently focused link.
 
-        This method uses Textual's built-in link focusing mechanism
-        to apply CSS-based highlighting to the focused link. It handles
-        exceptions gracefully to ensure the UI remains functional even
-        if focusing fails.
+        This method regenerates the markdown content with visual highlighting
+        for the focused link and scrolls to ensure it's visible on screen.
         """
-        # Focus the link widget using Textual's built-in focus system
-        # This will apply the CSS styles we defined in _apply_link_highlight_css()
+        # Generate markdown with highlighting for the focused link
+        if self.original_content:
+            highlighted_md = self._generate_highlighted_markdown(self.original_content)
+
+            try:
+                markdown_widget = self.query_one("#entry-content", expect_type=Markdown)
+                markdown_widget.update(highlighted_md)
+
+                # Scroll to approximately where the link should be
+                # Estimate based on link position in content
+                if self.focused_link_index is not None:
+                    self._scroll_to_link(self.focused_link_index)
+            except Exception:  # nosec B110  # noqa: S110
+                # If markdown update fails, that's okay - highlighting is optional
+                pass
+
+        # Also try the widget focusing approach as a fallback
         self._focus_link_widget()
 
     def action_next_link(self):

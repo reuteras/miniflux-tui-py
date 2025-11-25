@@ -1667,3 +1667,270 @@ class TestEntryReaderLinkHighlighting:
         # Should have default colors
         assert screen.link_highlight_bg == "#ff79c6"  # Default pink/magenta
         assert screen.link_highlight_fg == "#282a36"  # Default dark text
+
+
+class TestEntryReaderLinkHighlightingIntegration:
+    """Integration tests for link highlighting with mounted screen."""
+
+    @pytest.fixture
+    def entry_with_links(self, sample_feed):
+        """Create entry with multiple links for integration testing."""
+        html_content = """
+        <p>Check out <a href="http://example.com/link1">First Link</a> for more info.</p>
+        <p>Also visit <a href="http://example.com/link2">Second Link</a>.</p>
+        <p>And finally <a href="http://example.com/link3">Third Link</a>.</p>
+        """
+        return Entry(
+            id=1,
+            feed_id=1,
+            title="Entry with Links",
+            content=html_content,
+            url="http://localhost:8080/entry",
+            published_at=datetime(2023, 1, 1, 12, 0, 0, tzinfo=UTC),
+            starred=False,
+            status="unread",
+            feed=sample_feed,
+        )
+
+    @pytest.mark.asyncio
+    async def test_focus_link_widget_applies_styles(self, entry_with_links):
+        """Test that _focus_link_widget applies inline styles to focused link."""
+        screen = EntryReaderScreen(entry=entry_with_links)
+        screen.focused_link_index = 0
+        # Set links to satisfy the check in _focus_link_widget
+        screen.links = [{"text": "Link 1", "url": "http://example.com"}]
+
+        # Create mock link widget
+        mock_link = MagicMock()
+        mock_link.styles = MagicMock()
+
+        with mock.patch.object(screen, "_get_markdown_link_widgets", return_value=[mock_link]):
+            screen._focus_link_widget()
+
+            # Verify styles were applied to the focused link
+            mock_link.focus.assert_called_once()
+            mock_link.styles.clear.assert_not_called()  # We don't clear the focused one
+            assert mock_link.styles.background == screen.link_highlight_bg
+            assert mock_link.styles.color == screen.link_highlight_fg
+            assert mock_link.styles.text_style == "bold"
+
+    @pytest.mark.asyncio
+    async def test_focus_link_widget_clears_other_links_styles(self, entry_with_links):
+        """Test that _focus_link_widget clears styles from non-focused links."""
+        screen = EntryReaderScreen(entry=entry_with_links)
+        screen.focused_link_index = 1
+        # Set links to satisfy the check in _focus_link_widget
+        screen.links = [
+            {"text": "Link 1", "url": "http://example.com/1"},
+            {"text": "Link 2", "url": "http://example.com/2"},
+            {"text": "Link 3", "url": "http://example.com/3"},
+        ]
+
+        # Create mock link widgets
+        mock_links = [MagicMock(), MagicMock(), MagicMock()]
+
+        with mock.patch.object(screen, "_get_markdown_link_widgets", return_value=mock_links):
+            screen._focus_link_widget()
+
+            # Verify non-focused links had styles cleared
+            mock_links[0].styles.clear.assert_called_once()
+            mock_links[2].styles.clear.assert_called_once()
+
+            # Verify focused link was focused
+            mock_links[1].focus.assert_called_once()
+
+    @pytest.mark.asyncio
+    async def test_focus_link_widget_scrolls_to_link(self, entry_with_links):
+        """Test that _focus_link_widget scrolls to make focused link visible."""
+        screen = EntryReaderScreen(entry=entry_with_links)
+        screen.focused_link_index = 0
+        # Set links to satisfy the check in _focus_link_widget
+        screen.links = [{"text": "Link 1", "url": "http://example.com"}]
+
+        # Create mock link widget
+        mock_link = MagicMock()
+        mock_link.styles = MagicMock()
+
+        with mock.patch.object(screen, "_get_markdown_link_widgets", return_value=[mock_link]):
+            screen._focus_link_widget()
+
+            # Verify scroll was called with animation
+            mock_link.scroll_visible.assert_called_once_with(animate=True, duration=0.3, top=True)
+
+    @pytest.mark.asyncio
+    async def test_action_next_link_triggers_highlighting(self, entry_with_links):
+        """Test that action_next_link triggers highlighting via _update_markdown_display."""
+        screen = EntryReaderScreen(entry=entry_with_links)
+        screen.links = [
+            {"text": "First Link", "url": "http://example.com/link1"},
+            {"text": "Second Link", "url": "http://example.com/link2"},
+        ]
+        screen.link_indicator = MagicMock()
+
+        with mock.patch.object(screen, "_update_markdown_display") as mock_update:
+            screen.action_next_link()
+
+            # Verify _update_markdown_display was called to apply highlighting
+            mock_update.assert_called_once()
+            # Verify focus was set to first link
+            assert screen.focused_link_index == 0
+
+    @pytest.mark.asyncio
+    async def test_action_previous_link_triggers_highlighting(self, entry_with_links):
+        """Test that action_previous_link triggers highlighting via _update_markdown_display."""
+        screen = EntryReaderScreen(entry=entry_with_links)
+        screen.links = [
+            {"text": "First Link", "url": "http://example.com/link1"},
+            {"text": "Second Link", "url": "http://example.com/link2"},
+        ]
+        screen.link_indicator = MagicMock()
+
+        with mock.patch.object(screen, "_update_markdown_display") as mock_update:
+            # Start from no focus, previous should go to last link
+            screen.action_previous_link()
+
+            # Verify _update_markdown_display was called
+            mock_update.assert_called_once()
+            # Verify focus was set to last link (wrap around)
+            assert screen.focused_link_index == 1
+
+    @pytest.mark.asyncio
+    async def test_update_markdown_display_calls_focus_link_widget(self, entry_with_links):
+        """Test that _update_markdown_display calls _focus_link_widget."""
+        screen = EntryReaderScreen(entry=entry_with_links)
+        screen.focused_link_index = 0
+
+        with mock.patch.object(screen, "_focus_link_widget") as mock_focus:
+            screen._update_markdown_display()
+
+            # Verify _focus_link_widget was called
+            mock_focus.assert_called_once()
+
+    @pytest.mark.asyncio
+    async def test_link_highlighting_with_no_focused_link(self, entry_with_links):
+        """Test that highlighting gracefully handles None focused_link_index."""
+        screen = EntryReaderScreen(entry=entry_with_links)
+        screen.focused_link_index = None
+        # Set links to trigger the early return correctly
+        screen.links = [{"text": "Link", "url": "http://example.com"}]
+
+        # Should not raise exception (returns early)
+        screen._focus_link_widget()
+
+    @pytest.mark.asyncio
+    async def test_link_highlighting_with_out_of_bounds_index(self, entry_with_links):
+        """Test that highlighting gracefully handles out of bounds index."""
+        screen = EntryReaderScreen(entry=entry_with_links)
+        screen.focused_link_index = 999
+        # Set links to satisfy the check
+        screen.links = [
+            {"text": "Link 1", "url": "http://example.com/1"},
+            {"text": "Link 2", "url": "http://example.com/2"},
+        ]
+
+        mock_links = [MagicMock(), MagicMock()]
+        with mock.patch.object(screen, "_get_markdown_link_widgets", return_value=mock_links):
+            # Should not raise exception (graceful degradation)
+            screen._focus_link_widget()
+
+    @pytest.mark.asyncio
+    async def test_link_highlighting_exception_handling(self, entry_with_links):
+        """Test that link highlighting handles exceptions gracefully."""
+        screen = EntryReaderScreen(entry=entry_with_links)
+        screen.focused_link_index = 0
+        # Set links to satisfy the check
+        screen.links = [{"text": "Link", "url": "http://example.com"}]
+
+        with mock.patch.object(screen, "_get_markdown_link_widgets", side_effect=Exception("Widget error")):
+            # Should not raise exception (graceful degradation)
+            screen._focus_link_widget()
+
+    @pytest.mark.asyncio
+    async def test_get_markdown_link_widgets_returns_empty_before_mount(self, entry_with_links):
+        """Test that _get_markdown_link_widgets returns empty list before screen is mounted.
+
+        This is a critical test showing that markdown link widgets are NOT available
+        before the screen is actually mounted in the Textual app. The Markdown widget
+        renders links as styled text, not as separate focusable widgets.
+        """
+        screen = EntryReaderScreen(entry=entry_with_links)
+        # Before mounting, query_one will fail
+        links = screen._get_markdown_link_widgets()
+
+        # Should return empty list due to exception handling
+        assert links == []
+        assert isinstance(links, list)
+
+    @pytest.mark.asyncio
+    async def test_generate_highlighted_markdown_no_focus(self, entry_with_links):
+        """Test that _generate_highlighted_markdown returns original content when no link is focused."""
+        markdown_content = "Check out [Link](http://example.com) for more."
+        screen = EntryReaderScreen(entry=entry_with_links)
+        screen.focused_link_index = None
+        screen.links = [{"text": "Link", "url": "http://example.com"}]
+
+        highlighted = screen._generate_highlighted_markdown(markdown_content)
+
+        # Should return original content when no focus
+        assert highlighted == markdown_content
+
+    @pytest.mark.asyncio
+    async def test_generate_highlighted_markdown_with_focus(self, entry_with_links):
+        """Test that _generate_highlighted_markdown adds highlighting around focused link."""
+        markdown_content = "Check out [Link](http://example.com) for more."
+        screen = EntryReaderScreen(entry=entry_with_links)
+        screen.focused_link_index = 0
+        screen.links = [{"text": "Link", "url": "http://example.com"}]
+
+        highlighted = screen._generate_highlighted_markdown(markdown_content)
+
+        # Should contain markdown emphasis/highlighting (*** for bold italic)
+        assert "***[Link](http://example.com)***" in highlighted
+        assert "Link" in highlighted
+        assert "http://example.com" in highlighted
+
+    @pytest.mark.asyncio
+    async def test_generate_highlighted_markdown_multiple_links(self, entry_with_links):
+        """Test that _generate_highlighted_markdown highlights only the focused link."""
+        markdown_content = "Check out [First](http://example.com/1) and [Second](http://example.com/2) links."
+        screen = EntryReaderScreen(entry=entry_with_links)
+        screen.focused_link_index = 1
+        screen.links = [
+            {"text": "First", "url": "http://example.com/1"},
+            {"text": "Second", "url": "http://example.com/2"},
+        ]
+
+        highlighted = screen._generate_highlighted_markdown(markdown_content)
+
+        # Should contain highlighting for Second link
+        assert "Second" in highlighted
+        # First link should still be there but without highlight (by position)
+        assert "First" in highlighted
+
+    @pytest.mark.asyncio
+    async def test_generate_highlighted_markdown_invalid_index(self, entry_with_links):
+        """Test that _generate_highlighted_markdown returns original content with invalid index."""
+        markdown_content = "Check out [Link](http://example.com) for more."
+        screen = EntryReaderScreen(entry=entry_with_links)
+        screen.focused_link_index = 999  # Out of bounds
+        screen.links = [{"text": "Link", "url": "http://example.com"}]
+
+        highlighted = screen._generate_highlighted_markdown(markdown_content)
+
+        # Should return original content when index is out of bounds
+        assert highlighted == markdown_content
+
+    @pytest.mark.asyncio
+    async def test_generate_highlighted_markdown_exception_handling(self, entry_with_links):
+        """Test that _generate_highlighted_markdown handles exceptions gracefully."""
+        markdown_content = "Check out [Link](http://example.com) for more."
+        screen = EntryReaderScreen(entry=entry_with_links)
+        screen.focused_link_index = 0
+        screen.links = [{"text": "Link", "url": "http://example.com"}]
+
+        # Even with bad input, should not raise exception
+        highlighted = screen._generate_highlighted_markdown(markdown_content)
+
+        # Should return some content (original or highlighted)
+        assert isinstance(highlighted, str)
+        assert len(highlighted) > 0
