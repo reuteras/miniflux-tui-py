@@ -1789,6 +1789,60 @@ class EntryListScreen(Screen):
         )
         self.entry_item_map[entry.id] = list_item
 
+    async def _fetch_entries_for_sync(self) -> list[Entry] | None:
+        """Fetch entries from server based on current view.
+
+        Returns:
+            List of entries or None if error occurred
+        """
+        try:
+            if self.app.current_view == "starred":
+                return await self.app.client.get_starred_entries(limit=DEFAULT_ENTRY_LIMIT)
+            return await self.app.client.get_unread_entries(limit=DEFAULT_ENTRY_LIMIT)
+        except Exception as e:
+            self.notify(f"Error fetching entries: {e}", severity="error")
+            return None
+
+    async def _enrich_entries_with_categories(self, entries: list[Entry]) -> None:
+        """Enrich entries with category information from app state.
+
+        Args:
+            entries: List of entries to enrich
+        """
+        # Rebuild category mapping for fresh data
+        if hasattr(self.app, "_build_entry_category_mapping"):
+            self.app.entry_category_map = await self.app._build_entry_category_mapping()
+
+        # Enrich entries with category information
+        if self.app.entry_category_map:
+            for entry in entries:
+                if entry.id in self.app.entry_category_map:
+                    entry.feed.category_id = self.app.entry_category_map[entry.id]
+
+    def _apply_entry_changes(self, added_ids: set[int], removed_ids: set[int], new_entry_map: dict[int, Entry]) -> None:
+        """Apply entry changes to the UI.
+
+        Args:
+            added_ids: Set of entry IDs to add
+            removed_ids: Set of entry IDs to remove
+            new_entry_map: Map of entry ID to Entry object for new entries
+        """
+        # Remove entries that are no longer in the view
+        for entry_id in removed_ids:
+            self._remove_entry_from_ui(entry_id)
+
+        # Add new entries
+        for entry_id in added_ids:
+            self._add_entry_to_ui(new_entry_map[entry_id])
+
+        # Update app state and re-sort
+        self.app.entries = self.entries
+        self.sorted_entries = self._sort_entries(self.entries)
+
+        # Refresh the list view
+        if self.list_view:
+            self._populate_list()
+
     async def _perform_incremental_sync(self) -> tuple[int, int, int]:
         """Perform incremental sync of entries from the server.
 
@@ -1807,60 +1861,28 @@ class EntryListScreen(Screen):
         # Get current entry IDs before sync
         current_ids = {entry.id for entry in self.entries}
 
-        # Fetch fresh data from server based on current view
-        try:
-            if self.app.current_view == "starred":
-                new_entries = await self.app.client.get_starred_entries(limit=DEFAULT_ENTRY_LIMIT)
-            else:
-                new_entries = await self.app.client.get_unread_entries(limit=DEFAULT_ENTRY_LIMIT)
-        except Exception as e:
-            self.notify(f"Error fetching entries: {e}", severity="error")
+        # Fetch fresh data from server
+        new_entries = await self._fetch_entries_for_sync()
+        if new_entries is None:
             return (0, 0, 0)
 
-        # Rebuild category mapping for fresh data
-        if hasattr(self.app, "_build_entry_category_mapping"):
-            self.app.entry_category_map = await self.app._build_entry_category_mapping()
+        # Enrich with category data
+        await self._enrich_entries_with_categories(new_entries)
 
-        # Enrich new entries with category information
-        if self.app.entry_category_map:
-            for entry in new_entries:
-                if entry.id in self.app.entry_category_map:
-                    entry.feed.category_id = self.app.entry_category_map[entry.id]
-
+        # Calculate changes
         new_ids = {entry.id for entry in new_entries}
-
-        # Track changes
         added_ids = new_ids - current_ids
         removed_ids = current_ids - new_ids
-        new_count = len(added_ids)
-        removed_count = len(removed_ids)
 
         # If no changes, return early
         if not added_ids and not removed_ids:
             return (0, 0, 0)
 
-        # Build map of new entries for quick lookup
+        # Apply changes to UI
         new_entry_map = {entry.id: entry for entry in new_entries}
+        self._apply_entry_changes(added_ids, removed_ids, new_entry_map)
 
-        # Remove entries that are no longer in the view
-        for entry_id in removed_ids:
-            self._remove_entry_from_ui(entry_id)
-
-        # Add new entries
-        for entry_id in added_ids:
-            self._add_entry_to_ui(new_entry_map[entry_id])
-
-        # Update app state
-        self.app.entries = self.entries
-
-        # Re-sort entries to maintain proper order
-        self.sorted_entries = self._sort_entries(self.entries)
-
-        # Refresh the list view to show changes
-        if self.list_view:
-            self._populate_list()
-
-        return (new_count, removed_count, 0)
+        return (len(added_ids), len(removed_ids), 0)
 
     async def action_sync_entries(self):
         """Sync/reload entries from server without refreshing feeds.
