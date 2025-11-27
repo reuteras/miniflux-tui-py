@@ -1168,9 +1168,9 @@ class EntryListScreen(Screen):
             key = event.character
 
             if key == "u":
-                await self.action_show_unread()
+                self.action_show_unread()
             elif key == "b":
-                await self.action_show_starred()
+                self.action_show_starred()
             elif key == "h":
                 self.action_show_history()
             elif key == "c":
@@ -1687,7 +1687,7 @@ class EntryListScreen(Screen):
                     self._set_category_fold_state(category_title, False)
             self.notify("All categories collapsed")
 
-    async def action_refresh(self):
+    def action_refresh(self):
         """Refresh the current feed on the server (Issue #55 - Feed operations)."""
         if not hasattr(self.app, "client") or not self.app.client:
             self.notify("API client not initialized", severity="error")
@@ -1722,6 +1722,11 @@ class EntryListScreen(Screen):
             self.notify("No feed selected", severity="warning")
             return
 
+        # Run the refresh in background to keep UI responsive
+        self.run_worker(self._do_refresh(feed_id, feed_title), exclusive=True)
+
+    async def _do_refresh(self, feed_id: int, feed_title: str):
+        """Background worker for refreshing a feed."""
         try:
             # Start loading animation in header
             self._start_loading_animation(f"Refreshing {feed_title}...")
@@ -1738,7 +1743,7 @@ class EntryListScreen(Screen):
             # Always stop the loading animation
             self._stop_loading_animation()
 
-    async def action_refresh_all_feeds(self):
+    def action_refresh_all_feeds(self):
         """Refresh all feeds on the server (Issue #55 - Feed operations).
 
         This tells the Miniflux server to fetch new content from RSS feeds.
@@ -1748,6 +1753,11 @@ class EntryListScreen(Screen):
             self.notify("API client not initialized", severity="error")
             return
 
+        # Run the refresh in background to keep UI responsive
+        self.run_worker(self._do_refresh_all_feeds(), exclusive=True)
+
+    async def _do_refresh_all_feeds(self):
+        """Background worker for refreshing all feeds."""
         try:
             # Start loading animation in header
             self._start_loading_animation("Refreshing all feeds...")
@@ -1884,14 +1894,22 @@ class EntryListScreen(Screen):
 
         return (len(added_ids), len(removed_ids), 0)
 
-    async def action_sync_entries(self):
+    def action_sync_entries(self):
         """Sync/reload entries from server without refreshing feeds.
 
         This fetches the latest entries that already exist on the Miniflux server
         without telling the server to fetch new content from RSS feeds.
         Use this to get entries that were added elsewhere or by another client.
 
-        Uses incremental sync to dynamically add/remove entries without UI lockup.
+        Uses run_worker to execute the sync in the background, keeping UI responsive.
+        """
+        self.run_worker(self._do_sync_entries(), exclusive=True)
+
+    async def _do_sync_entries(self):
+        """Background worker for syncing entries.
+
+        This runs in the background allowing the UI to remain responsive
+        while the sync operation completes.
         """
         try:
             # Start loading animation in header
@@ -1920,8 +1938,12 @@ class EntryListScreen(Screen):
             # Always stop the loading animation
             self._stop_loading_animation()
 
-    async def action_show_unread(self):
+    def action_show_unread(self):
         """Load and show only unread entries."""
+        self.run_worker(self._do_show_unread(), exclusive=True)
+
+    async def _do_show_unread(self):
+        """Background worker for loading unread entries."""
         if hasattr(self.app, "load_entries"):
             try:
                 # Start loading animation in header
@@ -1935,8 +1957,12 @@ class EntryListScreen(Screen):
                 # Always stop the loading animation
                 self._stop_loading_animation()
 
-    async def action_show_starred(self):
+    def action_show_starred(self):
         """Load and show only starred entries."""
+        self.run_worker(self._do_show_starred(), exclusive=True)
+
+    async def _do_show_starred(self):
+        """Background worker for loading starred entries."""
         if hasattr(self.app, "load_entries"):
             try:
                 # Start loading animation in header

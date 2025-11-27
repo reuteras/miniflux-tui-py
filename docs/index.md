@@ -8,9 +8,9 @@ A Python Terminal User Interface (TUI) client for [Miniflux](https://miniflux.ap
 
 ## Status
 
-**Production/Stable** - v0.7.2 (November 2025)
+**Production/Stable** - v0.7.3 (November 2025)
 
-This project has reached production stability with comprehensive features, robust CI/CD, and high test coverage across Python 3.11-3.15.
+This project has reached production stability with comprehensive features including runtime theme switching and non-blocking background operations, robust CI/CD, and high test coverage across Python 3.11-3.15.
 
 ## Features
 
@@ -37,7 +37,8 @@ This project has reached production stability with comprehensive features, robus
 
 ### User Experience
 - ⌨️ **Keyboard-driven** - extensive Vim-style shortcuts
-- 🎨 **Theme support** - dark/light mode toggle
+- 🎨 **Runtime theme switching** - toggle dark/light mode instantly with 'T' key (v0.7.0+)
+- 🔄 **Non-blocking sync** - navigate and read entries while syncing in background (v0.7.0+)
 - 📚 **Reading history** - browse your 200 most recently read entries
 - 🔐 **Password manager** integration for secure credential storage
 - 📦 **Multi-platform** - Linux, macOS, Windows support

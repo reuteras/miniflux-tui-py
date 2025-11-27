@@ -330,10 +330,17 @@ The sync will:
 2. Preserve your view settings and position
 3. Update the display with new/changed entries
 
+**Non-blocking sync (v0.7.0+):**
+- The sync runs in the background, so you can **continue navigating and reading entries** while it's happening
+- A loading animation shows sync progress in the header
+- You'll see a notification when sync completes showing what changed (e.g., "+5 new, -2 removed")
+- All operations (`r`, `R`, `,`, `g+u`, `g+b`) are non-blocking and keep the UI responsive
+
 **Typical workflow:**
-1. Press `r` or `Shift+R` to tell server to refresh feeds
-2. Wait a moment for server to fetch RSS content
-3. Press `,` to sync new entries to your TUI
+1. Press `r` or `Shift+R` to tell server to refresh feeds (non-blocking)
+2. Continue using the app while server fetches RSS content
+3. Press `,` to sync new entries to your TUI (non-blocking)
+4. Keep reading while entries sync in background
 
 ## Appearance
 
@@ -341,17 +348,17 @@ The sync will:
 
 Press `Shift+T` to toggle between dark and light themes:
 
-| Key | Action                                  |
-|-----|-----------------------------------------|
-| `T` | Toggle theme (dark/light, applies next) |
+| Key | Action                                       |
+|-----|----------------------------------------------|
+| `T` | Toggle theme (dark/light, applies instantly) |
 
-- **Dark Theme** - Dracula-inspired high contrast theme (default)
-- **Light Theme** - Solarized-inspired light theme
+- **Dark Theme** - Using Textual's built-in dark theme (default)
+- **Light Theme** - Using Textual's built-in light theme
 
-When you toggle the theme:
-1. Your preference is saved to the config file
-2. A notification displays the selected theme
-3. Restart the application for the theme to take effect
+When you toggle the theme (v0.7.0+):
+1. The theme changes **instantly** without requiring a restart
+2. Your preference is saved to the config file
+3. A notification displays the selected theme
 
 You can also set your preferred theme in the config file:
 
@@ -359,6 +366,8 @@ You can also set your preferred theme in the config file:
 [theme]
 name = "dark"  # or "light"
 ```
+
+The theme will be applied automatically when you start the application.
 
 ## Getting Help
 
