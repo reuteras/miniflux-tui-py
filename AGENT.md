@@ -9,7 +9,7 @@ This document provides context about the miniflux-tui-py project for coding agen
 - **Language**: Python 3.11+
 - **Supported Python Versions**: 3.11, 3.12, 3.13, 3.14, 3.15 (preview)
 - **Framework**: Textual (TUI framework)
-- **Status**: Production/Stable (v0.7.2)
+- **Status**: Production/Stable (v0.7.3)
 - **Development Status**: 5 - Production/Stable (PyPI classifier)
 - **License**: MIT
 - **Author**: Peter Reuterås
@@ -592,6 +592,11 @@ async def action_mark_read(self):
 
 Latest releases (November 2025):
 
+### v0.7.3 (2025-11-27)
+- **Feature**: Runtime theme switching - instant dark/light mode toggle without restart
+- **Feature**: Non-blocking background operations - sync while navigating/reading entries
+- **Performance**: All data-fetching operations now use run_worker for responsive UI
+
 ### v0.7.2 (2025-11-17)
 - **Bug fix**: Added missing ID to Markdown widget to fix NoMatches error
 
@@ -903,7 +908,7 @@ except Exception as e:
 
 **Coverage too low**: Add more tests in `tests/` directory. Aim for >60% coverage. Use `uv run pytest --cov=miniflux_tui --cov-report=html` to see coverage report.
 
-## Key Features (as of v0.7.2)
+## Key Features (as of v0.7.3)
 
 ### Core Functionality
 - ✅ Browse and read RSS entries with keyboard navigation

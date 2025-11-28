@@ -85,8 +85,9 @@ class TestMinifluxTuiAppInitialization:
 
         assert app.CSS is not None
         assert isinstance(app.CSS, str)
-        assert "ListView" in app.CSS
+        # After switching to Textual built-in themes, CSS only contains layout rules
         assert "ListItem" in app.CSS
+        assert "Header" in app.CSS
 
     def test_app_inherits_from_textual_app(self, sample_config):
         """Test MinifluxTuiApp inherits from Textual App."""

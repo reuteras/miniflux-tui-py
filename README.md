@@ -33,10 +33,11 @@ A [Python](https://www.python.org) TUI (Terminal User Interface) client for the 
 
 ## Status
 
-**Production/Stable** - v0.7.2
+**Production/Stable** - v0.7.3
 
 This project has reached production stability with:
-- ✅ Comprehensive feature set (categories, feeds, settings, history, theme support)
+- ✅ Comprehensive feature set (categories, feeds, settings, history, runtime theme switching)
+- ✅ Non-blocking background operations (sync while using the UI)
 - ✅ Robust CI/CD with 15+ security and quality workflows
 - ✅ High test coverage (>60%) across Python 3.11-3.15
 - ✅ OpenSSF Best Practices badge and Scorecard monitoring
@@ -68,7 +69,8 @@ This project has reached production stability with:
 
 ### User Experience
 - ⌨️ **Keyboard-driven** - extensive Vim-style shortcuts
-- 🎨 **Theme support** - dark/light mode toggle
+- 🎨 **Runtime theme switching** - toggle dark/light mode instantly with 'T' key
+- 🔄 **Non-blocking sync** - navigate and read entries while syncing in background
 - 📚 **Reading history** - browse your 200 most recently read entries
 - 🔐 **Password manager** integration for secure credential storage
 - 📦 **Multi-platform** - Linux, macOS, Windows support
