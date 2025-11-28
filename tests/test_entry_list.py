@@ -1784,10 +1784,15 @@ class TestRefreshActions:
         # Mock notify
         screen.notify = MagicMock()
 
-        # Patch the app property getter
-        with patch.object(type(screen), "app", new_callable=lambda: property(lambda _: mock_app)):
-            # Call action_refresh (now synchronous)
+        # Patch the app property getter and run_worker
+        with (
+            patch.object(type(screen), "app", new_callable=lambda: property(lambda _: mock_app)),
+            patch.object(screen, "run_worker", side_effect=mock_run_worker),
+        ):
+            # Call action_refresh (now synchronous, uses run_worker)
             screen.action_refresh()
+            # Give the worker task a chance to run
+            await asyncio.sleep(0.1)
 
         # Verify error notification
         assert any("network error" in str(call[0][0]).lower() for call in screen.notify.call_args_list)
@@ -1810,10 +1815,15 @@ class TestRefreshActions:
         # Mock notify
         screen.notify = MagicMock()
 
-        # Patch the app property getter
-        with patch.object(type(screen), "app", new_callable=lambda: property(lambda _: mock_app)):
-            # Call action_refresh_all_feeds
+        # Patch the app property getter and run_worker
+        with (
+            patch.object(type(screen), "app", new_callable=lambda: property(lambda _: mock_app)),
+            patch.object(screen, "run_worker", side_effect=mock_run_worker),
+        ):
+            # Call action_refresh_all_feeds (now synchronous, uses run_worker)
             screen.action_refresh_all_feeds()
+            # Give the worker task a chance to run
+            await asyncio.sleep(0.1)
 
         # Verify refresh_all_feeds was called
         mock_client.refresh_all_feeds.assert_called_once()
@@ -1861,10 +1871,15 @@ class TestRefreshActions:
         # Mock notify
         screen.notify = MagicMock()
 
-        # Patch the app property getter
-        with patch.object(type(screen), "app", new_callable=lambda: property(lambda _: mock_app)):
-            # Call action_refresh_all_feeds
+        # Patch the app property getter and run_worker
+        with (
+            patch.object(type(screen), "app", new_callable=lambda: property(lambda _: mock_app)),
+            patch.object(screen, "run_worker", side_effect=mock_run_worker),
+        ):
+            # Call action_refresh_all_feeds (now synchronous, uses run_worker)
             screen.action_refresh_all_feeds()
+            # Give the worker task a chance to run
+            await asyncio.sleep(0.1)
 
         # Verify error notification
         assert any("network error" in str(call[0][0]).lower() for call in screen.notify.call_args_list)
@@ -1889,8 +1904,13 @@ class TestRefreshActions:
 
         screen.notify = MagicMock()
 
-        with patch.object(type(screen), "app", new_callable=lambda: property(lambda _: mock_app)):
+        with (
+            patch.object(type(screen), "app", new_callable=lambda: property(lambda _: mock_app)),
+            patch.object(screen, "run_worker", side_effect=mock_run_worker),
+        ):
             screen.action_refresh()
+            # Give the worker task a chance to run
+            await asyncio.sleep(0.1)
 
         assert any("Error refreshing feed" in str(call[0][0]) for call in screen.notify.call_args_list)
         mock_app.load_entries.assert_not_called()
@@ -1910,8 +1930,13 @@ class TestRefreshActions:
 
         screen.notify = MagicMock()
 
-        with patch.object(type(screen), "app", new_callable=lambda: property(lambda _: mock_app)):
+        with (
+            patch.object(type(screen), "app", new_callable=lambda: property(lambda _: mock_app)),
+            patch.object(screen, "run_worker", side_effect=mock_run_worker),
+        ):
             screen.action_refresh_all_feeds()
+            # Give the worker task a chance to run
+            await asyncio.sleep(0.1)
 
         assert any("Error refreshing all feeds" in str(call[0][0]) for call in screen.notify.call_args_list)
         mock_app.load_entries.assert_not_called()
@@ -1933,8 +1958,13 @@ class TestViewFilteringActions:
         mock_app.client = AsyncMock()
         mock_app.current_view = "unread"
 
-        with patch.object(type(screen), "app", new_callable=lambda: property(lambda _: mock_app)):
+        with (
+            patch.object(type(screen), "app", new_callable=lambda: property(lambda _: mock_app)),
+            patch.object(screen, "run_worker", side_effect=mock_run_worker),
+        ):
             screen.action_show_unread()
+            # Give the worker task a chance to run
+            await asyncio.sleep(0.1)
 
         mock_app.load_entries.assert_awaited_once_with("unread")
         assert screen.filter_unread_only is False
@@ -1954,8 +1984,13 @@ class TestViewFilteringActions:
         mock_app.client = AsyncMock()
         mock_app.current_view = "starred"
 
-        with patch.object(type(screen), "app", new_callable=lambda: property(lambda _: mock_app)):
+        with (
+            patch.object(type(screen), "app", new_callable=lambda: property(lambda _: mock_app)),
+            patch.object(screen, "run_worker", side_effect=mock_run_worker),
+        ):
             screen.action_show_starred()
+            # Give the worker task a chance to run
+            await asyncio.sleep(0.1)
 
         mock_app.load_entries.assert_awaited_once_with("starred")
         assert screen.filter_unread_only is False
