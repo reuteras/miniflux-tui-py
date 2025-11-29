@@ -237,7 +237,9 @@ system_requires = []
 requires = []
 
 [tool.briefcase.app.miniflux-gui.iOS]
-requires = []
+requires = [
+    "std-nslog~=1.0.0",
+]
 supported = true
 
 [tool.briefcase.app.miniflux-gui.android]
