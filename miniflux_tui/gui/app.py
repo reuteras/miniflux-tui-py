@@ -111,7 +111,7 @@ class MinifluxGUI(toga.App):  # pylint: disable=inherit-non-class
         self.main_window.show()  # type: ignore[attr-defined]
 
         # Load entries asynchronously using Toga's add_background_task
-        self.add_background_task(lambda app, **kwargs: self._safe_load_entries_with_timeout())  # noqa: ARG005
+        self.add_background_task(lambda app, **kwargs: self._safe_load_entries())  # noqa: ARG005
 
     def create_settings_screen(self, first_run: bool = False) -> toga.Box:
         """Create the settings screen for server configuration."""
@@ -207,9 +207,9 @@ class MinifluxGUI(toga.App):  # pylint: disable=inherit-non-class
             self.show_error(f"Failed to create client: {e}")
             return
 
-        # Load entries with timeout
+        # Load entries
         self.main_window.content = self.create_loading_screen("Connecting to server...")  # type: ignore[attr-defined]
-        await self._safe_load_entries_with_timeout()
+        await self._safe_load_entries()
 
     def _return_to_list(self):
         """Return to the entry list screen."""
@@ -270,7 +270,7 @@ class MinifluxGUI(toga.App):  # pylint: disable=inherit-non-class
     def _retry_load(self):
         """Retry loading entries after an error."""
         self.main_window.content = self.create_loading_screen("Retrying connection...")  # type: ignore[attr-defined]
-        self.add_background_task(lambda app, **kwargs: self._safe_load_entries_with_timeout())  # noqa: ARG005
+        self.add_background_task(lambda app, **kwargs: self._safe_load_entries())  # noqa: ARG005
 
     def create_loading_screen(self, message: str = "Loading...") -> toga.Box:
         """Create a loading screen with custom message."""
@@ -283,26 +283,6 @@ class MinifluxGUI(toga.App):  # pylint: disable=inherit-non-class
 
         loading_box.add(loading_label)
         return loading_box
-
-    async def _safe_load_entries_with_timeout(self):
-        """Load entries with timeout and error handling."""
-        try:
-            # Set 30 second timeout for initial connection
-            await asyncio.wait_for(self._safe_load_entries(), timeout=30.0)
-        except TimeoutError:
-            self._show_error_screen(
-                "Connection Timeout",
-                "Failed to connect to server within 30 seconds.",
-                "Please check your server URL and network connection.",
-                show_settings_button=True,
-            )
-        except Exception as e:
-            self._show_error_screen(
-                "Connection Error",
-                f"Failed to connect: {e}",
-                "Please verify your server URL and API key.",
-                show_settings_button=True,
-            )
 
     async def _safe_load_entries(self):
         """Load entries with error handling."""
