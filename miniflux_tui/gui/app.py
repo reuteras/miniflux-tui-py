@@ -69,8 +69,8 @@ class MinifluxGUI(toga.App):  # pylint: disable=inherit-non-class
             return
 
         # Create the main UI
-        self.main_window.content = self.create_loading_screen("Loading entries...")
-        self.main_window.show()
+        self.main_window.content = self.create_loading_screen("Loading entries...")  # type: ignore[attr-defined]
+        self.main_window.show()  # type: ignore[attr-defined]
 
         # Load entries asynchronously
         self._load_task = asyncio.create_task(self._safe_load_entries())
@@ -109,12 +109,12 @@ class MinifluxGUI(toga.App):  # pylint: disable=inherit-non-class
         )
         error_box.add(retry_button)
 
-        self.main_window.content = error_box
-        self.main_window.show()
+        self.main_window.content = error_box  # type: ignore[attr-defined]
+        self.main_window.show()  # type: ignore[attr-defined]
 
     def _retry_load(self):
         """Retry loading entries after an error."""
-        self.main_window.content = self.create_loading_screen("Retrying...")
+        self.main_window.content = self.create_loading_screen("Retrying...")  # type: ignore[attr-defined]
         self._load_task = asyncio.create_task(self._safe_load_entries())
 
     def create_loading_screen(self, message: str = "Loading...") -> toga.Box:
@@ -165,7 +165,7 @@ class MinifluxGUI(toga.App):  # pylint: disable=inherit-non-class
             self.entries.sort(key=lambda e: e.published_at, reverse=True)
 
         # Update UI with entries
-        self.main_window.content = self.create_entry_list_screen()
+        self.main_window.content = self.create_entry_list_screen()  # type: ignore[attr-defined]
 
     def create_entry_list_screen(self) -> toga.Box:
         """Create the entry list screen with navigation."""
@@ -259,7 +259,7 @@ class MinifluxGUI(toga.App):  # pylint: disable=inherit-non-class
             return  # Already in this view
 
         self.current_view = view_mode
-        self.main_window.content = self.create_loading_screen(f"Loading {view_mode} entries...")
+        self.main_window.content = self.create_loading_screen(f"Loading {view_mode} entries...")  # type: ignore[attr-defined]
         self._load_task = asyncio.create_task(self._safe_load_entries())
 
     def on_entry_select(self, _widget, row):
@@ -272,7 +272,7 @@ class MinifluxGUI(toga.App):  # pylint: disable=inherit-non-class
 
         if self.selected_entry:
             # Show entry detail screen
-            self.main_window.content = self.create_entry_detail_screen(self.selected_entry)
+            self.main_window.content = self.create_entry_detail_screen(self.selected_entry)  # type: ignore[attr-defined]
 
     def create_entry_detail_screen(self, entry: "Entry") -> toga.Box:
         """Create the entry detail screen."""
@@ -355,11 +355,11 @@ class MinifluxGUI(toga.App):  # pylint: disable=inherit-non-class
 
     def on_back_to_list(self, _widget):
         """Navigate back to entry list."""
-        self.main_window.content = self.create_entry_list_screen()
+        self.main_window.content = self.create_entry_list_screen()  # type: ignore[attr-defined]
 
     def on_refresh(self, _widget):
         """Refresh the entry list."""
-        self.main_window.content = self.create_loading_screen("Refreshing...")
+        self.main_window.content = self.create_loading_screen("Refreshing...")  # type: ignore[attr-defined]
         self._load_task = asyncio.create_task(self._safe_load_entries())
 
     async def _safe_toggle_read(self, entry: "Entry"):
@@ -383,7 +383,7 @@ class MinifluxGUI(toga.App):  # pylint: disable=inherit-non-class
 
         # Refresh the detail screen
         if self.selected_entry:
-            self.main_window.content = self.create_entry_detail_screen(self.selected_entry)
+            self.main_window.content = self.create_entry_detail_screen(self.selected_entry)  # type: ignore[attr-defined]
 
     async def _safe_toggle_star(self, entry: "Entry"):
         """Toggle star status with error handling."""
@@ -402,7 +402,7 @@ class MinifluxGUI(toga.App):  # pylint: disable=inherit-non-class
 
         # Refresh the detail screen
         if self.selected_entry:
-            self.main_window.content = self.create_entry_detail_screen(self.selected_entry)
+            self.main_window.content = self.create_entry_detail_screen(self.selected_entry)  # type: ignore[attr-defined]
 
     def on_open_browser(self, entry: "Entry"):
         """Open the entry URL in the default browser."""
@@ -415,7 +415,7 @@ class MinifluxGUI(toga.App):  # pylint: disable=inherit-non-class
         """Show an error dialog."""
         # Fallback if error dialog fails
         with suppress(Exception):
-            self.main_window.error_dialog("Error", message)
+            self.main_window.error_dialog("Error", message)  # type: ignore[attr-defined]
 
 
 def main():
