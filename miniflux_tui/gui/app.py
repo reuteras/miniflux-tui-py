@@ -85,33 +85,71 @@ class MinifluxGUI(toga.App):  # pylint: disable=inherit-non-class
         if sys.platform == "ios":
             config = self._load_settings()
 
-        # If no settings found, show settings screen
+        # Always show settings screen first - avoid startup async issues
+        # After user saves settings, we'll load entries
         if not config:
             self.main_window.content = self.create_settings_screen(first_run=True)  # type: ignore[attr-defined]
-            self.main_window.show()  # type: ignore[attr-defined]
-            return
+        else:
+            # Pre-configure client but don't load yet
+            try:
+                self.client = MinifluxClient(
+                    base_url=config["server_url"],
+                    api_key=config["api_key"],
+                    allow_invalid_certs=config.get("allow_invalid_certs", False),
+                    timeout=15.0,  # 15 second timeout
+                )
+            except Exception as e:
+                self._show_error_screen(
+                    "Configuration Error",
+                    f"Failed to initialize client: {e}",
+                    "Please check your settings.",
+                    show_settings_button=True,
+                )
+                self.main_window.show()  # type: ignore[attr-defined]
+                return
 
-        # Create client with loaded settings
-        try:
-            self.client = MinifluxClient(
-                base_url=config["server_url"],
-                api_key=config["api_key"],
-                allow_invalid_certs=config.get("allow_invalid_certs", False),
-            )
-        except Exception as e:
-            self._show_error_screen(
-                "Configuration Error",
-                f"Failed to initialize client: {e}",
-                "Please check your settings.",
-            )
-            return
+            # Show welcome screen with Connect button instead of auto-loading
+            self.main_window.content = self.create_welcome_screen()  # type: ignore[attr-defined]
 
-        # Create the main UI
-        self.main_window.content = self.create_loading_screen("Loading entries...")  # type: ignore[attr-defined]
         self.main_window.show()  # type: ignore[attr-defined]
 
-        # Load entries asynchronously using Toga's add_background_task
-        self.add_background_task(lambda app, **kwargs: self._safe_load_entries())  # noqa: ARG005
+    def create_welcome_screen(self) -> toga.Box:
+        """Create a welcome screen with Connect button."""
+        welcome_box = toga.Box(style=Pack(direction=COLUMN, margin=20, align_items="center"))
+
+        welcome_label = toga.Label(
+            "Ready to Connect",
+            style=Pack(margin=10, font_size=20, font_weight="bold"),
+        )
+
+        info_label = toga.Label(
+            "Your server settings are configured.\nTap Connect to load your feeds.",
+            style=Pack(margin=10, font_size=14),
+        )
+
+        connect_button = toga.Button(
+            "Connect",
+            on_press=self.on_connect,
+            style=Pack(margin=10),
+        )
+
+        settings_button = toga.Button(
+            "⚙️ Settings",
+            on_press=lambda _: self._show_settings(),
+            style=Pack(margin=5),
+        )
+
+        welcome_box.add(welcome_label)
+        welcome_box.add(info_label)
+        welcome_box.add(connect_button)
+        welcome_box.add(settings_button)
+
+        return welcome_box
+
+    async def on_connect(self, _widget):
+        """Connect and load entries."""
+        self.main_window.content = self.create_loading_screen("Connecting to server...")  # type: ignore[attr-defined]
+        await self._safe_load_entries()
 
     def create_settings_screen(self, first_run: bool = False) -> toga.Box:
         """Create the settings screen for server configuration."""
@@ -248,7 +286,7 @@ class MinifluxGUI(toga.App):  # pylint: disable=inherit-non-class
         # Add retry button
         retry_button = toga.Button(
             "Retry",
-            on_press=lambda _: self._retry_load(),
+            on_press=self._retry_load,
             style=Pack(margin=5),
         )
         button_box.add(retry_button)
@@ -267,10 +305,10 @@ class MinifluxGUI(toga.App):  # pylint: disable=inherit-non-class
         self.main_window.content = error_box  # type: ignore[attr-defined]
         self.main_window.show()  # type: ignore[attr-defined]
 
-    def _retry_load(self):
+    async def _retry_load(self, _widget=None):
         """Retry loading entries after an error."""
         self.main_window.content = self.create_loading_screen("Retrying connection...")  # type: ignore[attr-defined]
-        self.add_background_task(lambda app, **kwargs: self._safe_load_entries())  # noqa: ARG005
+        await self._safe_load_entries()
 
     def create_loading_screen(self, message: str = "Loading...") -> toga.Box:
         """Create a loading screen with custom message."""
