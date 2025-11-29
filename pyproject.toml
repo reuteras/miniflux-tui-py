@@ -197,7 +197,7 @@ project_name = "Miniflux Reader"
 bundle = "com.reuteras"
 version = "0.6.5"
 url = "https://github.com/reuteras/miniflux-tui-py"
-license = "MIT License"
+license.file = "LICENSE"
 author = "Peter Reuterås"
 author_email = "peter@reuteras.net"
 
