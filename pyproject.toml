@@ -215,6 +215,8 @@ Features:
 
 Built with BeeWare Toga framework."""
 sources = ["miniflux_tui"]
+# Specify the module name explicitly since app name doesn't match package name
+app_module_name = "miniflux_tui.gui.app"
 requires = [
     "toga>=0.5.0",
     "miniflux>=1.1.4",
