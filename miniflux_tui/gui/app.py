@@ -19,10 +19,6 @@ from miniflux_tui.api.client import MinifluxClient
 if TYPE_CHECKING:
     from miniflux_tui.api.models import Entry
 
-# Platform-specific imports for iOS settings storage
-if sys.platform == "ios":
-    from rubicon.objc import NSUserDefaults  # type: ignore[import-untyped]  # pylint: disable=no-name-in-module
-
 ViewMode = Literal["unread", "starred", "all"]
 
 
@@ -51,6 +47,9 @@ class MinifluxGUI(toga.App):  # pylint: disable=inherit-non-class
     def _load_settings(self) -> dict[str, str] | None:
         """Load settings from platform-specific storage."""
         if sys.platform == "ios":
+            from rubicon.objc import ObjCClass  # type: ignore[import-untyped]  # noqa: PLC0415
+
+            NSUserDefaults = ObjCClass("NSUserDefaults")  # type: ignore[attr-defined]  # pylint: disable=invalid-name  # noqa: N806
             defaults = NSUserDefaults.standardUserDefaults
             server_url = defaults.stringForKey("miniflux_server_url")
             api_key = defaults.stringForKey("miniflux_api_key")
@@ -65,6 +64,9 @@ class MinifluxGUI(toga.App):  # pylint: disable=inherit-non-class
     def _save_settings(self, server_url: str, api_key: str):
         """Save settings to platform-specific storage."""
         if sys.platform == "ios":
+            from rubicon.objc import ObjCClass  # type: ignore[import-untyped]  # noqa: PLC0415
+
+            NSUserDefaults = ObjCClass("NSUserDefaults")  # type: ignore[attr-defined]  # pylint: disable=invalid-name  # noqa: N806
             defaults = NSUserDefaults.standardUserDefaults
             defaults.setObject_forKey_(server_url, "miniflux_server_url")
             defaults.setObject_forKey_(api_key, "miniflux_api_key")
