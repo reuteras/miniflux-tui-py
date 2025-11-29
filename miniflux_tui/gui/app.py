@@ -207,9 +207,9 @@ class MinifluxGUI(toga.App):  # pylint: disable=inherit-non-class
             self.show_error(f"Failed to create client: {e}")
             return
 
-        # Load entries
-        self.main_window.content = self.create_loading_screen("Connecting...")  # type: ignore[attr-defined]
-        self._load_task = asyncio.create_task(self._safe_load_entries())
+        # Load entries with timeout
+        self.main_window.content = self.create_loading_screen("Connecting to server...")  # type: ignore[attr-defined]
+        self._load_task = asyncio.create_task(self._safe_load_entries_with_timeout())
 
     def _return_to_list(self):
         """Return to the entry list screen."""
@@ -218,7 +218,7 @@ class MinifluxGUI(toga.App):  # pylint: disable=inherit-non-class
         else:
             self.show_error("No connection established. Please configure settings first.")
 
-    def _show_error_screen(self, title: str, error: str, suggestion: str = ""):
+    def _show_error_screen(self, title: str, error: str, suggestion: str = "", show_settings_button: bool = False):
         """Show an error screen with details and suggestion."""
         error_box = toga.Box(style=Pack(direction=COLUMN, padding=20, alignment="center"))
 
@@ -232,33 +232,45 @@ class MinifluxGUI(toga.App):  # pylint: disable=inherit-non-class
             style=Pack(padding=5, font_size=14),
         )
 
+        error_box.add(error_title)
+        error_box.add(error_message)
+
         if suggestion:
             suggestion_label = toga.Label(
                 suggestion,
                 style=Pack(padding=5, font_size=12),
             )
-            error_box.add(error_title)
-            error_box.add(error_message)
             error_box.add(suggestion_label)
-        else:
-            error_box.add(error_title)
-            error_box.add(error_message)
+
+        # Button container
+        button_box = toga.Box(style=Pack(direction=ROW, padding=10))
 
         # Add retry button
         retry_button = toga.Button(
             "Retry",
             on_press=lambda _: self._retry_load(),
-            style=Pack(padding=10),
+            style=Pack(padding=5),
         )
-        error_box.add(retry_button)
+        button_box.add(retry_button)
+
+        # Add settings button if requested
+        if show_settings_button:
+            settings_button = toga.Button(
+                "⚙️ Settings",
+                on_press=lambda _: self._show_settings(),
+                style=Pack(padding=5),
+            )
+            button_box.add(settings_button)
+
+        error_box.add(button_box)
 
         self.main_window.content = error_box  # type: ignore[attr-defined]
         self.main_window.show()  # type: ignore[attr-defined]
 
     def _retry_load(self):
         """Retry loading entries after an error."""
-        self.main_window.content = self.create_loading_screen("Retrying...")  # type: ignore[attr-defined]
-        self._load_task = asyncio.create_task(self._safe_load_entries())
+        self.main_window.content = self.create_loading_screen("Retrying connection...")  # type: ignore[attr-defined]
+        self._load_task = asyncio.create_task(self._safe_load_entries_with_timeout())
 
     def create_loading_screen(self, message: str = "Loading...") -> toga.Box:
         """Create a loading screen with custom message."""
@@ -272,6 +284,26 @@ class MinifluxGUI(toga.App):  # pylint: disable=inherit-non-class
         loading_box.add(loading_label)
         return loading_box
 
+    async def _safe_load_entries_with_timeout(self):
+        """Load entries with timeout and error handling."""
+        try:
+            # Set 30 second timeout for initial connection
+            await asyncio.wait_for(self._safe_load_entries(), timeout=30.0)
+        except TimeoutError:
+            self._show_error_screen(
+                "Connection Timeout",
+                "Failed to connect to server within 30 seconds.",
+                "Please check your server URL and network connection.",
+                show_settings_button=True,
+            )
+        except Exception as e:
+            self._show_error_screen(
+                "Connection Error",
+                f"Failed to connect: {e}",
+                "Please verify your server URL and API key.",
+                show_settings_button=True,
+            )
+
     async def _safe_load_entries(self):
         """Load entries with error handling."""
         try:
@@ -281,12 +313,14 @@ class MinifluxGUI(toga.App):  # pylint: disable=inherit-non-class
                 "Connection Error",
                 f"Failed to connect to Miniflux server: {e}",
                 "Please check your network connection and server URL.",
+                show_settings_button=True,
             )
         except Exception as e:
             self._show_error_screen(
                 "Error Loading Entries",
                 f"An error occurred: {e}",
                 "Please try again or check your configuration.",
+                show_settings_button=True,
             )
 
     async def load_entries(self):
