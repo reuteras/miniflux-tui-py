@@ -80,10 +80,10 @@ miniflux_tui/
 
 3. **BeeWare Briefcase**
    ```bash
-   # Install GUI dependencies
-   uv pip install -e ".[gui]"
-   # Or with pip:
-   pip install -e ".[gui]"
+   # Install GUI dependencies (uv way)
+   uv sync --extra gui
+   # Or shorthand:
+   uv sync -e gui
    ```
 
 ### Configuration
@@ -235,15 +235,15 @@ briefcase package iOS
 #### "briefcase: command not found"
 
 ```bash
-# Install GUI dependencies
-uv pip install -e ".[gui]"
+# Install GUI dependencies (uv way)
+uv sync --extra gui
 ```
 
 #### "No module named 'toga'"
 
 ```bash
-# Install toga separately
-pip install toga>=0.5.0
+# Install toga separately (if needed)
+uv pip install toga>=0.5.0
 ```
 
 #### "Configuration Error" on app launch
