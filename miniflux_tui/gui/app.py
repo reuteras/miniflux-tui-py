@@ -110,23 +110,23 @@ class MinifluxGUI(toga.App):  # pylint: disable=inherit-non-class
         self.main_window.content = self.create_loading_screen("Loading entries...")  # type: ignore[attr-defined]
         self.main_window.show()  # type: ignore[attr-defined]
 
-        # Load entries asynchronously
-        self._load_task = asyncio.create_task(self._safe_load_entries())
+        # Load entries asynchronously using Toga's add_background_task
+        self.add_background_task(lambda app, **kwargs: self._safe_load_entries_with_timeout())  # noqa: ARG005
 
     def create_settings_screen(self, first_run: bool = False) -> toga.Box:
         """Create the settings screen for server configuration."""
-        settings_box = toga.Box(style=Pack(direction=COLUMN, padding=20))
+        settings_box = toga.Box(style=Pack(direction=COLUMN, margin=20))
 
         # Title
         title_label = toga.Label(
             "Miniflux Server Settings" if first_run else "Settings",
-            style=Pack(padding=10, font_size=20, font_weight="bold"),
+            style=Pack(margin=10, font_size=20, font_weight="bold"),
         )
 
         if first_run:
             intro_label = toga.Label(
                 "Please configure your Miniflux server to get started.",
-                style=Pack(padding=5, font_size=14),
+                style=Pack(margin=5, font_size=14),
             )
             settings_box.add(intro_label)
 
@@ -135,21 +135,21 @@ class MinifluxGUI(toga.App):  # pylint: disable=inherit-non-class
         # Server URL input
         url_label = toga.Label(
             "Server URL:",
-            style=Pack(padding_top=10, padding_bottom=5, font_size=14),
+            style=Pack(margin_top=10, margin_bottom=5, font_size=14),
         )
         self.server_url_input = toga.TextInput(
             placeholder="https://miniflux.example.com",
-            style=Pack(padding=5),
+            style=Pack(margin=5),
         )
 
         # API Key input
         api_key_label = toga.Label(
             "API Key:",
-            style=Pack(padding_top=10, padding_bottom=5, font_size=14),
+            style=Pack(margin_top=10, margin_bottom=5, font_size=14),
         )
         self.api_key_input = toga.TextInput(
             placeholder="Your Miniflux API key",
-            style=Pack(padding=5),
+            style=Pack(margin=5),
         )
 
         # Load existing settings if available
@@ -163,7 +163,7 @@ class MinifluxGUI(toga.App):  # pylint: disable=inherit-non-class
         save_button = toga.Button(
             "Save & Connect",
             on_press=self.on_save_settings,
-            style=Pack(padding=10),
+            style=Pack(margin=10),
         )
 
         # Back button (only if not first run)
@@ -171,7 +171,7 @@ class MinifluxGUI(toga.App):  # pylint: disable=inherit-non-class
             back_button = toga.Button(
                 "← Back",
                 on_press=lambda _: self._return_to_list(),
-                style=Pack(padding=5),
+                style=Pack(margin=5),
             )
             settings_box.add(back_button)
 
@@ -183,7 +183,7 @@ class MinifluxGUI(toga.App):  # pylint: disable=inherit-non-class
 
         return settings_box
 
-    def on_save_settings(self, _widget):
+    async def on_save_settings(self, _widget):
         """Save settings and connect to server."""
         server_url = self.server_url_input.value.strip()
         api_key = self.api_key_input.value.strip()
@@ -209,7 +209,7 @@ class MinifluxGUI(toga.App):  # pylint: disable=inherit-non-class
 
         # Load entries with timeout
         self.main_window.content = self.create_loading_screen("Connecting to server...")  # type: ignore[attr-defined]
-        self._load_task = asyncio.create_task(self._safe_load_entries_with_timeout())
+        await self._safe_load_entries_with_timeout()
 
     def _return_to_list(self):
         """Return to the entry list screen."""
@@ -220,16 +220,16 @@ class MinifluxGUI(toga.App):  # pylint: disable=inherit-non-class
 
     def _show_error_screen(self, title: str, error: str, suggestion: str = "", show_settings_button: bool = False):
         """Show an error screen with details and suggestion."""
-        error_box = toga.Box(style=Pack(direction=COLUMN, padding=20, alignment="center"))
+        error_box = toga.Box(style=Pack(direction=COLUMN, margin=20, align_items="center"))
 
         error_title = toga.Label(
             title,
-            style=Pack(padding=10, font_size=20, font_weight="bold"),
+            style=Pack(margin=10, font_size=20, font_weight="bold"),
         )
 
         error_message = toga.Label(
             error,
-            style=Pack(padding=5, font_size=14),
+            style=Pack(margin=5, font_size=14),
         )
 
         error_box.add(error_title)
@@ -238,18 +238,18 @@ class MinifluxGUI(toga.App):  # pylint: disable=inherit-non-class
         if suggestion:
             suggestion_label = toga.Label(
                 suggestion,
-                style=Pack(padding=5, font_size=12),
+                style=Pack(margin=5, font_size=12),
             )
             error_box.add(suggestion_label)
 
         # Button container
-        button_box = toga.Box(style=Pack(direction=ROW, padding=10))
+        button_box = toga.Box(style=Pack(direction=ROW, margin=10))
 
         # Add retry button
         retry_button = toga.Button(
             "Retry",
             on_press=lambda _: self._retry_load(),
-            style=Pack(padding=5),
+            style=Pack(margin=5),
         )
         button_box.add(retry_button)
 
@@ -258,7 +258,7 @@ class MinifluxGUI(toga.App):  # pylint: disable=inherit-non-class
             settings_button = toga.Button(
                 "⚙️ Settings",
                 on_press=lambda _: self._show_settings(),
-                style=Pack(padding=5),
+                style=Pack(margin=5),
             )
             button_box.add(settings_button)
 
@@ -270,15 +270,15 @@ class MinifluxGUI(toga.App):  # pylint: disable=inherit-non-class
     def _retry_load(self):
         """Retry loading entries after an error."""
         self.main_window.content = self.create_loading_screen("Retrying connection...")  # type: ignore[attr-defined]
-        self._load_task = asyncio.create_task(self._safe_load_entries_with_timeout())
+        self.add_background_task(lambda app, **kwargs: self._safe_load_entries_with_timeout())  # noqa: ARG005
 
     def create_loading_screen(self, message: str = "Loading...") -> toga.Box:
         """Create a loading screen with custom message."""
-        loading_box = toga.Box(style=Pack(direction=COLUMN, padding=20, alignment="center"))
+        loading_box = toga.Box(style=Pack(direction=COLUMN, margin=20, align_items="center"))
 
         loading_label = toga.Label(
             message,
-            style=Pack(padding=10, font_size=16),
+            style=Pack(margin=10, font_size=16),
         )
 
         loading_box.add(loading_label)
