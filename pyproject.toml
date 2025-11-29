@@ -178,7 +178,7 @@ relative_files = true
 
 [tool.pyright]
 include = ["miniflux_tui", "tests"]
-exclude = ["**/node_modules", "**/__pycache__"]
+exclude = ["**/node_modules", "**/__pycache__", "miniflux_tui/gui"]
 typeCheckingMode = "standard"
 pythonVersion = "3.11"
 reportMissingImports = true
