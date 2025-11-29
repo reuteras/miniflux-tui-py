@@ -89,20 +89,24 @@ This document outlines the planned features and improvements for the miniflux-tu
 - **Issue**: [#TBD](https://github.com/reuteras/miniflux-tui-py/issues)
 - **Status**: 📋 Planned
 
-## Version 0.7.0 - Themes & Performance 🔄
+## Version 0.7.0 - Themes & Performance ✅ RELEASED (2025-11-27)
 
-### UI/UX Improvements - Dark/Light Theme (🚀 High Priority)
-- [ ] Dark theme preset with optimized colors
-- [ ] Light theme preset with optimized colors
-- [ ] Theme toggle keybinding ('t' or similar)
-- [ ] Theme preference persistence in config
-- [ ] Runtime theme switching without restart
-- **Status**: 🔄 In Progress
+**Release Status**: ✅ Completed and deployed
 
-### Performance & Optimization (💡 Low Priority)
-- [ ] Incremental feed sync
-- [ ] Background refresh with notifications
+### UI/UX Improvements - Dark/Light Theme (🚀 High Priority) ✅
+- [x] Dark theme preset with optimized colors (using Textual built-in themes)
+- [x] Light theme preset with optimized colors (using Textual built-in themes)
+- [x] Theme toggle keybinding ('T' key)
+- [x] Theme preference persistence in config
+- [x] Runtime theme switching without restart (dynamic CSS update)
+- **Status**: ✅ Completed
+
+### Performance & Optimization (💡 Low Priority) ✅
+- [x] Incremental feed sync (dynamic add/remove entries without full reload)
+- [x] Background refresh with notifications (non-blocking UI using run_worker)
+- [x] Non-blocking sync operations (comma key syncs while UI remains responsive)
 - [ ] Memory optimization for large feed lists
+- **Status**: ✅ Mostly Completed
 
 ## Version 0.8.0 - Advanced Features (Planned)
 
@@ -133,6 +137,9 @@ This document outlines the planned features and improvements for the miniflux-tu
 - ✅ Category support (v0.5.0)
 - ✅ Feed management (v0.5.0)
 - ✅ User settings management (v0.6.0)
+- ✅ Runtime theme switching (v0.7.0)
+- ✅ Incremental feed sync (v0.7.0)
+- ✅ Non-blocking background operations (v0.7.0)
 
 ## Technical Considerations
 
@@ -187,7 +194,7 @@ These features are planned pending upstream Miniflux API support:
 - **v0.4.0** ✅ Released - Search & Theme support
 - **v0.5.0** ✅ Released (2025-11-01) - Categories & Feed Management
 - **v0.6.0** ✅ Released (2025-11-14) - History & User Settings
-- **v0.7.0** 🔄 In Progress - Themes & Performance Optimization
+- **v0.7.0** ✅ Released (2025-11-27) - Runtime Theme Switching & Non-blocking Sync
 - **v0.8.0** 📋 Planned (Q2 2026) - Advanced Features (Search, Integrations)
 
 ## Contributing
@@ -210,6 +217,6 @@ Have ideas for new features? Please:
 
 ---
 
-**Last Updated**: November 16, 2025
-**Current Version**: v0.6.4
-**Next Milestone**: v0.7.0 (Themes & Performance Optimization)
+**Last Updated**: November 27, 2025
+**Current Version**: v0.7.3
+**Next Milestone**: v0.8.0 (Advanced Features - Search & Integrations)

@@ -3,7 +3,7 @@
 
 # pylint: disable=no-value-for-parameter
 import asyncio
-from typing import ClassVar
+from typing import TYPE_CHECKING, ClassVar
 
 from textual.app import ComposeResult
 from textual.binding import Binding
@@ -17,22 +17,35 @@ from miniflux_tui.ui.screens.confirm_dialog import ConfirmDialog
 from miniflux_tui.ui.screens.input_dialog import InputDialog
 from miniflux_tui.utils import api_call
 
+if TYPE_CHECKING:
+    from miniflux_tui.api.models import Entry
+
 
 class CategoryListItem(ListItem):
-    """Custom list item for displaying a category.
+    """Custom list item for displaying a category with entry counts.
 
     Attributes:
         category: The Category object to display
+        unread_count: Number of unread entries in this category
+        read_count: Number of read entries in this category
     """
 
-    def __init__(self, category: Category):
-        """Initialize category list item.
+    def __init__(self, category: Category, unread_count: int = 0, read_count: int = 0):
+        """Initialize category list item with counts.
 
         Args:
             category: Category object to display
+            unread_count: Number of unread entries in this category
+            read_count: Number of read entries in this category
         """
         self.category = category
-        label_text = f"📁 {category.title}"
+        self.unread_count = unread_count
+        self.read_count = read_count
+
+        # Format: 📁 Category Name (3 unread / 10 total)
+        total = unread_count + read_count
+        label_text = f"📁 {category.title} ({unread_count} unread / {total} total)" if total > 0 else f"📁 {category.title}"
+
         super().__init__(Label(label_text))
 
 
@@ -85,14 +98,16 @@ class CategoryManagementScreen(Screen):
     }
     """
 
-    def __init__(self, categories: list[Category] | None = None, **kwargs):
+    def __init__(self, categories: list[Category] | None = None, entries: list["Entry"] | None = None, **kwargs):
         """Initialize category management screen.
 
         Args:
             categories: List of categories to display
+            entries: List of all entries to calculate counts from
         """
         super().__init__(**kwargs)
         self.categories = categories or []
+        self.entries = entries or []
         self.list_view: ListView | None = None
 
     def compose(self) -> ComposeResult:
@@ -109,13 +124,17 @@ class CategoryManagementScreen(Screen):
         self._populate_list()
 
     def _populate_list(self) -> None:
-        """Populate the list view with category items."""
+        """Populate the list view with category items, including entry counts."""
         if self.list_view is None:
             return
 
         self.list_view.clear()
         for category in self.categories:
-            self.list_view.append(CategoryListItem(category))
+            # Calculate entry counts for this category
+            unread_count = sum(1 for entry in self.entries if entry.feed.category_id == category.id and entry.is_unread)
+            read_count = sum(1 for entry in self.entries if entry.feed.category_id == category.id and not entry.is_unread)
+
+            self.list_view.append(CategoryListItem(category, unread_count, read_count))
 
         # Focus the list view
         if self.list_view.children:

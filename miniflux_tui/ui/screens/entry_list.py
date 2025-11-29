@@ -1,9 +1,11 @@
 # SPDX-License-Identifier: MIT
 """Entry list screen with feed sorting capabilities."""
 
+import asyncio
 from contextlib import suppress
 from typing import TYPE_CHECKING, Any, cast
 
+from textual import events
 from textual.app import ComposeResult
 from textual.binding import Binding
 from textual.screen import Screen
@@ -11,6 +13,7 @@ from textual.widgets import Footer, Header, Label, ListItem, ListView
 
 from miniflux_tui.api.models import Category, Entry
 from miniflux_tui.constants import (
+    DEFAULT_ENTRY_LIMIT,
     FOLD_COLLAPSED,
     FOLD_EXPANDED,
     SORT_MODES,
@@ -165,15 +168,22 @@ class FeedHeaderItem(ListItem):
 
 
 class CategoryHeaderItem(ListItem):
-    """Custom list item for category header with fold/unfold capability."""
+    """Custom list item for category header with fold/unfold capability and entry counts."""
 
-    def __init__(self, category_title: str, is_expanded: bool = True):
+    def __init__(self, category_title: str, is_expanded: bool = True, unread_count: int = 0, read_count: int = 0):
         self.category_title = category_title
         self.is_expanded = is_expanded
+        self.unread_count = unread_count
+        self.read_count = read_count
 
-        # Format header with fold indicator
+        # Format header with fold indicator and counts
         fold_icon = FOLD_EXPANDED if is_expanded else FOLD_COLLAPSED
-        header_text = f"[bold cyan]{fold_icon} [CATEGORY] {category_title}[/bold cyan]"
+        total = unread_count + read_count
+        if total > 0:
+            counts = f"({unread_count} unread / {total} total)"
+            header_text = f"[bold cyan]{fold_icon} [CATEGORY] {category_title} {counts}[/bold cyan]"
+        else:
+            header_text = f"[bold cyan]{fold_icon} [CATEGORY] {category_title}[/bold cyan]"
         label = Label(header_text, classes="category-header")
 
         # Initialize with the label
@@ -183,7 +193,12 @@ class CategoryHeaderItem(ListItem):
         """Toggle the fold state and update display."""
         self.is_expanded = not self.is_expanded
         fold_icon = FOLD_EXPANDED if self.is_expanded else FOLD_COLLAPSED
-        header_text = f"[bold cyan]{fold_icon} [CATEGORY] {self.category_title}[/bold cyan]"
+        total = self.unread_count + self.read_count
+        if total > 0:
+            counts = f"({self.unread_count} unread / {total} total)"
+            header_text = f"[bold cyan]{fold_icon} [CATEGORY] {self.category_title} {counts}[/bold cyan]"
+        else:
+            header_text = f"[bold cyan]{fold_icon} [CATEGORY] {self.category_title}[/bold cyan]"
         # Update the label
         if self.children:
             cast(Label, self.children[0]).update(header_text)
@@ -193,35 +208,48 @@ class EntryListScreen(Screen):
     """Screen for displaying a list of feed entries with sorting."""
 
     BINDINGS = [  # noqa: RUF012
+        # Navigation (vim-style)
         Binding("j", "cursor_down", "Down", show=False),
         Binding("k", "cursor_up", "Up", show=False),
+        Binding("n", "cursor_down", "Next Item", show=False),
+        Binding("p", "cursor_up", "Previous Item", show=False),
         Binding("down", "cursor_down", "Down", show=False),
         Binding("up", "cursor_up", "Up", show=False),
+        # Entry selection and actions
         Binding("enter", "select_entry", "Open Entry"),
         Binding("m", "toggle_read", "Mark Read/Unread"),
-        Binding("asterisk", "toggle_star", "Toggle Star"),
+        Binding("M", "toggle_read_previous", "Mark Read/Unread (Focus Prev)", show=False),
+        Binding("f", "toggle_star", "Toggle Starred"),
         Binding("e", "save_entry", "Save Entry"),
+        Binding("A", "mark_all_as_read", "Mark All as Read", show=False),
+        # Grouping and collapsing (note: g-prefix now used for section nav)
         Binding("s", "cycle_sort", "Cycle Sort"),
-        Binding("X", "feed_settings", "Feed Settings"),
-        Binding("g", "toggle_group_feed", "Group by Feed"),
-        Binding("c", "toggle_group_category", "Group by Category"),
-        Binding("M", "manage_categories", "Manage Categories"),
-        Binding("G", "expand_all", "Expand All"),
+        Binding("w", "toggle_group_feed", "Group by Feed", show=False),
+        Binding("C", "toggle_group_category", "Group by Category", show=False),
+        Binding("shift+l", "expand_all", "Expand All", show=False),
         Binding("Z", "collapse_all", "Collapse All"),
+        Binding("G", "go_to_bottom", "Go to Bottom", show=False),
         Binding("h", "collapse_fold", "Collapse Feed/Category"),
         Binding("l", "expand_fold", "Expand Feed/Category"),
         Binding("left", "collapse_fold", "Collapse Feed/Category", show=False),
         Binding("right", "expand_fold", "Expand Feed/Category", show=False),
+        # Feed operations
         Binding("r", "refresh", "Refresh Current Feed"),
-        Binding("comma", "sync_entries", "Sync Entries", show=False),
         Binding("R", "refresh_all_feeds", "Refresh All Feeds"),
-        Binding("u", "show_unread", "Unread"),
-        Binding("t", "show_starred", "Starred"),
+        Binding("comma", "sync_entries", "Sync Entries", show=False),
+        # Section navigation (g prefix)
+        Binding("g", "g_prefix_mode", "Section Navigation", show=False),
+        # Feed settings
+        Binding("X", "feed_settings", "Feed Settings"),
+        # Search and help
         Binding("slash", "search", "Search"),
         Binding("question_mark", "show_help", "Help"),
+        # Mode-specific (these are handled by g_prefix_mode)
+        # g+u = unread, g+b = starred, g+c = categories, g+f = feeds, g+h = history, g+s = settings
+        # Status, settings, history (also accessible via g-prefix, but keep for compatibility)
         Binding("i", "show_status", "Status"),
-        Binding("S", "show_settings", "Settings"),
         Binding("H", "show_history", "History"),
+        Binding("S", "show_settings", "Settings"),
         Binding("T", "toggle_theme", "Toggle Theme"),
         Binding("q", "quit", "Quit"),
     ]
@@ -275,6 +303,7 @@ class EntryListScreen(Screen):
         self._loading_animation_frame = 0  # Current animation frame
         self._loading_animation_frames = ["⠋", "⠙", "⠹", "⠸", "⠼", "⠴", "⠦", "⠧", "⠇", "⠏"]  # Spinner frames
         self._loading_message = ""  # Message to show during loading
+        self._g_prefix_mode = False  # Flag to track if waiting for g-prefix command
 
     def _safe_log(self, message: str) -> None:
         """Safely log a message, handling cases where app is not available."""
@@ -1011,9 +1040,23 @@ class EntryListScreen(Screen):
             # Default: expanded if not set, unless group_collapsed is True
             self.category_fold_state[category_title] = not self.group_collapsed
 
-        # Create and add a fold-aware header item
+        # Calculate entry counts for this category
+        category_id = None
+        for entry in self.sorted_entries:
+            entry_category = self._get_category_title(entry.feed.category_id)
+            if entry_category == category_title:
+                category_id = entry.feed.category_id
+                break
+
+        unread_count = 0
+        read_count = 0
+        if category_id is not None:
+            unread_count = sum(1 for e in self.sorted_entries if e.feed.category_id == category_id and e.is_unread)
+            read_count = sum(1 for e in self.sorted_entries if e.feed.category_id == category_id and not e.is_unread)
+
+        # Create and add a fold-aware header item with counts
         is_expanded = self.category_fold_state[category_title]
-        header = CategoryHeaderItem(category_title, is_expanded=is_expanded)
+        header = CategoryHeaderItem(category_title, is_expanded=is_expanded, unread_count=unread_count, read_count=read_count)
         self.category_header_map[category_title] = header
         self.list_view.append(header)
 
@@ -1108,6 +1151,48 @@ class EntryListScreen(Screen):
         """Check if an item is visible (not hidden by CSS class)."""
         return "collapsed" not in item.classes
 
+    async def _on_key(self, event: events.Key) -> None:
+        """Handle key events, with special support for g-prefix commands.
+
+        When _g_prefix_mode is True, the next key after 'g' is interpreted as a command:
+        - u = show unread
+        - b = show starred
+        - h = show history
+        - c = group entries by category
+        - C = go to category management
+        - f = go to feeds
+        - s = go to settings
+        """
+        if self._g_prefix_mode:
+            self._g_prefix_mode = False
+            key = event.character
+
+            if key == "u":
+                self.action_show_unread()
+            elif key == "b":
+                self.action_show_starred()
+            elif key == "h":
+                self.action_show_history()
+            elif key == "c":
+                # g+c: Group entries by category and show counts
+                self.action_toggle_group_category()
+            elif key == "C":
+                # g+C: Go to category management screen
+                await self.action_show_categories()
+            elif key == "f":
+                self.action_show_feeds()
+            elif key == "s":
+                self.action_show_settings()
+            elif key == "g":
+                # Allow 'gg' to go to top (vim-style)
+                self.action_go_to_top()
+            else:
+                # Unrecognized g-command, cancel mode
+                pass
+            event.prevent_default()
+        else:
+            await super()._on_key(event)
+
     def action_cursor_down(self):
         """Move cursor down to next visible entry item, skipping collapsed entries."""
         if not self.list_view or len(self.list_view.children) == 0:
@@ -1163,6 +1248,57 @@ class EntryListScreen(Screen):
             # Silently ignore index errors when navigating beyond list bounds
             pass
 
+    def action_g_prefix_mode(self) -> None:
+        """Activate g-prefix mode for section navigation.
+
+        Sets the flag to wait for the next key, which will be interpreted as:
+        - g: go to top (gg)
+        - u: show unread entries
+        - b: show starred entries
+        - h: show history
+        - c: go to categories
+        - f: go to feeds
+        - s: go to settings
+        """
+        self._g_prefix_mode = True
+        self.notify("g-prefix mode (press g/u/b/h/c/f/s)", timeout=2)
+
+    async def action_show_categories(self) -> None:
+        """Go to categories (g+c)."""
+        await self.action_manage_categories()
+
+    def action_show_feeds(self) -> None:
+        """Go to feeds management (g+f)."""
+        if hasattr(self.app, "push_feed_management_screen"):
+            self.app.push_feed_management_screen()
+        else:
+            self.notify("Feed management not available", severity="warning")
+
+    def action_go_to_top(self) -> None:
+        """Go to top of entry list (gg)."""
+        if self.list_view and len(self.list_view.children) > 0:
+            # Find first visible item
+            for i, child in enumerate(self.list_view.children):
+                if isinstance(child, ListItem) and self._is_item_visible(child):
+                    self.list_view.index = i
+                    if self.list_view.highlighted_child:
+                        self.list_view.scroll_to_center(self.list_view.highlighted_child, animate=False)
+                    self.notify("Jumped to top", timeout=1)
+                    return
+
+    def action_go_to_bottom(self) -> None:
+        """Go to bottom of entry list (G)."""
+        if self.list_view and len(self.list_view.children) > 0:
+            # Find last visible item (search backwards)
+            for i in range(len(self.list_view.children) - 1, -1, -1):
+                child = self.list_view.children[i]
+                if isinstance(child, ListItem) and self._is_item_visible(child):
+                    self.list_view.index = i
+                    if self.list_view.highlighted_child:
+                        self.list_view.scroll_to_center(self.list_view.highlighted_child, animate=False)
+                    self.notify("Jumped to bottom", timeout=1)
+                    return
+
     async def action_toggle_read(self):
         """Toggle read/unread status of current entry."""
         if not self.list_view:
@@ -1191,6 +1327,39 @@ class EntryListScreen(Screen):
 
                 # Notify user of success
                 self.notify(f"Entry marked as {new_status}")
+
+    async def action_toggle_read_previous(self):
+        """Toggle read/unread status and focus previous entry (M key)."""
+        if not self.list_view:
+            return
+
+        # First toggle the read status
+        highlighted = self.list_view.highlighted_child
+        if highlighted and isinstance(highlighted, EntryListItem):
+            # Determine new status
+            new_status = "read" if highlighted.entry.is_unread else "unread"
+
+            # Use consistent error handling context
+            with api_call(self, f"marking entry as {new_status}") as client:
+                if client is None:
+                    return
+
+                # Call API to persist change
+                await client.change_entry_status(highlighted.entry.id, new_status)
+
+                # Update local state
+                highlighted.entry.status = new_status
+
+                # Try incremental update first; fall back to full refresh if needed
+                if not self._update_single_item(highlighted.entry):
+                    # Fall back to full refresh if incremental update fails
+                    self._populate_list()
+
+                # Notify user of success
+                self.notify(f"Entry marked as {new_status}")
+
+        # Then move to previous entry
+        self.action_cursor_up()
 
     async def action_toggle_star(self):
         """Toggle star status of current entry."""
@@ -1234,6 +1403,62 @@ class EntryListScreen(Screen):
                 await client.save_entry(highlighted.entry.id)
                 self.notify(f"Entry saved: {highlighted.entry.title}")
 
+    async def action_mark_all_as_read(self):
+        """Mark all visible entries as read (A key) with confirmation."""
+        if not self.list_view or len(self.list_view.children) == 0:
+            self.notify("No entries to mark", severity="warning")
+            return
+
+        # Import here to avoid circular dependency
+        from miniflux_tui.ui.screens.confirm_dialog import ConfirmDialog  # noqa: PLC0415
+
+        # Count unread entries
+        unread_count = sum(1 for entry in self.sorted_entries if entry.is_unread)
+        if unread_count == 0:
+            self.notify("No unread entries to mark", severity="warning")
+            return
+
+        def on_confirm() -> None:
+            """Handle confirmation to mark all as read."""
+            asyncio.create_task(self._do_mark_all_as_read())  # noqa: RUF006
+
+        # Create confirmation dialog
+        dialog = ConfirmDialog(
+            title="Mark All as Read",
+            message=f"Mark all {unread_count} unread entries as read?",
+            confirm_label="Yes",
+            cancel_label="No",
+            on_confirm=on_confirm,
+        )
+        self.app.push_screen(dialog)
+
+    async def _do_mark_all_as_read(self) -> None:
+        """Mark all entries as read via API.
+
+        This is called after user confirms the action.
+        """
+        # Use consistent error handling context
+        with api_call(self, "marking all entries as read") as client:
+            if client is None:
+                return
+
+            try:
+                # Mark all entries as read via API
+                await client.mark_all_as_read()
+
+                # Update local state for all visible entries
+                for entry in self.sorted_entries:
+                    if entry.is_unread:
+                        entry.status = "read"
+
+                # Refresh the list to show updated states
+                self._populate_list()
+
+                # Notify user
+                self.notify("All entries marked as read")
+            except Exception as e:
+                self.notify(f"Error marking all as read: {e}", severity="error")
+
     def action_cycle_sort(self):
         """Cycle through sort modes."""
         current_index = SORT_MODES.index(self.current_sort)
@@ -1254,9 +1479,7 @@ class EntryListScreen(Screen):
         self.group_by_feed = not self.group_by_feed
 
         if self.group_by_feed:
-            # Start with groups collapsed when enabling
-            self.group_collapsed = True
-            # Clear existing fold states so new groups start collapsed
+            # Clear existing fold states so new groups use config default
             self.feed_fold_state.clear()
             self.notify("Grouping by feed (use h/l to collapse/expand)")
         else:
@@ -1278,9 +1501,7 @@ class EntryListScreen(Screen):
         self.group_by_category = not self.group_by_category
 
         if self.group_by_category:
-            # Start with groups collapsed when enabling
-            self.group_collapsed = True
-            # Clear existing fold states so new groups start collapsed
+            # Clear existing fold states so new groups use config default
             self.category_fold_state.clear()
             self.notify("Grouping by category (use h/l to collapse/expand)")
         else:
@@ -1466,7 +1687,7 @@ class EntryListScreen(Screen):
                     self._set_category_fold_state(category_title, False)
             self.notify("All categories collapsed")
 
-    async def action_refresh(self):
+    def action_refresh(self):
         """Refresh the current feed on the server (Issue #55 - Feed operations)."""
         if not hasattr(self.app, "client") or not self.app.client:
             self.notify("API client not initialized", severity="error")
@@ -1501,6 +1722,11 @@ class EntryListScreen(Screen):
             self.notify("No feed selected", severity="warning")
             return
 
+        # Run the refresh in background to keep UI responsive
+        self.run_worker(self._do_refresh(feed_id, feed_title), exclusive=True)
+
+    async def _do_refresh(self, feed_id: int, feed_title: str):
+        """Background worker for refreshing a feed."""
         try:
             # Start loading animation in header
             self._start_loading_animation(f"Refreshing {feed_title}...")
@@ -1517,7 +1743,7 @@ class EntryListScreen(Screen):
             # Always stop the loading animation
             self._stop_loading_animation()
 
-    async def action_refresh_all_feeds(self):
+    def action_refresh_all_feeds(self):
         """Refresh all feeds on the server (Issue #55 - Feed operations).
 
         This tells the Miniflux server to fetch new content from RSS feeds.
@@ -1527,6 +1753,11 @@ class EntryListScreen(Screen):
             self.notify("API client not initialized", severity="error")
             return
 
+        # Run the refresh in background to keep UI responsive
+        self.run_worker(self._do_refresh_all_feeds(), exclusive=True)
+
+    async def _do_refresh_all_feeds(self):
+        """Background worker for refreshing all feeds."""
         try:
             # Start loading animation in header
             self._start_loading_animation("Refreshing all feeds...")
@@ -1543,27 +1774,162 @@ class EntryListScreen(Screen):
             # Always stop the loading animation
             self._stop_loading_animation()
 
-    async def action_sync_entries(self):
+    def _remove_entry_from_ui(self, entry_id: int) -> None:
+        """Remove an entry from the UI by ID.
+
+        Args:
+            entry_id: The ID of the entry to remove
+        """
+        self.entries = [e for e in self.entries if e.id != entry_id]
+        self.sorted_entries = [e for e in self.sorted_entries if e.id != entry_id]
+        if entry_id in self.entry_item_map:
+            del self.entry_item_map[entry_id]
+
+    def _add_entry_to_ui(self, entry: Entry) -> None:
+        """Add an entry to the UI.
+
+        Args:
+            entry: The entry to add
+        """
+        self.entries.append(entry)
+        list_item = EntryListItem(
+            entry=entry,
+            unread_color=self.unread_color,
+            read_color=self.read_color,
+        )
+        self.entry_item_map[entry.id] = list_item
+
+    async def _fetch_entries_for_sync(self) -> list[Entry] | None:
+        """Fetch entries from server based on current view.
+
+        Returns:
+            List of entries or None if error occurred
+        """
+        try:
+            if self.app.current_view == "starred":
+                return await self.app.client.get_starred_entries(limit=DEFAULT_ENTRY_LIMIT)
+            return await self.app.client.get_unread_entries(limit=DEFAULT_ENTRY_LIMIT)
+        except Exception as e:
+            self.notify(f"Error fetching entries: {e}", severity="error")
+            return None
+
+    async def _enrich_entries_with_categories(self, entries: list[Entry]) -> None:
+        """Enrich entries with category information from app state.
+
+        Args:
+            entries: List of entries to enrich
+        """
+        # Rebuild category mapping for fresh data
+        if hasattr(self.app, "_build_entry_category_mapping"):
+            self.app.entry_category_map = await self.app._build_entry_category_mapping()
+
+        # Enrich entries with category information
+        if self.app.entry_category_map:
+            for entry in entries:
+                if entry.id in self.app.entry_category_map:
+                    entry.feed.category_id = self.app.entry_category_map[entry.id]
+
+    def _apply_entry_changes(self, added_ids: set[int], removed_ids: set[int], new_entry_map: dict[int, Entry]) -> None:
+        """Apply entry changes to the UI.
+
+        Args:
+            added_ids: Set of entry IDs to add
+            removed_ids: Set of entry IDs to remove
+            new_entry_map: Map of entry ID to Entry object for new entries
+        """
+        # Remove entries that are no longer in the view
+        for entry_id in removed_ids:
+            self._remove_entry_from_ui(entry_id)
+
+        # Add new entries
+        for entry_id in added_ids:
+            self._add_entry_to_ui(new_entry_map[entry_id])
+
+        # Update app state and re-sort
+        self.app.entries = self.entries
+        self.sorted_entries = self._sort_entries(self.entries)
+
+        # Refresh the list view
+        if self.list_view:
+            self._populate_list()
+
+    async def _perform_incremental_sync(self) -> tuple[int, int, int]:
+        """Perform incremental sync of entries from the server.
+
+        Fetches new entries from the server and dynamically updates the UI by:
+        - Adding new entries to the list
+        - Removing entries that were marked read elsewhere
+        - Preserving UI state (cursor position, sort order, etc.)
+
+        Returns:
+            Tuple of (new_count, removed_count, updated_count)
+        """
+        if not hasattr(self.app, "client") or not self.app.client:
+            self.notify("API client not initialized", severity="error")
+            return (0, 0, 0)
+
+        # Get current entry IDs before sync
+        current_ids = {entry.id for entry in self.entries}
+
+        # Fetch fresh data from server
+        new_entries = await self._fetch_entries_for_sync()
+        if new_entries is None:
+            return (0, 0, 0)
+
+        # Enrich with category data
+        await self._enrich_entries_with_categories(new_entries)
+
+        # Calculate changes
+        new_ids = {entry.id for entry in new_entries}
+        added_ids = new_ids - current_ids
+        removed_ids = current_ids - new_ids
+
+        # If no changes, return early
+        if not added_ids and not removed_ids:
+            return (0, 0, 0)
+
+        # Apply changes to UI
+        new_entry_map = {entry.id: entry for entry in new_entries}
+        self._apply_entry_changes(added_ids, removed_ids, new_entry_map)
+
+        return (len(added_ids), len(removed_ids), 0)
+
+    def action_sync_entries(self):
         """Sync/reload entries from server without refreshing feeds.
 
         This fetches the latest entries that already exist on the Miniflux server
         without telling the server to fetch new content from RSS feeds.
         Use this to get entries that were added elsewhere or by another client.
-        """
-        if not hasattr(self.app, "load_entries"):
-            self.notify("Cannot sync entries", severity="error")
-            return
 
+        Uses run_worker to execute the sync in the background, keeping UI responsive.
+        """
+        self.run_worker(self._do_sync_entries(), exclusive=True)
+
+    async def _do_sync_entries(self):
+        """Background worker for syncing entries.
+
+        This runs in the background allowing the UI to remain responsive
+        while the sync operation completes.
+        """
         try:
             # Start loading animation in header
             self._start_loading_animation("Syncing entries...")
 
-            # Rebuild category mapping for fresh data
-            if hasattr(self.app, "_build_entry_category_mapping"):
-                self.app.entry_category_map = await self.app._build_entry_category_mapping()
-            # Reload entries without refreshing feeds
-            await self.app.load_entries(self.app.current_view)
-            # load_entries will show the result message
+            # Perform incremental sync
+            new_count, removed_count, _ = await self._perform_incremental_sync()
+
+            # Show summary message
+            if new_count == 0 and removed_count == 0:
+                self.notify("Entries are up to date", severity="information", timeout=2)
+            else:
+                details = []
+                if new_count > 0:
+                    details.append(f"+{new_count} new")
+                if removed_count > 0:
+                    details.append(f"-{removed_count} removed")
+                summary = ", ".join(details)
+                self.notify(f"Synced entries: {summary}", severity="information")
+
         except (ConnectionError, TimeoutError) as e:
             self.notify(f"Network error syncing entries: {e}", severity="error")
         except Exception as e:
@@ -1572,8 +1938,12 @@ class EntryListScreen(Screen):
             # Always stop the loading animation
             self._stop_loading_animation()
 
-    async def action_show_unread(self):
+    def action_show_unread(self):
         """Load and show only unread entries."""
+        self.run_worker(self._do_show_unread(), exclusive=True)
+
+    async def _do_show_unread(self):
+        """Background worker for loading unread entries."""
         if hasattr(self.app, "load_entries"):
             try:
                 # Start loading animation in header
@@ -1587,8 +1957,12 @@ class EntryListScreen(Screen):
                 # Always stop the loading animation
                 self._stop_loading_animation()
 
-    async def action_show_starred(self):
+    def action_show_starred(self):
         """Load and show only starred entries."""
+        self.run_worker(self._do_show_starred(), exclusive=True)
+
+    async def _do_show_starred(self):
+        """Background worker for loading starred entries."""
         if hasattr(self.app, "load_entries"):
             try:
                 # Start loading animation in header

@@ -158,6 +158,8 @@ class Config:
         group_collapsed: bool = False,
         show_info_messages: bool = True,
         theme_name: str = "dark",
+        link_highlight_bg: str | None = None,
+        link_highlight_fg: str | None = None,
     ):
         self.server_url = server_url
         self._password_command = _normalize_command(password)
@@ -170,6 +172,8 @@ class Config:
         self.group_collapsed = group_collapsed
         self.show_info_messages = show_info_messages
         self.theme_name = theme_name
+        self.link_highlight_bg = link_highlight_bg
+        self.link_highlight_fg = link_highlight_fg
 
     @property
     def password_command(self) -> tuple[str, ...]:
@@ -351,6 +355,8 @@ class Config:
             group_collapsed=settings["group_collapsed"],
             show_info_messages=settings["show_info_messages"],
             theme_name=settings["theme_name"],
+            link_highlight_bg=settings["link_highlight_bg"],
+            link_highlight_fg=settings["link_highlight_fg"],
         )
 
     def save_theme_preference(self, config_path: Path | None = None) -> None:
@@ -495,6 +501,8 @@ def _extract_config_settings(data: dict) -> dict:
     unread_color: str = theme.get("unread_color", "cyan")
     read_color: str = theme.get("read_color", "gray")
     theme_name: str = theme.get("name", "dark")
+    link_highlight_bg: str | None = theme.get("link_highlight_bg")
+    link_highlight_fg: str | None = theme.get("link_highlight_fg")
 
     # Sorting settings
     sorting: dict = data.get("sorting", {})
@@ -510,6 +518,8 @@ def _extract_config_settings(data: dict) -> dict:
         "unread_color": unread_color,
         "read_color": read_color,
         "theme_name": theme_name,
+        "link_highlight_bg": link_highlight_bg,
+        "link_highlight_fg": link_highlight_fg,
         "default_sort": default_sort,
         "default_group_by_feed": default_group_by_feed,
         "group_collapsed": group_collapsed,
@@ -640,7 +650,9 @@ default_sort = "date"
 # Default grouping by feed (default: false)
 default_group_by_feed = false
 
-# Start with groups collapsed when grouping is enabled (default: false)
+# Default expand/collapse state when toggling group mode
+# true = groups start collapsed, false = groups start expanded (default: false)
+# Applies to both feed grouping (g key) and category grouping (c key)
 group_collapsed = false
 
 [ui]
@@ -734,7 +746,9 @@ default_sort = "date"
 # Start in grouped mode (recommended for Codespaces)
 default_group_by_feed = true
 
-# Start with groups collapsed (optional)
+# Default expand/collapse state when toggling group mode
+# true = groups start collapsed, false = groups start expanded (default: false)
+# Applies to both feed grouping (g key) and category grouping (c key)
 group_collapsed = false
 
 [ui]

@@ -1,6 +1,6 @@
 # Features Overview
 
-This page provides a comprehensive overview of all features available in miniflux-tui-py v0.7.2.
+This page provides a comprehensive overview of all features available in miniflux-tui-py v0.7.3.
 
 ## Core Functionality
 
@@ -151,12 +151,14 @@ Access comprehensive feed configuration with `X` key.
 - Bulk update operation
 - Use `,` to sync changes to TUI
 
-**Sync from Server** (`,`)
+**Sync from Server** (`,`) - Non-blocking in v0.7.0+
 - Fetch latest entries from Miniflux to TUI
+- **Runs in background** - continue using UI while syncing
 - Preserves view settings and position
 - Updates display with new/changed entries
+- Shows notification with change summary (+X new, -Y removed)
 
-Typical workflow: `Shift+R` → wait → `,`
+Typical workflow: `Shift+R` → keep reading → `,` → continue using app while syncing
 
 ## Category Management
 
@@ -196,11 +198,12 @@ Access with `Shift+H` key.
 
 ### Theme Support
 
-**Theme Toggle** (`Shift+T`)
-- Dark theme (Dracula-inspired, high contrast) - default
-- Light theme (Solarized-inspired)
-- Preference saved to config file
-- Requires restart to apply
+**Runtime Theme Toggle** (`Shift+T`) - v0.7.0+
+- Dark theme (Textual built-in dark theme) - default
+- Light theme (Textual built-in light theme)
+- **Instant theme switching** - no restart required
+- Preference automatically saved to config file
+- Changes apply immediately to entire UI
 
 Set in config:
 ```toml

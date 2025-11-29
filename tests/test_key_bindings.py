@@ -59,28 +59,28 @@ class TestEntryListKeyBindings:
     """Test key bindings for EntryListScreen."""
 
     def test_has_group_by_feed_binding(self, sample_entries):
-        """Test that 'g' key binding exists for group by feed."""
+        """Test that 'w' key binding exists for group by feed."""
         screen = EntryListScreen(sample_entries)
 
-        # Check binding exists
+        # Check binding exists (now uses 'w' instead of 'g' since 'g' is for g-prefix mode)
         binding_keys = [b.key for b in screen.BINDINGS]  # type: ignore[attr-defined]
-        assert "g" in binding_keys
+        assert "w" in binding_keys
 
         # Check it maps to correct action
-        g_binding = next(b for b in screen.BINDINGS if b.key == "g")  # type: ignore[attr-defined]
-        assert g_binding.action == "toggle_group_feed"  # type: ignore[attr-defined]
-        assert "Group by Feed" in g_binding.description  # type: ignore[attr-defined]
+        w_binding = next(b for b in screen.BINDINGS if b.key == "w")  # type: ignore[attr-defined]
+        assert w_binding.action == "toggle_group_feed"  # type: ignore[attr-defined]
+        assert "Group by Feed" in w_binding.description  # type: ignore[attr-defined]
 
     def test_has_group_by_category_binding(self, sample_entries):
-        """Test that 'c' key binding exists for group by category."""
+        """Test that 'C' (Shift+C) key binding exists for group by category."""
         screen = EntryListScreen(sample_entries)
 
-        # Check binding exists
+        # Check binding exists (now uses 'C' instead of 'c' since 'g+c' is for g-prefix mode)
         binding_keys = [b.key for b in screen.BINDINGS]  # type: ignore[attr-defined]
-        assert "c" in binding_keys
+        assert "C" in binding_keys
 
         # Check it maps to correct action
-        c_binding = next(b for b in screen.BINDINGS if b.key == "c")  # type: ignore[attr-defined]
+        c_binding = next(b for b in screen.BINDINGS if b.key == "C")  # type: ignore[attr-defined]
         assert c_binding.action == "toggle_group_category"  # type: ignore[attr-defined]
         assert "Group by Category" in c_binding.description  # type: ignore[attr-defined]
 
@@ -97,44 +97,88 @@ class TestEntryListKeyBindings:
         assert h_binding.action == "show_history"  # type: ignore[attr-defined]
         assert "History" in h_binding.description  # type: ignore[attr-defined]
 
-    def test_group_by_feed_starts_collapsed(self, sample_entries, sample_categories, monkeypatch):
-        """Test that enabling group by feed starts with groups collapsed."""
-        screen = EntryListScreen(sample_entries, sample_categories)
+    def test_group_by_feed_respects_config(self, sample_entries, sample_categories, monkeypatch):
+        """Test that enabling group by feed respects the group_collapsed config."""
+        screen = EntryListScreen(sample_entries, sample_categories, group_collapsed=False)
 
         # Mock notify to avoid NoActiveAppError
         monkeypatch.setattr(screen, "notify", lambda *_args, **_kwargs: None)
         monkeypatch.setattr(screen, "_populate_list", lambda: None)
 
-        # Initially not grouped
+        # Initially not grouped, with config group_collapsed=False
         assert not screen.group_by_feed
         assert not screen.group_collapsed
 
         # Simulate pressing 'g' to enable grouping
         screen.action_toggle_group_feed()
 
-        # Should be grouped and collapsed
+        # Should be grouped, and group_collapsed should retain config value (False)
         assert screen.group_by_feed
-        assert screen.group_collapsed
+        assert not screen.group_collapsed
 
         # Feed fold state should be cleared
         assert len(screen.feed_fold_state) == 0
 
-    def test_group_by_category_starts_collapsed(self, sample_entries, sample_categories, monkeypatch):
-        """Test that enabling group by category starts with groups collapsed."""
-        screen = EntryListScreen(sample_entries, sample_categories)
+    def test_group_by_category_respects_config(self, sample_entries, sample_categories, monkeypatch):
+        """Test that enabling group by category respects the group_collapsed config."""
+        screen = EntryListScreen(sample_entries, sample_categories, group_collapsed=False)
 
         # Mock notify to avoid NoActiveAppError
         monkeypatch.setattr(screen, "notify", lambda *_args, **_kwargs: None)
         monkeypatch.setattr(screen, "_populate_list", lambda: None)
 
-        # Initially not grouped
+        # Initially not grouped, with config group_collapsed=False
         assert not screen.group_by_category
         assert not screen.group_collapsed
 
         # Simulate pressing 'c' to enable grouping
         screen.action_toggle_group_category()
 
-        # Should be grouped and collapsed
+        # Should be grouped, and group_collapsed should retain config value (False)
+        assert screen.group_by_category
+        assert not screen.group_collapsed
+
+        # Category fold state should be cleared
+        assert len(screen.category_fold_state) == 0
+
+    def test_group_by_feed_respects_config_when_true(self, sample_entries, sample_categories, monkeypatch):
+        """Test that enabling group by feed respects group_collapsed=True config."""
+        screen = EntryListScreen(sample_entries, sample_categories, group_collapsed=True)
+
+        # Mock notify to avoid NoActiveAppError
+        monkeypatch.setattr(screen, "notify", lambda *_args, **_kwargs: None)
+        monkeypatch.setattr(screen, "_populate_list", lambda: None)
+
+        # Initially not grouped, but config group_collapsed=True
+        assert not screen.group_by_feed
+        assert screen.group_collapsed
+
+        # Simulate pressing 'g' to enable grouping
+        screen.action_toggle_group_feed()
+
+        # Should be grouped, and group_collapsed should retain config value (True)
+        assert screen.group_by_feed
+        assert screen.group_collapsed
+
+        # Feed fold state should be cleared
+        assert len(screen.feed_fold_state) == 0
+
+    def test_group_by_category_respects_config_when_true(self, sample_entries, sample_categories, monkeypatch):
+        """Test that enabling group by category respects group_collapsed=True config."""
+        screen = EntryListScreen(sample_entries, sample_categories, group_collapsed=True)
+
+        # Mock notify to avoid NoActiveAppError
+        monkeypatch.setattr(screen, "notify", lambda *_args, **_kwargs: None)
+        monkeypatch.setattr(screen, "_populate_list", lambda: None)
+
+        # Initially not grouped, but config group_collapsed=True
+        assert not screen.group_by_category
+        assert screen.group_collapsed
+
+        # Simulate pressing 'c' to enable grouping
+        screen.action_toggle_group_category()
+
+        # Should be grouped, and group_collapsed should retain config value (True)
         assert screen.group_by_category
         assert screen.group_collapsed
 
@@ -202,9 +246,10 @@ class TestHistoryScreen:
         # Should have all the same bindings as EntryListScreen
         binding_keys = [b.key for b in screen.BINDINGS]  # type: ignore[attr-defined]
 
-        # Check key bindings exist
-        assert "g" in binding_keys  # Group by feed
-        assert "c" in binding_keys  # Group by category
+        # Check key bindings exist (updated for new g-prefix mode)
+        assert "g" in binding_keys  # g-prefix mode (for g+u, g+b, g+h, g+c, g+f, g+s)
+        assert "w" in binding_keys  # Group by feed (moved from 'g')
+        assert "C" in binding_keys  # Group by category (moved from 'c')
         assert "j" in binding_keys or "down" in binding_keys  # Navigation
         assert "k" in binding_keys or "up" in binding_keys  # Navigation
         assert "enter" in binding_keys  # Open entry

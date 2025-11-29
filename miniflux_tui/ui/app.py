@@ -59,81 +59,48 @@ def _load_history_screen_cls() -> type[EntryHistoryScreen]:  # nosec: CWE-1047 -
 class MinifluxTuiApp(App):
     """A Textual TUI application for Miniflux."""
 
-    CSS = ""  # Will be set in __init__ based on theme preference
-
-    def _generate_css(self, theme_name: str = "dark") -> str:
-        """Generate CSS with theme-specific colors.
-
-        Args:
-            theme_name: Name of the theme to use
-
-        Returns:
-            CSS string with theme variables defined
-        """
-        theme = get_theme(theme_name)
-        # Map theme colors to CSS variables for Textual
-        colors = theme.colors
-
-        return f"""
-    Screen {{
-        background: {colors["surface"]};
-    }}
-
-    Header {{
+    # Minimal CSS for specific layout/styling - colors come from Textual themes
+    CSS = """
+    Header {
         align: left top;
-    }}
+    }
 
-    .entry-title {{
+    .entry-title {
         padding: 1 2;
-        background: {colors["boost"]};
-    }}
+    }
 
-    .entry-meta {{
+    .entry-meta {
         padding: 0 2;
-    }}
+    }
 
-    .entry-url {{
+    .entry-url {
         padding: 0 2 1 2;
-    }}
+    }
 
-    .separator {{
+    .separator {
         padding: 0 2;
-        color: {colors["border"]};
-    }}
+    }
 
-    .entry-content {{
+    .entry-content {
         padding: 1 2;
-    }}
+    }
 
-    ListView {{
-        background: {colors["surface"]};
-        color: {colors["text"]};
-    }}
-
-    ListItem {{
+    ListItem {
         padding: 0 1;
-    }}
-
-    ListItem:hover {{
-        background: {colors["boost"]};
-    }}
-
-    ListItem.-active {{
-        background: {colors["accent"]};
-    }}
+    }
 
     /* Hide collapsed entries */
-    ListItem.collapsed {{
+    ListItem.collapsed {
         display: none;
-    }}
+    }
 
     /* Help screen logo styling */
-    .help-logo {{
+    .help-logo {
         max-height: 10;
         width: auto;
         margin: 1 0;
         content-align: center middle;
-    }}
+    }
     """
 
     def __init__(
@@ -152,16 +119,22 @@ class MinifluxTuiApp(App):
             css_path: Path to custom CSS file
             watch_css: Whether to watch CSS file for changes
         """
-        # Theme management - set CSS on class before super().__init__
+        # Theme management - map config theme to Textual's built-in themes
         self._current_theme = config.theme_name
-        # Generate and set CSS based on theme preference
-        MinifluxTuiApp.CSS = self._generate_css(self._current_theme)
+        theme_mapping = {
+            "dark": "textual-dark",
+            "light": "textual-light",
+        }
+        textual_theme = theme_mapping.get(config.theme_name, "textual-dark")
 
         super().__init__(
             driver_class=driver_class,
             css_path=css_path,
             watch_css=watch_css,
         )
+
+        # Apply the theme after initialization
+        self.theme = textual_theme
         self.config = config
         self.client: MinifluxClient | None = None
         self.entries: list[Entry] = []
@@ -198,7 +171,7 @@ class MinifluxTuiApp(App):
         self.set_theme(new_theme)
 
     def set_theme(self, theme_name: str) -> None:
-        """Set the current theme and save to config.
+        """Set the current theme and save to config with runtime theme switching.
 
         Args:
             theme_name: Name of the theme to set ("dark" or "light")
@@ -219,14 +192,20 @@ class MinifluxTuiApp(App):
         except Exception as e:
             self.log(f"Failed to save theme preference: {e}")
 
-        # Note: Dynamic CSS updates in Textual are complex. The theme toggle saves
-        # the preference for the next session. This is acceptable for MVP.
-        # Users can restart the app to see the new theme colors.
+        # Map our config theme names to Textual's built-in theme names
+        theme_mapping = {
+            "dark": "textual-dark",
+            "light": "textual-light",
+        }
+
+        # Use Textual's built-in theme switching
+        textual_theme_name = theme_mapping.get(theme_name, "textual-dark")
+        self.theme = textual_theme_name
 
         # Notify user
         theme = get_theme(theme_name)
         self.notify(
-            f"Theme: {theme.display_name} (applies on restart)",
+            f"Theme: {theme.display_name}",
             severity="information",
         )
 
@@ -470,6 +449,11 @@ class MinifluxTuiApp(App):
         entry_reader_cls: type[EntryReaderScreen]
         entry_reader_cls = entry_reader_module.EntryReaderScreen
 
+        # Get link highlight colors from config or theme
+        theme = get_theme(self.config.theme_name)
+        link_highlight_bg = self.config.link_highlight_bg or theme.colors.get("link-highlight-bg", "#ff79c6")
+        link_highlight_fg = self.config.link_highlight_fg or theme.colors.get("link-highlight-fg", "#282a36")
+
         reader_screen: EntryReaderScreen = entry_reader_cls(
             entry=entry,
             entry_list=entry_list or self.entries,
@@ -477,6 +461,8 @@ class MinifluxTuiApp(App):
             unread_color=self.config.unread_color,
             read_color=self.config.read_color,
             group_info=group_info,
+            link_highlight_bg=link_highlight_bg,
+            link_highlight_fg=link_highlight_fg,
         )
         self.push_screen(reader_screen)
 
@@ -536,7 +522,7 @@ class MinifluxTuiApp(App):
             CategoryManagementScreen,
         )
 
-        management_screen = CategoryManagementScreen(categories=categories)
+        management_screen = CategoryManagementScreen(categories=categories, entries=self.entries)
         self.push_screen(management_screen)
 
     async def on_unmount(self) -> None:

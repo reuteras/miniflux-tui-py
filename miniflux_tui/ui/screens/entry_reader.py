@@ -25,30 +25,38 @@ class EntryReaderScreen(Screen):
     """Screen for reading a single feed entry."""
 
     BINDINGS: list[Binding] = [  # noqa: RUF012
+        # Scrolling
         Binding("j", "scroll_down", "Scroll Down", show=False),
         Binding("k", "scroll_up", "Scroll Up", show=False),
-        Binding("J", "next_entry", "Next Entry", show=True),
-        Binding("K", "previous_entry", "Previous Entry", show=True),
         Binding("pagedown", "page_down", "Page Down"),
         Binding("pageup", "page_up", "Page Up"),
-        Binding("b", "back", "Back to List"),
+        # Entry navigation (matches web interface)
+        Binding("J", "next_entry", "Next Entry", show=True),
+        Binding("K", "previous_entry", "Previous Entry", show=True),
+        # Entry actions
+        Binding("m", "mark_read", "Mark Read", show=False),
         Binding("u", "mark_unread", "Mark Unread"),
-        Binding("asterisk", "toggle_star", "Toggle Star"),
+        Binding("f", "toggle_star", "Toggle Starred"),
         Binding("e", "save_entry", "Save Entry"),
         Binding("o", "open_browser", "Open in Browser"),
-        Binding("f", "fetch_original", "Fetch Original"),
-        Binding("X", "feed_settings", "Feed Settings"),
+        Binding("v", "open_browser", "Open URL", show=False),
+        Binding("d", "fetch_original", "Download Original"),
+        # Link navigation
         Binding("tab", "next_link", "Next Link", show=True),
         Binding("shift+tab", "previous_link", "Previous Link", show=True),
         Binding("n", "next_link", "Next Link", show=False),
         Binding("p", "previous_link", "Previous Link", show=False),
         Binding("enter", "open_focused_link", "Open Link", show=True),
         Binding("c", "clear_link_focus", "Clear Link", show=True),
+        # Navigation and settings
+        Binding("b", "back", "Back to List"),
+        Binding("escape", "back", "Back", show=False),
+        Binding("X", "feed_settings", "Feed Settings"),
+        # Help and status
         Binding("question_mark", "show_help", "Help"),
         Binding("i", "show_status", "Status"),
         Binding("S", "show_settings", "Settings"),
         Binding("q", "quit", "Quit"),
-        Binding("escape", "back", "Back", show=False),
     ]
 
     app: EntryReaderAppProtocol
@@ -79,8 +87,19 @@ class EntryReaderScreen(Screen):
         overflow: auto;
     }
 
+    /* Highlight focused links within Markdown */
+    Markdown:focus-within {
+        border: tall $accent;
+    }
+
     #link-indicator {
         height: auto;
+    }
+
+    .link-highlight {
+        background: $accent;
+        color: $text;
+        text-style: bold;
     }
     """
 
@@ -92,6 +111,8 @@ class EntryReaderScreen(Screen):
         unread_color: str = "cyan",
         read_color: str = "gray",
         group_info: dict[str, str | int] | None = None,
+        link_highlight_bg: str | None = None,
+        link_highlight_fg: str | None = None,
         **kwargs,
     ):
         super().__init__(**kwargs)
@@ -101,11 +122,14 @@ class EntryReaderScreen(Screen):
         self.unread_color = unread_color
         self.read_color = read_color
         self.group_info = group_info  # Contains: mode, name, total, unread
+        self.link_highlight_bg = link_highlight_bg or "#ff79c6"  # Default: pink/magenta
+        self.link_highlight_fg = link_highlight_fg or "#282a36"  # Default: dark text
         self.scroll_container = None
         self.group_stats_widget: Static | None = None  # Reference to group stats widget for updates
         self.links: list[dict[str, str]] = []  # List of {text: str, url: str}
         self.focused_link_index: int | None = None  # Currently focused link index
         self.link_indicator: Static | None = None  # Widget to show focused link
+        self.original_content: str = ""  # Store original markdown content for highlighting
 
     def compose(self) -> ComposeResult:
         """Create child widgets."""
@@ -136,6 +160,9 @@ class EntryReaderScreen(Screen):
 
         # Convert HTML content to markdown for better display
         content = self._html_to_markdown(self.entry.content)
+
+        # Store original content for highlighting
+        self.original_content = content
 
         # Extract links from content
         self.links = self._extract_links(content)
@@ -437,6 +464,11 @@ class EntryReaderScreen(Screen):
         if app:
             app.pop_screen()
 
+    async def action_mark_read(self):
+        """Mark entry as read."""
+        await self._mark_entry_as_read()
+        self.notify("Marked as read")
+
     async def action_mark_unread(self):
         """Mark entry as unread."""
         app = self._resolve_app()
@@ -656,6 +688,97 @@ class EntryReaderScreen(Screen):
         if app:
             app.push_screen("settings")
 
+    def _get_markdown_link_widgets(self) -> list:
+        """Get all link widgets from the Markdown widget.
+
+        Returns:
+            List of link widgets found in the Markdown content
+        """
+        try:
+            markdown_widget = self.query_one("#entry-content", expect_type=Markdown)
+            # Try to find link widgets within the Markdown widget
+            # Links in Markdown might be nested in various ways
+            return list(markdown_widget.query("Link"))
+        except Exception:
+            # If we can't query links, return empty list
+            return []
+
+    def _scroll_to_link(self, link_index: int):
+        """Scroll to make the focused link visible.
+
+        Args:
+            link_index: Index of the link in self.links to scroll to
+        """
+        if not self.links or link_index < 0 or link_index >= len(self.links):
+            return
+
+        try:
+            # Try to get link widgets from the Markdown widget
+            link_widgets = self._get_markdown_link_widgets()
+
+            if link_widgets and link_index < len(link_widgets):
+                # If we have actual link widgets, focus and scroll to the specific one
+                target_link = link_widgets[link_index]
+                target_link.focus()
+                target_link.scroll_visible(animate=True, duration=0.3, top=True)
+            else:
+                # Fallback: estimate position based on markdown content
+                # This is an approximation since we don't have exact widget positions
+                self._estimate_and_scroll_to_link(link_index)
+        except Exception:  # nosec B110  # noqa: S110
+            # Silently fail if scrolling isn't possible (e.g., screen not mounted)
+            # This is expected in test contexts or when the widget isn't available
+            # Intentional silent failure for graceful degradation
+            pass
+
+    def _estimate_and_scroll_to_link(self, link_index: int):
+        """Estimate link position and scroll there (fallback method).
+
+        Args:
+            link_index: Index of the link to scroll to
+        """
+        try:
+            markdown_widget = self.query_one("#entry-content", expect_type=Markdown)
+            link = self.links[link_index]
+
+            # Get the markdown content
+            content = self._html_to_markdown(self.entry.content)
+
+            # Find the position of the link in the content
+            # For markdown links: [text](url)
+            link_pattern = f"[{link['text']}]({link['url']})"
+            pos = content.find(link_pattern)
+
+            # If not found, try finding just the URL
+            if pos == -1:
+                pos = content.find(link["url"])
+
+            if pos != -1:
+                # Estimate the line number (rough approximation)
+                # Count newlines before the link position
+                lines_before = content[:pos].count("\n")
+
+                # Get terminal height to calculate scroll position
+                # Using screen size instead of app.size (which isn't in protocol)
+                terminal_height = self.screen.size.height if hasattr(self.screen, "size") else 24
+                content_height = markdown_widget.virtual_size.height
+
+                # Calculate approximate Y position
+                # This is rough - assumes even line distribution
+                if content_height > 0:
+                    y_pos = (lines_before / content.count("\n")) * content_height if content.count("\n") > 0 else 0
+
+                    # Scroll to position (centered if possible)
+                    offset = terminal_height // 3  # Show link in upper third of screen
+                    scroll_y = max(0, y_pos - offset)
+
+                    markdown_widget.scroll_to(y=scroll_y, animate=True, duration=0.3)
+        except Exception:  # nosec B110  # noqa: S110
+            # Silently fail if scrolling isn't possible (e.g., screen not mounted)
+            # This is expected in test contexts or when the widget isn't available
+            # Intentional silent failure for graceful degradation
+            pass
+
     def _update_link_indicator(self):
         """Update the link indicator widget with current focused link info."""
         if not self.link_indicator:
@@ -683,6 +806,107 @@ class EntryReaderScreen(Screen):
 
         self.link_indicator.update(indicator_text)
 
+    def _generate_highlighted_markdown(self, original_content: str) -> str:
+        """Generate markdown with visual highlight for the focused link.
+
+        This method re-renders the original markdown to add visual highlighting
+        around the currently focused link using markdown formatting that the
+        Markdown widget will interpret.
+
+        Args:
+            original_content: The original markdown content
+
+        Returns:
+            Markdown content with highlighting added for the focused link
+        """
+        if self.focused_link_index is None or not self.links or self.focused_link_index >= len(self.links):
+            return original_content
+
+        try:
+            content = original_content
+            focused_link = self.links[self.focused_link_index]
+            link_url = focused_link["url"].strip()
+            link_text = focused_link["text"].strip()
+
+            # Find and replace the markdown link pattern with a highlighted version
+            # Pattern: [text](url)
+            # Use markdown's bold (**) and code block style for background effect
+            # We'll wrap it with visual markers that work in terminal: ***text***
+            markdown_pattern = rf"\[{re.escape(link_text)}\]\({re.escape(link_url)}\)"
+
+            # Use markdown's emphasis to make it stand out: ***bold italic***
+            # Or use code styling: `[text](url)` for monospace/highlight effect
+            # Since we can't easily do background colors in markdown, we'll use
+            # bold + inversion via combining multiple emphasis styles
+            replacement = f"***[{link_text}]({link_url})***"
+
+            return re.sub(markdown_pattern, replacement, content, count=1)
+        except Exception:  # nosec B110
+            # Silently fail and return original content if highlighting fails
+            return original_content
+
+    def _focus_link_widget(self) -> None:
+        """Focus the Link widget corresponding to the current focused_link_index.
+
+        This method attempts to manipulate link widgets if available, and falls back
+        to re-rendering markdown with visual highlighting.
+        """
+        if self.focused_link_index is None or not self.links:
+            return
+
+        try:
+            # Try the widget approach first (may not work in all cases)
+            link_widgets = self._get_markdown_link_widgets()
+
+            if link_widgets and self.focused_link_index < len(link_widgets):
+                # Clear previous link styling
+                for i, link_widget in enumerate(link_widgets):
+                    if i != self.focused_link_index:
+                        # Reset to default styles (remove inline styles)
+                        link_widget.styles.clear()
+
+                # Focus and style the specific link widget at the focused index
+                target_link = link_widgets[self.focused_link_index]
+                target_link.focus()
+
+                # Apply inline styles with configured colors
+                target_link.styles.background = self.link_highlight_bg
+                target_link.styles.color = self.link_highlight_fg
+                target_link.styles.text_style = "bold"
+
+                # Scroll to make it visible
+                target_link.scroll_visible(animate=True, duration=0.3, top=True)
+        except Exception:  # nosec B110  # noqa: S110
+            # Silently fail if focusing isn't possible (e.g., screen not mounted)
+            # This is expected in test contexts or when the widget isn't available
+            # Intentional silent failure for graceful degradation
+            pass
+
+    def _update_markdown_display(self):
+        """Update the markdown display to highlight the currently focused link.
+
+        This method regenerates the markdown content with visual highlighting
+        for the focused link and scrolls to ensure it's visible on screen.
+        """
+        # Generate markdown with highlighting for the focused link
+        if self.original_content:
+            highlighted_md = self._generate_highlighted_markdown(self.original_content)
+
+            try:
+                markdown_widget = self.query_one("#entry-content", expect_type=Markdown)
+                markdown_widget.update(highlighted_md)
+
+                # Scroll to approximately where the link should be
+                # Estimate based on link position in content
+                if self.focused_link_index is not None:
+                    self._scroll_to_link(self.focused_link_index)
+            except Exception:  # nosec B110  # noqa: S110
+                # If markdown update fails, that's okay - highlighting is optional
+                pass
+
+        # Also try the widget focusing approach as a fallback
+        self._focus_link_widget()
+
     def action_next_link(self):
         """Navigate to the next link in the content."""
         if not self.links:
@@ -697,6 +921,8 @@ class EntryReaderScreen(Screen):
             self.focused_link_index = (self.focused_link_index + 1) % len(self.links)
 
         self._update_link_indicator()
+        # Update markdown display with highlighting (includes scrolling)
+        self._update_markdown_display()
 
     def action_previous_link(self):
         """Navigate to the previous link in the content."""
@@ -712,6 +938,8 @@ class EntryReaderScreen(Screen):
             self.focused_link_index = (self.focused_link_index - 1) % len(self.links)
 
         self._update_link_indicator()
+        # Update markdown display with highlighting (includes scrolling)
+        self._update_markdown_display()
 
     def action_open_focused_link(self):
         """Open the currently focused link in the browser."""
@@ -737,6 +965,15 @@ class EntryReaderScreen(Screen):
 
     def action_clear_link_focus(self):
         """Clear the current link focus."""
+        # First blur the currently focused link widget if any
+        try:
+            link_widgets = self._get_markdown_link_widgets()
+            if link_widgets and self.focused_link_index is not None and self.focused_link_index < len(link_widgets):
+                link_widgets[self.focused_link_index].blur()
+        except Exception:  # nosec B110  # noqa: S110
+            # Intentional silent failure for graceful degradation
+            pass
+
         self.focused_link_index = None
         self._update_link_indicator()
         self.notify("Link focus cleared")

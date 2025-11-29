@@ -58,9 +58,14 @@ group_collapsed = false
   - `false` - Show flat list (default)
   - `true` - Show grouped by feed
 
-- **group_collapsed**: Whether groups start collapsed when grouping is enabled
+- **group_collapsed**: Default expand/collapse state when toggling group modes
   - `false` - Groups start expanded (default)
   - `true` - Groups start collapsed
+  - Applies to:
+    - Initial startup when `default_group_by_feed = true`
+    - When toggling feed grouping with `g` key
+    - When toggling category grouping with `c` key
+  - Tip: Set to `true` for a cleaner view with many feeds/categories
 
 ### UI Settings
 
