@@ -214,6 +214,7 @@ Features:
 - Clean, native interface
 
 Built with BeeWare Toga framework."""
+icon = "assets/logo"
 sources = ["miniflux_tui", "miniflux_gui"]
 requires = [
     "toga>=0.5.0",

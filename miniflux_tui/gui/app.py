@@ -4,6 +4,7 @@
 import asyncio
 import html
 import re
+import sys
 import webbrowser
 from contextlib import suppress
 from typing import TYPE_CHECKING, Literal
@@ -14,10 +15,13 @@ from toga.style import Pack  # type: ignore[import-untyped]
 from toga.style.pack import COLUMN, ROW  # type: ignore[attr-defined]
 
 from miniflux_tui.api.client import MinifluxClient
-from miniflux_tui.config import load_config
 
 if TYPE_CHECKING:
     from miniflux_tui.api.models import Entry
+
+# Platform-specific imports for iOS settings storage
+if sys.platform == "ios":
+    from rubicon.objc import NSUserDefaults  # type: ignore[import-untyped]  # pylint: disable=no-name-in-module
 
 ViewMode = Literal["unread", "starred", "all"]
 
@@ -44,6 +48,28 @@ class MinifluxGUI(toga.App):  # pylint: disable=inherit-non-class
         self.html_converter.ignore_emphasis = False
         self.html_converter.body_width = 0  # Don't wrap text
 
+    def _load_settings(self) -> dict[str, str] | None:
+        """Load settings from platform-specific storage."""
+        if sys.platform == "ios":
+            defaults = NSUserDefaults.standardUserDefaults
+            server_url = defaults.stringForKey("miniflux_server_url")
+            api_key = defaults.stringForKey("miniflux_api_key")
+
+            if server_url and api_key:
+                return {
+                    "server_url": str(server_url),
+                    "api_key": str(api_key),
+                }
+        return None
+
+    def _save_settings(self, server_url: str, api_key: str):
+        """Save settings to platform-specific storage."""
+        if sys.platform == "ios":
+            defaults = NSUserDefaults.standardUserDefaults
+            defaults.setObject_forKey_(server_url, "miniflux_server_url")
+            defaults.setObject_forKey_(api_key, "miniflux_api_key")
+            defaults.synchronize()
+
     def startup(self):
         """Construct and show the Toga application.
 
@@ -52,19 +78,29 @@ class MinifluxGUI(toga.App):  # pylint: disable=inherit-non-class
         # Create the main window
         self.main_window = toga.MainWindow(title=self.formal_name)
 
-        # Load configuration
+        # Try to load settings (iOS) or config file (desktop)
+        config = None
+        if sys.platform == "ios":
+            config = self._load_settings()
+
+        # If no settings found, show settings screen
+        if not config:
+            self.main_window.content = self.create_settings_screen(first_run=True)  # type: ignore[attr-defined]
+            self.main_window.show()  # type: ignore[attr-defined]
+            return
+
+        # Create client with loaded settings
         try:
-            config = load_config()
             self.client = MinifluxClient(
-                base_url=config["server_url"],  # type: ignore[index]
-                api_key=config["api_key"],  # type: ignore[index]
-                allow_invalid_certs=config.get("allow_invalid_certs", False),  # type: ignore[attr-defined] # pylint: disable=no-member
+                base_url=config["server_url"],
+                api_key=config["api_key"],
+                allow_invalid_certs=config.get("allow_invalid_certs", False),
             )
         except Exception as e:
             self._show_error_screen(
                 "Configuration Error",
-                f"Failed to load configuration: {e}",
-                "Please run 'miniflux-tui --init' to set up your configuration.",
+                f"Failed to initialize client: {e}",
+                "Please check your settings.",
             )
             return
 
@@ -74,6 +110,111 @@ class MinifluxGUI(toga.App):  # pylint: disable=inherit-non-class
 
         # Load entries asynchronously
         self._load_task = asyncio.create_task(self._safe_load_entries())
+
+    def create_settings_screen(self, first_run: bool = False) -> toga.Box:
+        """Create the settings screen for server configuration."""
+        settings_box = toga.Box(style=Pack(direction=COLUMN, padding=20))
+
+        # Title
+        title_label = toga.Label(
+            "Miniflux Server Settings" if first_run else "Settings",
+            style=Pack(padding=10, font_size=20, font_weight="bold"),
+        )
+
+        if first_run:
+            intro_label = toga.Label(
+                "Please configure your Miniflux server to get started.",
+                style=Pack(padding=5, font_size=14),
+            )
+            settings_box.add(intro_label)
+
+        settings_box.add(title_label)
+
+        # Server URL input
+        url_label = toga.Label(
+            "Server URL:",
+            style=Pack(padding_top=10, padding_bottom=5, font_size=14),
+        )
+        self.server_url_input = toga.TextInput(
+            placeholder="https://miniflux.example.com",
+            style=Pack(padding=5),
+        )
+
+        # API Key input
+        api_key_label = toga.Label(
+            "API Key:",
+            style=Pack(padding_top=10, padding_bottom=5, font_size=14),
+        )
+        self.api_key_input = toga.TextInput(
+            placeholder="Your Miniflux API key",
+            style=Pack(padding=5),
+        )
+
+        # Load existing settings if available
+        if not first_run and sys.platform == "ios":
+            config = self._load_settings()
+            if config:
+                self.server_url_input.value = config.get("server_url", "")
+                self.api_key_input.value = config.get("api_key", "")
+
+        # Save button
+        save_button = toga.Button(
+            "Save & Connect",
+            on_press=self.on_save_settings,
+            style=Pack(padding=10),
+        )
+
+        # Back button (only if not first run)
+        if not first_run:
+            back_button = toga.Button(
+                "← Back",
+                on_press=lambda _: self._return_to_list(),
+                style=Pack(padding=5),
+            )
+            settings_box.add(back_button)
+
+        settings_box.add(url_label)
+        settings_box.add(self.server_url_input)
+        settings_box.add(api_key_label)
+        settings_box.add(self.api_key_input)
+        settings_box.add(save_button)
+
+        return settings_box
+
+    def on_save_settings(self, _widget):
+        """Save settings and connect to server."""
+        server_url = self.server_url_input.value.strip()
+        api_key = self.api_key_input.value.strip()
+
+        # Validate inputs
+        if not server_url or not api_key:
+            self.show_error("Please enter both server URL and API key.")
+            return
+
+        # Save settings
+        self._save_settings(server_url, api_key)
+
+        # Create client
+        try:
+            self.client = MinifluxClient(
+                base_url=server_url,
+                api_key=api_key,
+                allow_invalid_certs=False,
+            )
+        except Exception as e:
+            self.show_error(f"Failed to create client: {e}")
+            return
+
+        # Load entries
+        self.main_window.content = self.create_loading_screen("Connecting...")  # type: ignore[attr-defined]
+        self._load_task = asyncio.create_task(self._safe_load_entries())
+
+    def _return_to_list(self):
+        """Return to the entry list screen."""
+        if self.client:
+            self.main_window.content = self.create_entry_list_screen()  # type: ignore[attr-defined]
+        else:
+            self.show_error("No connection established. Please configure settings first.")
 
     def _show_error_screen(self, title: str, error: str, suggestion: str = ""):
         """Show an error screen with details and suggestion."""
@@ -196,7 +337,7 @@ class MinifluxGUI(toga.App):  # pylint: disable=inherit-non-class
         nav_box.add(starred_button)
         nav_box.add(all_button)
 
-        # Header with title and refresh button
+        # Header with title and buttons
         header_box = toga.Box(style=Pack(direction=ROW, padding=5))
 
         view_titles = {
@@ -210,13 +351,20 @@ class MinifluxGUI(toga.App):  # pylint: disable=inherit-non-class
             style=Pack(padding=5, font_size=18, font_weight="bold", flex=1),
         )
 
+        settings_button = toga.Button(
+            "⚙️",
+            on_press=lambda _: self._show_settings(),
+            style=Pack(padding=5),
+        )
+
         refresh_button = toga.Button(
-            "🔄 Refresh",
+            "🔄",
             on_press=self.on_refresh,
             style=Pack(padding=5),
         )
 
         header_box.add(header_label)
+        header_box.add(settings_button)
         header_box.add(refresh_button)
 
         # Entry list using DetailedList
@@ -261,6 +409,10 @@ class MinifluxGUI(toga.App):  # pylint: disable=inherit-non-class
         self.current_view = view_mode
         self.main_window.content = self.create_loading_screen(f"Loading {view_mode} entries...")  # type: ignore[attr-defined]
         self._load_task = asyncio.create_task(self._safe_load_entries())
+
+    def _show_settings(self):
+        """Show the settings screen."""
+        self.main_window.content = self.create_settings_screen(first_run=False)  # type: ignore[attr-defined]
 
     def on_entry_select(self, _widget, row):
         """Handle entry selection."""
