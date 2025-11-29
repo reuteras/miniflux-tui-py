@@ -195,7 +195,7 @@ skips = ["B101"]  # Skip assert_used check (used in tests)
 [tool.briefcase]
 project_name = "Miniflux Reader"
 bundle = "com.reuteras"
-version = "0.6.5"
+version = "0.7.3"
 url = "https://github.com/reuteras/miniflux-tui-py"
 license.file = "LICENSE"
 author = "Peter Reuterås"
@@ -238,11 +238,7 @@ requires = []
 [tool.briefcase.app.miniflux-gui.iOS]
 requires = []
 supported = true
-# iOS specific settings
-bundle_identifier = "com.reuteras.miniflux"
 
 [tool.briefcase.app.miniflux-gui.android]
 requires = []
 supported = true
-# Android specific settings
-package_name = "com.reuteras.miniflux"
