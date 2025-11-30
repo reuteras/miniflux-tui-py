@@ -60,7 +60,7 @@ class MinifluxClient:
     @staticmethod
     async def _run_sync(func, *args, **kwargs):
         """Run a synchronous function in an executor."""
-        loop = asyncio.get_event_loop()
+        loop = asyncio.get_running_loop()
         return await loop.run_in_executor(None, partial(func, *args, **kwargs))
 
     async def _call_with_retry(
