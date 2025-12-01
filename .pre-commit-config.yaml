@@ -24,13 +24,13 @@ repos:
       - id: destroyed-symlinks
       - id: check-shebang-scripts-are-executable
   - repo: https://github.com/astral-sh/ruff-pre-commit
-    rev: v0.14.6
+    rev: v0.14.7
     hooks:
       - id: ruff
         args: ["--fix"]
       - id: ruff-format
   - repo: https://github.com/editorconfig-checker/editorconfig-checker.python
-    rev: 3.5.0
+    rev: 3.6.0
     hooks:
       - id: editorconfig-checker
         alias: ec
@@ -44,15 +44,15 @@ repos:
         types: [markdown]
         additional_dependencies: ["markdown-table-formatter@1.6.1"]
   - repo: https://github.com/owenlamont/uv-secure
-    rev: 0.15.0
+    rev: 0.15.2
     hooks:
       - id: uv-secure
   - repo: https://github.com/gitleaks/gitleaks
-    rev: v8.29.1
+    rev: v8.30.0
     hooks:
       - id: gitleaks
   - repo: https://github.com/pylint-dev/pylint
-    rev: v4.0.3
+    rev: v4.0.4
     hooks:
       - id: pylint
         args: ["--errors-only", "--rcfile=/dev/null"]
