@@ -4,7 +4,14 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
-## [0.7.3] - 2025-11-19
+## [0.7.3] - 2025-12-01
+
+### BUG FIXES
+
+- Improve link highlighting visibility in entry reader using CSS-based widget focus (#605)
+- remove double scrollbar in settings screen (#606)
+- Restore non-blocking sync and fix theme switching to use Textual… (#611)
+- Pin CodeQL actions to commit SHA (#636)
 
 ### DOCUMENTATION
 
@@ -13,6 +20,21 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### FEATURES
 
 - Respect group_collapsed config when toggling group modes (#599)
+- Implement visual link highlighting and improved scrolling for entry reader (#609)
+- Implement runtime theme switching and incremental feed sync (#610)
+
+### MAINTENANCE
+
+- Release v0.7.3 (#600)
+- bump peter-evans/create-pull-request from 7.0.8 to 7.0.9 (#617) 🤖
+- bump google/osv-scanner-action/.github/workflows/osv-scanner-reusable.yml (#618) 🤖
+- bump zizmorcore/zizmor-action from 0.2.0 to 0.3.0 (#626) 🤖
+- bump coverallsapp/github-action from 2.3.6 to 2.3.7 (#624) 🤖
+- bump actions/checkout from 5.0.0 to 6.0.0 (#623) 🤖
+- bump actions/dependency-review-action (#621) 🤖
+- bump chainguard-dev/actions from 1.5.7 to 1.5.10 (#630) 🤖
+- bump astral-sh/setup-uv from 7.1.2 to 7.1.4 (#632) 🤖
+- pin CodeQL action versions with commit hashes (#637)
 
 
 
@@ -22,7 +44,7 @@ Thank you to everyone who contributed to this release!
 
 **Humans:** 👤 Peter Reuterås
 
-**AI & Automation:** 🤖 Claude (AI Assistant)
+**AI & Automation:** 🤖 Claude (AI Assistant), dependabot[bot] (Dependencies)
 ## [v0.7.2] - 2025-11-17
 
 ### BUG FIXES
@@ -1538,3 +1560,4 @@ Thank you to everyone who contributed to this release!
 **Humans:** 👤 Peter Reuterås
 
 **AI & Automation:** 🤖 Claude (AI Assistant)
+
