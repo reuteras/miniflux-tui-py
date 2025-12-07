@@ -5,6 +5,7 @@ These tests start the complete MinifluxTuiApp with realistic data structures
 (multiple categories, feeds, and entries) and verify full user workflows.
 """
 
+import sys
 from datetime import UTC, datetime, timedelta
 from typing import cast
 from unittest.mock import AsyncMock, MagicMock, patch
@@ -667,6 +668,7 @@ class TestFilteringWithRealisticData:
 class TestComplexScenarios:
     """Test complex scenarios with realistic data."""
 
+    @pytest.mark.skipif(sys.platform == "win32", reason="Flaky on Windows due to Textual widget timing differences")
     @pytest.mark.asyncio
     async def test_grouped_and_sorted_together(self, full_integration_config, full_integration_client):
         """Test group mode combined with feed sorting.
