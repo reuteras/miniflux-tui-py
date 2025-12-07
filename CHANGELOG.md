@@ -4,7 +4,22 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
-## [0.7.3] - 2025-12-01
+## [0.7.4] - 2025-12-07
+
+### BUG FIXES
+
+- Add automatic reconnection on stale connection errors (#644)
+
+
+
+#### Contributors
+
+Thank you to everyone who contributed to this release!
+
+**Humans:** 👤 Peter Reuterås
+
+**AI & Automation:** 🤖 Claude (AI Assistant)
+## [v0.7.3] - 2025-12-01
 
 ### BUG FIXES
 
@@ -35,6 +50,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - bump chainguard-dev/actions from 1.5.7 to 1.5.10 (#630) 🤖
 - bump astral-sh/setup-uv from 7.1.2 to 7.1.4 (#632) 🤖
 - pin CodeQL action versions with commit hashes (#637)
+- Release v0.7.3 (#638)
 
 
 
