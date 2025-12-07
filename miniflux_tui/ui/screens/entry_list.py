@@ -1737,7 +1737,7 @@ class EntryListScreen(Screen):
             self.notify(f"Feed '{feed_title}' refreshed. Use ',' to sync new entries.", severity="information")
         except (ConnectionError, TimeoutError, OSError, BrokenPipeError) as e:
             # Connection error - try to reconnect and retry once
-            self.notify(f"Connection error, attempting to reconnect...", severity="warning")
+            self.notify("Connection error, attempting to reconnect...", severity="warning")
             if await self.app.reconnect_client():
                 try:
                     await self.app.client.refresh_feed(feed_id)
@@ -1777,7 +1777,7 @@ class EntryListScreen(Screen):
             self.notify("All feeds refreshed successfully. Use ',' to sync new entries.", severity="information")
         except (ConnectionError, TimeoutError, OSError, BrokenPipeError) as e:
             # Connection error - try to reconnect and retry once
-            self.notify(f"Connection error, attempting to reconnect...", severity="warning")
+            self.notify("Connection error, attempting to reconnect...", severity="warning")
             if await self.app.reconnect_client():
                 try:
                     await self.app.client.refresh_all_feeds()
@@ -1923,6 +1923,27 @@ class EntryListScreen(Screen):
         """
         self.run_worker(self._do_sync_entries(), exclusive=True)
 
+    def _format_sync_summary(self, new_count: int, removed_count: int, after_reconnect: bool = False) -> None:
+        """Format and display sync summary message.
+
+        Args:
+            new_count: Number of new entries
+            removed_count: Number of removed entries
+            after_reconnect: Whether this is after a reconnection
+        """
+        if new_count == 0 and removed_count == 0:
+            message = "Entries are up to date after reconnection" if after_reconnect else "Entries are up to date"
+            self.notify(message, severity="information", timeout=2)
+        else:
+            details = []
+            if new_count > 0:
+                details.append(f"+{new_count} new")
+            if removed_count > 0:
+                details.append(f"-{removed_count} removed")
+            summary = ", ".join(details)
+            prefix = "Synced entries after reconnection: " if after_reconnect else "Synced entries: "
+            self.notify(f"{prefix}{summary}", severity="information")
+
     async def _do_sync_entries(self):
         """Background worker for syncing entries.
 
@@ -1937,33 +1958,15 @@ class EntryListScreen(Screen):
             new_count, removed_count, _ = await self._perform_incremental_sync()
 
             # Show summary message
-            if new_count == 0 and removed_count == 0:
-                self.notify("Entries are up to date", severity="information", timeout=2)
-            else:
-                details = []
-                if new_count > 0:
-                    details.append(f"+{new_count} new")
-                if removed_count > 0:
-                    details.append(f"-{removed_count} removed")
-                summary = ", ".join(details)
-                self.notify(f"Synced entries: {summary}", severity="information")
+            self._format_sync_summary(new_count, removed_count)
 
         except (ConnectionError, TimeoutError, OSError, BrokenPipeError) as e:
             # Connection error - try to reconnect and retry once
-            self.notify(f"Connection error, attempting to reconnect...", severity="warning")
+            self.notify("Connection error, attempting to reconnect...", severity="warning")
             if await self.app.reconnect_client():
                 try:
                     new_count, removed_count, _ = await self._perform_incremental_sync()
-                    if new_count == 0 and removed_count == 0:
-                        self.notify("Entries are up to date after reconnection", severity="information", timeout=2)
-                    else:
-                        details = []
-                        if new_count > 0:
-                            details.append(f"+{new_count} new")
-                        if removed_count > 0:
-                            details.append(f"-{removed_count} removed")
-                        summary = ", ".join(details)
-                        self.notify(f"Synced entries after reconnection: {summary}", severity="information")
+                    self._format_sync_summary(new_count, removed_count, after_reconnect=True)
                 except Exception as retry_error:
                     self.notify(f"Error after reconnection: {retry_error}", severity="error")
             else:
