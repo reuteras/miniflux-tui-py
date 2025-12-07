@@ -73,7 +73,7 @@ class MinifluxClient:
     ) -> T:
         """Call function with exponential backoff retry logic.
 
-        Automatically retries on network errors (ConnectionError, TimeoutError)
+        Automatically retries on network errors (ConnectionError, TimeoutError, OSError)
         with exponential backoff. Other exceptions are raised immediately.
 
         Backoff calculation:
@@ -97,7 +97,7 @@ class MinifluxClient:
             Result from func call
 
         Raises:
-            ConnectionError/TimeoutError: Last network error if all retries fail
+            ConnectionError/TimeoutError/OSError: Last network error if all retries fail
             Exception: Other exceptions are raised immediately without retry
         """
         last_exception = None
@@ -106,8 +106,10 @@ class MinifluxClient:
             try:
                 # Try the function call
                 return await self._run_sync(func, *args, **kwargs)
-            except (ConnectionError, TimeoutError) as e:
+            except (ConnectionError, TimeoutError, OSError, BrokenPipeError) as e:
                 # Transient network errors - retry with backoff
+                # OSError covers socket-level errors including stale connections
+                # BrokenPipeError occurs when connection is closed unexpectedly
                 last_exception = e
                 if attempt < max_retries - 1:
                     # Calculate exponential backoff delay

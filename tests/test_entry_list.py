@@ -1773,6 +1773,8 @@ class TestRefreshActions:
         mock_client.refresh_feed = AsyncMock(side_effect=ConnectionError("Network error"))
         mock_app = MagicMock()
         mock_app.client = mock_client
+        # Mock reconnect_client as async function that returns False
+        mock_app.reconnect_client = AsyncMock(return_value=False)
 
         # Mock list view with highlighted entry
         mock_list_view = MagicMock()
@@ -1867,6 +1869,8 @@ class TestRefreshActions:
         mock_client.refresh_all_feeds = AsyncMock(side_effect=TimeoutError("Connection timeout"))
         mock_app = MagicMock()
         mock_app.client = mock_client
+        # Mock reconnect_client as async function that returns False
+        mock_app.reconnect_client = AsyncMock(return_value=False)
 
         # Mock notify
         screen.notify = MagicMock()

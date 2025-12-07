@@ -525,6 +525,31 @@ class MinifluxTuiApp(App):
         management_screen = CategoryManagementScreen(categories=categories, entries=self.entries)
         self.push_screen(management_screen)
 
+    async def reconnect_client(self) -> bool:
+        """Recreate the API client connection.
+
+        This is useful when the connection becomes stale after long periods of inactivity.
+
+        Returns:
+            bool: True if reconnection was successful, False otherwise
+        """
+        try:
+            # Close existing client if it exists
+            if self.client:
+                await self.client.close()
+
+            # Recreate the client with same configuration
+            self.client = MinifluxClient(
+                base_url=self.config.server_url,
+                api_key=self.config.api_key,
+                allow_invalid_certs=self.config.allow_invalid_certs,
+            )
+            return True
+        except Exception as e:
+            self.log(f"Failed to reconnect client: {e}")
+            self.notify(f"Connection failed: {e}", severity="error")
+            return False
+
     async def on_unmount(self) -> None:
         """Called when app is unmounted."""
         # Close API client

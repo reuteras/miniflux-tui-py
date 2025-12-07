@@ -1735,8 +1735,17 @@ class EntryListScreen(Screen):
 
             # Show success message
             self.notify(f"Feed '{feed_title}' refreshed. Use ',' to sync new entries.", severity="information")
-        except (ConnectionError, TimeoutError) as e:
-            self.notify(f"Network error refreshing feed: {e}", severity="error")
+        except (ConnectionError, TimeoutError, OSError, BrokenPipeError) as e:
+            # Connection error - try to reconnect and retry once
+            self.notify(f"Connection error, attempting to reconnect...", severity="warning")
+            if await self.app.reconnect_client():
+                try:
+                    await self.app.client.refresh_feed(feed_id)
+                    self.notify(f"Feed '{feed_title}' refreshed after reconnection. Use ',' to sync new entries.", severity="information")
+                except Exception as retry_error:
+                    self.notify(f"Error after reconnection: {retry_error}", severity="error")
+            else:
+                self.notify(f"Network error refreshing feed: {e}", severity="error")
         except Exception as e:
             self.notify(f"Error refreshing feed: {e}", severity="error")
         finally:
@@ -1766,8 +1775,17 @@ class EntryListScreen(Screen):
 
             # Show success message
             self.notify("All feeds refreshed successfully. Use ',' to sync new entries.", severity="information")
-        except (ConnectionError, TimeoutError) as e:
-            self.notify(f"Network error refreshing feeds: {e}", severity="error")
+        except (ConnectionError, TimeoutError, OSError, BrokenPipeError) as e:
+            # Connection error - try to reconnect and retry once
+            self.notify(f"Connection error, attempting to reconnect...", severity="warning")
+            if await self.app.reconnect_client():
+                try:
+                    await self.app.client.refresh_all_feeds()
+                    self.notify("All feeds refreshed after reconnection. Use ',' to sync new entries.", severity="information")
+                except Exception as retry_error:
+                    self.notify(f"Error after reconnection: {retry_error}", severity="error")
+            else:
+                self.notify(f"Network error refreshing feeds: {e}", severity="error")
         except Exception as e:
             self.notify(f"Error refreshing all feeds: {e}", severity="error")
         finally:
@@ -1930,8 +1948,26 @@ class EntryListScreen(Screen):
                 summary = ", ".join(details)
                 self.notify(f"Synced entries: {summary}", severity="information")
 
-        except (ConnectionError, TimeoutError) as e:
-            self.notify(f"Network error syncing entries: {e}", severity="error")
+        except (ConnectionError, TimeoutError, OSError, BrokenPipeError) as e:
+            # Connection error - try to reconnect and retry once
+            self.notify(f"Connection error, attempting to reconnect...", severity="warning")
+            if await self.app.reconnect_client():
+                try:
+                    new_count, removed_count, _ = await self._perform_incremental_sync()
+                    if new_count == 0 and removed_count == 0:
+                        self.notify("Entries are up to date after reconnection", severity="information", timeout=2)
+                    else:
+                        details = []
+                        if new_count > 0:
+                            details.append(f"+{new_count} new")
+                        if removed_count > 0:
+                            details.append(f"-{removed_count} removed")
+                        summary = ", ".join(details)
+                        self.notify(f"Synced entries after reconnection: {summary}", severity="information")
+                except Exception as retry_error:
+                    self.notify(f"Error after reconnection: {retry_error}", severity="error")
+            else:
+                self.notify(f"Network error syncing entries: {e}", severity="error")
         except Exception as e:
             self.notify(f"Error syncing entries: {e}", severity="error")
         finally:
