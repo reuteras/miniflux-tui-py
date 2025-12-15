@@ -43,7 +43,7 @@ class TestStatusScreenBindings:
         status_screen = StatusScreen()
         assert hasattr(status_screen, "BINDINGS")
         assert isinstance(status_screen.BINDINGS, list)
-        assert len(status_screen.BINDINGS) == 3
+        assert len(status_screen.BINDINGS) == 4
 
     def test_status_screen_has_escape_binding(self):
         """Test StatusScreen has Escape key binding."""
@@ -622,14 +622,14 @@ class TestStatusScreenIntegration:
     def test_status_screen_bindings_valid_keys(self):
         """Test that binding keys are valid."""
         status_screen = StatusScreen()
-        valid_keys = {"escape", "q", "r"}
+        valid_keys = {"escape", "q", "r", "shift+r"}
         binding_keys = {b.key for b in status_screen.BINDINGS}  # type: ignore[attr-defined]
         assert binding_keys == valid_keys
 
     def test_status_screen_bindings_valid_actions(self):
         """Test that binding actions are valid."""
         status_screen = StatusScreen()
-        valid_actions = {"close", "refresh"}
+        valid_actions = {"close", "refresh", "refresh_failed_feeds"}
         binding_actions = {b.action for b in status_screen.BINDINGS}  # type: ignore[attr-defined]
         assert binding_actions == valid_actions
 
