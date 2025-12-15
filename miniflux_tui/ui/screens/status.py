@@ -16,7 +16,8 @@ class StatusScreen(Screen):
     BINDINGS: list[Binding] = [  # noqa: RUF012
         Binding("escape", "close", "Close"),
         Binding("q", "close", "Close"),
-        Binding("r", "refresh", "Refresh"),
+        Binding("r", "refresh", "Refresh Status"),
+        Binding("shift+r", "refresh_failed_feeds", "Refresh Failed Feeds"),
     ]
 
     def __init__(self, **kwargs):
@@ -60,7 +61,7 @@ class StatusScreen(Screen):
             yield Static(id="error-feeds-list")
             yield Static()
 
-            yield Static("[dim]Press r to refresh, Esc or q to close[/dim]")
+            yield Static("[dim]Press r to refresh status, Shift+R to refresh failed feeds, Esc or q to close[/dim]")
 
         yield footer
 
@@ -215,3 +216,52 @@ class StatusScreen(Screen):
 
         # Notify user
         self.app.notify("Status refreshed")
+
+    async def action_refresh_failed_feeds(self):
+        """Refresh all failed feeds shown on the status screen.
+
+        This iterates through all feeds with errors and attempts to refresh each one.
+        After refreshing, reloads the status display to show updated information.
+        """
+        if not hasattr(self.app, "client") or not getattr(self.app, "client", None):
+            self.app.notify("API client not available", severity="error")
+            return
+
+        if not self.error_feeds:
+            self.app.notify("No failed feeds to refresh", severity="warning")
+            return
+
+        client = getattr(self.app, "client", None)
+        feed_count = len(self.error_feeds)
+
+        # Show progress message
+        try:
+            error_feeds_widget = self.query_one("#error-feeds-list", Static)
+            error_feeds_widget.update(f"[dim]Refreshing {feed_count} failed feed(s)...[/dim]")
+        except Exception as e:
+            self.app.log(f"Could not update refresh message: {e}")
+
+        # Refresh each failed feed
+        success_count = 0
+        failed_count = 0
+
+        for feed in self.error_feeds:
+            try:
+                await client.refresh_feed(feed.id)
+                success_count += 1
+                self.app.log(f"Successfully refreshed feed: {feed.title}")
+            except Exception as e:
+                failed_count += 1
+                self.app.log(f"Failed to refresh feed {feed.title}: {type(e).__name__}: {e}")
+
+        # Reload status to show updated information
+        await self._load_status()
+
+        # Notify user of results
+        if failed_count == 0:
+            self.app.notify(f"Successfully refreshed {success_count} feed(s)", severity="information")
+        else:
+            self.app.notify(
+                f"Refreshed {success_count} feed(s), {failed_count} failed",
+                severity="warning",
+            )
