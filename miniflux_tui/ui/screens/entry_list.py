@@ -500,14 +500,21 @@ class EntryListScreen(Screen):
 
         self.refresh_optimizer.track_full_refresh()
 
-        # Restore cursor position after list is updated
-        # This ensures cursor is initialized even when called directly (e.g., from tests)
-        # Uses call_later to defer until ListView has fully updated
-        # On initial mount, use simple positioning; otherwise restore previous position
+        # CRITICAL FIX: Set cursor position IMMEDIATELY after populating to prevent
+        # ListView from defaulting to first item (which causes double-highlight bug).
+        # Previously, we used call_later which allowed a render frame where index 0
+        # was highlighted, then the correct position was set, leaving both highlighted.
         if self._is_initial_mount:
-            self.call_later(self._set_initial_position_and_focus)
+            # On initial mount, set to first item
+            self._set_cursor_to_index(0)
+            self._safe_log("Initial mount: cursor set to first item (index 0)")
         else:
-            self.call_later(self._restore_cursor_position_and_focus)
+            # Otherwise, restore to previous position
+            self._restore_cursor_position()
+
+        # Use call_later ONLY for focus (not cursor positioning)
+        # This prevents rendering glitches while ensuring focus is set
+        self.call_later(self._ensure_focus)
 
     def _find_entry_index_by_id(self, entry_id: int | None) -> int | None:
         """Find the index of an entry by its ID.

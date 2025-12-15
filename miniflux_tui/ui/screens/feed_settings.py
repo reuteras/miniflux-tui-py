@@ -3,6 +3,7 @@
 
 from __future__ import annotations
 
+import webbrowser
 from typing import TYPE_CHECKING, Any, ClassVar
 
 from textual.app import ComposeResult
@@ -28,7 +29,7 @@ class FeedSettingsScreen(Screen):
     - Network settings (authentication, proxies, certificates)
     - Rules and filtering (scraper, rewrite, blocking rules)
     - Feed metadata (last check, next check, ETag, LastModified)
-    - Feed management (delete)
+    - Feed management (delete, open in web browser)
 
     Attributes:
         feed_id: ID of the feed being configured
@@ -45,6 +46,7 @@ class FeedSettingsScreen(Screen):
         Binding("ctrl+s", "save_changes", "Save", key_display="Ctrl+S"),
         Binding("escape", "cancel_changes", "Cancel"),
         Binding("x", "open_helper", "Helper"),
+        Binding("o", "open_in_browser", "Open in Web"),
     ]
 
     DEFAULT_CSS: ClassVar[str] = """
@@ -598,6 +600,15 @@ class FeedSettingsScreen(Screen):
             value = event.value if event.value else None
             self._on_field_changed(event.select.id, value)
 
+    async def on_button_pressed(self, event: Button.Pressed) -> None:
+        """Handle button press events.
+
+        Args:
+            event: Button press event
+        """
+        if event.button.id == "delete-feed-button":
+            await self.action_delete_feed()
+
     async def action_focus_next(self) -> None:
         """Focus next focusable widget."""
         self.screen.focus_next()
@@ -787,6 +798,34 @@ class FeedSettingsScreen(Screen):
             docs_cache=self.docs_cache,
         )
         self.app.push_screen(helper_screen)
+
+    def action_open_in_browser(self) -> None:
+        """Open the feed in the web browser.
+
+        Opens the feed's entries page in the default web browser using the
+        Miniflux server URL and the current feed ID.
+
+        The URL format is: <SERVER_URL>/feed/<feed_id>/entries
+        """
+        # Get server URL from app config
+        if not hasattr(self.app, "config") or not self.app.config:  # type: ignore[attr-defined]
+            self._show_message("Error: App configuration not available", severity="error")
+            return
+
+        server_url = self.app.config.server_url  # type: ignore[attr-defined]
+        if not server_url:
+            self._show_message("Error: Server URL not configured", severity="error")
+            return
+
+        # Construct feed URL
+        feed_url = f"{server_url.rstrip('/')}/feed/{self.feed_id}/entries"
+
+        # Open in browser
+        try:
+            webbrowser.open(feed_url)
+            self._show_message(f"Opened in browser: {feed_url}", severity="success")
+        except Exception as e:
+            self._show_message(f"Error opening browser: {e}", severity="error")
 
     async def action_delete_feed(self) -> None:
         """Delete the feed with confirmation and visual feedback.
