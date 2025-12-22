@@ -91,7 +91,7 @@ jobs:
 
       - name: Download artifacts
         if: github.event_name != 'pull_request'
-        uses: actions/download-artifact@018cc2cf5baa6db3ef3c5f8a56943fffe632ef53 # v6
+        uses: actions/download-artifact@37930b1c2abaa49bbe596cd826c3c89aef350131 # v6
         with:
           name: ${{ env.DIST_ARTIFACT_NAME }}
           path: dist/
@@ -172,14 +172,14 @@ jobs:
 
       - name: Download artifacts
         if: github.event_name != 'pull_request'
-        uses: actions/download-artifact@018cc2cf5baa6db3ef3c5f8a56943fffe632ef53 # v6
+        uses: actions/download-artifact@37930b1c2abaa49bbe596cd826c3c89aef350131 # v6
         with:
           name: dist-${{ github.run_id }}-${{ github.run_attempt }}
           path: dist/
 
       - name: Download binary artifacts
         if: github.event_name != 'pull_request'
-        uses: actions/download-artifact@018cc2cf5baa6db3ef3c5f8a56943fffe632ef53 # v6
+        uses: actions/download-artifact@37930b1c2abaa49bbe596cd826c3c89aef350131 # v6
         with:
           pattern: ${{ env.BINARY_ARTIFACT_PREFIX }}-*
           merge-multiple: true
