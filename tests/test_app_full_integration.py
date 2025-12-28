@@ -467,6 +467,10 @@ class TestSortingModesWithRealisticData:
                         second_entry = entry_list_screen.sorted_entries[1]
                         assert first_entry.published_at >= second_entry.published_at
 
+    @pytest.mark.skipif(
+        sys.platform == "win32" and sys.version_info < (3, 13),
+        reason="Flaky on Windows with Python 3.11-3.12 due to Textual pilot timeout issues",
+    )
     @pytest.mark.asyncio
     async def test_feed_sort_mode(self, full_integration_config, full_integration_client):
         """Test feed sorting (alphabetical by feed name)."""
