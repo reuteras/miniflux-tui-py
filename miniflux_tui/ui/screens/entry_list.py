@@ -296,6 +296,7 @@ class EntryListScreen(Screen):
         self.last_highlighted_entry_id: int | None = None  # Track last highlighted entry ID for position
         self.last_cursor_index: int = 0  # Track cursor position for non-grouped mode
         self._is_initial_mount: bool = True  # Track if this is the first time mounting the screen
+        self._was_at_end_before_sync: bool = False  # Track if cursor was at end before sync
         self._header_widget: Header | None = None
         self._footer_widget: Footer | None = None
         # Loading animation state
@@ -508,6 +509,12 @@ class EntryListScreen(Screen):
             # On initial mount, set to first item
             self._set_cursor_to_index(0)
             self._safe_log("Initial mount: cursor set to first item (index 0)")
+        elif self._was_at_end_before_sync:
+            # If we were at the end before sync and new entries arrived, jump to first item
+            self._safe_log("Was at end before sync, resetting cursor to first item (index 0)")
+            self._set_cursor_to_index(0)
+            # Reset the flag after using it
+            self._was_at_end_before_sync = False
         else:
             # Otherwise, restore to previous position
             self._restore_cursor_position()
@@ -1958,6 +1965,23 @@ class EntryListScreen(Screen):
         while the sync operation completes.
         """
         try:
+            # Track if we're at the end of the list before sync
+            # This helps us decide whether to jump to the first item after refresh
+            if self.list_view and len(self.list_view.children) > 0:
+                # Check if cursor is at or near the last visible item
+                last_visible_index = -1
+                for i in range(len(self.list_view.children) - 1, -1, -1):
+                    child = self.list_view.children[i]
+                    if isinstance(child, ListItem) and self._is_item_visible(child):
+                        last_visible_index = i
+                        break
+
+                # If we're at the last item, mark that we were at the end
+                if self.list_view.index is not None and self.list_view.index == last_visible_index:
+                    self._was_at_end_before_sync = True
+                else:
+                    self._was_at_end_before_sync = False
+
             # Start loading animation in header
             self._start_loading_animation("Syncing entries...")
 
@@ -1996,6 +2020,8 @@ class EntryListScreen(Screen):
                 self._start_loading_animation("Loading unread entries...")
 
                 await self.app.load_entries("unread")
+                # Keep the UI filter flags clear since we're loading from server
+                # The server-side view is what matters for refresh
                 self.filter_unread_only = False
                 self.filter_starred_only = False
                 self._populate_list()
