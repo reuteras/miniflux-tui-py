@@ -432,6 +432,10 @@ class TestGroupModeWithRealisticData:
 class TestSortingModesWithRealisticData:
     """Test sorting modes with realistic data."""
 
+    @pytest.mark.skipif(
+        sys.platform == "win32" and sys.version_info < (3, 13),
+        reason="Flaky on Windows with Python 3.11-3.12 due to Textual pilot timeout issues",
+    )
     @pytest.mark.asyncio
     async def test_date_sort_mode(self, full_integration_config, full_integration_client):
         """Test date sorting (newest first)."""
