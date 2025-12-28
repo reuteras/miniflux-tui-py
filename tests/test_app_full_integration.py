@@ -363,6 +363,10 @@ class TestGroupModeWithRealisticData:
                 # Verify entries are still available
                 assert len(entry_list_screen.entries) > 0
 
+    @pytest.mark.skipif(
+        sys.platform == "win32" and sys.version_info < (3, 13),
+        reason="Flaky on Windows with Python 3.11-3.12 due to Textual pilot timeout issues",
+    )
     @pytest.mark.asyncio
     async def test_toggle_group_mode(self, full_integration_config, full_integration_client):
         """Test toggling group mode on and off."""
