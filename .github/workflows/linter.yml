@@ -182,7 +182,7 @@ jobs:
 
       - name: Upload gitleaks report
         if: (steps.gitleaks.outcome == 'success' || steps.gitleaks.outcome == 'failure') && github.event_name != 'pull_request'
-        uses: github/codeql-action/upload-sarif@4e94bd11f71e507f7f87df81788dff88d1dacbfb
+        uses: github/codeql-action/upload-sarif@5d4e8d1aca955e8d8589aabd499c5cae939e33c7
         with:
           sarif_file: gitleaks.sarif
           category: gitleaks
