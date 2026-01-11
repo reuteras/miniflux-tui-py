@@ -27,7 +27,8 @@ class MinifluxAppProtocol(Protocol):
 
     # Application state
     current_view: str
-    entry_category_map: dict[int, int]
+    entry_category_map: dict[int, int]  # Deprecated - use feed_category_map
+    feed_category_map: dict[int, int]  # Maps feed_id → category_id (cached)
 
     # Logging and notifications
     def log(self, message: str, /) -> None:

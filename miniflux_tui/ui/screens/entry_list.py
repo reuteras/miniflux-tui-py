@@ -42,6 +42,10 @@ class CollapsibleListView(ListView):
         if current_index is None:
             current_index = -1
 
+        # Clamp current_index to valid bounds to prevent IndexError
+        # This can happen if the list was rebuilt with fewer items
+        current_index = min(current_index, len(self.children) - 1)
+
         # Find next visible item
         for i in range(current_index + 1, len(self.children)):
             widget = self.children[i]
@@ -57,6 +61,10 @@ class CollapsibleListView(ListView):
         current_index = self.index
         if current_index is None:
             current_index = len(self.children)
+
+        # Clamp current_index to valid bounds to prevent IndexError
+        # This can happen if the list was rebuilt with fewer items
+        current_index = min(current_index, len(self.children))
 
         # Find previous visible item
         for i in range(current_index - 1, -1, -1):
@@ -1846,20 +1854,20 @@ class EntryListScreen(Screen):
             return None
 
     async def _enrich_entries_with_categories(self, entries: list[Entry]) -> None:
-        """Enrich entries with category information from app state.
+        """Enrich entries with category information using cached feed mapping (fast).
+
+        OPTIMIZATION: Uses the cached feed_category_map instead of rebuilding
+        the entire entry→category mapping on every sync. This is much faster.
 
         Args:
             entries: List of entries to enrich
         """
-        # Rebuild category mapping for fresh data
-        if hasattr(self.app, "_build_entry_category_mapping"):
-            self.app.entry_category_map = await self.app._build_entry_category_mapping()
-
-        # Enrich entries with category information
-        if self.app.entry_category_map:
+        # Use cached feed_category_map (no expensive rebuild needed!)
+        if hasattr(self.app, "feed_category_map") and self.app.feed_category_map:
             for entry in entries:
-                if entry.id in self.app.entry_category_map:
-                    entry.feed.category_id = self.app.entry_category_map[entry.id]
+                # Look up category using feed_id (very fast)
+                if entry.feed_id in self.app.feed_category_map:
+                    entry.feed.category_id = self.app.feed_category_map[entry.feed_id]
 
     def _apply_entry_changes(self, added_ids: set[int], removed_ids: set[int], new_entry_map: dict[int, Entry]) -> None:
         """Apply entry changes to the UI.
