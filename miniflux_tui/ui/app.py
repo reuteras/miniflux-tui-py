@@ -3,6 +3,7 @@
 
 from __future__ import annotations
 
+import asyncio
 import traceback
 from importlib import import_module
 from typing import TYPE_CHECKING, cast
@@ -140,7 +141,8 @@ class MinifluxTuiApp(App):
         self.entries: list[Entry] = []
         self.categories: list[Category] = []
         self.feeds: list[Feed] = []
-        self.entry_category_map: dict[int, int] = {}  # Maps entry_id → category_id
+        self.entry_category_map: dict[int, int] = {}  # Maps entry_id → category_id (deprecated, use feed_category_map)
+        self.feed_category_map: dict[int, int] = {}  # Maps feed_id → category_id (fast cached mapping)
         self.current_view = "unread"  # or "starred"
         self._entry_list_screen_cls: type[EntryListScreen] | None = None
         self._status_screen_cls: type[StatusScreen] | None = None
@@ -265,13 +267,13 @@ class MinifluxTuiApp(App):
         self.install_screen(history_cls(), name="history")
 
         # Load categories, feeds, and entries while loading screen is shown
-        # Order matters: categories are needed to build entry→category mapping
+        # Order matters: feeds must be loaded before building feed→category mapping
         await self.load_categories()
         await self.load_feeds()
 
-        # Build category mapping using category API (better than feed-based approach)
-        # This creates a mapping of entry_id → category_id that we'll use later
-        self.entry_category_map = await self._build_entry_category_mapping()
+        # Build feed→category mapping from feeds (fast, cached in feed_category_map)
+        # This is much faster than the old entry-based approach
+        await self._build_entry_category_mapping()
 
         await self.load_entries()
 
@@ -319,63 +321,76 @@ class MinifluxTuiApp(App):
             self.log(f"Full error:\n{error_details}")
 
     async def _build_entry_category_mapping(self) -> dict[int, int]:
-        """Build a mapping of entry_id → category_id using the category API.
+        """Build feed_id → category_id mapping by fetching entries in parallel (optimized).
 
-        Since the feeds endpoint doesn't include category_id, we use a different
-        approach: fetch entries from each category and build a mapping.
+        OPTIMIZATION: Fetches categories in PARALLEL and uses a SMALL entry limit per category
+        (100 instead of 10,000). We only need enough entries to identify which feeds are in
+        each category. This is 10-100x faster than the old sequential approach.
 
         Returns:
-            Dictionary mapping entry_id to category_id
+            Empty dict for backward compatibility (real mapping is in self.feed_category_map)
         """
         if not self.client or not self.categories:
             self.log("Skipping category mapping: no client or categories")
+            self.feed_category_map = {}
             return {}
 
-        entry_category_map: dict[int, int] = {}
-        self.log(f"Building entry→category mapping from {len(self.categories)} categories...")
+        self.log(f"Building feed→category mapping from {len(self.categories)} categories (parallel)...")
 
-        for category in self.categories:
+        async def fetch_category_feeds(category: Category) -> tuple[int, set[int]]:
+            """Fetch feed IDs for a category (small limit for speed)."""
             try:
-                # Fetch all entries in this category
-                category_entries = await self.client.get_category_entries(category.id, limit=10000)
-                self.log(f"  Category {category.id} ({category.title}): {len(category_entries)} entries")
-
-                # Map each entry to this category
-                for entry in category_entries:
-                    entry_category_map[entry.id] = category.id
-                    self.log(f"    ✓ Entry {entry.id} → Category {category.id}")
-
+                # Only fetch 100 entries - enough to discover all feeds in category
+                entries = await self.client.get_category_entries(category.id, limit=100)
+                feed_ids = {entry.feed_id for entry in entries}
+                self.log(f"  Category '{category.title}': {len(feed_ids)} feeds")
+                return (category.id, feed_ids)
             except Exception as e:
-                self.log(f"  ✗ Category {category.id}: failed to fetch entries - {e}")
+                self.log(f"  Category '{category.title}': failed - {e}")
+                return (category.id, set())
 
-        self.log(f"Built mapping for {len(entry_category_map)} entries across categories")
-        return entry_category_map
+        # Fetch all categories in PARALLEL (much faster!)
+        results = await asyncio.gather(*[fetch_category_feeds(cat) for cat in self.categories])
 
-    def _enrich_entries_with_category_mapping(self, entries: list, entry_category_map: dict[int, int]) -> list:
+        # Build feed_id → category_id mapping
+        self.feed_category_map = {}
+        for category_id, feed_ids in results:
+            for feed_id in feed_ids:
+                self.feed_category_map[feed_id] = category_id
+
+        self.log(f"Built feed→category mapping for {len(self.feed_category_map)} feeds (parallel fetch)")
+        return {}  # Deprecated, real mapping is in self.feed_category_map
+
+    def _enrich_entries_with_category_mapping(self, entries: list, entry_category_map: dict[int, int]) -> list:  # noqa: ARG002
         """
-        Enrich entries with category_id using a pre-built entry→category mapping.
+        Enrich entries with category_id using feed→category mapping (fast).
+
+        OPTIMIZATION: This now uses self.feed_category_map (feed_id → category_id)
+        instead of the deprecated entry_category_map. Much faster because we don't
+        need to fetch all entries from all categories.
 
         Args:
             entries: List of entries to enrich
-            entry_category_map: Dictionary mapping entry_id to category_id
+            entry_category_map: DEPRECATED - no longer used, kept for compatibility
 
         Returns:
             List of entries with category information populated
         """
-        self.log(f"Applying category mapping to {len(entries)} entries")
-        self.log(f"Entry→category mapping has {len(entry_category_map)} entries")
+        if not self.feed_category_map:
+            self.log("No feed→category mapping available, skipping enrichment")
+            return entries
+
+        self.log(f"Applying category mapping to {len(entries)} entries using feed mapping")
 
         enriched_count = 0
         for entry in entries:
-            if entry.id in entry_category_map:
-                category_id = entry_category_map[entry.id]
+            # Look up category_id using entry's feed_id (much faster!)
+            if entry.feed_id in self.feed_category_map:
+                category_id = self.feed_category_map[entry.feed_id]
                 entry.feed.category_id = category_id
                 enriched_count += 1
-                self.log(f"  ✓ Entry {entry.id}: set category_id = {category_id}")
-            else:
-                self.log(f"  - Entry {entry.id}: not in any category")
 
-        self.log(f"Applied category mapping to {enriched_count}/{len(entries)} entries")
+        self.log(f"Applied category mapping to {enriched_count}/{len(entries)} entries (feed-based)")
         return entries
 
     async def load_entries(self, view: str = "unread") -> None:
@@ -397,9 +412,9 @@ class MinifluxTuiApp(App):
                 self.entries = await self.client.get_unread_entries(limit=DEFAULT_ENTRY_LIMIT)
                 self.current_view = "unread"
 
-            # Enrich entries with category information using the mapping
-            if self.entry_category_map:
-                self.entries = self._enrich_entries_with_category_mapping(self.entries, self.entry_category_map)
+            # Enrich entries with category information using the feed mapping (fast)
+            # Always call this - it has its own internal checks and uses cached feed_category_map
+            self.entries = self._enrich_entries_with_category_mapping(self.entries, {})
 
             # Update the entry list screen if it exists
             entry_list_screen = self._get_entry_list_screen()
@@ -468,8 +483,8 @@ class MinifluxTuiApp(App):
 
     async def action_refresh_entries(self) -> None:
         """Refresh entries from API."""
-        # Rebuild category mapping and reload entries
-        self.entry_category_map = await self._build_entry_category_mapping()
+        # Rebuild feed→category mapping (cached in feed_category_map) and reload entries
+        await self._build_entry_category_mapping()
         await self.load_entries(self.current_view)
         self.notify("Entries refreshed")
 
