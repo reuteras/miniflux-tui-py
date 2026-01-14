@@ -405,6 +405,8 @@ class EntryListScreen(Screen):
 
         # Refresh the list to reflect any status changes when returning from other screens
         if self.entries and self.list_view:
+            # Update subtitle to reflect current state
+            self._update_subtitle()
             # _populate_list() now handles cursor restoration and focus via call_later
             self._populate_list()
         elif self.list_view and len(self.list_view.children) > 0:
@@ -1481,13 +1483,25 @@ class EntryListScreen(Screen):
             except Exception as e:
                 self.notify(f"Error marking all as read: {e}", severity="error")
 
+    def _get_view_display_name(self) -> str:
+        """Get display name for current view."""
+        if self.app.current_view == "starred":
+            return "Starred"
+        return "Unread"
+
+    def _update_subtitle(self) -> None:
+        """Update subtitle with current view and sort information."""
+        view_name = self._get_view_display_name()
+        sort_name = self.current_sort.title()
+        self.sub_title = f"{view_name} | Sort: {sort_name}"
+
     def action_cycle_sort(self):
         """Cycle through sort modes."""
         current_index = SORT_MODES.index(self.current_sort)
         self.current_sort = SORT_MODES[(current_index + 1) % len(SORT_MODES)]
 
-        # Update title to show current sort
-        self.sub_title = f"Sort: {self.current_sort.title()}"
+        # Update subtitle to show current view and sort
+        self._update_subtitle()
 
         # Re-populate list
         self._populate_list()
@@ -1889,9 +1903,24 @@ class EntryListScreen(Screen):
         self.app.entries = self.entries
         self.sorted_entries = self._sort_entries(self.entries)
 
-        # Refresh the list view
+        # Refresh the list view with error handling and fallback
         if self.list_view:
-            self._populate_list()
+            try:
+                self._populate_list()
+            except Exception as e:
+                self._safe_log(f"UI update failed during incremental sync: {e}")
+                self.notify("Sync UI update failed - reloading entries...", severity="warning")
+
+                # Fallback: trigger full reload to ensure UI consistency
+                # Use run_worker to execute the async reload in background
+                async def _sync_fallback_reload():
+                    try:
+                        await self.app.load_entries(self.app.current_view)
+                    except Exception as reload_error:
+                        self._safe_log(f"Fallback reload also failed: {reload_error}")
+                        self.notify("Failed to reload entries after sync error", severity="error")
+
+                self.run_worker(_sync_fallback_reload(), exclusive=True)
 
     async def _perform_incremental_sync(self) -> tuple[int, int, int]:
         """Perform incremental sync of entries from the server.
@@ -1934,6 +1963,35 @@ class EntryListScreen(Screen):
 
         return (len(added_ids), len(removed_ids), 0)
 
+    def _validate_sync_ui_state(self, new_count: int, removed_count: int) -> None:
+        """Validate UI state after sync and trigger fallback if needed.
+
+        Args:
+            new_count: Number of new entries added
+            removed_count: Number of entries removed
+        """
+        # Check if sync made changes but UI appears empty
+        if (new_count > 0 or removed_count > 0) and self.list_view:
+            visible_items = 0
+            for child in self.list_view.children:
+                if isinstance(child, ListItem) and child.styles.display != "none":
+                    visible_items += 1
+
+            # If we have entries but no visible items, something went wrong
+            if len(self.entries) > 0 and visible_items == 0:
+                self._safe_log(f"Sync validation failed: {len(self.entries)} entries but 0 visible items")
+                self.notify("Sync completed but display appears empty - reloading...", severity="warning")
+
+                # Trigger fallback reload
+                async def _sync_validation_reload():
+                    try:
+                        await self.app.load_entries(self.app.current_view)
+                    except Exception as e:
+                        self._safe_log(f"Validation reload failed: {e}")
+                        self.notify("Failed to reload entries after sync validation", severity="error")
+
+                self.run_worker(_sync_validation_reload(), exclusive=True)
+
     def action_sync_entries(self):
         """Sync/reload entries from server without refreshing feeds.
 
@@ -1966,6 +2024,58 @@ class EntryListScreen(Screen):
             prefix = "Synced entries after reconnection: " if after_reconnect else "Synced entries: "
             self.notify(f"{prefix}{summary}", severity="information")
 
+    def _check_if_at_end_before_sync(self) -> None:
+        """Check if cursor is at the end of the list before sync.
+
+        Sets self._was_at_end_before_sync to help decide whether to jump
+        to the first item after refresh.
+        """
+        if not self.list_view or len(self.list_view.children) == 0:
+            return
+
+        # Find the last visible item index
+        last_visible_index = -1
+        for i in range(len(self.list_view.children) - 1, -1, -1):
+            child = self.list_view.children[i]
+            if isinstance(child, ListItem) and self._is_item_visible(child):
+                last_visible_index = i
+                break
+
+        # Mark if we're at the last item
+        self._was_at_end_before_sync = self.list_view.index is not None and self.list_view.index == last_visible_index
+
+    def _emergency_subtitle_update(self) -> None:
+        """Emergency fallback for subtitle update when normal update fails."""
+        try:
+            view_name = "Unread"
+            if hasattr(self, "app") and self.app and hasattr(self.app, "current_view"):
+                view_name = "Starred" if self.app.current_view == "starred" else "Unread"
+            sort_name = self.current_sort.title() if hasattr(self, "current_sort") else "Date"
+            self.sub_title = f"{view_name} | Sort: {sort_name}"
+        except Exception as emergency_error:
+            self._safe_log(f"Emergency subtitle update also failed: {emergency_error}")
+
+    async def _handle_sync_connection_error(self, error: Exception) -> None:
+        """Handle connection errors during sync by attempting reconnection.
+
+        Args:
+            error: The connection error that occurred
+        """
+        self._safe_log(f"Connection error during sync: {error}")
+        self.notify("Connection error, attempting to reconnect...", severity="warning")
+
+        if await self.app.reconnect_client():
+            try:
+                self._safe_log("Retrying sync after reconnection")
+                new_count, removed_count, _ = await self._perform_incremental_sync()
+                self._format_sync_summary(new_count, removed_count, after_reconnect=True)
+            except Exception as retry_error:
+                self._safe_log(f"Error after reconnection: {retry_error}")
+                self.notify(f"Error after reconnection: {retry_error}", severity="error")
+        else:
+            self._safe_log(f"Reconnection failed: {error}")
+            self.notify(f"Network error syncing entries: {error}", severity="error")
+
     async def _do_sync_entries(self):
         """Background worker for syncing entries.
 
@@ -1973,48 +2083,30 @@ class EntryListScreen(Screen):
         while the sync operation completes.
         """
         try:
-            # Track if we're at the end of the list before sync
-            # This helps us decide whether to jump to the first item after refresh
-            if self.list_view and len(self.list_view.children) > 0:
-                # Check if cursor is at or near the last visible item
-                last_visible_index = -1
-                for i in range(len(self.list_view.children) - 1, -1, -1):
-                    child = self.list_view.children[i]
-                    if isinstance(child, ListItem) and self._is_item_visible(child):
-                        last_visible_index = i
-                        break
-
-                # If we're at the last item, mark that we were at the end
-                if self.list_view.index is not None and self.list_view.index == last_visible_index:
-                    self._was_at_end_before_sync = True
-                else:
-                    self._was_at_end_before_sync = False
-
-            # Start loading animation in header
+            self._check_if_at_end_before_sync()
             self._start_loading_animation("Syncing entries...")
 
             # Perform incremental sync
+            self._safe_log("Starting incremental sync operation")
             new_count, removed_count, _ = await self._perform_incremental_sync()
+            self._safe_log(f"Incremental sync completed: +{new_count} new, -{removed_count} removed")
 
-            # Show summary message
+            # Validate UI state after sync
+            self._validate_sync_ui_state(new_count, removed_count)
             self._format_sync_summary(new_count, removed_count)
 
         except (ConnectionError, TimeoutError, OSError, BrokenPipeError) as e:
-            # Connection error - try to reconnect and retry once
-            self.notify("Connection error, attempting to reconnect...", severity="warning")
-            if await self.app.reconnect_client():
-                try:
-                    new_count, removed_count, _ = await self._perform_incremental_sync()
-                    self._format_sync_summary(new_count, removed_count, after_reconnect=True)
-                except Exception as retry_error:
-                    self.notify(f"Error after reconnection: {retry_error}", severity="error")
-            else:
-                self.notify(f"Network error syncing entries: {e}", severity="error")
+            await self._handle_sync_connection_error(e)
         except Exception as e:
+            self._safe_log(f"Unexpected error during sync: {e}")
             self.notify(f"Error syncing entries: {e}", severity="error")
         finally:
-            # Always stop the loading animation
-            self._stop_loading_animation()
+            try:
+                self._stop_loading_animation()
+                self._update_subtitle()
+            except Exception as e:
+                self._safe_log(f"Failed to update UI state after sync: {e}")
+                self._emergency_subtitle_update()
 
     def action_show_unread(self):
         """Load and show only unread entries."""
@@ -2032,6 +2124,7 @@ class EntryListScreen(Screen):
                 # The server-side view is what matters for refresh
                 self.filter_unread_only = False
                 self.filter_starred_only = False
+                self._update_subtitle()
                 self._populate_list()
             finally:
                 # Always stop the loading animation
@@ -2051,6 +2144,7 @@ class EntryListScreen(Screen):
                 await self.app.load_entries("starred")
                 self.filter_unread_only = False
                 self.filter_starred_only = False
+                self._update_subtitle()
                 self._populate_list()
             finally:
                 # Always stop the loading animation

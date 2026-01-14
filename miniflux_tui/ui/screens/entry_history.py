@@ -13,8 +13,11 @@ class EntryHistoryScreen(EntryListScreen):
     def __init__(self, **kwargs):
         """Initialize with empty entries list - will be populated on mount."""
         super().__init__(entries=[], **kwargs)
-        # Update subtitle to indicate this is history view
-        self.sub_title = "Reading History"
+
+    def _update_subtitle(self) -> None:
+        """Update subtitle with history view and sort information."""
+        sort_name = self.current_sort.title()
+        self.sub_title = f"History | Sort: {sort_name}"
 
     def on_mount(self) -> None:
         """Called when screen is mounted - load history instead of normal entries."""
@@ -40,11 +43,13 @@ class EntryHistoryScreen(EntryListScreen):
             if not history_entries:
                 self.app.notify("No read entries found. Read some articles first!", severity="information")
                 self.entries = []
+                self._update_subtitle()
                 self._populate_list()
             else:
                 self.app.notify(f"Loaded {len(history_entries)} entries", severity="information")
                 # Set the entries and populate the list (inherited from EntryListScreen)
                 self.entries = history_entries
+                self._update_subtitle()
                 self._populate_list()
 
         except Exception as e:
