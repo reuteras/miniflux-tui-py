@@ -29,3 +29,11 @@ default_sort = "date"
 # Default grouping by feed (default: false)
 # When true, entries will be grouped by feed name in the list
 default_group_by_feed = false
+
+[ui]
+# Wrap entry content at this column width (0 = no limit)
+text_width = 120
+
+# Show information messages (e.g., "Refreshing...", "Loaded N entries")
+# Set to false to only show warnings and errors (default: true)
+show_info_messages = true

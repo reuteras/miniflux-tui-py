@@ -111,6 +111,7 @@ class EntryReaderScreen(Screen):
         unread_color: str = "cyan",
         read_color: str = "gray",
         group_info: dict[str, str | int] | None = None,
+        text_width: int = 120,
         link_highlight_bg: str | None = None,
         link_highlight_fg: str | None = None,
         **kwargs,
@@ -122,6 +123,7 @@ class EntryReaderScreen(Screen):
         self.unread_color = unread_color
         self.read_color = read_color
         self.group_info = group_info  # Contains: mode, name, total, unread
+        self.text_width = max(0, text_width)
         self.link_highlight_bg = link_highlight_bg or "#ff79c6"  # Default: pink/magenta
         self.link_highlight_fg = link_highlight_fg or "#282a36"  # Default: dark text
         self.scroll_container = None
@@ -181,6 +183,10 @@ class EntryReaderScreen(Screen):
         """Called when screen is mounted."""
         # Get reference to the Markdown widget (now the scrollable container)
         self.scroll_container = self.query_one(Markdown)
+        if self.text_width > 0:
+            # Constrain the content area to the configured width for visual wrapping.
+            self.scroll_container.styles.width = self.text_width
+            self.scroll_container.styles.max_width = self.text_width
 
         # Set title to just the application name (no feed name or entry title)
         self.title = ""
@@ -375,8 +381,7 @@ class EntryReaderScreen(Screen):
                 self.log(traceback.format_exc())
                 self.notify(f"Error marking as read: {e}", severity="error")
 
-    @staticmethod
-    def _html_to_markdown(html_content: str) -> str:
+    def _html_to_markdown(self, html_content: str) -> str:
         """Convert HTML content to markdown for display.
 
         Converts HTML from RSS feed entries to markdown format for better
@@ -393,8 +398,8 @@ class EntryReaderScreen(Screen):
         h.ignore_links = False
         h.ignore_images = False
         h.ignore_emphasis = False
-        # Disable body width wrapping - let Textual handle terminal wrapping
-        h.body_width = 0
+        # Control wrapping for long lines in terminal output
+        h.body_width = self.text_width
         return h.handle(html_content)
 
     @staticmethod
