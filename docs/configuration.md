@@ -71,13 +71,9 @@ group_collapsed = false
 
 ```toml
 [ui]
-text_width = 120
 show_info_messages = true
 ```
 
-- **text_width**: Wrap entry content at this column width
-  - `120` - Default wrap width for entry content
-  - `0` - No wrapping (let terminal width decide)
 - **show_info_messages**: Control information message display
   - `true` - Show all messages including info (default)
   - `false` - Show only warnings and errors
@@ -100,7 +96,6 @@ default_group_by_feed = false
 group_collapsed = false
 
 [ui]
-text_width = 120
 show_info_messages = true
 ```
 

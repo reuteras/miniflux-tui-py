@@ -476,7 +476,6 @@ class MinifluxTuiApp(App):
             unread_color=self.config.unread_color,
             read_color=self.config.read_color,
             group_info=group_info,
-            text_width=self.config.text_width,
             link_highlight_bg=link_highlight_bg,
             link_highlight_fg=link_highlight_fg,
         )

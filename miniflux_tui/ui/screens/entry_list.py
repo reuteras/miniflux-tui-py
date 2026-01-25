@@ -425,23 +425,6 @@ class EntryListScreen(Screen):
             # Open the selected entry directly
             self._open_entry(event.item.entry)
 
-    def on_list_view_highlighted(self, event: ListView.Highlighted) -> None:
-        """Track highlighted item for cursor restoration after refresh."""
-        if self.list_view and self.list_view.index is not None:
-            self.last_cursor_index = self.list_view.index
-
-        if isinstance(event.item, EntryListItem):
-            entry = event.item.entry
-            self.last_highlighted_entry_id = entry.id
-            self.last_highlighted_feed = entry.feed.title
-            self.last_highlighted_category = self._get_category_title(entry.feed.category_id)
-        elif isinstance(event.item, FeedHeaderItem):
-            self.last_highlighted_feed = event.item.feed_title
-            self.last_highlighted_entry_id = None
-        elif isinstance(event.item, CategoryHeaderItem):
-            self.last_highlighted_category = event.item.category_title
-            self.last_highlighted_entry_id = None
-
     def _open_first_entry_by_feed(self, feed_title: str) -> None:
         """Find and open the first entry in a feed."""
         for entry in self.sorted_entries:
@@ -1502,8 +1485,7 @@ class EntryListScreen(Screen):
 
     def _get_view_display_name(self) -> str:
         """Get display name for current view."""
-        current_view = getattr(self.app, "current_view", "unread")
-        if current_view == "starred":
+        if self.app.current_view == "starred":
             return "Starred"
         return "Unread"
 
