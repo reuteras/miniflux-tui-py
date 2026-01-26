@@ -41,4 +41,4 @@ jobs:
       pull-requests: none  # Minimal permissions - no PR access needed
       issues: none  # Minimal permissions - no issues access needed
     # v2.2.3
-    uses: google/osv-scanner-action/.github/workflows/osv-scanner-reusable.yml@375a0e8ebdc98e99b02ac4338a724f5750f21213
+    uses: google/osv-scanner-action/.github/workflows/osv-scanner-reusable.yml@2a387edfbe02a11d856b89172f6e978100177eb4
