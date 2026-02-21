@@ -4,11 +4,71 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
-## [0.7.4] - 2025-12-07
+## [0.7.5] - 2026-02-21
+
+### BUG FIXES
+
+- Resolve feed settings delete button and double highlight issues (#639, #640, #642) (#657)
+- Reset cursor to first entry when syncing from end of list (#673)
+- Skip flaky integration tests on Windows with Python 3.11-3.12 (#674)
+- Skip additional flaky tests on Windows Python 3.11-3.12 (#676)
+- reduce code complexity and fix test app attribute errors (#731)
+
+### MAINTENANCE
+
+- bump oxsecurity/megalinter from 9.1.0 to 9.2.0 (#649) 🤖
+- bump actions/setup-python from 6.0.0 to 6.1.0 (#651) 🤖
+- bump actions/checkout from 6.0.0 to 6.0.1 (#654) 🤖
+- bump actions/download-artifact from 6.0.0 to 7.0.0 (#659) 🤖
+- bump google/osv-scanner-action/.github/workflows/osv-scanner-reusable.yml (#669) 🤖
+- bump actions/cache from 4.3.0 to 5.0.1 (#666) 🤖
+- bump actions/upload-artifact from 5.0.0 to 6.0.0 (#665) 🤖
+- bump step-security/harden-runner from 2.13.2 to 2.14.0 (#661) 🤖
+- bump peter-evans/create-pull-request from 7.0.9 to 8.0.0 (#662) 🤖
+- bump astral-sh/setup-uv from 7.1.4 to 7.1.6 (#678) 🤖
+- bump docker/setup-buildx-action from 3.11.1 to 3.12.0 (#680) 🤖
+- bump actions/attest-build-provenance from 3.0.0 to 3.1.0 (#684) 🤖
+- bump github/codeql-action from 4.31.0 to 4.31.9 (#682) 🤖
+- bump oxsecurity/megalinter from 9.2.0 to 9.3.0 (#690) 🤖
+- bump py-cov-action/python-coverage-comment-action (#693) 🤖
+- bump astral-sh/setup-uv from 7.1.6 to 7.2.0 (#695) 🤖
+- pre-commit autoupdate (#697)
+- bump google/osv-scanner-action/.github/workflows/osv-scanner-reusable.yml (#699) 🤖
+- bump zizmorcore/zizmor-action from 0.3.0 to 0.4.1 (#703) 🤖
+- bump actions/cache from 5.0.1 to 5.0.2 (#701) 🤖
+- bump actions/checkout from 6.0.1 to 6.0.2 (#705) 🤖
+- bump release-drafter/release-drafter from 6.1.0 to 6.2.0 (#709) 🤖
+- bump peter-evans/create-pull-request from 8.0.0 to 8.1.0 (#711) 🤖
+- bump actions/setup-python from 6.1.0 to 6.2.0 (#713) 🤖
+- bump zizmorcore/zizmor-action from 0.4.1 to 0.5.0 (#715) 🤖
+- bump docker/login-action from 3.6.0 to 3.7.0 (#718) 🤖
+- bump actions/attest-build-provenance from 3.1.0 to 3.2.0 (#717) 🤖
+- bump actions/cache from 5.0.2 to 5.0.3 (#719) 🤖
+- bump step-security/harden-runner from 2.14.0 to 2.14.2 (#725) 🤖
+- bump astral-sh/setup-uv from 7.2.0 to 7.3.0 (#727) 🤖
+
+### TESTING
+
+- Skip flaky test on Windows (#647)
+
+
+
+#### Contributors
+
+Thank you to everyone who contributed to this release!
+
+**Humans:** 👤 Peter Reuterås
+
+**AI & Automation:** 🤖 Claude (AI Assistant), dependabot[bot] (Dependencies)
+## [v0.7.4] - 2025-12-07
 
 ### BUG FIXES
 
 - Add automatic reconnection on stale connection errors (#644)
+
+### MAINTENANCE
+
+- Release v0.7.4 (#646)
 
 
 
