@@ -46,6 +46,10 @@ updates:
       day: "monday"
       time: "03:00"
     open-pull-requests-limit: 5
+    groups:
+      actions-deps:
+        patterns:
+          - "*"
     cooldown:
       default-days: 7
 
