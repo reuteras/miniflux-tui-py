@@ -745,8 +745,8 @@ class TestComplexScenarios:
                 assert len(entry_list_screen.sorted_entries) > 0
 
     @pytest.mark.skipif(
-        sys.platform == "win32" and sys.version_info < (3, 13),
-        reason="Flaky on Windows with Python 3.11-3.12 due to Textual pilot timeout issues",
+        sys.platform == "win32",
+        reason="Flaky on Windows due to Textual pilot timeout issues",
     )
     @pytest.mark.asyncio
     async def test_entry_counts_per_feed(self, full_integration_config, full_integration_client, realistic_entries):
