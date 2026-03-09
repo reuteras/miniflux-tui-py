@@ -36,7 +36,7 @@ jobs:
           persist-credentials: false
 
       - name: Install uv
-        uses: astral-sh/setup-uv@eac588ad8def6316056a12d4907a9d4d84ff7a3b # v7.3.0
+        uses: astral-sh/setup-uv@5a095e7a2014a4212f075830d4f7277575a9d098 # v7.3.1
         with:
           github-token: ${{ secrets.GITHUB_TOKEN }}
           enable-cache: "false"
@@ -91,7 +91,7 @@ jobs:
 
       - name: Download artifacts
         if: github.event_name != 'pull_request'
-        uses: actions/download-artifact@37930b1c2abaa49bbe596cd826c3c89aef350131 # v6
+        uses: actions/download-artifact@70fc10c6e5e1ce46ad2ea6f2b72d43f7d47b13c3 # v6
         with:
           name: ${{ env.DIST_ARTIFACT_NAME }}
           path: dist/
@@ -127,7 +127,7 @@ jobs:
           persist-credentials: false
 
       - name: Install uv
-        uses: astral-sh/setup-uv@eac588ad8def6316056a12d4907a9d4d84ff7a3b # v7.3.0
+        uses: astral-sh/setup-uv@5a095e7a2014a4212f075830d4f7277575a9d098 # v7.3.1
         with:
           github-token: ${{ secrets.GITHUB_TOKEN }}
           enable-cache: "false"
@@ -172,14 +172,14 @@ jobs:
 
       - name: Download artifacts
         if: github.event_name != 'pull_request'
-        uses: actions/download-artifact@37930b1c2abaa49bbe596cd826c3c89aef350131 # v6
+        uses: actions/download-artifact@70fc10c6e5e1ce46ad2ea6f2b72d43f7d47b13c3 # v6
         with:
           name: dist-${{ github.run_id }}-${{ github.run_attempt }}
           path: dist/
 
       - name: Download binary artifacts
         if: github.event_name != 'pull_request'
-        uses: actions/download-artifact@37930b1c2abaa49bbe596cd826c3c89aef350131 # v6
+        uses: actions/download-artifact@70fc10c6e5e1ce46ad2ea6f2b72d43f7d47b13c3 # v6
         with:
           pattern: ${{ env.BINARY_ARTIFACT_PREFIX }}-*
           merge-multiple: true
