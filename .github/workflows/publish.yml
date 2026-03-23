@@ -91,7 +91,7 @@ jobs:
 
       - name: Download artifacts
         if: github.event_name != 'pull_request'
-        uses: actions/download-artifact@70fc10c6e5e1ce46ad2ea6f2b72d43f7d47b13c3 # v6
+        uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v6
         with:
           name: ${{ env.DIST_ARTIFACT_NAME }}
           path: dist/
@@ -172,14 +172,14 @@ jobs:
 
       - name: Download artifacts
         if: github.event_name != 'pull_request'
-        uses: actions/download-artifact@70fc10c6e5e1ce46ad2ea6f2b72d43f7d47b13c3 # v6
+        uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v6
         with:
           name: dist-${{ github.run_id }}-${{ github.run_attempt }}
           path: dist/
 
       - name: Download binary artifacts
         if: github.event_name != 'pull_request'
-        uses: actions/download-artifact@70fc10c6e5e1ce46ad2ea6f2b72d43f7d47b13c3 # v6
+        uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v6
         with:
           pattern: ${{ env.BINARY_ARTIFACT_PREFIX }}-*
           merge-multiple: true
@@ -242,7 +242,7 @@ jobs:
             binaries/*
 
       - name: Install cosign
-        uses: sigstore/cosign-installer@faadad0cce49287aee09b3a48701e75088a2c6ad # v4.0.0
+        uses: sigstore/cosign-installer@ba7bc0a3fef59531c69a25acd34668d6d3fe6f22 # v4.1.0
 
       - name: Sign release artifacts with cosign
         if: github.event_name != 'pull_request'
