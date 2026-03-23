@@ -185,46 +185,45 @@ jobs:
           merge-multiple: true
           path: binaries/
 
-      - name: Install Syft
+      - name: Create SBOM output directory
         if: github.event_name != 'pull_request'
-        run: |
-          set -euo pipefail
-          SYFT_VERSION=v1.36.0
-          SYFT_BASE_URL="https://github.com/anchore/syft/releases/download/${SYFT_VERSION}"
-          SYFT_ARCHIVE="syft_${SYFT_VERSION#v}_linux_amd64.tar.gz"
-          TMP_DIR="$(mktemp -d)"
-          ARCHIVE_PATH="${TMP_DIR}/syft.tar.gz"
+        run: mkdir -p sbom
 
-          if ! curl -sSfL "${SYFT_BASE_URL}/${SYFT_ARCHIVE}" -o "${ARCHIVE_PATH}"; then
-            ALT_ARCHIVE="syft_Linux_x86_64.tar.gz"
-            curl -sSfL "${SYFT_BASE_URL}/${ALT_ARCHIVE}" -o "${ARCHIVE_PATH}"
-          fi
-
-          sudo tar -xz -f "${ARCHIVE_PATH}" -C /usr/local/bin syft
-          rm -rf "${TMP_DIR}"
-
-      - name: Generate SBOMs for release artifacts
+      - name: Generate SBOM for PyPI dist (CycloneDX)
         if: github.event_name != 'pull_request'
-        run: |
-          mkdir -p sbom
-          TAG_NAME="${RELEASE_TAG}"
-          VERSION="${TAG_NAME#v}"
-          syft dir:dist --source-name miniflux-tui-py \
-            --source-version "${VERSION}" \
-            --output cyclonedx-json=sbom/miniflux-tui-pypi.cdx.json
-          syft dir:dist --source-name miniflux-tui-py \
-            --source-version "${VERSION}" \
-            --output spdx-json=sbom/miniflux-tui-pypi.spdx.json
-          if compgen -G "binaries/*" > /dev/null; then
-            syft dir:binaries --source-name miniflux-tui \
-              --source-version "${VERSION}" \
-              --output cyclonedx-json=sbom/miniflux-tui-binaries.cdx.json
-            syft dir:binaries --source-name miniflux-tui \
-              --source-version "${VERSION}" \
-              --output spdx-json=sbom/miniflux-tui-binaries.spdx.json
-          else
-            echo "No binary artifacts found; skipping binary SBOM generation."
-          fi
+        uses: anchore/sbom-action@f6c3d0fe42c3cf876e3462574e4c9416b5e0f07a # v0.9.0
+        with:
+          path: dist/
+          format: cyclonedx-json
+          output-file: sbom/miniflux-tui-pypi.cdx.json
+          upload-artifact: false
+
+      - name: Generate SBOM for PyPI dist (SPDX)
+        if: github.event_name != 'pull_request'
+        uses: anchore/sbom-action@f6c3d0fe42c3cf876e3462574e4c9416b5e0f07a # v0.9.0
+        with:
+          path: dist/
+          format: spdx-json
+          output-file: sbom/miniflux-tui-pypi.spdx.json
+          upload-artifact: false
+
+      - name: Generate SBOM for binaries (CycloneDX)
+        if: github.event_name != 'pull_request' && hashFiles('binaries/**') != ''
+        uses: anchore/sbom-action@f6c3d0fe42c3cf876e3462574e4c9416b5e0f07a # v0.9.0
+        with:
+          path: binaries/
+          format: cyclonedx-json
+          output-file: sbom/miniflux-tui-binaries.cdx.json
+          upload-artifact: false
+
+      - name: Generate SBOM for binaries (SPDX)
+        if: github.event_name != 'pull_request' && hashFiles('binaries/**') != ''
+        uses: anchore/sbom-action@f6c3d0fe42c3cf876e3462574e4c9416b5e0f07a # v0.9.0
+        with:
+          path: binaries/
+          format: spdx-json
+          output-file: sbom/miniflux-tui-binaries.spdx.json
+          upload-artifact: false
 
       - name: Upload SBOM artifacts
         if: github.event_name != 'pull_request'

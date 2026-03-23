@@ -344,3 +344,31 @@ jobs:
           echo "🎯 Target: >80% mutation score for high-quality tests"
           echo ""
           echo "Note: Mutation testing is informational and does not block PR merging."
+
+  bandit:
+    name: Bandit Security Analysis
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        shell: bash
+    steps:
+      - name: Harden the runner (Audit all outbound calls)
+        uses: step-security/harden-runner@58077d3c7e43986b6b15fba718e8ea69e387dfcc # v2.15.1
+        with:
+          egress-policy: audit
+
+      - name: Checkout code
+        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+        with:
+          persist-credentials: false
+
+      - name: Install uv
+        uses: astral-sh/setup-uv@5a095e7a2014a4212f075830d4f7277575a9d098 # v7.3.1
+        with:
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Install dependencies
+        run: uv sync --locked --group dev
+
+      - name: Run Bandit security checks
+        run: uv run bandit -q -r miniflux_tui
