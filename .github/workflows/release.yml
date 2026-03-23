@@ -88,22 +88,17 @@ jobs:
       - name: Regenerate uv.lock
         run: uv lock
 
-      - name: Install git-cliff
-        run: |
-          CLIFF_VERSION="2.7.0"
-          wget -q "https://github.com/orhun/git-cliff/releases/download/v${CLIFF_VERSION}/git-cliff-${CLIFF_VERSION}-x86_64-unknown-linux-gnu.tar.gz"
-          tar -xzf "git-cliff-${CLIFF_VERSION}-x86_64-unknown-linux-gnu.tar.gz"
-          sudo mv "git-cliff-${CLIFF_VERSION}/git-cliff" /usr/local/bin/
-          rm -rf "git-cliff-${CLIFF_VERSION}" "git-cliff-${CLIFF_VERSION}-x86_64-unknown-linux-gnu.tar.gz"
-
       - name: Update CHANGELOG.md
+        uses: orhun/git-cliff-action@c93ef52f3d0ddcdcc9bd5447d98d458a11cd4f72 # v4.7.1
+        with:
+          config: cliff.toml
+          args: --tag ${{ steps.version.outputs.version }}
         env:
-          VERSION: ${{ steps.version.outputs.version }}
-        run: |
-          git-cliff --config cliff.toml --tag "$VERSION" --output CHANGELOG.md
+          OUTPUT: CHANGELOG.md
+          GITHUB_REPO: ${{ github.repository }}
 
       - name: Setup Gitsign for commit signing
-        uses: chainguard-dev/actions/setup-gitsign@3e8a2a226fad9e1ecbf2d359b8a7697554a4ac6d # main
+        uses: chainguard-dev/actions/setup-gitsign@d67380d0b02c09412f8e17f660ec48870bd89e6e # v1.6.9
 
       - name: Create release branch and commit
         env:
@@ -303,7 +298,7 @@ jobs:
           persist-credentials: false
 
       - name: Setup Gitsign
-        uses: chainguard-dev/actions/setup-gitsign@3e8a2a226fad9e1ecbf2d359b8a7697554a4ac6d # main
+        uses: chainguard-dev/actions/setup-gitsign@d67380d0b02c09412f8e17f660ec48870bd89e6e # v1.6.9
 
       - name: Create and push signed tag
         env:

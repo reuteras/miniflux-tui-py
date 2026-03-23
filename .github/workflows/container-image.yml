@@ -85,39 +85,27 @@ jobs:
           platforms: linux/amd64,linux/arm64
           tags: ${{ steps.image-tags.outputs.tags }}
 
-      - name: Install Syft
+      - name: Create SBOM output directory
         if: github.event_name != 'pull_request'
-        run: |
-          set -euo pipefail
-          SYFT_VERSION=v1.36.0
-          SYFT_BASE_URL="https://github.com/anchore/syft/releases/download/${SYFT_VERSION}"
-          SYFT_ARCHIVE="syft_${SYFT_VERSION#v}_linux_amd64.tar.gz"
-          TMP_DIR="$(mktemp -d)"
-          ARCHIVE_PATH="${TMP_DIR}/syft.tar.gz"
+        run: mkdir -p sbom
 
-          if ! curl -sSfL "${SYFT_BASE_URL}/${SYFT_ARCHIVE}" -o "${ARCHIVE_PATH}"; then
-            ALT_ARCHIVE="syft_Linux_x86_64.tar.gz"
-            curl -sSfL "${SYFT_BASE_URL}/${ALT_ARCHIVE}" -o "${ARCHIVE_PATH}"
-          fi
-
-          sudo tar -xz -f "${ARCHIVE_PATH}" -C /usr/local/bin syft
-          rm -rf "${TMP_DIR}"
-
-      - name: Generate SBOMs for container image
+      - name: Generate SBOM for container image (CycloneDX)
         if: github.event_name != 'pull_request'
-        env:
-          IMAGE_DIGEST: ${{ steps.build.outputs.digest }}
-        run: |
-          set -euo pipefail
-          if [[ ! "${IMAGE_DIGEST}" =~ ^sha256:[0-9a-f]{64}$ ]]; then
-            echo "Unexpected image digest format: ${IMAGE_DIGEST}" >&2
-            exit 1
-          fi
-          mkdir -p sbom
-          IMAGE="${REGISTRY}/${IMAGE_NAME}@${IMAGE_DIGEST}"
-          SAFE_DIGEST="${IMAGE_DIGEST//:/-}"
-          syft "docker:${IMAGE}" -o cyclonedx-json --file "sbom/miniflux-tui-image-${SAFE_DIGEST}.cdx.json"
-          syft "docker:${IMAGE}" -o spdx-json --file "sbom/miniflux-tui-image-${SAFE_DIGEST}.spdx.json"
+        uses: anchore/sbom-action@f6c3d0fe42c3cf876e3462574e4c9416b5e0f07a # v0.9.0
+        with:
+          image: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}@${{ steps.build.outputs.digest }}
+          format: cyclonedx-json
+          output-file: sbom/miniflux-tui-image.cdx.json
+          upload-artifact: false
+
+      - name: Generate SBOM for container image (SPDX)
+        if: github.event_name != 'pull_request'
+        uses: anchore/sbom-action@f6c3d0fe42c3cf876e3462574e4c9416b5e0f07a # v0.9.0
+        with:
+          image: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}@${{ steps.build.outputs.digest }}
+          format: spdx-json
+          output-file: sbom/miniflux-tui-image.spdx.json
+          upload-artifact: false
 
       - name: Upload SBOM artifacts
         if: github.event_name != 'pull_request'
