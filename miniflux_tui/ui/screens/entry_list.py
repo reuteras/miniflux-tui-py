@@ -667,6 +667,34 @@ class EntryListScreen(Screen):
             except Exception as e:
                 self._safe_log(f"  Emergency fallback failed: {type(e).__name__}: {e}")
 
+    def _scroll_to_first_new_entry(self, new_entry_ids: set[int]) -> None:
+        """Position cursor on the first newly-added entry in the current sort order.
+
+        Called after a sync that added new entries, so the user can immediately
+        see the new content rather than staying at their previous reading position.
+        In grouped mode, expands the feed containing the first new entry if it is
+        currently collapsed.
+
+        Args:
+            new_entry_ids: Set of entry IDs that were added during the sync
+        """
+        if not new_entry_ids or not self.list_view or not self.sorted_entries:
+            return
+
+        for entry in self.sorted_entries:
+            if entry.id not in new_entry_ids:
+                continue
+
+            # In grouped mode, expand the feed so the entry is visible
+            if self.group_by_feed and entry.feed.title in self.feed_fold_state and not self.feed_fold_state[entry.feed.title]:
+                self.feed_fold_state[entry.feed.title] = True
+                self._set_feed_fold_state(entry.feed.title, True)
+
+            idx = self._find_entry_index_by_id(entry.id)
+            if idx is not None:
+                self._set_cursor_to_index(idx)
+            return
+
     def _set_initial_position_and_focus(self) -> None:
         """Set cursor to first item on initial mount and ensure focus."""
         if not self.list_view or len(self.list_view.children) == 0:
@@ -1921,6 +1949,9 @@ class EntryListScreen(Screen):
         if self.list_view:
             try:
                 self._populate_list()
+                if added_ids:
+                    self.list_view.refresh()
+                    self._scroll_to_first_new_entry(added_ids)
             except Exception as e:
                 self._safe_log(f"UI update failed during incremental sync: {e}")
                 self.notify("Sync UI update failed - reloading entries...", severity="warning")
