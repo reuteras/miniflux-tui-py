@@ -2111,8 +2111,11 @@ class EntryListScreen(Screen):
                 self._safe_log("Retrying sync after reconnection")
                 new_count, removed_count, _, new_entry_ids = await self._perform_incremental_sync()
                 self._format_sync_summary(new_count, removed_count, after_reconnect=True)
-                if new_entry_ids:
-                    self.call_after_refresh(lambda: self._scroll_to_first_new_entry(new_entry_ids))
+                if new_count > 0 or removed_count > 0:
+                    await asyncio.sleep(0)
+                    self._populate_list()
+                    if new_entry_ids:
+                        self._scroll_to_first_new_entry(new_entry_ids)
             except Exception as retry_error:
                 self._safe_log(f"Error after reconnection: {retry_error}")
                 self.notify(f"Error after reconnection: {retry_error}", severity="error")
@@ -2130,18 +2133,20 @@ class EntryListScreen(Screen):
             self._check_if_at_end_before_sync()
             self._start_loading_animation("Syncing entries...")
 
-            # Perform incremental sync
+            # Perform incremental sync (calls _populate_list once internally)
             self._safe_log("Starting incremental sync operation")
             new_count, removed_count, _, new_entry_ids = await self._perform_incremental_sync()
             self._safe_log(f"Incremental sync completed: +{new_count} new, -{removed_count} removed")
 
-            # Validate UI state after sync
-            self._validate_sync_ui_state(new_count, removed_count)
             self._format_sync_summary(new_count, removed_count)
 
-            # Scroll to first new entry after Textual has rendered the updated list
-            if new_entry_ids:
-                self.call_after_refresh(lambda: self._scroll_to_first_new_entry(new_entry_ids))
+            # Yield to event loop so Textual can process the first populate,
+            # then repopulate (mirrors the g+u double-populate pattern which works reliably).
+            if new_count > 0 or removed_count > 0:
+                await asyncio.sleep(0)
+                self._populate_list()
+                if new_entry_ids:
+                    self._scroll_to_first_new_entry(new_entry_ids)
 
         except (ConnectionError, TimeoutError, OSError, BrokenPipeError) as e:
             await self._handle_sync_connection_error(e)
