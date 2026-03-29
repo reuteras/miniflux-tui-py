@@ -1949,9 +1949,6 @@ class EntryListScreen(Screen):
         if self.list_view:
             try:
                 self._populate_list()
-                if added_ids:
-                    self.list_view.refresh()
-                    self._scroll_to_first_new_entry(added_ids)
             except Exception as e:
                 self._safe_log(f"UI update failed during incremental sync: {e}")
                 self.notify("Sync UI update failed - reloading entries...", severity="warning")
@@ -1967,7 +1964,7 @@ class EntryListScreen(Screen):
 
                 self.run_worker(_sync_fallback_reload(), exclusive=True)
 
-    async def _perform_incremental_sync(self) -> tuple[int, int, int]:
+    async def _perform_incremental_sync(self) -> tuple[int, int, int, set[int]]:
         """Perform incremental sync of entries from the server.
 
         Fetches new entries from the server and dynamically updates the UI by:
@@ -1976,11 +1973,11 @@ class EntryListScreen(Screen):
         - Preserving UI state (cursor position, sort order, etc.)
 
         Returns:
-            Tuple of (new_count, removed_count, updated_count)
+            Tuple of (new_count, removed_count, updated_count, added_ids)
         """
         if not hasattr(self.app, "client") or not self.app.client:
             self.notify("API client not initialized", severity="error")
-            return (0, 0, 0)
+            return (0, 0, 0, set())
 
         # Get current entry IDs before sync
         current_ids = {entry.id for entry in self.entries}
@@ -1988,7 +1985,7 @@ class EntryListScreen(Screen):
         # Fetch fresh data from server
         new_entries = await self._fetch_entries_for_sync()
         if new_entries is None:
-            return (0, 0, 0)
+            return (0, 0, 0, set())
 
         # Enrich with category data
         await self._enrich_entries_with_categories(new_entries)
@@ -2000,13 +1997,13 @@ class EntryListScreen(Screen):
 
         # If no changes, return early
         if not added_ids and not removed_ids:
-            return (0, 0, 0)
+            return (0, 0, 0, set())
 
         # Apply changes to UI
         new_entry_map = {entry.id: entry for entry in new_entries}
         self._apply_entry_changes(added_ids, removed_ids, new_entry_map)
 
-        return (len(added_ids), len(removed_ids), 0)
+        return (len(added_ids), len(removed_ids), 0, added_ids)
 
     def _validate_sync_ui_state(self, new_count: int, removed_count: int) -> None:
         """Validate UI state after sync and trigger fallback if needed.
@@ -2019,7 +2016,7 @@ class EntryListScreen(Screen):
         if (new_count > 0 or removed_count > 0) and self.list_view:
             visible_items = 0
             for child in self.list_view.children:
-                if isinstance(child, ListItem) and child.styles.display != "none":
+                if isinstance(child, ListItem) and "collapsed" not in child.classes:
                     visible_items += 1
 
             # If we have entries but no visible items, something went wrong
@@ -2112,8 +2109,10 @@ class EntryListScreen(Screen):
         if await self.app.reconnect_client():
             try:
                 self._safe_log("Retrying sync after reconnection")
-                new_count, removed_count, _ = await self._perform_incremental_sync()
+                new_count, removed_count, _, new_entry_ids = await self._perform_incremental_sync()
                 self._format_sync_summary(new_count, removed_count, after_reconnect=True)
+                if new_entry_ids:
+                    self.call_after_refresh(lambda: self._scroll_to_first_new_entry(new_entry_ids))
             except Exception as retry_error:
                 self._safe_log(f"Error after reconnection: {retry_error}")
                 self.notify(f"Error after reconnection: {retry_error}", severity="error")
@@ -2133,12 +2132,16 @@ class EntryListScreen(Screen):
 
             # Perform incremental sync
             self._safe_log("Starting incremental sync operation")
-            new_count, removed_count, _ = await self._perform_incremental_sync()
+            new_count, removed_count, _, new_entry_ids = await self._perform_incremental_sync()
             self._safe_log(f"Incremental sync completed: +{new_count} new, -{removed_count} removed")
 
             # Validate UI state after sync
             self._validate_sync_ui_state(new_count, removed_count)
             self._format_sync_summary(new_count, removed_count)
+
+            # Scroll to first new entry after Textual has rendered the updated list
+            if new_entry_ids:
+                self.call_after_refresh(lambda: self._scroll_to_first_new_entry(new_entry_ids))
 
         except (ConnectionError, TimeoutError, OSError, BrokenPipeError) as e:
             await self._handle_sync_connection_error(e)
