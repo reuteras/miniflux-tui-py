@@ -134,6 +134,16 @@ def validate_config(config_dict: dict) -> tuple[bool, str]:
                 )
             )
 
+        ui = config_dict.get("ui", {})
+        if ui and "text_width" in ui:
+            text_width = ui["text_width"]
+            validations.append(
+                (
+                    isinstance(text_width, int) and text_width >= 0,
+                    "ui.text_width must be an integer >= 0",
+                )
+            )
+
     # Check all validations
     for condition, error_msg in validations:
         if not condition:
@@ -157,6 +167,7 @@ class Config:
         default_group_by_feed: bool = False,
         group_collapsed: bool = False,
         show_info_messages: bool = True,
+        text_width: int = 120,
         theme_name: str = "dark",
         link_highlight_bg: str | None = None,
         link_highlight_fg: str | None = None,
@@ -171,6 +182,7 @@ class Config:
         self.default_group_by_feed = default_group_by_feed
         self.group_collapsed = group_collapsed
         self.show_info_messages = show_info_messages
+        self.text_width = text_width
         self.theme_name = theme_name
         self.link_highlight_bg = link_highlight_bg
         self.link_highlight_fg = link_highlight_fg
@@ -354,6 +366,7 @@ class Config:
             default_group_by_feed=settings["default_group_by_feed"],
             group_collapsed=settings["group_collapsed"],
             show_info_messages=settings["show_info_messages"],
+            text_width=settings["text_width"],
             theme_name=settings["theme_name"],
             link_highlight_bg=settings["link_highlight_bg"],
             link_highlight_fg=settings["link_highlight_fg"],
@@ -513,6 +526,7 @@ def _extract_config_settings(data: dict) -> dict:
     # UI settings
     ui: dict = data.get("ui", {})
     show_info_messages: bool = ui.get("show_info_messages", True)
+    text_width: int = ui.get("text_width", 120)
 
     return {
         "unread_color": unread_color,
@@ -524,6 +538,7 @@ def _extract_config_settings(data: dict) -> dict:
         "default_group_by_feed": default_group_by_feed,
         "group_collapsed": group_collapsed,
         "show_info_messages": show_info_messages,
+        "text_width": text_width,
     }
 
 
