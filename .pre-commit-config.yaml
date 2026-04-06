@@ -24,7 +24,7 @@ repos:
       - id: destroyed-symlinks
       - id: check-shebang-scripts-are-executable
   - repo: https://github.com/astral-sh/ruff-pre-commit
-    rev: v0.15.8
+    rev: v0.15.9
     hooks:
       - id: ruff
         args: ["--fix"]
@@ -44,7 +44,7 @@ repos:
         types: [markdown]
         additional_dependencies: ["markdown-table-formatter@1.6.1"]
   - repo: https://github.com/owenlamont/uv-secure
-    rev: 0.17.0
+    rev: 0.17.1
     hooks:
       - id: uv-secure
   - repo: https://github.com/gitleaks/gitleaks
