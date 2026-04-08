@@ -1499,7 +1499,7 @@ class EntryListScreen(Screen):
 
         def on_confirm() -> None:
             """Handle confirmation to mark all as read."""
-            asyncio.create_task(self._do_mark_all_as_read())  # noqa: RUF006
+            self.run_worker(self._do_mark_all_as_read(), exclusive=True)
 
         # Create confirmation dialog
         dialog = ConfirmDialog(
