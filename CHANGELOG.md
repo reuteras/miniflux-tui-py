@@ -4,7 +4,74 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
-## [0.7.5] - 2026-02-21
+## [0.8.2] - 2026-04-20
+
+### BUG FIXES
+
+- Use BOT_TOKEN for release branch push and PR creation (#806)
+
+### MAINTENANCE
+
+- Release v0.7.6 (#802)
+- Release v0.7.8 (#804)
+
+
+
+#### Contributors
+
+Thank you to everyone who contributed to this release!
+
+**Humans:** 👤 Peter Reuterås
+
+**AI & Automation:** 🤖 Claude (AI Assistant)
+## [v0.7.6] - 2026-04-20
+
+### BUG FIXES
+
+- skip test_entry_counts_per_feed on all Windows versions (#763)
+- Scroll to first new entry after sync to make new content visible (#779)
+- Defer new-entry scroll until after Textual renders the updated list (#780)
+- Use double-populate pattern to ensure new entries appear after sync (#781)
+- replace asyncio.create_task with run_worker to prevent GC of fire-and-forget tasks (#788)
+- address GitHub code scanning security alerts (#789)
+- Remediate security findings from audit (HTML sanitization, SSRF, TLS, file permissions) (#799)
+
+### FEATURES
+
+- Re-add text_width config option for entry reader (#778)
+
+### MAINTENANCE
+
+- bump google/osv-scanner-action/.github/workflows/osv-scanner-reusable.yml (#735) 🤖
+- bump docker/build-push-action from 6.18.0 to 6.19.2 (#737) 🤖
+- bump github/codeql-action from 4.31.9 to 4.32.4 (#742) 🤖
+- bump aquasecurity/trivy-action from 0.33.1 to 0.34.1 (#746) 🤖
+- bump actions/dependency-review-action from 4.8.2 to 4.8.3 (#744) 🤖
+- bump actions/upload-artifact from 6.0.0 to 7.0.0 (#750) 🤖
+- bump oxsecurity/megalinter from 9.3.0 to 9.4.0 (#752) 🤖
+- bump astral-sh/setup-uv from 7.3.0 to 7.3.1 (#753) 🤖
+- bump actions/download-artifact from 7.0.0 to 8.0.0 (#756) 🤖
+- bump actions/attest-build-provenance from 3.2.0 to 4.1.0 (#754) 🤖
+- bump the actions-deps group with 9 updates (#764) 🤖
+- bump the actions-deps group with 2 updates (#770) 🤖
+- Remove supply chain risks from GitHub Actions workflows (#775)
+- bump the actions-deps group with 3 updates (#782) 🤖
+- bump the actions-deps group with 5 updates (#785) 🤖
+- bump the actions-deps group with 3 updates (#792) 🤖
+- bump pytest in the uv group across 1 directory (#795) 🤖
+- bump the actions-deps group with 7 updates (#796) 🤖
+- Release v0.7.6 (#800)
+
+
+
+#### Contributors
+
+Thank you to everyone who contributed to this release!
+
+**Humans:** 👤 Peter Reuterås
+
+**AI & Automation:** 🤖 Claude (AI Assistant), dependabot[bot] (Dependencies)
+## [v0.7.5] - 2026-02-21
 
 ### BUG FIXES
 
@@ -46,6 +113,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - bump actions/cache from 5.0.2 to 5.0.3 (#719) 🤖
 - bump step-security/harden-runner from 2.14.0 to 2.14.2 (#725) 🤖
 - bump astral-sh/setup-uv from 7.2.0 to 7.3.0 (#727) 🤖
+- Release v0.7.5 (#732)
 
 ### TESTING
 
