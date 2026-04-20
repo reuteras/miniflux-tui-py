@@ -103,7 +103,9 @@ jobs:
       - name: Create release branch and commit
         env:
           VERSION: ${{ steps.version.outputs.version }}
-          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          # BOT_TOKEN is a PAT — unlike GITHUB_TOKEN, pushes made with it
+          # cause the pull_request event to fire and trigger CI on the PR.
+          GH_TOKEN: ${{ secrets.BOT_TOKEN }}
         run: |
           BRANCH="release/v${VERSION}"
 
@@ -123,7 +125,8 @@ jobs:
       - name: Create Pull Request
         id: create-pr
         env:
-          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          # BOT_TOKEN here so the PR creation event triggers CI workflows.
+          GH_TOKEN: ${{ secrets.BOT_TOKEN }}
           VERSION: ${{ steps.version.outputs.version }}
         run: |
           BRANCH="release/v${VERSION}"
