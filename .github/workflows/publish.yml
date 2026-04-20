@@ -61,7 +61,7 @@ jobs:
 
       - name: Upload artifacts
         if: github.event_name != 'pull_request'
-        uses: actions/upload-artifact@bbbca2ddaa5d8feaa63e36b76fdaad77386f024f # v5
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v5
         with:
           name: ${{ env.DIST_ARTIFACT_NAME }}
           path: dist/
@@ -97,7 +97,7 @@ jobs:
           path: dist/
 
       - name: Publish to PyPI
-        uses: pypa/gh-action-pypi-publish@ed0c53931b1dc9bd32cbe73a98c7f6766f8a527e # v1.13.0
+        uses: pypa/gh-action-pypi-publish@cef221092ed1bacb1cc03d23a2d87d1d172e277b # v1.14.0
         with:
           packages-dir: dist/
           skip-existing: true
@@ -142,7 +142,7 @@ jobs:
         run: uv run python scripts/build_binary.py
 
       - name: Upload binary artifact
-        uses: actions/upload-artifact@bbbca2ddaa5d8feaa63e36b76fdaad77386f024f # v5
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v5
         with:
           name: ${{ env.BINARY_ARTIFACT_PREFIX }}-${{ matrix.os }}
           path: build/binary/*
@@ -227,7 +227,7 @@ jobs:
 
       - name: Upload SBOM artifacts
         if: github.event_name != 'pull_request'
-        uses: actions/upload-artifact@bbbca2ddaa5d8feaa63e36b76fdaad77386f024f # v5
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v5
         with:
           name: sbom
           path: sbom/
