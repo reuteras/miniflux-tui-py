@@ -648,6 +648,7 @@ dependencies = [
     { name = "html5lib" },
     { name = "httpx" },
     { name = "miniflux" },
+    { name = "requests" },
     { name = "textual" },
 ]
 
@@ -717,6 +718,7 @@ requires-dist = [
     { name = "pytest-asyncio", marker = "extra == 'dev'", specifier = ">=0.23.0" },
     { name = "pytest-benchmark", marker = "extra == 'dev'", specifier = ">=4.0.0" },
     { name = "pytest-cov", marker = "extra == 'dev'", specifier = ">=4.0.0" },
+    { name = "requests", specifier = ">=2.32.0" },
     { name = "ruff", marker = "extra == 'dev'", specifier = ">=0.6.0" },
     { name = "textual", specifier = ">=6.4.0" },
     { name = "tomli", marker = "python_full_version < '3.11'", specifier = ">=2.0.1" },
