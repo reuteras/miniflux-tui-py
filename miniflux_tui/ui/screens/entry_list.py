@@ -667,6 +667,34 @@ class EntryListScreen(Screen):
             except Exception as e:
                 self._safe_log(f"  Emergency fallback failed: {type(e).__name__}: {e}")
 
+    def _scroll_to_first_new_entry(self, new_entry_ids: set[int]) -> None:
+        """Position cursor on the first newly-added entry in the current sort order.
+
+        Called after a sync that added new entries, so the user can immediately
+        see the new content rather than staying at their previous reading position.
+        In grouped mode, expands the feed containing the first new entry if it is
+        currently collapsed.
+
+        Args:
+            new_entry_ids: Set of entry IDs that were added during the sync
+        """
+        if not new_entry_ids or not self.list_view or not self.sorted_entries:
+            return
+
+        for entry in self.sorted_entries:
+            if entry.id not in new_entry_ids:
+                continue
+
+            # In grouped mode, expand the feed so the entry is visible
+            if self.group_by_feed and entry.feed.title in self.feed_fold_state and not self.feed_fold_state[entry.feed.title]:
+                self.feed_fold_state[entry.feed.title] = True
+                self._set_feed_fold_state(entry.feed.title, True)
+
+            idx = self._find_entry_index_by_id(entry.id)
+            if idx is not None:
+                self._set_cursor_to_index(idx)
+            return
+
     def _set_initial_position_and_focus(self) -> None:
         """Set cursor to first item on initial mount and ensure focus."""
         if not self.list_view or len(self.list_view.children) == 0:
@@ -1471,7 +1499,7 @@ class EntryListScreen(Screen):
 
         def on_confirm() -> None:
             """Handle confirmation to mark all as read."""
-            asyncio.create_task(self._do_mark_all_as_read())  # noqa: RUF006
+            self.run_worker(self._do_mark_all_as_read(), exclusive=True)
 
         # Create confirmation dialog
         dialog = ConfirmDialog(
@@ -1936,7 +1964,7 @@ class EntryListScreen(Screen):
 
                 self.run_worker(_sync_fallback_reload(), exclusive=True)
 
-    async def _perform_incremental_sync(self) -> tuple[int, int, int]:
+    async def _perform_incremental_sync(self) -> tuple[int, int, int, set[int]]:
         """Perform incremental sync of entries from the server.
 
         Fetches new entries from the server and dynamically updates the UI by:
@@ -1945,11 +1973,11 @@ class EntryListScreen(Screen):
         - Preserving UI state (cursor position, sort order, etc.)
 
         Returns:
-            Tuple of (new_count, removed_count, updated_count)
+            Tuple of (new_count, removed_count, updated_count, added_ids)
         """
         if not hasattr(self.app, "client") or not self.app.client:
             self.notify("API client not initialized", severity="error")
-            return (0, 0, 0)
+            return (0, 0, 0, set())
 
         # Get current entry IDs before sync
         current_ids = {entry.id for entry in self.entries}
@@ -1957,7 +1985,7 @@ class EntryListScreen(Screen):
         # Fetch fresh data from server
         new_entries = await self._fetch_entries_for_sync()
         if new_entries is None:
-            return (0, 0, 0)
+            return (0, 0, 0, set())
 
         # Enrich with category data
         await self._enrich_entries_with_categories(new_entries)
@@ -1969,13 +1997,13 @@ class EntryListScreen(Screen):
 
         # If no changes, return early
         if not added_ids and not removed_ids:
-            return (0, 0, 0)
+            return (0, 0, 0, set())
 
         # Apply changes to UI
         new_entry_map = {entry.id: entry for entry in new_entries}
         self._apply_entry_changes(added_ids, removed_ids, new_entry_map)
 
-        return (len(added_ids), len(removed_ids), 0)
+        return (len(added_ids), len(removed_ids), 0, added_ids)
 
     def _validate_sync_ui_state(self, new_count: int, removed_count: int) -> None:
         """Validate UI state after sync and trigger fallback if needed.
@@ -1988,7 +2016,7 @@ class EntryListScreen(Screen):
         if (new_count > 0 or removed_count > 0) and self.list_view:
             visible_items = 0
             for child in self.list_view.children:
-                if isinstance(child, ListItem) and child.styles.display != "none":
+                if isinstance(child, ListItem) and "collapsed" not in child.classes:
                     visible_items += 1
 
             # If we have entries but no visible items, something went wrong
@@ -2081,8 +2109,13 @@ class EntryListScreen(Screen):
         if await self.app.reconnect_client():
             try:
                 self._safe_log("Retrying sync after reconnection")
-                new_count, removed_count, _ = await self._perform_incremental_sync()
+                new_count, removed_count, _, new_entry_ids = await self._perform_incremental_sync()
                 self._format_sync_summary(new_count, removed_count, after_reconnect=True)
+                if new_count > 0 or removed_count > 0:
+                    await asyncio.sleep(0)
+                    self._populate_list()
+                    if new_entry_ids:
+                        self._scroll_to_first_new_entry(new_entry_ids)
             except Exception as retry_error:
                 self._safe_log(f"Error after reconnection: {retry_error}")
                 self.notify(f"Error after reconnection: {retry_error}", severity="error")
@@ -2100,14 +2133,20 @@ class EntryListScreen(Screen):
             self._check_if_at_end_before_sync()
             self._start_loading_animation("Syncing entries...")
 
-            # Perform incremental sync
+            # Perform incremental sync (calls _populate_list once internally)
             self._safe_log("Starting incremental sync operation")
-            new_count, removed_count, _ = await self._perform_incremental_sync()
+            new_count, removed_count, _, new_entry_ids = await self._perform_incremental_sync()
             self._safe_log(f"Incremental sync completed: +{new_count} new, -{removed_count} removed")
 
-            # Validate UI state after sync
-            self._validate_sync_ui_state(new_count, removed_count)
             self._format_sync_summary(new_count, removed_count)
+
+            # Yield to event loop so Textual can process the first populate,
+            # then repopulate (mirrors the g+u double-populate pattern which works reliably).
+            if new_count > 0 or removed_count > 0:
+                await asyncio.sleep(0)
+                self._populate_list()
+                if new_entry_ids:
+                    self._scroll_to_first_new_entry(new_entry_ids)
 
         except (ConnectionError, TimeoutError, OSError, BrokenPipeError) as e:
             await self._handle_sync_connection_error(e)

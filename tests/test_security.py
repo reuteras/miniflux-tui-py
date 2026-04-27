@@ -42,10 +42,10 @@ class TestURLValidation:
         assert "local" in error.lower()
 
     def test_reject_127_0_0_1(self) -> None:
-        """Test 127.0.0.1 URLs are rejected."""
+        """Test 127.0.0.1 URLs are rejected (loopback → private network)."""
         is_valid, error = validate_feed_url("http://127.0.0.1:8080")
         assert is_valid is False
-        assert "local" in error.lower()
+        assert "local" in error.lower() or "private" in error.lower()
 
     def test_reject_private_ip_192_168(self) -> None:
         """Test 192.168.x.x URLs are rejected."""
@@ -68,10 +68,38 @@ class TestURLValidation:
     def test_reject_link_local_ipv6(self) -> None:
         """Test link-local IPv6 URLs are rejected."""
         is_valid, error = validate_feed_url("http://[fe80::1]")
-        # IPv6 hostnames in brackets may be accepted, but we verify it's handled
-        # This is a lower priority security concern than SSRF to private networks
-        if not is_valid:
-            assert "link-local" in error.lower() or "invalid" in error.lower()
+        assert is_valid is False
+        assert "private" in error.lower()
+
+    def test_reject_ipv6_loopback(self) -> None:
+        """Test IPv6 loopback ::1 is rejected."""
+        is_valid, error = validate_feed_url("http://[::1]/feed")
+        assert is_valid is False
+        assert "private" in error.lower()
+
+    def test_reject_ipv6_ula(self) -> None:
+        """Test IPv6 Unique Local Addresses (fd00::/8) are rejected."""
+        is_valid, error = validate_feed_url("http://[fd00::1]/feed")
+        assert is_valid is False
+        assert "private" in error.lower()
+
+    def test_reject_ipv6_ula_fc(self) -> None:
+        """Test IPv6 Unique Local Addresses (fc00::/7) are rejected."""
+        is_valid, error = validate_feed_url("http://[fc00::1]/feed")
+        assert is_valid is False
+        assert "private" in error.lower()
+
+    def test_reject_ipv4_multicast(self) -> None:
+        """Test IPv4 multicast addresses (224.0.0.0/4) are rejected."""
+        is_valid, error = validate_feed_url("http://224.0.0.1/feed")
+        assert is_valid is False
+        assert "private" in error.lower()
+
+    def test_reject_carrier_grade_nat(self) -> None:
+        """Test carrier-grade NAT addresses (100.64.0.0/10) are rejected."""
+        is_valid, error = validate_feed_url("http://100.64.0.1/feed")
+        assert is_valid is False
+        assert "private" in error.lower()
 
     def test_reject_overlong_url(self) -> None:
         """Test extremely long URLs are rejected."""

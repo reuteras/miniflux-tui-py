@@ -1,7 +1,6 @@
 # SPDX-License-Identifier: MIT
 """Feed management screen for viewing and managing feeds."""
 
-import asyncio
 from typing import ClassVar
 
 from textual.app import ComposeResult
@@ -154,7 +153,7 @@ class FeedManagementScreen(Screen):
                 return
 
             # Create feed in background
-            asyncio.create_task(self._create_feed(url))  # noqa: RUF006
+            self.run_worker(self._create_feed(url), exclusive=True)
 
         self.app.push_screen(
             InputDialog(
@@ -198,7 +197,7 @@ class FeedManagementScreen(Screen):
             return
 
         def on_confirm() -> None:
-            asyncio.create_task(self._do_delete_feed(feed))  # noqa: RUF006
+            self.run_worker(self._do_delete_feed(feed), exclusive=True)
 
         self.app.push_screen(
             ConfirmDialog(

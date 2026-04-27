@@ -26,7 +26,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Harden the runner (Audit all outbound calls)
-        uses: step-security/harden-runner@58077d3c7e43986b6b15fba718e8ea69e387dfcc # v2.15.1
+        uses: step-security/harden-runner@8d3c67de8e2fe68ef647c8db1e6a09f647780f40 # v2.19.0
         with:
           egress-policy: audit
 
@@ -36,7 +36,7 @@ jobs:
           persist-credentials: false
 
       - name: Install uv
-        uses: astral-sh/setup-uv@5a095e7a2014a4212f075830d4f7277575a9d098 # v7.3.1
+        uses: astral-sh/setup-uv@08807647e7069bb48b6ef5acd8ec9567f424441b # v8.1.0
         with:
           github-token: ${{ secrets.GITHUB_TOKEN }}
           enable-cache: "false"
@@ -61,7 +61,7 @@ jobs:
 
       - name: Upload artifacts
         if: github.event_name != 'pull_request'
-        uses: actions/upload-artifact@bbbca2ddaa5d8feaa63e36b76fdaad77386f024f # v5
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v5
         with:
           name: ${{ env.DIST_ARTIFACT_NAME }}
           path: dist/
@@ -81,7 +81,7 @@ jobs:
       id-token: write
     steps:
       - name: Harden the runner (Audit all outbound calls)
-        uses: step-security/harden-runner@58077d3c7e43986b6b15fba718e8ea69e387dfcc # v2.15.1
+        uses: step-security/harden-runner@8d3c67de8e2fe68ef647c8db1e6a09f647780f40 # v2.19.0
         with:
           egress-policy: audit
 
@@ -91,13 +91,13 @@ jobs:
 
       - name: Download artifacts
         if: github.event_name != 'pull_request'
-        uses: actions/download-artifact@70fc10c6e5e1ce46ad2ea6f2b72d43f7d47b13c3 # v6
+        uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v6
         with:
           name: ${{ env.DIST_ARTIFACT_NAME }}
           path: dist/
 
       - name: Publish to PyPI
-        uses: pypa/gh-action-pypi-publish@ed0c53931b1dc9bd32cbe73a98c7f6766f8a527e # v1.13.0
+        uses: pypa/gh-action-pypi-publish@cef221092ed1bacb1cc03d23a2d87d1d172e277b # v1.14.0
         with:
           packages-dir: dist/
           skip-existing: true
@@ -117,7 +117,7 @@ jobs:
       actions: read
     steps:
       - name: Harden the runner (Audit all outbound calls)
-        uses: step-security/harden-runner@58077d3c7e43986b6b15fba718e8ea69e387dfcc # v2.15.1
+        uses: step-security/harden-runner@8d3c67de8e2fe68ef647c8db1e6a09f647780f40 # v2.19.0
         with:
           egress-policy: audit
 
@@ -127,7 +127,7 @@ jobs:
           persist-credentials: false
 
       - name: Install uv
-        uses: astral-sh/setup-uv@5a095e7a2014a4212f075830d4f7277575a9d098 # v7.3.1
+        uses: astral-sh/setup-uv@08807647e7069bb48b6ef5acd8ec9567f424441b # v8.1.0
         with:
           github-token: ${{ secrets.GITHUB_TOKEN }}
           enable-cache: "false"
@@ -142,7 +142,7 @@ jobs:
         run: uv run python scripts/build_binary.py
 
       - name: Upload binary artifact
-        uses: actions/upload-artifact@bbbca2ddaa5d8feaa63e36b76fdaad77386f024f # v5
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v5
         with:
           name: ${{ env.BINARY_ARTIFACT_PREFIX }}-${{ matrix.os }}
           path: build/binary/*
@@ -162,7 +162,7 @@ jobs:
       attestations: write  # Required to generate SLSA provenance
     steps:
       - name: Harden the runner (Audit all outbound calls)
-        uses: step-security/harden-runner@58077d3c7e43986b6b15fba718e8ea69e387dfcc # v2.15.1
+        uses: step-security/harden-runner@8d3c67de8e2fe68ef647c8db1e6a09f647780f40 # v2.19.0
         with:
           egress-policy: audit
 
@@ -172,63 +172,62 @@ jobs:
 
       - name: Download artifacts
         if: github.event_name != 'pull_request'
-        uses: actions/download-artifact@70fc10c6e5e1ce46ad2ea6f2b72d43f7d47b13c3 # v6
+        uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v6
         with:
           name: dist-${{ github.run_id }}-${{ github.run_attempt }}
           path: dist/
 
       - name: Download binary artifacts
         if: github.event_name != 'pull_request'
-        uses: actions/download-artifact@70fc10c6e5e1ce46ad2ea6f2b72d43f7d47b13c3 # v6
+        uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v6
         with:
           pattern: ${{ env.BINARY_ARTIFACT_PREFIX }}-*
           merge-multiple: true
           path: binaries/
 
-      - name: Install Syft
+      - name: Create SBOM output directory
         if: github.event_name != 'pull_request'
-        run: |
-          set -euo pipefail
-          SYFT_VERSION=v1.36.0
-          SYFT_BASE_URL="https://github.com/anchore/syft/releases/download/${SYFT_VERSION}"
-          SYFT_ARCHIVE="syft_${SYFT_VERSION#v}_linux_amd64.tar.gz"
-          TMP_DIR="$(mktemp -d)"
-          ARCHIVE_PATH="${TMP_DIR}/syft.tar.gz"
+        run: mkdir -p sbom
 
-          if ! curl -sSfL "${SYFT_BASE_URL}/${SYFT_ARCHIVE}" -o "${ARCHIVE_PATH}"; then
-            ALT_ARCHIVE="syft_Linux_x86_64.tar.gz"
-            curl -sSfL "${SYFT_BASE_URL}/${ALT_ARCHIVE}" -o "${ARCHIVE_PATH}"
-          fi
-
-          sudo tar -xz -f "${ARCHIVE_PATH}" -C /usr/local/bin syft
-          rm -rf "${TMP_DIR}"
-
-      - name: Generate SBOMs for release artifacts
+      - name: Generate SBOM for PyPI dist (CycloneDX)
         if: github.event_name != 'pull_request'
-        run: |
-          mkdir -p sbom
-          TAG_NAME="${RELEASE_TAG}"
-          VERSION="${TAG_NAME#v}"
-          syft dir:dist --source-name miniflux-tui-py \
-            --source-version "${VERSION}" \
-            --output cyclonedx-json=sbom/miniflux-tui-pypi.cdx.json
-          syft dir:dist --source-name miniflux-tui-py \
-            --source-version "${VERSION}" \
-            --output spdx-json=sbom/miniflux-tui-pypi.spdx.json
-          if compgen -G "binaries/*" > /dev/null; then
-            syft dir:binaries --source-name miniflux-tui \
-              --source-version "${VERSION}" \
-              --output cyclonedx-json=sbom/miniflux-tui-binaries.cdx.json
-            syft dir:binaries --source-name miniflux-tui \
-              --source-version "${VERSION}" \
-              --output spdx-json=sbom/miniflux-tui-binaries.spdx.json
-          else
-            echo "No binary artifacts found; skipping binary SBOM generation."
-          fi
+        uses: anchore/sbom-action@e22c389904149dbc22b58101806040fa8d37a610 # v0.24.0
+        with:
+          path: dist/
+          format: cyclonedx-json
+          output-file: sbom/miniflux-tui-pypi.cdx.json
+          upload-artifact: false
+
+      - name: Generate SBOM for PyPI dist (SPDX)
+        if: github.event_name != 'pull_request'
+        uses: anchore/sbom-action@e22c389904149dbc22b58101806040fa8d37a610 # v0.24.0
+        with:
+          path: dist/
+          format: spdx-json
+          output-file: sbom/miniflux-tui-pypi.spdx.json
+          upload-artifact: false
+
+      - name: Generate SBOM for binaries (CycloneDX)
+        if: github.event_name != 'pull_request' && hashFiles('binaries/**') != ''
+        uses: anchore/sbom-action@e22c389904149dbc22b58101806040fa8d37a610 # v0.24.0
+        with:
+          path: binaries/
+          format: cyclonedx-json
+          output-file: sbom/miniflux-tui-binaries.cdx.json
+          upload-artifact: false
+
+      - name: Generate SBOM for binaries (SPDX)
+        if: github.event_name != 'pull_request' && hashFiles('binaries/**') != ''
+        uses: anchore/sbom-action@e22c389904149dbc22b58101806040fa8d37a610 # v0.24.0
+        with:
+          path: binaries/
+          format: spdx-json
+          output-file: sbom/miniflux-tui-binaries.spdx.json
+          upload-artifact: false
 
       - name: Upload SBOM artifacts
         if: github.event_name != 'pull_request'
-        uses: actions/upload-artifact@bbbca2ddaa5d8feaa63e36b76fdaad77386f024f # v5
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v5
         with:
           name: sbom
           path: sbom/
@@ -242,7 +241,7 @@ jobs:
             binaries/*
 
       - name: Install cosign
-        uses: sigstore/cosign-installer@faadad0cce49287aee09b3a48701e75088a2c6ad # v4.0.0
+        uses: sigstore/cosign-installer@cad07c2e89fa2edd6e2d7bab4c1aa38e53f76003 # v4.1.1
 
       - name: Sign release artifacts with cosign
         if: github.event_name != 'pull_request'

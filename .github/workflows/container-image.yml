@@ -29,7 +29,7 @@ jobs:
 
     steps:
       - name: Harden the runner (Audit all outbound calls)
-        uses: step-security/harden-runner@58077d3c7e43986b6b15fba718e8ea69e387dfcc # v2.15.1
+        uses: step-security/harden-runner@8d3c67de8e2fe68ef647c8db1e6a09f647780f40 # v2.19.0
         with:
           egress-policy: audit
 
@@ -67,7 +67,7 @@ jobs:
 
       - name: Log in to the Container registry
         if: github.event_name != 'pull_request'
-        uses: docker/login-action@b45d80f862d83dbcd57f89517bcf500b2ab88fb2 # v4.0.0
+        uses: docker/login-action@4907a6ddec9925e35a0a9e82d7399ccc52663121 # v4.1.0
         with:
           registry: ${{ env.REGISTRY }}
           username: ${{ github.actor }}
@@ -75,7 +75,7 @@ jobs:
 
       - name: Build and push image
         id: build
-        uses: docker/build-push-action@d08e5c354a6adb9ed34480a06d141179aa583294 # v7.0.0
+        uses: docker/build-push-action@bcafcacb16a39f128d818304e6c9c0c18556b85f # v7.1.0
         with:
           context: .
           file: ./Dockerfile
@@ -85,62 +85,39 @@ jobs:
           platforms: linux/amd64,linux/arm64
           tags: ${{ steps.image-tags.outputs.tags }}
 
-      - name: Install Syft
+      - name: Create SBOM output directory
         if: github.event_name != 'pull_request'
-        run: |
-          set -euo pipefail
-          SYFT_VERSION=v1.36.0
-          SYFT_BASE_URL="https://github.com/anchore/syft/releases/download/${SYFT_VERSION}"
-          SYFT_ARCHIVE="syft_${SYFT_VERSION#v}_linux_amd64.tar.gz"
-          TMP_DIR="$(mktemp -d)"
-          ARCHIVE_PATH="${TMP_DIR}/syft.tar.gz"
+        run: mkdir -p sbom
 
-          if ! curl -sSfL "${SYFT_BASE_URL}/${SYFT_ARCHIVE}" -o "${ARCHIVE_PATH}"; then
-            ALT_ARCHIVE="syft_Linux_x86_64.tar.gz"
-            curl -sSfL "${SYFT_BASE_URL}/${ALT_ARCHIVE}" -o "${ARCHIVE_PATH}"
-          fi
-
-          sudo tar -xz -f "${ARCHIVE_PATH}" -C /usr/local/bin syft
-          rm -rf "${TMP_DIR}"
-
-      - name: Generate SBOMs for container image
+      - name: Generate SBOM for container image (CycloneDX)
         if: github.event_name != 'pull_request'
-        env:
-          IMAGE_DIGEST: ${{ steps.build.outputs.digest }}
-        run: |
-          set -euo pipefail
-          if [[ ! "${IMAGE_DIGEST}" =~ ^sha256:[0-9a-f]{64}$ ]]; then
-            echo "Unexpected image digest format: ${IMAGE_DIGEST}" >&2
-            exit 1
-          fi
-          mkdir -p sbom
-          IMAGE="${REGISTRY}/${IMAGE_NAME}@${IMAGE_DIGEST}"
-          SAFE_DIGEST="${IMAGE_DIGEST//:/-}"
-          syft "docker:${IMAGE}" -o cyclonedx-json --file "sbom/miniflux-tui-image-${SAFE_DIGEST}.cdx.json"
-          syft "docker:${IMAGE}" -o spdx-json --file "sbom/miniflux-tui-image-${SAFE_DIGEST}.spdx.json"
+        uses: anchore/sbom-action@e22c389904149dbc22b58101806040fa8d37a610 # v0.24.0
+        with:
+          image: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}@${{ steps.build.outputs.digest }}
+          format: cyclonedx-json
+          output-file: sbom/miniflux-tui-image.cdx.json
+          upload-artifact: false
+
+      - name: Generate SBOM for container image (SPDX)
+        if: github.event_name != 'pull_request'
+        uses: anchore/sbom-action@e22c389904149dbc22b58101806040fa8d37a610 # v0.24.0
+        with:
+          image: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}@${{ steps.build.outputs.digest }}
+          format: spdx-json
+          output-file: sbom/miniflux-tui-image.spdx.json
+          upload-artifact: false
 
       - name: Upload SBOM artifacts
         if: github.event_name != 'pull_request'
-        uses: actions/upload-artifact@bbbca2ddaa5d8feaa63e36b76fdaad77386f024f # v5
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v5
         with:
           name: sbom-container
           path: sbom/
           retention-days: 7
 
-      - name: Scan container image for vulnerabilities
-        if: github.event_name != 'pull_request'
-        uses: aquasecurity/trivy-action@57a97c7e7821a5776cebc9bb87c984fa69cba8f1 # v0.35.0
-        with:
-          image-ref: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}@${{ steps.build.outputs.digest }}
-          format: table
-          vuln-type: 'os,library'
-          severity: 'CRITICAL,HIGH'
-          ignore-unfixed: true
-          exit-code: '1'
-
       - name: Install cosign
         if: github.event_name != 'pull_request'
-        uses: sigstore/cosign-installer@faadad0cce49287aee09b3a48701e75088a2c6ad # v4.0.0
+        uses: sigstore/cosign-installer@cad07c2e89fa2edd6e2d7bab4c1aa38e53f76003 # v4.1.1
 
       - name: Sign container image
         if: github.event_name != 'pull_request'

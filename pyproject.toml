@@ -1,6 +1,6 @@
 [project]
 name = "miniflux-tui-py"
-version = "0.7.5"
+version = "0.8.5"
 description = "A Python TUI client for Miniflux RSS reader with feed sorting capabilities"
 readme = "README.md"
 requires-python = ">=3.11"
@@ -39,6 +39,7 @@ dependencies = [
     "html5lib>=1.1",
     "bleach>=6.3.0",
     "httpx>=0.28.1",
+    "requests>=2.32.0",
 ]
 
 [project.optional-dependencies]

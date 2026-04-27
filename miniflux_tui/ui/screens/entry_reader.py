@@ -8,6 +8,7 @@ from contextlib import suppress
 from urllib.parse import urlparse
 
 import html2text
+from bs4 import BeautifulSoup
 from textual.app import ComposeResult
 from textual.binding import Binding
 
@@ -111,6 +112,7 @@ class EntryReaderScreen(Screen):
         unread_color: str = "cyan",
         read_color: str = "gray",
         group_info: dict[str, str | int] | None = None,
+        text_width: int = 120,
         link_highlight_bg: str | None = None,
         link_highlight_fg: str | None = None,
         **kwargs,
@@ -122,6 +124,7 @@ class EntryReaderScreen(Screen):
         self.unread_color = unread_color
         self.read_color = read_color
         self.group_info = group_info  # Contains: mode, name, total, unread
+        self.text_width = max(0, text_width)
         self.link_highlight_bg = link_highlight_bg or "#ff79c6"  # Default: pink/magenta
         self.link_highlight_fg = link_highlight_fg or "#282a36"  # Default: dark text
         self.scroll_container = None
@@ -181,6 +184,10 @@ class EntryReaderScreen(Screen):
         """Called when screen is mounted."""
         # Get reference to the Markdown widget (now the scrollable container)
         self.scroll_container = self.query_one(Markdown)
+        if self.text_width > 0:
+            # Constrain the content area to the configured width for visual wrapping.
+            self.scroll_container.styles.width = self.text_width
+            self.scroll_container.styles.max_width = self.text_width
 
         # Set title to just the application name (no feed name or entry title)
         self.title = ""
@@ -376,7 +383,57 @@ class EntryReaderScreen(Screen):
                 self.notify(f"Error marking as read: {e}", severity="error")
 
     @staticmethod
-    def _html_to_markdown(html_content: str) -> str:
+    def _sanitize_feed_html(html_content: str) -> str:
+        """Strip dangerous tags and attributes from untrusted feed HTML.
+
+        RSS feed content is untrusted input. Before passing to html2text we
+        remove elements that could embed terminal escape sequences or other
+        harmful payloads in the rendered output.
+
+        Args:
+            html_content: Raw HTML from an RSS entry
+
+        Returns:
+            HTML with dangerous tags and attributes removed
+        """
+        dangerous_tags = frozenset(
+            {
+                "script",
+                "style",
+                "iframe",
+                "object",
+                "embed",
+                "form",
+                "meta",
+                "link",
+                "base",
+                "noscript",
+                "applet",
+                "frame",
+                "frameset",
+            }
+        )
+        url_attrs = frozenset({"href", "src", "action", "formaction", "data"})
+
+        soup = BeautifulSoup(html_content, "html.parser")
+
+        for tag in soup.find_all(dangerous_tags):
+            tag.decompose()
+
+        for tag in soup.find_all(True):
+            for attr in list(tag.attrs):
+                lower_attr = attr.lower()
+                # Remove all event-handler attributes (onclick, onload, …)
+                if lower_attr.startswith("on"):
+                    del tag.attrs[attr]
+                elif lower_attr in url_attrs:
+                    val = str(tag.get(attr, "")).strip().lower()
+                    if val.startswith(("javascript:", "vbscript:", "data:")):
+                        del tag.attrs[attr]
+
+        return str(soup)
+
+    def _html_to_markdown(self, html_content: str) -> str:
         """Convert HTML content to markdown for display.
 
         Converts HTML from RSS feed entries to markdown format for better
@@ -388,14 +445,15 @@ class EntryReaderScreen(Screen):
         Returns:
             Markdown-formatted string suitable for terminal display
         """
+        sanitized = self._sanitize_feed_html(html_content)
         h = html2text.HTML2Text()
         # Preserve links, images, and emphasis in the output
         h.ignore_links = False
         h.ignore_images = False
         h.ignore_emphasis = False
-        # Disable body width wrapping - let Textual handle terminal wrapping
-        h.body_width = 0
-        return h.handle(html_content)
+        # Control wrapping: 0 = let Textual handle terminal wrapping, >0 = wrap at configured width
+        h.body_width = self.text_width
+        return h.handle(sanitized)
 
     @staticmethod
     def _extract_links(markdown_content: str) -> list[dict[str, str]]:
@@ -519,7 +577,13 @@ class EntryReaderScreen(Screen):
         if not parsed.netloc:
             return False
 
-        return not any(ord(char) < 32 for char in url)
+        # Reject literal control characters
+        if any(ord(char) < 32 for char in url):
+            return False
+
+        # Reject percent-encoded null byte, which some platforms pass through
+        # to the underlying shell invocation used by webbrowser.open()
+        return "%00" not in url.lower()
 
     def action_open_browser(self):
         """Open entry URL in web browser."""

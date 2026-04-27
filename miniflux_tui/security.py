@@ -1,6 +1,7 @@
 # SPDX-License-Identifier: MIT
 """Security utilities for input validation and sanitization."""
 
+import ipaddress
 import re
 from urllib.parse import urlparse
 
@@ -46,41 +47,51 @@ def _check_url_hostname(parsed) -> str | None:
     Returns:
         Error message if invalid, None if valid
     """
-    # Extract hostname without port
-    hostname = parsed.netloc.split(":")[0].lower()
+    # Use parsed.hostname which correctly strips IPv6 brackets and lowercases.
+    # parsed.netloc.split(":") is wrong for IPv6 (e.g. "[fd00::1]" → "[fd00").
+    hostname = parsed.hostname or ""
 
-    # Block localhost/loopback addresses
-    if hostname in ["localhost", "127.0.0.1", "::1", "[::1]"]:
+    # Block localhost by name
+    if hostname == "localhost":
         return "Cannot add local URLs (localhost)"
 
-    # Block private IP ranges
+    # Block all private/reserved IP addresses (covers loopback, ULA, link-local,
+    # multicast, carrier-grade NAT, etc.) using the stdlib ipaddress module.
     if _is_private_ip(hostname):
         return "Cannot add private network URLs"
-
-    # Block IPv6 loopback and link-local
-    if hostname.startswith(("fe80:", "[fe80:")):
-        return "Cannot add link-local IPv6 addresses"
 
     return None
 
 
+# RFC 6598 Shared Address Space (100.64.0.0/10) is used for carrier-grade NAT
+# and is not classified by Python's ipaddress as is_private / is_reserved in
+# Python 3.13. Check it explicitly.
+_ADDITIONAL_RESERVED_NETWORKS: tuple[ipaddress.IPv4Network | ipaddress.IPv6Network, ...] = (ipaddress.IPv4Network("100.64.0.0/10"),)
+
+
 def _is_private_ip(hostname: str) -> bool:
-    """Check if hostname is a private IP address.
+    """Check if hostname is a private or reserved IP address.
+
+    Uses the stdlib ipaddress module instead of regex patterns so that
+    IPv4-mapped IPv6, ULA (fd00::/8), multicast, carrier-grade NAT, and
+    other reserved ranges are all covered correctly.
 
     Args:
-        hostname: The hostname/IP to check
+        hostname: The hostname/IP to check (IPv6 brackets already stripped
+            by urlparse.hostname)
 
     Returns:
-        True if hostname is a private IP, False otherwise
+        True if hostname is a private/reserved IP, False otherwise
     """
-    private_patterns = [
-        r"^192\.168\.",
-        r"^10\.",
-        r"^172\.(1[6-9]|2[0-9]|3[01])\.",  # 172.16.0.0 - 172.31.255.255
-        r"^127\.",  # Loopback
-        r"^169\.254\.",  # Link-local
-    ]
-    return any(re.match(pattern, hostname) for pattern in private_patterns)
+    try:
+        addr = ipaddress.ip_address(hostname)
+        if addr.is_private or addr.is_loopback or addr.is_link_local or addr.is_multicast or addr.is_reserved or addr.is_unspecified:
+            return True
+        return any(addr in net for net in _ADDITIONAL_RESERVED_NETWORKS)
+    except ValueError:
+        # Not a valid IP literal — it is a hostname; DNS-based access is
+        # controlled server-side by Miniflux itself.
+        return False
 
 
 def _check_url_suspicious_content(url: str) -> str | None:

@@ -2,7 +2,6 @@
 """Category management screen for viewing and managing categories."""
 
 # pylint: disable=no-value-for-parameter
-import asyncio
 from typing import TYPE_CHECKING, ClassVar
 
 from textual.app import ComposeResult
@@ -168,7 +167,7 @@ class CategoryManagementScreen(Screen):
                 self.app.notify("Category name cannot be empty", severity="error")
                 return
 
-            asyncio.create_task(self._do_create_category(title.strip()))  # noqa: RUF006
+            self.run_worker(self._do_create_category(title.strip()), exclusive=True)
 
         dialog = InputDialog(
             title="Create Category",
@@ -209,7 +208,7 @@ class CategoryManagementScreen(Screen):
                 self.app.notify("Category name cannot be empty", severity="error")
                 return
 
-            asyncio.create_task(self._do_edit_category(selected.id, new_title.strip()))  # noqa: RUF006
+            self.run_worker(self._do_edit_category(selected.id, new_title.strip()), exclusive=True)
 
         dialog = InputDialog(
             title="Edit Category",
@@ -252,7 +251,7 @@ class CategoryManagementScreen(Screen):
 
         def on_confirm() -> None:
             """Handle deletion confirmation."""
-            asyncio.create_task(self._do_delete_category(selected.id, selected.title))  # noqa: RUF006
+            self.run_worker(self._do_delete_category(selected.id, selected.title), exclusive=True)
 
         dialog = ConfirmDialog(
             title="Delete Category?",

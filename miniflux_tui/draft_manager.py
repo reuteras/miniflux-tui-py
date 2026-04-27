@@ -82,7 +82,7 @@ class DraftManager:
         """
         config_dir = Path(get_config_dir())
         self.drafts_dir = config_dir / "drafts"
-        self.drafts_dir.mkdir(parents=True, exist_ok=True)
+        self.drafts_dir.mkdir(parents=True, exist_ok=True, mode=0o700)
 
     def save_draft(self, feed_id: int, field_values: dict[str, Any]) -> Draft:
         """Save a draft of feed settings.
@@ -107,6 +107,7 @@ class DraftManager:
         draft_file = self._get_draft_file(feed_id)
         try:
             draft_file.write_text(json.dumps(draft.to_dict(), indent=2), encoding="utf-8")
+            draft_file.chmod(0o600)
             return draft
         except OSError as e:
             msg = f"Failed to save draft for feed {feed_id}: {e}"

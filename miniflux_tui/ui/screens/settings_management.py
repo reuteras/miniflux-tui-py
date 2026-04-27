@@ -90,6 +90,7 @@ class SettingsScreen(Screen):
                     "[bold white]Colors & Display[/bold white]",
                     f"  Unread Color:        {config.unread_color}",
                     f"  Read Color:          {config.read_color}",
+                    f"  Text Width:          {config.text_width}",
                     "",
                     "[bold white]Default Settings[/bold white]",
                     f"  Default Sort:        {config.default_sort}",

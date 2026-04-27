@@ -2,10 +2,12 @@
 """Miniflux API client wrapper using official miniflux package."""
 
 import asyncio
+import warnings
 from collections.abc import Callable
 from functools import partial
 from typing import TypeVar
 
+import requests
 from miniflux import Client as MinifluxClientBase
 
 from miniflux_tui.constants import BACKOFF_FACTOR, MAX_RETRIES
@@ -31,16 +33,29 @@ class MinifluxClient:
         Args:
             base_url: Base URL of the Miniflux server
             api_key: API key for authentication
-            allow_invalid_certs: Whether to allow invalid SSL certificates (not supported by official client)
+            allow_invalid_certs: Whether to allow invalid SSL certificates (e.g. self-signed certs).
+                When True a custom requests.Session with verify=False is passed to the client.
             timeout: Request timeout in seconds (not supported by official client)
         """
         self.base_url = base_url.rstrip("/")
 
-        # Create official Miniflux client (synchronous)
-        # The official client expects api_key as a keyword argument
-        self.client = MinifluxClientBase(base_url, api_key=api_key)
+        # Create official Miniflux client (synchronous).
+        # When the user opts in to allow_invalid_certs (e.g. self-signed cert
+        # behind Tailscale), pass a custom Session with verify=False.
+        # We suppress urllib3's InsecureRequestWarning because the user made
+        # an explicit, informed configuration choice.
+        if allow_invalid_certs:
+            session = requests.Session()
+            session.verify = False
+            with warnings.catch_warnings():
+                warnings.simplefilter("ignore")
+                import urllib3  # noqa: PLC0415
 
-        # Allow invalid certs
+                urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
+            self.client = MinifluxClientBase(base_url, api_key=api_key, session=session)
+        else:
+            self.client = MinifluxClientBase(base_url, api_key=api_key)
+
         self.allow_invalid_certs: bool = allow_invalid_certs
 
         # Timeout for network calls

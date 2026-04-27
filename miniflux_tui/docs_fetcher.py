@@ -7,6 +7,7 @@ import re
 from html.parser import HTMLParser
 
 import httpx
+from bs4 import BeautifulSoup
 
 # Mapping of rule types to their documentation anchors
 RULE_TYPES = {
@@ -68,11 +69,16 @@ class DocsFetcher:
             Raw HTML content
 
         Raises:
+            ValueError: If the response Content-Type is not HTML
             Exception: Network errors or HTTP errors
         """
         async with httpx.AsyncClient(timeout=self.timeout) as client:
             response = await client.get(DOCS_URL)
             response.raise_for_status()
+            content_type = response.headers.get("content-type", "")
+            if "text/html" not in content_type:
+                msg = f"Unexpected content type from docs URL: {content_type!r}"
+                raise ValueError(msg)
             return response.text
 
     def _extract_section(self, html: str, anchor: str, rule_type: str) -> str:
@@ -177,22 +183,32 @@ class HTMLContentParser(HTMLParser):
 def _sanitize_html(html: str) -> str:
     """Sanitize HTML to prevent XSS when displaying in TUI.
 
+    Uses BeautifulSoup to remove dangerous tags and attributes rather than
+    fragile regex patterns that can be bypassed with case variations,
+    entity encoding, or extra whitespace.
+
     Args:
         html: Raw HTML content
 
     Returns:
-        Sanitized HTML
+        Sanitized HTML with dangerous elements removed
     """
-    # Remove potentially dangerous tags and attributes
-    dangerous_patterns = [
-        r"<script[^>]*>.*?</script>",  # Remove script tags
-        r"<iframe[^>]*>.*?</iframe>",  # Remove iframes
-        r"on\w+\s*=",  # Remove event handlers
-        r"javascript:",  # Remove javascript: protocol
-    ]
+    dangerous_tags = frozenset({"script", "iframe", "object", "embed", "applet"})
+    url_attrs = frozenset({"href", "src", "action", "formaction", "data"})
 
-    sanitized = html
-    for pattern in dangerous_patterns:
-        sanitized = re.sub(pattern, "", sanitized, flags=re.IGNORECASE | re.DOTALL)
+    soup = BeautifulSoup(html, "html.parser")
 
-    return sanitized
+    for tag in soup.find_all(dangerous_tags):
+        tag.decompose()
+
+    for tag in soup.find_all(True):
+        for attr in list(tag.attrs):
+            lower_attr = attr.lower()
+            if lower_attr.startswith("on"):
+                del tag.attrs[attr]
+            elif lower_attr in url_attrs:
+                val = str(tag.get(attr, "")).strip().lower()
+                if val.startswith(("javascript:", "vbscript:")):
+                    del tag.attrs[attr]
+
+    return str(soup)
