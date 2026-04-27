@@ -33,7 +33,7 @@ jobs:
       pr_number: ${{ steps.create-pr.outputs.pr_number }}
     steps:
       - name: Harden the runner
-        uses: step-security/harden-runner@f808768d1510423e83855289c910610ca9b43176 # v2.17.0
+        uses: step-security/harden-runner@8d3c67de8e2fe68ef647c8db1e6a09f647780f40 # v2.19.0
         with:
           egress-policy: audit
 
@@ -44,7 +44,7 @@ jobs:
           persist-credentials: false
 
       - name: Install uv
-        uses: astral-sh/setup-uv@cec208311dfd045dd5311c1add060b2062131d57 # v8.0.0
+        uses: astral-sh/setup-uv@08807647e7069bb48b6ef5acd8ec9567f424441b # v8.1.0
         with:
           github-token: ${{ secrets.GITHUB_TOKEN }}
           enable-cache: "false"
@@ -98,7 +98,7 @@ jobs:
           GITHUB_REPO: ${{ github.repository }}
 
       - name: Setup Gitsign for commit signing
-        uses: chainguard-dev/actions/setup-gitsign@de68b87302e6266db5fb5220246f8aa46fe94b67 # v1.6.14
+        uses: chainguard-dev/actions/setup-gitsign@061bc0e921116bde1470f51fb5c86d5318f16558 # v1.6.15
 
       - name: Create release branch and commit
         env:
@@ -182,7 +182,7 @@ jobs:
       checks: read
     steps:
       - name: Harden the runner
-        uses: step-security/harden-runner@f808768d1510423e83855289c910610ca9b43176 # v2.17.0
+        uses: step-security/harden-runner@8d3c67de8e2fe68ef647c8db1e6a09f647780f40 # v2.19.0
         with:
           egress-policy: audit
 
@@ -288,7 +288,7 @@ jobs:
       id-token: write
     steps:
       - name: Harden the runner
-        uses: step-security/harden-runner@f808768d1510423e83855289c910610ca9b43176 # v2.17.0
+        uses: step-security/harden-runner@8d3c67de8e2fe68ef647c8db1e6a09f647780f40 # v2.19.0
         with:
           egress-policy: audit
 
@@ -300,7 +300,7 @@ jobs:
           persist-credentials: false
 
       - name: Setup Gitsign
-        uses: chainguard-dev/actions/setup-gitsign@de68b87302e6266db5fb5220246f8aa46fe94b67 # v1.6.14
+        uses: chainguard-dev/actions/setup-gitsign@061bc0e921116bde1470f51fb5c86d5318f16558 # v1.6.15
 
       - name: Create and push signed tag
         env:
