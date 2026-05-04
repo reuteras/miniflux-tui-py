@@ -89,7 +89,7 @@ jobs:
         run: uv lock
 
       - name: Update CHANGELOG.md
-        uses: orhun/git-cliff-action@c93ef52f3d0ddcdcc9bd5447d98d458a11cd4f72 # v4.7.1
+        uses: orhun/git-cliff-action@f50e11560dce63f7c33227798f90b924471a88b5 # v4.8.0
         with:
           config: cliff.toml
           args: --tag ${{ steps.version.outputs.version }}
@@ -98,7 +98,7 @@ jobs:
           GITHUB_REPO: ${{ github.repository }}
 
       - name: Setup Gitsign for commit signing
-        uses: chainguard-dev/actions/setup-gitsign@061bc0e921116bde1470f51fb5c86d5318f16558 # v1.6.15
+        uses: chainguard-dev/actions/setup-gitsign@0cba302c40fce067ec0d39f1d91b10580d4b06b0 # v1.6.16
 
       - name: Create release branch and commit
         env:
@@ -300,7 +300,7 @@ jobs:
           persist-credentials: false
 
       - name: Setup Gitsign
-        uses: chainguard-dev/actions/setup-gitsign@061bc0e921116bde1470f51fb5c86d5318f16558 # v1.6.15
+        uses: chainguard-dev/actions/setup-gitsign@0cba302c40fce067ec0d39f1d91b10580d4b06b0 # v1.6.16
 
       - name: Create and push signed tag
         env:
