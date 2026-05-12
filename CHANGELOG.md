@@ -4,11 +4,34 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
-## [0.8.5] - 2026-04-20
+## [0.8.6] - 2026-05-12
+
+### MAINTENANCE
+
+- Release v0.8.3 (#811)
+- bump the actions-deps group with 5 updates (#812) 🤖
+- bump the actions-deps group with 2 updates (#815) 🤖
+- bump the actions-deps group with 3 updates (#816) 🤖
+- bump urllib3 in the uv group across 1 directory (#817) 🤖
+
+
+
+#### Contributors
+
+Thank you to everyone who contributed to this release!
+
+**Humans:** 👤 Peter Reuterås
+
+**AI & Automation:** 🤖 Claude (AI Assistant), dependabot[bot] (Dependencies)
+## [v0.8.5] - 2026-04-20
 
 ### BUG FIXES
 
 - use BOT_TOKEN to trigger publish workflow dispatch (#809)
+
+### MAINTENANCE
+
+- Release v0.8.5 (#810)
 
 
 
