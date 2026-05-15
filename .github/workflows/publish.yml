@@ -61,7 +61,7 @@ jobs:
 
       - name: Upload artifacts
         if: github.event_name != 'pull_request'
-        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v5
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
         with:
           name: ${{ env.DIST_ARTIFACT_NAME }}
           path: dist/
@@ -142,7 +142,7 @@ jobs:
         run: uv run python scripts/build_binary.py
 
       - name: Upload binary artifact
-        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v5
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
         with:
           name: ${{ env.BINARY_ARTIFACT_PREFIX }}-${{ matrix.os }}
           path: build/binary/*
@@ -227,7 +227,7 @@ jobs:
 
       - name: Upload SBOM artifacts
         if: github.event_name != 'pull_request'
-        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v5
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
         with:
           name: sbom
           path: sbom/
