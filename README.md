@@ -13,16 +13,12 @@
 [![Python 3.15 Preview](https://img.shields.io/badge/Python%203.15-preview-yellow)](https://github.com/reuteras/miniflux-tui-py/actions/workflows/test.yml)
 [![OSV Scanner](https://github.com/reuteras/miniflux-tui-py/actions/workflows/osv-scanner.yml/badge.svg)](https://github.com/reuteras/miniflux-tui-py/actions/workflows/osv-scanner.yml)
 [![CodeQL](https://github.com/reuteras/miniflux-tui-py/actions/workflows/codeql.yml/badge.svg)](https://github.com/reuteras/miniflux-tui-py/actions/workflows/codeql.yml)
-[![Semgrep](https://github.com/reuteras/miniflux-tui-py/actions/workflows/semgrep.yml/badge.svg)](https://github.com/reuteras/miniflux-tui-py/actions/workflows/semgrep.yml)
-[![Dependency Review](https://github.com/reuteras/miniflux-tui-py/actions/workflows/dependency-review.yml/badge.svg)](https://github.com/reuteras/miniflux-tui-py/actions/workflows/dependency-review.yml)
-[![License Check](https://github.com/reuteras/miniflux-tui-py/actions/workflows/license-check.yml/badge.svg)](https://github.com/reuteras/miniflux-tui-py/actions/workflows/license-check.yml)
 [![zizmor](https://github.com/reuteras/miniflux-tui-py/actions/workflows/zizmor.yml/badge.svg)](https://github.com/reuteras/miniflux-tui-py/actions/workflows/zizmor.yml)
 [![Container Builds](https://github.com/reuteras/miniflux-tui-py/actions/workflows/container-image.yml/badge.svg)](https://github.com/reuteras/miniflux-tui-py/actions/workflows/container-image.yml)
 [![SBOM](https://img.shields.io/badge/SBOM-CycloneDX%20%26%20SPDX-5A45FF)](https://github.com/reuteras/miniflux-tui-py/releases/latest)
 [![Coverage Status](https://coveralls.io/repos/github/reuteras/miniflux-tui-py/badge.svg?branch=main)](https://coveralls.io/github/reuteras/miniflux-tui-py?branch=main)
 [![Documentation](https://img.shields.io/badge/docs-GitHub%20Pages-blue)](https://reuteras.github.io/miniflux-tui-py/)
 [![pre-commit](https://img.shields.io/badge/pre--commit-enabled-brightgreen?logo=pre-commit)](https://github.com/pre-commit/pre-commit)
-[![OpenSSF Scorecard](https://api.securityscorecards.dev/projects/github.com/reuteras/miniflux-tui-py/badge)](https://securityscorecards.dev/viewer/?uri=github.com/reuteras/miniflux-tui-py)
 [![OpenSSF Best Practices](https://www.bestpractices.dev/projects/11362/badge?t=2025)](https://www.bestpractices.dev/projects/11362)
 
 A [Python](https://www.python.org) TUI (Terminal User Interface) client for the [Miniflux](https://miniflux.app) self-hosted RSS reader built with [Textual](https://github.com/textualize/textual/).
@@ -34,9 +30,9 @@ A [Python](https://www.python.org) TUI (Terminal User Interface) client for the 
 This project has reached production stability with:
 - ✅ Comprehensive feature set (categories, feeds, settings, history, runtime theme switching)
 - ✅ Non-blocking background operations (sync while using the UI)
-- ✅ Robust CI/CD with 15+ security and quality workflows
+- ✅ Robust CI/CD with automated security and quality workflows
 - ✅ High test coverage (>60%) across Python 3.11-3.15
-- ✅ OpenSSF Best Practices badge and Scorecard monitoring
+- ✅ OpenSSF Best Practices badge
 - ✅ Container builds with SLSA attestation
 - ✅ Professional documentation and API reference
 

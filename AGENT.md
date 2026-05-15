@@ -16,7 +16,7 @@ This document provides context about the miniflux-tui-py project for coding agen
 - **PyPI**: Available at <https://pypi.org/project/miniflux-tui-py/>
 - **Docs**: <https://reuteras.github.io/miniflux-tui-py/>
 - **Roadmap**: See [ROADMAP.md](ROADMAP.md) for v0.7.0+ features
-- **Security**: OpenSSF Best Practices, Scorecard, SLSA attestation
+- **Security**: OpenSSF Best Practices, SLSA attestation
 
 This is a Python reimplementation of [cliflux](https://github.com/spencerwi/cliflux) (original Rust implementation).
 
@@ -24,13 +24,11 @@ This is a Python reimplementation of [cliflux](https://github.com/spencerwi/clif
 
 The project has reached **Production/Stable** status with:
 - ✅ Comprehensive feature set (categories, feeds, settings, history)
-- ✅ Robust CI/CD with 15+ GitHub Actions workflows
+- ✅ Robust CI/CD with GitHub Actions workflows
 - ✅ High test coverage (>60%) with async support
-- ✅ Multiple security scanning tools (CodeQL, Semgrep, OSV, CIFuzz, Malcontent)
-- ✅ Performance benchmarking and optimization
+- ✅ Security scanning (CodeQL, OSV Scanner)
 - ✅ Container builds with SLSA attestation
 - ✅ OpenSSF Best Practices badge
-- ✅ OpenSSF Scorecard monitoring
 - ✅ Professional documentation (MkDocs Material)
 - ✅ Automated release workflow with signed commits
 - ✅ PyPI Trusted Publisher (OIDC)
@@ -89,17 +87,10 @@ miniflux-tui-py/
 │   │   ├── publish.yml              # Publish to PyPI on git tags
 │   │   ├── docs-deploy.yml          # Deploy docs to GitHub Pages
 │   │   ├── codeql.yml               # CodeQL security analysis
-│   │   ├── semgrep.yml              # Semgrep SAST scanning
 │   │   ├── osv-scanner.yml          # OSV vulnerability scanning
-│   │   ├── cifuzz.yml               # Fuzz testing
-│   │   ├── malcontent-pr.yml        # Malware detection
-│   │   ├── linter.yml               # MegaLinter
-│   │   ├── performance.yml          # Performance benchmarking
 │   │   ├── container-image.yml      # Container builds
-│   │   ├── dependency-review.yml    # Dependency review
-│   │   ├── license-check.yml        # License validation
 │   │   ├── zizmor.yml               # Workflow security
-│   │   └── scorecard.yml            # OpenSSF Scorecard
+│   │   └── pre-commit-autoupdate.yml # Pre-commit hook updates
 │   ├── dependabot.yml               # Automated dependency updates
 │   └── CODEOWNERS                   # Code review requirements
 ├── pyproject.toml                   # Project metadata & dependencies
@@ -260,87 +251,28 @@ uv run miniflux-tui --init
 uv run miniflux-tui
 ```
 
-### Git Workflow (CRITICAL)
+### Git Workflow
 
-**⚠️ ALL CHANGES MUST BE IN FEATURE BRANCHES - NEVER COMMIT DIRECTLY TO MAIN**
+Direct commits to main are allowed. Feature branches are optional but fine for larger changes.
 
-The main branch is protected and enforces:
-1. **All changes must come through pull requests** - No direct pushes allowed
-2. **All CI checks must pass** - Tests, linting, type checking, security scans
-3. **Code review required** - Before any merge to main
-4. **Branches must be up-to-date** - Rebase before merging
-
-**Branch Naming Conventions:**
-- `feat/feature-name` - New features (e.g., `feat/v0.5.0-categories`)
-- `fix/bug-name` - Bug fixes (e.g., `fix/navigation-bug`)
-- `docs/document-name` - Documentation updates (e.g., `docs/installation-guide`)
-- `refactor/component-name` - Code refactoring (e.g., `refactor/entry-list`)
-- `test/feature-name` - Test additions (e.g., `test/search-functionality`)
-- `chore/task-name` - Maintenance tasks (e.g., `chore/dependency-update`)
-
-**All development must follow this workflow:**
+**Before committing (run checks!):**
 
 ```bash
-# 1. Create feature branch from main (ALWAYS start from main)
-git checkout main
-git pull origin main
-git checkout -b feat/your-feature-name
-
-# 2. Make changes locally
-# (Edit files, make improvements)
-
-# 3. Test your changes before committing (RUN ALL CHECKS!)
 uv run ruff check .              # Lint
 uv run ruff format .             # Format
 uv run pyright                   # Type check
 uv run pytest tests              # Run tests
-pre-commit run --all-files       # Pre-commit hooks
-
-# 4. Commit with clear, descriptive message
-git add .
-git commit -m "feat: Clear description of what was implemented
-
-## Changes
-- Bullet point 1
-- Bullet point 2
-
-## Related Issues
-- #123 - Issue title
-
-## Testing
-- ✅ Tests added
-- ✅ CI checks passing"
-
-# 5. Push to origin (NEVER directly to main)
-git push origin feat/your-feature-name
-
-# 6. Create a Pull Request on GitHub
-# - Go to https://github.com/reuteras/miniflux-tui-py/pulls
-# - Click "New Pull Request"
-# - Select your branch against main
-# - Fill in detailed description
-# - Link related issues with "Fixes #123" or "Related to #456"
-
-# 7. Wait for CI to pass
-# - GitHub Actions will run all checks automatically
-# - Fix any failures before merging
-
-# 8. After PR is merged, clean up your local branch
-git checkout main
-git pull origin main
-git branch -d feat/your-feature-name
-git push origin --delete feat/your-feature-name
 ```
 
-**Critical Rules:**
-- ✅ Create branch FROM main (git checkout main; git pull origin main; git checkout -b ...)
-- ✅ Make changes ONLY in the branch (NOT on main)
-- ✅ Test BEFORE committing (run ruff, pyright, pytest)
-- ✅ Commit messages MUST be clear and describe the WHY
-- ✅ Push ONLY to your branch (git push origin branch-name)
-- ✅ Create PR on GitHub (never merge directly)
-- ✅ Wait for CI/CD to pass
-- ✅ Delete branch after merge
+**Commit message format** (conventional commits help with changelog generation):
+
+```bash
+git commit -m "feat: Add new feature"
+git commit -m "fix: Fix bug in navigation"
+git commit -m "docs: Update README"
+git commit -m "refactor: Refactor entry list"
+git commit -m "chore: Update dependencies"
+```
 
 **⚠️ CRITICAL: SSH SIGNING WITH 1PASSWORD**
 
@@ -364,65 +296,6 @@ This project uses 1Password for SSH commit signing approval. When you attempt to
 4. Retry the commit
 
 This ensures all commits are verified and trusted.
-
-**Why this workflow?**
-- Ensures code quality through automated CI checks (no breaking commits)
-- Enables peer review and knowledge sharing
-- Maintains clear, linear commit history
-- Prevents accidental pushes that break the main branch
-- Allows safe rollback of any feature
-- Makes it easy to track what changes and when
-- Enables multiple developers to work in parallel
-
-### GitHub Branch Protection Rules (main branch)
-
-The main branch has protection rules enabled via GitHub Settings. These prevent direct pushes and enforce quality standards.
-
-**⚠️ Branch Protection Rules (Single Maintainer Model)**
-
-The project uses strong branch protection rules with a single maintainer reviewer to ensure code quality and security while maintaining operational efficiency.
-
-**To configure branch protection:**
-
-1. Go to **Settings** → **Branches** → **Add rule** (or edit existing rule)
-2. Apply to `main` branch
-3. Enable these settings:
-
-#### Pull Request Requirements
-- ✅ **Require a pull request before merging**
-  - **Require approvals: 1** (Single maintainer review by reuteras)
-  - ✅ **Dismiss stale pull request approvals when new commits are pushed**
-  - ✅ **Require review from Code Owners** (requires .github/CODEOWNERS)
-  - ✅ **Require approval of the most recent reviewable push**
-
-#### Status Check Requirements
-- ✅ **Require status checks to pass before merging**
-  - ✅ **Require branches to be up to date before merging**
-  - Select required checks: All CI checks (test, docs-deploy, scorecard, etc.)
-
-#### Commit Requirements
-- ✅ **Require signed commits** (All commits must be signed)
-
-#### Branch Rules
-- ✅ **Do not allow bypassing the above settings**
-  - ✅ **Include administrators** (CRITICAL - branch protection applies to everyone)
-- ✅ **Allow force pushes: DISABLED**
-- ✅ **Allow deletions: DISABLED**
-
-#### Code Owners Configuration
-The `.github/CODEOWNERS` file is configured with:
-- `@reuteras` - Primary maintainer (code review required)
-
-**Security Features:**
-- ✅ No direct commits to main - all changes require pull requests
-- ✅ Single maintainer review required before merge
-- ✅ All CI/CD checks must pass before merge
-- ✅ Signed commits required for audit trail
-- ✅ Branch must be up-to-date before merging
-- ✅ Stale reviews are dismissed when new commits are pushed
-- ✅ Admin enforcement - rules apply to everyone including administrators
-- ✅ Force pushes and deletions are blocked
-- ✅ Conventional commits enforced through issue linking
 
 ### Common Commands
 ```bash
@@ -628,7 +501,7 @@ Major feature additions:
 - **GitHub Actions CI/CD**:
   - Automated testing on Python 3.11, 3.12, 3.13, 3.14, 3.15 preview
   - Type checking with pyright
-  - Security scanning (CodeQL, Semgrep, OSV Scanner, CIFuzz)
+  - Security scanning (CodeQL, OSV Scanner)
   - Test coverage tracking with coveralls
   - Auto-deploy docs to GitHub Pages
   - Auto-publish to PyPI on version tags
@@ -637,8 +510,6 @@ Major feature additions:
   - Pre-commit hooks with pyright type checking
   - Standard community files (CHANGELOG, CONTRIBUTING, CODE_OF_CONDUCT, SECURITY)
   - Dependabot for automated dependency updates
-  - MegaLinter for code quality
-  - Performance benchmarking
 - **Code quality**:
   - Added constants.py for centralized configuration
   - Added performance.py for optimization tracking
@@ -654,14 +525,8 @@ Major feature additions:
   - Linting with ruff
   - Security scanning:
     - CodeQL (static analysis)
-    - Semgrep (SAST)
     - OSV Scanner (vulnerability scanning)
-    - CIFuzz (fuzz testing)
-    - Malcontent (malware detection)
     - Bandit (Python security linter)
-  - Dependency review and license checking
-  - MegaLinter for comprehensive code quality
-  - Performance benchmarking
   - Container builds with SLSA attestation
 - **Pre-commit hooks**: Enforces quality before commit
   - ruff linting and formatting
@@ -785,7 +650,7 @@ The project uses PyPI's Trusted Publisher (OIDC) for secure publishing:
 If a maintainer asks for help preparing a release:
 
 **Pre-Release:**
-- [ ] All PRs merged to main
+- [ ] All changes committed to main
 - [ ] All tests passing: `uv run pytest tests`
 - [ ] Code formatted: `uv run ruff format .`
 - [ ] Linting clean: `uv run ruff check .`
@@ -968,6 +833,5 @@ except Exception as e:
 - [Original cliflux (Rust)](https://github.com/spencerwi/cliflux)
 - [uv Package Manager](https://docs.astral.sh/uv/)
 - [OpenSSF Best Practices](https://www.bestpractices.dev/projects/11362)
-- [OpenSSF Scorecard](https://securityscorecards.dev/viewer/?uri=github.com/reuteras/miniflux-tui-py)
 - Commits to GitHub should be signed with SSH key
 - No bare URLs in Markdown files
