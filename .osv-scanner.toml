@@ -1,3 +1,6 @@
 [[IgnoredVulns]]
 id = "GHSA-5239-wwwm-4pmq"
 reason = "Not relevant for this project and no patch"
+[[IgnoredVulns]]
+id = "PYSEC-2026-89"
+reason = "Using patched version. Wrong info in DB"
