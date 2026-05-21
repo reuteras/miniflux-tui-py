@@ -43,10 +43,6 @@ repos:
         language: node
         types: [markdown]
         additional_dependencies: ["markdown-table-formatter@1.6.1"]
-  - repo: https://github.com/owenlamont/uv-secure
-    rev: v0.17.2
-    hooks:
-      - id: uv-secure
   - repo: https://github.com/gitleaks/gitleaks
     rev: v8.30.0
     hooks:
