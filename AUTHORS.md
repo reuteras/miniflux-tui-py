@@ -18,7 +18,6 @@ All contributors are tracked automatically via GitHub. See the [contributors pag
 Our automated contributors help keep the project secure and up-to-date:
 - **[@dependabot](https://github.com/apps/dependabot)** - Dependency updates (security & versions)
 - **[@renovate](https://github.com/apps/renovate)** - Dependency management and updates
-- **[@step-security-bot](https://github.com/step-security-bot)** - Security hardening recommendations
 
 Thank you to all who contribute to miniflux-tui-py, whether through code, bug reports, documentation, or suggestions!
 

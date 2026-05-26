@@ -502,7 +502,7 @@ Major feature additions:
   - Automated testing on Python 3.11, 3.12, 3.13, 3.14, 3.15 preview
   - Type checking with pyright
   - Security scanning (CodeQL, OSV Scanner)
-  - Test coverage tracking with coveralls
+  - Test coverage tracking via CI artifacts
   - Auto-deploy docs to GitHub Pages
   - Auto-publish to PyPI on version tags
   - Container builds with SLSA attestation
@@ -520,7 +520,7 @@ Major feature additions:
 
 - **Automated CI/CD**: GitHub Actions runs on every push
   - Tests Python 3.11, 3.12, 3.13, 3.14 with 3.15 preview
-  - Minimum 60% test coverage required (tracked with coveralls)
+  - Minimum 60% test coverage required (checked in CI)
   - Type checking with pyright
   - Linting with ruff
   - Security scanning:

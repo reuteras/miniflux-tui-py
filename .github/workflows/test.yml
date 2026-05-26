@@ -29,8 +29,7 @@ jobs:
     name: "${{ matrix.os }} / Python ${{ matrix.python-version }}"
     runs-on: ${{ matrix.os }}
     permissions:
-      contents: read  # For checking out code
-      pull-requests: write  # For posting coverage comments
+      contents: read
     defaults:
       run:
         shell: bash
@@ -40,11 +39,6 @@ jobs:
         os: [ubuntu-latest, macos-latest, windows-latest]
         python-version: ["3.11", "3.12", "3.13", "3.14"]
     steps:
-      - name: Harden the runner (Audit all outbound calls)
-        uses: step-security/harden-runner@ab7a9404c0f3da075243ca237b5fac12c98deaa5 # v2.19.3
-        with:
-          egress-policy: audit
-
       - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
         with:
           persist-credentials: false
@@ -109,15 +103,6 @@ jobs:
             .coverage.${{ matrix.os }}-py${{ matrix.python-version }}
           retention-days: 7
 
-      - name: Upload coverage to Coveralls
-        uses: coverallsapp/github-action@5cbfd81b66ca5d10c19b062c04de0199c215fb6e # v2.3.7
-        with:
-          github-token: ${{ secrets.GITHUB_TOKEN }}
-          file: ./coverage.xml
-          format: cobertura
-          flag-name: ${{ matrix.os }}-py${{ matrix.python-version }}
-          parallel: true
-
       - name: Coverage differential for PRs
         if: github.event_name == 'pull_request' && matrix.os == 'ubuntu-latest' && matrix.python-version == '3.11'
         continue-on-error: true
@@ -144,18 +129,6 @@ jobs:
             echo "ℹ️ Target: ≥70% coverage on changed lines"
           } >> "$GITHUB_STEP_SUMMARY"
 
-      - name: Copy coverage file for comment action
-        if: github.event_name == 'pull_request' && matrix.os == 'ubuntu-latest' && matrix.python-version == '3.11'
-        run: cp .coverage.${{ matrix.os }}-py${{ matrix.python-version }} .coverage
-
-      - name: Coverage comment on PR
-        if: github.event_name == 'pull_request' && matrix.os == 'ubuntu-latest' && matrix.python-version == '3.11'
-        uses: py-cov-action/python-coverage-comment-action@63f52f4fbbffada6e8dee8ec432de7e01df9ba79 # v3.41
-        with:
-          GITHUB_TOKEN: ${{ github.token }}
-          MINIMUM_GREEN: 80
-          MINIMUM_ORANGE: 60
-
       - name: Check coverage threshold
         run: |
           uv run python - <<'PY'
@@ -179,11 +152,6 @@ jobs:
       run:
         shell: bash
     steps:
-      - name: Harden the runner (Audit all outbound calls)
-        uses: step-security/harden-runner@ab7a9404c0f3da075243ca237b5fac12c98deaa5 # v2.19.3
-        with:
-          egress-policy: audit
-
       - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
         with:
           persist-credentials: false
@@ -251,34 +219,12 @@ jobs:
           print(f"Coverage {coverage:.2f}% meets threshold {threshold:.0f}%")
           PY
 
-  coverage-finish:
-    name: Finish Coveralls
-    needs: [test, test-future]
-    runs-on: ubuntu-latest
-    if: always()
-    steps:
-      - name: Harden the runner (Audit all outbound calls)
-        uses: step-security/harden-runner@ab7a9404c0f3da075243ca237b5fac12c98deaa5 # v2.19.3
-        with:
-          egress-policy: audit
-
-      - name: Coveralls Finished
-        uses: coverallsapp/github-action@5cbfd81b66ca5d10c19b062c04de0199c215fb6e # v2.3.7
-        with:
-          github-token: ${{ secrets.GITHUB_TOKEN }}
-          parallel-finished: true
-
   mutation-testing:
     name: Mutation Testing
     runs-on: ubuntu-latest
     if: github.event_name == 'pull_request'
     continue-on-error: true
     steps:
-      - name: Harden the runner (Audit all outbound calls)
-        uses: step-security/harden-runner@ab7a9404c0f3da075243ca237b5fac12c98deaa5 # v2.19.3
-        with:
-          egress-policy: audit
-
       - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
         with:
           persist-credentials: false
@@ -352,11 +298,6 @@ jobs:
       run:
         shell: bash
     steps:
-      - name: Harden the runner (Audit all outbound calls)
-        uses: step-security/harden-runner@ab7a9404c0f3da075243ca237b5fac12c98deaa5 # v2.19.3
-        with:
-          egress-policy: audit
-
       - name: Checkout code
         uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
         with:

@@ -110,7 +110,7 @@ The following are automatically exempted from issue linking:
 1. **Dependabot PRs** - Automated dependency updates
 2. **Renovate PRs** - Automated dependency management
 3. **Release PRs** - Automated release preparation
-4. **Bot PRs** - Other automation (step-security-bot, etc.)
+4. **Bot PRs** - Other automation (pre-commit-autoupdate, etc.)
 
 ## Verification
 

@@ -32,11 +32,6 @@ jobs:
       version: ${{ steps.version.outputs.version }}
       pr_number: ${{ steps.create-pr.outputs.pr_number }}
     steps:
-      - name: Harden the runner
-        uses: step-security/harden-runner@ab7a9404c0f3da075243ca237b5fac12c98deaa5 # v2.19.3
-        with:
-          egress-policy: audit
-
       - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
         with:
           fetch-depth: 0
@@ -88,17 +83,27 @@ jobs:
       - name: Regenerate uv.lock
         run: uv lock
 
-      - name: Update CHANGELOG.md
-        uses: orhun/git-cliff-action@f50e11560dce63f7c33227798f90b924471a88b5 # v4.8.0
-        with:
-          config: cliff.toml
-          args: --tag ${{ steps.version.outputs.version }}
+      - name: Install git-cliff
         env:
-          OUTPUT: CHANGELOG.md
-          GITHUB_REPO: ${{ github.repository }}
+          # renovate: datasource=github-releases depName=orhun/git-cliff
+          GIT_CLIFF_VERSION: v2.9.3
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          gh release download "${GIT_CLIFF_VERSION}" \
+            -R orhun/git-cliff \
+            --pattern "git-cliff-*-x86_64-unknown-linux-gnu.tar.gz" \
+            -D /tmp/gc/
+          tar xf /tmp/gc/git-cliff-*-x86_64-unknown-linux-gnu.tar.gz -C /tmp/gc/
+          find /tmp/gc -name "git-cliff" -type f -exec install -m 0755 {} /usr/local/bin/git-cliff \;
 
-      - name: Setup Gitsign for commit signing
-        uses: chainguard-dev/actions/setup-gitsign@c69a264ec2a5934c3186c618f368fc1c86f16cff # v1.6.19
+      - name: Update CHANGELOG.md
+        env:
+          GITHUB_REPO: ${{ github.repository }}
+        run: |
+          git cliff \
+            --config cliff.toml \
+            --tag ${{ steps.version.outputs.version }} \
+            --output CHANGELOG.md
 
       - name: Create release branch and commit
         env:
@@ -181,11 +186,6 @@ jobs:
       pull-requests: write
       checks: read
     steps:
-      - name: Harden the runner
-        uses: step-security/harden-runner@ab7a9404c0f3da075243ca237b5fac12c98deaa5 # v2.19.3
-        with:
-          egress-policy: audit
-
       - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
         with:
           persist-credentials: false
@@ -287,20 +287,12 @@ jobs:
       contents: write
       id-token: write
     steps:
-      - name: Harden the runner
-        uses: step-security/harden-runner@ab7a9404c0f3da075243ca237b5fac12c98deaa5 # v2.19.3
-        with:
-          egress-policy: audit
-
       - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
         with:
           ref: main
           fetch-depth: 0
           token: ${{ secrets.GITHUB_TOKEN }}
           persist-credentials: false
-
-      - name: Setup Gitsign
-        uses: chainguard-dev/actions/setup-gitsign@c69a264ec2a5934c3186c618f368fc1c86f16cff # v1.6.19
 
       - name: Create and push signed tag
         env:
@@ -328,8 +320,8 @@ jobs:
             exit 1
           fi
 
-          # Create signed tag
-          git tag -s "$TAG" -m "$TAG"
+          # Create annotated tag
+          git tag -a "$TAG" -m "$TAG"
           git push origin "$TAG"
 
           echo "::notice::Created and pushed signed tag: $TAG on commit $(git rev-parse HEAD)"

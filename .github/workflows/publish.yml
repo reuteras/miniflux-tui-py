@@ -25,11 +25,6 @@ jobs:
       actions: read
     runs-on: ubuntu-latest
     steps:
-      - name: Harden the runner (Audit all outbound calls)
-        uses: step-security/harden-runner@ab7a9404c0f3da075243ca237b5fac12c98deaa5 # v2.19.3
-        with:
-          egress-policy: audit
-
       - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
         with:
           ref: ${{ inputs.tag || github.ref }}
@@ -80,11 +75,6 @@ jobs:
       actions: read
       id-token: write
     steps:
-      - name: Harden the runner (Audit all outbound calls)
-        uses: step-security/harden-runner@ab7a9404c0f3da075243ca237b5fac12c98deaa5 # v2.19.3
-        with:
-          egress-policy: audit
-
       - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd  # v6.0.2
         with:
           persist-credentials: false
@@ -116,11 +106,6 @@ jobs:
       contents: read
       actions: read
     steps:
-      - name: Harden the runner (Audit all outbound calls)
-        uses: step-security/harden-runner@ab7a9404c0f3da075243ca237b5fac12c98deaa5 # v2.19.3
-        with:
-          egress-policy: audit
-
       - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
         with:
           ref: ${{ inputs.tag || github.ref }}
@@ -161,11 +146,6 @@ jobs:
       id-token: write  # Required for OpenID Connect trusted publishing to PyPI
       attestations: write  # Required to generate SLSA provenance
     steps:
-      - name: Harden the runner (Audit all outbound calls)
-        uses: step-security/harden-runner@ab7a9404c0f3da075243ca237b5fac12c98deaa5 # v2.19.3
-        with:
-          egress-policy: audit
-
       - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd  # v6.0.2
         with:
           persist-credentials: false
@@ -189,41 +169,35 @@ jobs:
         if: github.event_name != 'pull_request'
         run: mkdir -p sbom
 
+      - name: Install syft
+        if: github.event_name != 'pull_request'
+        env:
+          # renovate: datasource=github-releases depName=anchore/syft
+          SYFT_VERSION: v1.22.0
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          gh release download "${SYFT_VERSION}" \
+            -R anchore/syft \
+            --pattern "syft_*_linux_amd64.tar.gz" \
+            -D /tmp/syft/
+          tar xf /tmp/syft/syft_*_linux_amd64.tar.gz -C /tmp/syft/
+          install -m 0755 /tmp/syft/syft /usr/local/bin/syft
+
       - name: Generate SBOM for PyPI dist (CycloneDX)
         if: github.event_name != 'pull_request'
-        uses: anchore/sbom-action@e22c389904149dbc22b58101806040fa8d37a610 # v0.24.0
-        with:
-          path: dist/
-          format: cyclonedx-json
-          output-file: sbom/miniflux-tui-pypi.cdx.json
-          upload-artifact: false
+        run: syft scan dir:dist/ -o cyclonedx-json=sbom/miniflux-tui-pypi.cdx.json
 
       - name: Generate SBOM for PyPI dist (SPDX)
         if: github.event_name != 'pull_request'
-        uses: anchore/sbom-action@e22c389904149dbc22b58101806040fa8d37a610 # v0.24.0
-        with:
-          path: dist/
-          format: spdx-json
-          output-file: sbom/miniflux-tui-pypi.spdx.json
-          upload-artifact: false
+        run: syft scan dir:dist/ -o spdx-json=sbom/miniflux-tui-pypi.spdx.json
 
       - name: Generate SBOM for binaries (CycloneDX)
         if: github.event_name != 'pull_request' && hashFiles('binaries/**') != ''
-        uses: anchore/sbom-action@e22c389904149dbc22b58101806040fa8d37a610 # v0.24.0
-        with:
-          path: binaries/
-          format: cyclonedx-json
-          output-file: sbom/miniflux-tui-binaries.cdx.json
-          upload-artifact: false
+        run: syft scan dir:binaries/ -o cyclonedx-json=sbom/miniflux-tui-binaries.cdx.json
 
       - name: Generate SBOM for binaries (SPDX)
         if: github.event_name != 'pull_request' && hashFiles('binaries/**') != ''
-        uses: anchore/sbom-action@e22c389904149dbc22b58101806040fa8d37a610 # v0.24.0
-        with:
-          path: binaries/
-          format: spdx-json
-          output-file: sbom/miniflux-tui-binaries.spdx.json
-          upload-artifact: false
+        run: syft scan dir:binaries/ -o spdx-json=sbom/miniflux-tui-binaries.spdx.json
 
       - name: Upload SBOM artifacts
         if: github.event_name != 'pull_request'
@@ -241,7 +215,16 @@ jobs:
             binaries/*
 
       - name: Install cosign
-        uses: sigstore/cosign-installer@6f9f17788090df1f26f669e9d70d6ae9567deba6 # v4.1.2
+        env:
+          # renovate: datasource=github-releases depName=sigstore/cosign
+          COSIGN_VERSION: v2.4.3
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          gh release download "${COSIGN_VERSION}" \
+            -R sigstore/cosign \
+            --pattern "cosign-linux-amd64" \
+            -D /tmp/cosign/
+          install -m 0755 /tmp/cosign/cosign-linux-amd64 /usr/local/bin/cosign
 
       - name: Sign release artifacts with cosign
         if: github.event_name != 'pull_request'
