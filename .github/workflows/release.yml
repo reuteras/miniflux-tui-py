@@ -99,10 +99,11 @@ jobs:
       - name: Update CHANGELOG.md
         env:
           GITHUB_REPO: ${{ github.repository }}
+          STEPS_VERSION_OUTPUTS_VERSION: ${{ steps.version.outputs.version }}
         run: |
           git cliff \
             --config cliff.toml \
-            --tag ${{ steps.version.outputs.version }} \
+            --tag ${STEPS_VERSION_OUTPUTS_VERSION} \
             --output CHANGELOG.md
 
       - name: Create release branch and commit
