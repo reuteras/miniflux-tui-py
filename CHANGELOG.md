@@ -4,7 +4,31 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
-## [0.8.6] - 2026-05-12
+## [0.8.7] - 2026-05-30
+
+### BUG FIXES
+
+- Update git-cliff to v2.13.1 in release workflow
+
+### MAINTENANCE
+
+- bump the actions-deps group with 3 updates (#823) 🤖
+- pre-commit autoupdate (#824)
+- bump pymdown-extensions in the uv group across 1 directory (#825) 🤖
+- bump idna in the uv group across 1 directory (#826) 🤖
+- bump the actions-deps group with 3 updates (#827) 🤖
+- pre-commit autoupdate (#828)
+
+
+
+#### Contributors
+
+Thank you to everyone who contributed to this release!
+
+**Humans:** 👤 Peter Reuterås
+
+**AI & Automation:** 🤖 Claude (AI Assistant), dependabot[bot] (Dependencies)
+## [v0.8.6] - 2026-05-12
 
 ### MAINTENANCE
 
@@ -13,6 +37,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - bump the actions-deps group with 2 updates (#815) 🤖
 - bump the actions-deps group with 3 updates (#816) 🤖
 - bump urllib3 in the uv group across 1 directory (#817) 🤖
+- Release v0.8.6 (#819)
 
 
 
