@@ -9,6 +9,8 @@ from html.parser import HTMLParser
 import httpx
 from bs4 import BeautifulSoup
 
+from miniflux_tui.utils import strip_control_chars
+
 # Mapping of rule types to their documentation anchors
 RULE_TYPES = {
     "scraper_rules": "scraper-rules",
@@ -180,35 +182,74 @@ class HTMLContentParser(HTMLParser):
         return "".join(self.text_parts)
 
 
-def _sanitize_html(html: str) -> str:
-    """Sanitize HTML to prevent XSS when displaying in TUI.
+_DOCS_ALLOWED_TAGS: frozenset[str] = frozenset(
+    {
+        "a",
+        "b",
+        "blockquote",
+        "br",
+        "code",
+        "dd",
+        "dl",
+        "dt",
+        "em",
+        "h1",
+        "h2",
+        "h3",
+        "h4",
+        "h5",
+        "h6",
+        "hr",
+        "i",
+        "li",
+        "ol",
+        "p",
+        "pre",
+        "span",
+        "strong",
+        "table",
+        "tbody",
+        "td",
+        "th",
+        "thead",
+        "tr",
+        "ul",
+    }
+)
+_DOCS_ALLOWED_ATTRS: dict[str, frozenset[str]] = {
+    "a": frozenset({"href", "title"}),
+    "th": frozenset({"scope"}),
+    "td": frozenset({"colspan", "rowspan"}),
+}
+_DOCS_ALLOWED_SCHEMES: frozenset[str] = frozenset({"http", "https"})
+_DOCS_URL_ATTRS: frozenset[str] = frozenset({"href", "src"})
 
-    Uses BeautifulSoup to remove dangerous tags and attributes rather than
-    fragile regex patterns that can be bypassed with case variations,
-    entity encoding, or extra whitespace.
+
+def _sanitize_html(html: str) -> str:
+    """Allowlist-based HTML sanitizer for Miniflux documentation content.
+
+    Only tags in _DOCS_ALLOWED_TAGS survive (others unwrapped). Only
+    attributes in _DOCS_ALLOWED_ATTRS survive. URL attributes restricted
+    to _DOCS_ALLOWED_SCHEMES. No blocklist.
 
     Args:
         html: Raw HTML content
 
     Returns:
-        Sanitized HTML with dangerous elements removed
+        Sanitized HTML with only explicitly allowed elements
     """
-    dangerous_tags = frozenset({"script", "iframe", "object", "embed", "applet"})
-    url_attrs = frozenset({"href", "src", "action", "formaction", "data"})
-
     soup = BeautifulSoup(html, "html.parser")
-
-    for tag in soup.find_all(dangerous_tags):
-        tag.decompose()
-
     for tag in soup.find_all(True):
-        for attr in list(tag.attrs):
-            lower_attr = attr.lower()
-            if lower_attr.startswith("on"):
-                del tag.attrs[attr]
-            elif lower_attr in url_attrs:
-                val = str(tag.get(attr, "")).strip().lower()
-                if val.startswith(("javascript:", "vbscript:")):
+        if tag.name not in _DOCS_ALLOWED_TAGS:
+            tag.unwrap()
+        else:
+            permitted = _DOCS_ALLOWED_ATTRS.get(tag.name, frozenset())
+            for attr in list(tag.attrs):
+                if attr not in permitted:
                     del tag.attrs[attr]
-
-    return str(soup)
+                elif attr in _DOCS_URL_ATTRS:
+                    raw = str(tag.get(attr, "")).strip().lower()
+                    colon = raw.find(":")
+                    if colon != -1 and raw[:colon] not in _DOCS_ALLOWED_SCHEMES:
+                        del tag.attrs[attr]
+    return strip_control_chars(str(soup))

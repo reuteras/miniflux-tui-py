@@ -3,6 +3,7 @@
 
 from __future__ import annotations
 
+import re
 import shutil
 import subprocess  # nosec B404
 import tomllib
@@ -11,6 +12,17 @@ from contextlib import contextmanager
 from importlib import metadata
 from pathlib import Path
 from typing import Any
+
+# Strips C0 (0x00-0x1F) and C1 (0x7F-0x9F) control characters EXCEPT tab (0x09)
+# and newline (0x0A). Carriage return, ESC, BEL, etc. are removed so untrusted
+# feed text cannot inject terminal escape sequences.
+_CONTROL_CHARS_RE = re.compile(r"[\x00-\x08\x0b-\x1f\x7f-\x9f]")
+
+
+def strip_control_chars(text: str | None) -> str:
+    """Remove terminal control characters from untrusted text."""
+    return _CONTROL_CHARS_RE.sub("", text or "")
+
 
 PYPROJECT_PATH = Path(__file__).resolve().parent.parent / "pyproject.toml"
 REPO_ROOT = PYPROJECT_PATH.parent

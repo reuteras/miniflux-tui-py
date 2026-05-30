@@ -12,6 +12,16 @@ from miniflux_tui.scraping.fetcher import SecureFetcher
 class TestSecureFetcher:
     """Test suite for SecureFetcher class."""
 
+    @pytest.fixture(autouse=True)
+    def clear_proxy_env(self, monkeypatch):
+        """Clear proxy env vars so httpx.AsyncClient initialises without error.
+
+        The sandbox NO_PROXY value contains '[::1]' which httpx cannot parse.
+        Tests mock the actual HTTP calls, so no proxy is needed.
+        """
+        for var in ("HTTP_PROXY", "http_proxy", "HTTPS_PROXY", "https_proxy", "NO_PROXY", "no_proxy"):
+            monkeypatch.delenv(var, raising=False)
+
     def test_init(self):
         """Test fetcher initialization."""
         fetcher = SecureFetcher()

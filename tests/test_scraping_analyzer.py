@@ -292,12 +292,18 @@ class TestContentAnalyzer:
         assert extracted == ""
 
     def test_extract_with_selector_sanitization(self):
-        """Test extracted content is sanitized."""
+        """Test extracted content is sanitized — disallowed tag markup removed.
+
+        Pure allowlist: only tags in ALLOWED_TAGS survive as markup. Tags not
+        in the list are unwrapped (tag stripped, text content preserved).
+        In a TUI no code executes, so text from script/style is harmless.
+        """
         dangerous_html = """
         <article>
             <p>Safe content</p>
             <script>dangerousCode()</script>
             <iframe src="evil.com"></iframe>
+            <style>.x{display:none}</style>
             <p>More safe content</p>
         </article>
         """
@@ -305,13 +311,64 @@ class TestContentAnalyzer:
 
         extracted = analyzer.extract_with_selector("article")
 
-        # Should contain safe content
         assert "Safe content" in extracted
-        # Should NOT contain dangerous tags
+        assert "More safe content" in extracted
+        # Tag markup must be gone (allowlist enforced — no blocklist)
         assert "<script>" not in extracted
         assert "<iframe>" not in extracted
-        # The text content from script will be removed with strip=True in bleach
-        assert "dangerousCode" not in extracted or "</script>" not in extracted
+        assert "<style>" not in extracted
+        # Non-allowed attributes on allowed tags must be gone
+        assert 'src="evil.com"' not in extracted
+
+    def test_extract_sanitizes_url_schemes(self):
+        """Test that only allowed URL schemes survive in href/src attributes."""
+        html = """
+        <article>
+            <a href="javascript:stealCookies()">click me</a>
+            <a href="JAVASCRIPT:stealCookies()">uppercase</a>
+            <a href="vbscript:MsgBox(1)">vbscript</a>
+            <a href="data:text/html,evil">data uri</a>
+            <img src="javascript:alert(1)">
+            <a href="https://safe.example.com">safe link</a>
+            <a href="http://also-safe.example.com">also safe</a>
+            <a href="/relative/path">relative</a>
+        </article>
+        """
+        analyzer = ContentAnalyzer(html)
+        extracted = analyzer.extract_with_selector("article")
+
+        # Disallowed schemes must be stripped from the attribute value
+        assert "javascript:" not in extracted.lower()
+        assert "vbscript:" not in extracted.lower()
+        assert 'href="data:' not in extracted.lower()
+        # Safe schemes must be kept
+        assert 'href="https://safe.example.com"' in extracted
+        assert 'href="http://also-safe.example.com"' in extracted
+        # Relative URLs (no scheme) must be kept
+        assert 'href="/relative/path"' in extracted
+
+    def test_extract_unwraps_disallowed_tags(self):
+        """Test that disallowed tags are unwrapped — only tag markup removed."""
+        html = """
+        <article>
+            <p>Before</p>
+            <svg><p>svg label</p></svg>
+            <object data="evil.swf"></object>
+            <embed src="evil.swf">
+            <p>After</p>
+        </article>
+        """
+        analyzer = ContentAnalyzer(html)
+        extracted = analyzer.extract_with_selector("article")
+
+        assert "Before" in extracted
+        assert "After" in extracted
+        # Tag markup for disallowed elements must be gone
+        assert "<svg" not in extracted
+        assert "<object" not in extracted
+        assert "<embed" not in extracted
+        # data:/src attributes on the disallowed tags themselves are gone since
+        # the tags were unwrapped — only allowed attributes on allowed tags survive
 
     def test_get_element_stats(self):
         """Test getting element statistics."""
@@ -474,24 +531,29 @@ class TestContentAnalyzer:
         assert "Content" in remaining
 
     def test_preview_removal_sanitizes(self):
-        """Test removal preview sanitizes output."""
+        """Test removal preview sanitizes output — pure allowlist, no blocklist."""
         html = """
         <body>
             <article>
                 <p>Safe content</p>
                 <script>alert('xss')</script>
+                <a href="javascript:evil()">bad link</a>
+                <a href="https://good.example.com">good link</a>
             </article>
         </body>
         """
         analyzer = ContentAnalyzer(html)
 
-        # Remove nothing - just test sanitization
         remaining = analyzer.preview_removal(".nonexistent")
 
-        # Script tag should be removed by sanitization
         assert "Safe content" in remaining
+        # Tag markup for disallowed elements must be gone
         assert "<script>" not in remaining.lower()
         assert "</script>" not in remaining.lower()
+        # Disallowed URL schemes must be stripped
+        assert "javascript:" not in remaining.lower()
+        # Safe URL must survive
+        assert "https://good.example.com" in remaining
 
     def test_preview_removal_multiple_elements(self):
         """Test removal of multiple matching elements."""

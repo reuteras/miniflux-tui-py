@@ -331,6 +331,40 @@ default_sort = "date"       # "date", "feed", or "status"
 default_group_by_feed = false
 ```
 
+## Security Design Principles
+
+This application processes untrusted content from RSS feeds, including feeds from security blogs that may contain malware examples. Security is a top priority.
+
+### Allowlists over blocklists
+
+**Always use allowlists, never blocklists, for HTML sanitization.**
+
+A blocklist enumerates known-bad things (e.g. `dangerous_tags = {"script", "iframe", ...}`). It is inherently incomplete: any new dangerous tag or URL scheme invented after the list was written slips straight through. An allowlist enumerates known-good things; anything not on the list is rejected by default.
+
+Apply this principle to every layer of HTML sanitization:
+
+| Layer       | Wrong (blocklist)                          | Right (allowlist)                           |
+|-------------|--------------------------------------------|---------------------------------------------|
+| Tags        | `if tag in dangerous_tags: decompose()`    | `if tag not in ALLOWED_TAGS: unwrap()`      |
+| URL schemes | `if url.startswith("javascript:"): remove` | `if scheme not in ALLOWED_SCHEMES: remove`  |
+| Attributes  | `if attr.startswith("on"): remove`         | `if attr not in ALLOWED_ATTRS[tag]: remove` |
+
+**Existing sanitizers** follow this pattern:
+
+- `miniflux_tui/scraping/analyzer.py` — `_sanitize_html()` uses `ALLOWED_TAGS`, `ALLOWED_ATTRS`, `_ALLOWED_SCHEMES`
+- `miniflux_tui/ui/screens/entry_reader.py` — `_sanitize_feed_html()` uses `_FEED_ALLOWED_TAGS`, `_FEED_ALLOWED_ATTRS`, `_FEED_ALLOWED_SCHEMES`
+- `miniflux_tui/docs_fetcher.py` — `_sanitize_html()` uses `_DOCS_ALLOWED_TAGS`, `_DOCS_ALLOWED_ATTRS`, `_DOCS_ALLOWED_SCHEMES`
+
+**When adding a new sanitizer:** define an allowlist of permitted tags, per-tag permitted attributes, and permitted URL schemes. Do not add a blocklist of dangerous tags or schemes; the allowlist already rejects everything not explicitly permitted.
+
+### Unwrap vs decompose for non-allowed tags
+
+Non-allowed tags are **unwrapped** (tag markup removed, text content preserved). In a TUI, text content from `<script>` or `<style>` tags is just text — it is never executed. For security blogs that show malware examples, displaying the code as text is the correct behaviour.
+
+### URL scheme allowlist
+
+Permitted schemes for user-facing URLs: `http`, `https`, `mailto`. Relative URLs (no scheme) are always permitted. Everything else — including `javascript:`, `vbscript:`, `data:` — is rejected by the allowlist check (no colon → relative, colon present → scheme must be in the allowlist).
+
 ## Code Style & Standards
 
 - **Line length**: 140 characters

@@ -11,15 +11,115 @@ import html2text
 from bs4 import BeautifulSoup
 from textual.app import ComposeResult
 from textual.binding import Binding
-
-# No longer using VerticalScroll - Markdown is the scrollable container
+from textual.content import Content
 from textual.screen import Screen
 from textual.widgets import Footer, Header, Markdown, Static
 
 from miniflux_tui.api.models import Entry
 from miniflux_tui.constants import CONTENT_SEPARATOR
 from miniflux_tui.ui.protocols import EntryReaderAppProtocol
-from miniflux_tui.utils import get_star_icon
+from miniflux_tui.utils import get_star_icon, strip_control_chars
+
+# HTML tags allowed in RSS feed content passed to html2text.
+# Everything not in this set is unwrapped (markup stripped, text preserved).
+# No blocklist: anything not explicitly allowed is removed.
+_FEED_ALLOWED_TAGS: frozenset[str] = frozenset(
+    {
+        # Block structure
+        "article",
+        "aside",
+        "blockquote",
+        "br",
+        "caption",
+        "center",
+        "dd",
+        "details",
+        "div",
+        "dl",
+        "dt",
+        "figcaption",
+        "figure",
+        "footer",
+        "h1",
+        "h2",
+        "h3",
+        "h4",
+        "h5",
+        "h6",
+        "header",
+        "hr",
+        "li",
+        "main",
+        "nav",
+        "ol",
+        "p",
+        "pre",
+        "section",
+        "summary",
+        "table",
+        "tbody",
+        "td",
+        "tfoot",
+        "th",
+        "thead",
+        "tr",
+        "ul",
+        # Inline semantics
+        "a",
+        "abbr",
+        "acronym",
+        "address",
+        "b",
+        "big",
+        "cite",
+        "code",
+        "col",
+        "colgroup",
+        "del",
+        "dfn",
+        "em",
+        "i",
+        "img",
+        "ins",
+        "kbd",
+        "mark",
+        "q",
+        "s",
+        "samp",
+        "small",
+        "span",
+        "strong",
+        "sub",
+        "sup",
+        "time",
+        "tt",
+        "u",
+        "var",
+        # Legacy tags common in older RSS feeds
+        "font",
+    }
+)
+
+# Only these attributes are kept, per tag.
+_FEED_ALLOWED_ATTRS: dict[str, frozenset[str]] = {
+    "a": frozenset({"href", "title", "rel"}),
+    "img": frozenset({"src", "alt", "title", "width", "height"}),
+    "th": frozenset({"scope", "colspan", "rowspan"}),
+    "td": frozenset({"colspan", "rowspan"}),
+    "col": frozenset({"span"}),
+    "colgroup": frozenset({"span"}),
+    "time": frozenset({"datetime"}),
+    "abbr": frozenset({"title"}),
+    "dfn": frozenset({"title"}),
+    "acronym": frozenset({"title"}),
+    "font": frozenset({"color", "size", "face"}),
+}
+
+# Only these schemes are permitted in URL attributes.
+_FEED_ALLOWED_SCHEMES: frozenset[str] = frozenset({"http", "https", "mailto"})
+
+# Allowed attributes that carry URLs and need scheme validation.
+_FEED_URL_ATTRS: frozenset[str] = frozenset({"href", "src"})
 
 
 class EntryReaderScreen(Screen):
@@ -143,11 +243,17 @@ class EntryReaderScreen(Screen):
 
         # Title and metadata (fixed height)
         yield Static(
-            f"[bold cyan]{star_icon} {self.entry.title}[/bold cyan]",
+            Content.from_markup(
+                f"[bold cyan]{star_icon} $title[/bold cyan]",
+                title=strip_control_chars(self.entry.title),
+            ),
             classes="entry-title",
         )
         yield Static(
-            f"[dim]{self.entry.feed.title} | {self.entry.published_at.strftime('%Y-%m-%d %H:%M')}[/dim]",
+            Content.from_markup(
+                f"[dim]$feed | {self.entry.published_at.strftime('%Y-%m-%d %H:%M')}[/dim]",
+                feed=strip_control_chars(self.entry.feed.title),
+            ),
             classes="entry-meta",
         )
 
@@ -158,7 +264,10 @@ class EntryReaderScreen(Screen):
             self.group_stats_widget = group_stats_widget
             yield group_stats_widget
 
-        yield Static(f"[dim]{self.entry.url}[/dim]", classes="entry-url")
+        yield Static(
+            Content.from_markup("[dim]$url[/dim]", url=strip_control_chars(self.entry.url)),
+            classes="entry-url",
+        )
         yield Static(CONTENT_SEPARATOR, classes="separator")
 
         # Convert HTML content to markdown for better display
@@ -384,54 +493,35 @@ class EntryReaderScreen(Screen):
 
     @staticmethod
     def _sanitize_feed_html(html_content: str) -> str:
-        """Strip dangerous tags and attributes from untrusted feed HTML.
+        """Allowlist-based sanitizer for untrusted RSS feed HTML.
 
-        RSS feed content is untrusted input. Before passing to html2text we
-        remove elements that could embed terminal escape sequences or other
-        harmful payloads in the rendered output.
+        Only tags in _FEED_ALLOWED_TAGS survive; others are unwrapped (markup
+        stripped, text content preserved — harmless in a TUI that does not
+        execute code). Only attributes in _FEED_ALLOWED_ATTRS survive. URL
+        attributes are restricted to schemes in _FEED_ALLOWED_SCHEMES.
+        No blocklist: anything not explicitly allowed is removed.
 
         Args:
             html_content: Raw HTML from an RSS entry
 
         Returns:
-            HTML with dangerous tags and attributes removed
+            HTML safe to pass to html2text
         """
-        dangerous_tags = frozenset(
-            {
-                "script",
-                "style",
-                "iframe",
-                "object",
-                "embed",
-                "form",
-                "meta",
-                "link",
-                "base",
-                "noscript",
-                "applet",
-                "frame",
-                "frameset",
-            }
-        )
-        url_attrs = frozenset({"href", "src", "action", "formaction", "data"})
-
         soup = BeautifulSoup(html_content, "html.parser")
-
-        for tag in soup.find_all(dangerous_tags):
-            tag.decompose()
-
         for tag in soup.find_all(True):
-            for attr in list(tag.attrs):
-                lower_attr = attr.lower()
-                # Remove all event-handler attributes (onclick, onload, …)
-                if lower_attr.startswith("on"):
-                    del tag.attrs[attr]
-                elif lower_attr in url_attrs:
-                    val = str(tag.get(attr, "")).strip().lower()
-                    if val.startswith(("javascript:", "vbscript:", "data:")):
+            if tag.name not in _FEED_ALLOWED_TAGS:
+                tag.unwrap()
+            else:
+                permitted = _FEED_ALLOWED_ATTRS.get(tag.name, frozenset())
+                for attr in list(tag.attrs):
+                    if attr not in permitted:
                         del tag.attrs[attr]
-
-        return str(soup)
+                    elif attr in _FEED_URL_ATTRS:
+                        raw = str(tag.get(attr, "")).strip().lower()
+                        colon = raw.find(":")
+                        if colon != -1 and raw[:colon] not in _FEED_ALLOWED_SCHEMES:
+                            del tag.attrs[attr]
+        return strip_control_chars(str(soup))
 
     def _html_to_markdown(self, html_content: str) -> str:
         """Convert HTML content to markdown for display.
@@ -671,12 +761,22 @@ class EntryReaderScreen(Screen):
         title_widgets = self.query(".entry-title")
         if title_widgets:
             star_icon = get_star_icon(self.entry.starred)
-            title_widgets[0].update(f"[bold cyan]{star_icon} {self.entry.title}[/bold cyan]")  # type: ignore[union-attr]
+            title_widgets[0].update(  # type: ignore[union-attr]
+                Content.from_markup(
+                    f"[bold cyan]{star_icon} $title[/bold cyan]",
+                    title=strip_control_chars(self.entry.title),
+                )
+            )
 
         # Update metadata widget (feed name and date)
         meta_widgets = self.query(".entry-meta")
         if meta_widgets:
-            meta_widgets[0].update(f"[dim]{self.entry.feed.title} | {self.entry.published_at.strftime('%Y-%m-%d %H:%M')}[/dim]")  # type: ignore[union-attr]
+            meta_widgets[0].update(  # type: ignore[union-attr]
+                Content.from_markup(
+                    f"[dim]$feed | {self.entry.published_at.strftime('%Y-%m-%d %H:%M')}[/dim]",
+                    feed=strip_control_chars(self.entry.feed.title),
+                )
+            )
 
         # Update group stats if available (second meta widget if it exists)
         group_stats_text = self._get_group_stats_text()
@@ -696,7 +796,9 @@ class EntryReaderScreen(Screen):
         # Update URL widget
         url_widgets = self.query(".entry-url")
         if url_widgets:
-            url_widgets[0].update(f"[dim]{self.entry.url}[/dim]")  # type: ignore[union-attr]
+            url_widgets[0].update(  # type: ignore[union-attr]
+                Content.from_markup("[dim]$url[/dim]", url=strip_control_chars(self.entry.url))
+            )
 
         # Update content (Markdown widget)
         markdown_widgets = self.query_one("#entry-content", expect_type=Markdown)  # type: ignore[arg-type]

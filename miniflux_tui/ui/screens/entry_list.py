@@ -8,6 +8,7 @@ from typing import TYPE_CHECKING, Any, cast
 from textual import events
 from textual.app import ComposeResult
 from textual.binding import Binding
+from textual.content import Content
 from textual.screen import Screen
 from textual.widgets import Footer, Header, Label, ListItem, ListView
 
@@ -19,7 +20,7 @@ from miniflux_tui.constants import (
     SORT_MODES,
 )
 from miniflux_tui.performance import ScreenRefreshOptimizer
-from miniflux_tui.utils import api_call, get_star_icon, get_status_icon
+from miniflux_tui.utils import api_call, get_star_icon, get_status_icon, strip_control_chars
 
 if TYPE_CHECKING:
     MinifluxTuiApp = Any
@@ -89,11 +90,15 @@ class EntryListItem(ListItem):
         # Determine color based on read status
         color = unread_color if entry.is_unread else read_color
 
-        # Create the label text with color markup
-        label_text = f"[{color}]{status_icon} {star_icon} {entry.feed.title} | {entry.title}[/{color}]"
+        # Create the label content with untrusted values isolated from markup
+        label_content = Content.from_markup(
+            f"[{color}]{status_icon} {star_icon} $feed | $title[/{color}]",
+            feed=strip_control_chars(entry.feed.title),
+            title=strip_control_chars(entry.title),
+        )
 
         # Initialize with the label
-        super().__init__(Label(label_text))
+        super().__init__(Label(label_content))
 
 
 class FeedHeaderItem(ListItem):
@@ -130,17 +135,24 @@ class FeedHeaderItem(ListItem):
         count_text = f"[dim]({unread_count} unread / {total_count} total)[/dim]" if total_count > 0 else ""
 
         if category_title:
-            category_part = f"[dim]({category_title})[/dim]"
+            category_part = "[dim]($cat)[/dim]"
             if error_text:
-                header_text = f"[bold]{fold_icon} {feed_title}[/bold] {category_part} {count_text} {error_text}".strip()
+                header_text = f"[bold]{fold_icon} $feed[/bold] {category_part} {count_text} {error_text}".strip()
             else:
-                header_text = f"[bold]{fold_icon} {feed_title}[/bold] {category_part} {count_text}".strip()
+                header_text = f"[bold]{fold_icon} $feed[/bold] {category_part} {count_text}".strip()
         elif error_text:
-            header_text = f"[bold]{fold_icon} {feed_title}[/bold] {count_text} {error_text}".strip()
+            header_text = f"[bold]{fold_icon} $feed[/bold] {count_text} {error_text}".strip()
         else:
-            header_text = f"[bold]{fold_icon} {feed_title}[/bold] {count_text}".strip()
+            header_text = f"[bold]{fold_icon} $feed[/bold] {count_text}".strip()
 
-        label = Label(header_text, classes="feed-header")
+        label = Label(
+            Content.from_markup(
+                header_text,
+                feed=strip_control_chars(feed_title),
+                cat=strip_control_chars(category_title),
+            ),
+            classes="feed-header",
+        )
 
         # Initialize with the label
         super().__init__(label)
@@ -160,19 +172,25 @@ class FeedHeaderItem(ListItem):
         count_text = f"[dim]({self.unread_count} unread / {self.total_count} total)[/dim]" if self.total_count > 0 else ""
 
         if self.category_title:
-            category_part = f"[dim]({self.category_title})[/dim]"
+            category_part = "[dim]($cat)[/dim]"
             if error_text:
-                header_text = f"[bold]{fold_icon} {self.feed_title}[/bold] {category_part} {count_text} {error_text}".strip()
+                header_text = f"[bold]{fold_icon} $feed[/bold] {category_part} {count_text} {error_text}".strip()
             else:
-                header_text = f"[bold]{fold_icon} {self.feed_title}[/bold] {category_part} {count_text}".strip()
+                header_text = f"[bold]{fold_icon} $feed[/bold] {category_part} {count_text}".strip()
         elif error_text:
-            header_text = f"[bold]{fold_icon} {self.feed_title}[/bold] {count_text} {error_text}".strip()
+            header_text = f"[bold]{fold_icon} $feed[/bold] {count_text} {error_text}".strip()
         else:
-            header_text = f"[bold]{fold_icon} {self.feed_title}[/bold] {count_text}".strip()
+            header_text = f"[bold]{fold_icon} $feed[/bold] {count_text}".strip()
 
         # Update the label
         if self.children:
-            cast(Label, self.children[0]).update(header_text)
+            cast(Label, self.children[0]).update(
+                Content.from_markup(
+                    header_text,
+                    feed=strip_control_chars(self.feed_title),
+                    cat=strip_control_chars(self.category_title),
+                )
+            )
 
 
 class CategoryHeaderItem(ListItem):
@@ -189,10 +207,13 @@ class CategoryHeaderItem(ListItem):
         total = unread_count + read_count
         if total > 0:
             counts = f"({unread_count} unread / {total} total)"
-            header_text = f"[bold cyan]{fold_icon} [CATEGORY] {category_title} {counts}[/bold cyan]"
+            header_text = f"[bold cyan]{fold_icon} [CATEGORY] $cat {counts}[/bold cyan]"
         else:
-            header_text = f"[bold cyan]{fold_icon} [CATEGORY] {category_title}[/bold cyan]"
-        label = Label(header_text, classes="category-header")
+            header_text = f"[bold cyan]{fold_icon} [CATEGORY] $cat[/bold cyan]"
+        label = Label(
+            Content.from_markup(header_text, cat=strip_control_chars(category_title)),
+            classes="category-header",
+        )
 
         # Initialize with the label
         super().__init__(label)
@@ -204,12 +225,12 @@ class CategoryHeaderItem(ListItem):
         total = self.unread_count + self.read_count
         if total > 0:
             counts = f"({self.unread_count} unread / {total} total)"
-            header_text = f"[bold cyan]{fold_icon} [CATEGORY] {self.category_title} {counts}[/bold cyan]"
+            header_text = f"[bold cyan]{fold_icon} [CATEGORY] $cat {counts}[/bold cyan]"
         else:
-            header_text = f"[bold cyan]{fold_icon} [CATEGORY] {self.category_title}[/bold cyan]"
+            header_text = f"[bold cyan]{fold_icon} [CATEGORY] $cat[/bold cyan]"
         # Update the label
         if self.children:
-            cast(Label, self.children[0]).update(header_text)
+            cast(Label, self.children[0]).update(Content.from_markup(header_text, cat=strip_control_chars(self.category_title)))
 
 
 class EntryListScreen(Screen):

@@ -1934,3 +1934,104 @@ class TestEntryReaderLinkHighlightingIntegration:
         # Should return some content (original or highlighted)
         assert isinstance(highlighted, str)
         assert len(highlighted) > 0
+
+
+class TestSanitizeFeedHtml:
+    """Security tests for _sanitize_feed_html — the main RSS content sanitizer.
+
+    Design principle: pure allowlist. Only tags in _FEED_ALLOWED_TAGS and
+    attributes in _FEED_ALLOWED_ATTRS survive. No blocklist of bad tags.
+    """
+
+    def _sanitize(self, html: str) -> str:
+        return EntryReaderScreen._sanitize_feed_html(html)
+
+    # --- Tag allowlist ---
+
+    def test_disallowed_tag_markup_is_removed(self):
+        """Tags not in the allowlist lose their markup (unwrapped)."""
+        result = self._sanitize("<script>code()</script><p>text</p>")
+        assert "<script>" not in result
+        assert "</script>" not in result
+        assert "<p>text</p>" in result
+
+    def test_allowed_tags_survive(self):
+        """Common article tags in the allowlist are kept."""
+        html = "<p>Para</p><strong>Bold</strong><em>Italic</em><code>code</code>"
+        result = self._sanitize(html)
+        assert "<p>Para</p>" in result
+        assert "<strong>Bold</strong>" in result
+        assert "<em>Italic</em>" in result
+        assert "<code>code</code>" in result
+
+    def test_no_blocklist_needed(self):
+        """A tag invented after the allowlist was written is safely unwrapped."""
+        # <portal> is a newer tag; it's not in the allowlist so it must be unwrapped.
+        result = self._sanitize('<portal src="evil.com"><p>content</p></portal>')
+        assert "<portal" not in result
+        assert "<p>content</p>" in result
+
+    # --- URL scheme allowlist ---
+
+    def test_javascript_href_removed(self):
+        result = self._sanitize('<a href="javascript:stealCookies()">click</a>')
+        assert "javascript:" not in result.lower()
+
+    def test_javascript_href_uppercase_removed(self):
+        result = self._sanitize('<a href="JAVASCRIPT:stealCookies()">click</a>')
+        assert "javascript:" not in result.lower()
+
+    def test_vbscript_href_removed(self):
+        result = self._sanitize('<a href="vbscript:MsgBox(1)">click</a>')
+        assert "vbscript:" not in result.lower()
+
+    def test_data_uri_href_removed(self):
+        result = self._sanitize('<a href="data:text/html,<script>evil()</script>">click</a>')
+        assert "data:" not in result.lower()
+
+    def test_javascript_img_src_removed(self):
+        result = self._sanitize('<img src="javascript:alert(1)" alt="x">')
+        assert "javascript:" not in result.lower()
+
+    def test_https_href_kept(self):
+        result = self._sanitize('<a href="https://example.com">link</a>')
+        assert 'href="https://example.com"' in result
+
+    def test_http_href_kept(self):
+        result = self._sanitize('<a href="http://example.com">link</a>')
+        assert 'href="http://example.com"' in result
+
+    def test_mailto_href_kept(self):
+        result = self._sanitize('<a href="mailto:user@example.com">email</a>')
+        assert 'href="mailto:user@example.com"' in result
+
+    def test_relative_url_kept(self):
+        result = self._sanitize('<a href="/relative/path">link</a>')
+        assert 'href="/relative/path"' in result
+
+    # --- Attribute allowlist ---
+
+    def test_event_handlers_removed(self):
+        """All on* event-handler attributes are stripped (not in allowlist)."""
+        result = self._sanitize('<p onclick="evil()" onload="evil()">text</p>')
+        assert "onclick" not in result
+        assert "onload" not in result
+        assert "<p>text</p>" in result
+
+    def test_style_attribute_removed(self):
+        result = self._sanitize('<p style="display:none">text</p>')
+        assert "style=" not in result
+        assert "text" in result
+
+    def test_class_attribute_removed(self):
+        result = self._sanitize('<p class="tracking">text</p>')
+        assert "class=" not in result
+
+    def test_img_alt_and_src_kept(self):
+        result = self._sanitize('<img src="https://example.com/img.png" alt="desc">')
+        assert 'src="https://example.com/img.png"' in result
+        assert 'alt="desc"' in result
+
+    def test_anchor_rel_kept(self):
+        result = self._sanitize('<a href="https://x.com" rel="noopener">x</a>')
+        assert 'rel="noopener"' in result

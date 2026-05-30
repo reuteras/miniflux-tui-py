@@ -3,8 +3,40 @@
 
 from typing import Any, ClassVar
 
-import bleach
 from bs4 import BeautifulSoup
+
+from miniflux_tui.utils import strip_control_chars
+
+# Only URL attributes that need scheme validation.
+_URL_ATTRS: frozenset[str] = frozenset({"href", "src", "action", "formaction"})
+
+# Only these schemes are permitted in URL attributes.
+_ALLOWED_SCHEMES: frozenset[str] = frozenset({"http", "https", "mailto"})
+
+
+def _sanitize_html(html: str, allowed_tags: list[str], allowed_attributes: dict[str, list[str]]) -> str:
+    """Allowlist-based HTML sanitizer.
+
+    Only tags in allowed_tags survive (others are unwrapped — markup stripped,
+    text content preserved). Only attributes in allowed_attributes survive.
+    URL attributes are further restricted to schemes in _ALLOWED_SCHEMES.
+    No blocklist: anything not explicitly allowed is removed.
+    """
+    soup = BeautifulSoup(html, "html.parser")
+    for tag in soup.find_all(True):
+        if tag.name not in allowed_tags:
+            tag.unwrap()
+        else:
+            permitted = allowed_attributes.get(tag.name, [])
+            for attr in list(tag.attrs):
+                if attr not in permitted:
+                    del tag.attrs[attr]
+                elif attr in _URL_ATTRS:
+                    raw = str(tag.get(attr, "")).strip().lower()
+                    colon = raw.find(":")
+                    if colon != -1 and raw[:colon] not in _ALLOWED_SCHEMES:
+                        del tag.attrs[attr]
+    return strip_control_chars(str(soup))
 
 
 class ContentAnalyzer:
@@ -44,8 +76,7 @@ class ContentAnalyzer:
         Args:
             html: Raw HTML string to analyze
         """
-        # Use html5lib - most forgiving and secure parser
-        self.soup = BeautifulSoup(html, "html5lib")
+        self.soup = BeautifulSoup(html, "html.parser")
         self.analyzed_selectors = set()
 
     def _add_candidate_if_new(self, element, selector: str, element_type: str, element_count: int, candidates: list) -> None:
@@ -301,13 +332,7 @@ class ContentAnalyzer:
             # Get HTML of matched elements
             html = "".join(str(elem) for elem in elements)
 
-            # Sanitize with bleach to remove dangerous content
-            return bleach.clean(
-                html,
-                tags=self.ALLOWED_TAGS,
-                attributes=self.ALLOWED_ATTRIBUTES,
-                strip=True,
-            )
+            return _sanitize_html(html, self.ALLOWED_TAGS, self.ALLOWED_ATTRIBUTES)
         except Exception:
             return ""
 
@@ -349,7 +374,7 @@ class ContentAnalyzer:
         """
         try:
             # Create a copy of the soup to work with
-            soup_copy = BeautifulSoup(str(self.soup), "html5lib")
+            soup_copy = BeautifulSoup(str(self.soup), "html.parser")
 
             # Find and remove all matching elements
             elements = soup_copy.select(selector)
@@ -363,12 +388,6 @@ class ContentAnalyzer:
 
             html = str(body)
 
-            # Sanitize for safe display
-            return bleach.clean(
-                html,
-                tags=self.ALLOWED_TAGS,
-                attributes=self.ALLOWED_ATTRIBUTES,
-                strip=True,
-            )
+            return _sanitize_html(html, self.ALLOWED_TAGS, self.ALLOWED_ATTRIBUTES)
         except Exception:
             return ""
