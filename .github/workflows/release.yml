@@ -86,7 +86,7 @@ jobs:
       - name: Install git-cliff
         env:
           # renovate: datasource=github-releases depName=orhun/git-cliff
-          GIT_CLIFF_VERSION: v2.9.3
+          GIT_CLIFF_VERSION: v2.13.1
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
           gh release download "${GIT_CLIFF_VERSION}" \
