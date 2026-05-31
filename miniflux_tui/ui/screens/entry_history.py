@@ -69,3 +69,31 @@ class EntryHistoryScreen(EntryListScreen):
         """
         self.app.log("History screen: action_show_history - popping back to main list")
         self.app.pop_screen()
+
+    def action_show_unread(self):
+        """Load unread entries and return to main entry list."""
+        self.run_worker(self._do_show_unread(), exclusive=True)
+
+    async def _do_show_unread(self):
+        """Override: load unread entries then navigate back to main screen."""
+        if hasattr(self.app, "load_entries"):
+            try:
+                self._start_loading_animation("Loading unread entries...")
+                await self.app.load_entries("unread")
+            finally:
+                self._stop_loading_animation()
+        self.app.pop_screen()
+
+    def action_show_starred(self):
+        """Load starred entries and return to main entry list."""
+        self.run_worker(self._do_show_starred(), exclusive=True)
+
+    async def _do_show_starred(self):
+        """Override: load starred entries then navigate back to main screen."""
+        if hasattr(self.app, "load_entries"):
+            try:
+                self._start_loading_animation("Loading starred entries...")
+                await self.app.load_entries("starred")
+            finally:
+                self._stop_loading_animation()
+        self.app.pop_screen()

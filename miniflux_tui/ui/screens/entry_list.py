@@ -424,15 +424,11 @@ class EntryListScreen(Screen):
             self._is_initial_mount = False
             return
 
-        # Refresh the list to reflect any status changes when returning from other screens
-        if self.entries and self.list_view:
-            # Update subtitle to reflect current state
+        # Refresh the list to reflect any status changes when returning from other screens.
+        # Always populate (even when entries is empty) so stale items are cleared.
+        if self.list_view:
             self._update_subtitle()
-            # _populate_list() now handles cursor restoration and focus via call_later
             self._populate_list()
-        elif self.list_view and len(self.list_view.children) > 0:
-            # If no entries, just ensure focus
-            self.call_later(self._ensure_focus)
 
     def on_list_view_selected(self, event: ListView.Selected) -> None:
         """Handle ListView selection (Enter key)."""
