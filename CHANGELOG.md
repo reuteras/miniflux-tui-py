@@ -4,11 +4,12 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
-## [0.8.7] - 2026-05-30
+## [v0.8.7] - 2026-05-30
 
 ### BUG FIXES
 
 - Update git-cliff to v2.13.1 in release workflow
+- history items stay on screen after g+u/g+b (#830)
 
 ### MAINTENANCE
 
@@ -18,6 +19,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - bump idna in the uv group across 1 directory (#826) 🤖
 - bump the actions-deps group with 3 updates (#827) 🤖
 - pre-commit autoupdate (#828)
+- Release v0.8.7 (#829)
 
 
 
