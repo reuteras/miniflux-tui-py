@@ -2,6 +2,7 @@
 """Tests for HTML content analyzer."""
 
 from bs4 import BeautifulSoup
+
 from miniflux_tui.scraping.analyzer import ContentAnalyzer
 
 # Sample HTML for testing
