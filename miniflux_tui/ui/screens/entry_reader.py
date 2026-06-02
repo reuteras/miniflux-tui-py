@@ -20,6 +20,15 @@ from miniflux_tui.constants import CONTENT_SEPARATOR
 from miniflux_tui.ui.protocols import EntryReaderAppProtocol
 from miniflux_tui.utils import get_star_icon, strip_control_chars
 
+# Tags whose *entire subtree* must be removed (decomposed), not just unwrapped.
+# Unlike script/style whose text content is preserved for security-blog use,
+# these tags are purely structural/fallback elements whose text is never
+# intended to be shown as article body:
+#   - noscript: JS-disabled fallback; in RSS feeds its content duplicates the
+#               main article text, causing visible text doubling.
+#   - template:  inert HTML fragment, never rendered directly by browsers.
+_FEED_DECOMPOSE_TAGS: frozenset[str] = frozenset({"noscript", "template"})
+
 # HTML tags allowed in RSS feed content passed to html2text.
 # Everything not in this set is unwrapped (markup stripped, text preserved).
 # No blocklist: anything not explicitly allowed is removed.
@@ -508,6 +517,10 @@ class EntryReaderScreen(Screen):
             HTML safe to pass to html2text
         """
         soup = BeautifulSoup(html_content, "html.parser")
+        # Remove entire subtrees for tags whose content is structural/fallback,
+        # not article body (e.g. noscript duplicates text; template is inert).
+        for tag in soup.find_all(_FEED_DECOMPOSE_TAGS):
+            tag.decompose()
         for tag in soup.find_all(True):
             if tag.name not in _FEED_ALLOWED_TAGS:
                 tag.unwrap()
@@ -520,6 +533,12 @@ class EntryReaderScreen(Screen):
                         raw = str(tag.get(attr, "")).strip().lower()
                         colon = raw.find(":")
                         if colon != -1 and raw[:colon] not in _FEED_ALLOWED_SCHEMES:
+                            del tag.attrs[attr]
+                        elif colon != -1 and (len(raw) > 2048 or " " in urlparse(raw).netloc):
+                            # Reject malformed URLs where article text was accidentally
+                            # used as an href value (e.g. SANS ISC feed corruption).
+                            # Spaces in the hostname or extreme length are impossible in
+                            # real URLs; keeping them causes Markdown link-parse breakage.
                             del tag.attrs[attr]
         return strip_control_chars(str(soup))
 
@@ -805,6 +824,7 @@ class EntryReaderScreen(Screen):
         # Update content (Markdown widget)
         markdown_widgets = self.query_one("#entry-content", expect_type=Markdown)  # type: ignore[arg-type]
         content = self._html_to_markdown(self.entry.content)
+        self.original_content = content  # keep in sync so Tab link navigation uses correct entry
         markdown_widgets.update(content)
 
         # Extract links from new content
