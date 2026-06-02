@@ -35,10 +35,6 @@ uv run pyright miniflux_tui tests
 uv run pytest tests --cov=miniflux_tui
 ```
 
-## Code of Conduct
-
-Please review our [CODE_OF_CONDUCT.md](CODE_OF_CONDUCT.md). We expect all contributors to follow it.
-
 ## Full Contributing Guide
 
 For detailed contributing guidelines, see [docs/contributing.md](docs/contributing.md).
