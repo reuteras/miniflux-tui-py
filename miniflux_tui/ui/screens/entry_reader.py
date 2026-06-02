@@ -543,6 +543,8 @@ class EntryReaderScreen(Screen):
         h.ignore_emphasis = False
         # Control wrapping: 0 = let Textual handle terminal wrapping, >0 = wrap at configured width
         h.body_width = self.text_width
+        # Prevent wrapping inside [text](url) constructs; long URLs break Markdown link syntax
+        h.wrap_links = False
         return h.handle(sanitized)
 
     @staticmethod
