@@ -10,7 +10,7 @@ Please read our [Code of Conduct](https://github.com/reuteras/miniflux-tui-py/bl
 
 ### Prerequisites
 
-- Python 3.13 or later
+- Python 3.11 or later
 - [uv](https://docs.astral.sh/uv/) - Fast Python package manager
 - Git
 
@@ -176,7 +176,7 @@ uv run pytest tests --cov=miniflux_tui --cov-report=term-missing
 ### Python Version Support
 
 miniflux-tui-py is tested on:
-- **Supported versions**: Python 3.13, 3.14
+- **Supported versions**: Python 3.11, 3.12, 3.13, 3.14
 - **Preview versions**: Python 3.15 (optional, may fail)
 - **All platforms**: Linux (Ubuntu), macOS, Windows
 
@@ -184,8 +184,8 @@ Tests run automatically on all combinations in CI/CD. If your changes have versi
 
 ```bash
 # Test with specific Python version
-uv python install 3.13
-uv run -p 3.13 pytest tests
+uv python install 3.11
+uv run -p 3.11 pytest tests
 ```
 
 ## Updating Documentation

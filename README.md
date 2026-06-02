@@ -24,7 +24,7 @@ A [Python](https://www.python.org) TUI (Terminal User Interface) client for the 
 
 ## Status
 
-**Production/Stable** - v0.7.3
+**Production/Stable**
 
 This project has reached production stability with:
 - ✅ Comprehensive feature set (categories, feeds, settings, history, runtime theme switching)
@@ -191,26 +191,23 @@ To verify the setup before running the application, use:
 uv run miniflux-tui --check-config
 ```
 
-### Keeping your Miniflux token secret
+### Keeping your Miniflux credentials secret
 
 Use [Codespaces secrets](https://docs.github.com/codespaces/managing-your-codespaces/managing-secrets-for-your-codespaces)
-to store your API token so only the Codespaces that you start can read it:
+to store your credentials so only the Codespaces that you start can read them:
 
-1. In the repository, go to **Settings → Codespaces secrets** and add a new
-    secret named `MINIFLUX_TOKEN` (or add a personal Codespaces secret from your
-    user settings).
-2. Launch a Codespace for this repository. GitHub injects the secret into the
-    environment as `MINIFLUX_TOKEN` each time the Codespace starts.
-3. Configure `config.toml` to read the token from the environment by using a
-    command for the `password` field, for example:
+1. In the repository, go to **Settings → Codespaces secrets** and add two secrets:
+    - `MINIFLUX_SERVER_URL`: Your Miniflux server URL (e.g. `https://miniflux.example.com`)
+    - `MINIFLUX_API_KEY`: Your Miniflux API token
+2. Launch a Codespace for this repository. GitHub injects the secrets into the
+    environment each time the Codespace starts. If both secrets are present and
+    no config file exists, miniflux-tui will create a Codespaces-optimized config
+    automatically on first run.
+3. To create the config manually instead, run `miniflux-tui --init-codespace`.
 
-    ```toml
-    password = ["/bin/sh", "-c", "printf %s \"$MINIFLUX_TOKEN\""]
-    ```
-
-Each collaborator must define their own secret—your personal Codespaces secrets
+Each collaborator must define their own secrets—your personal Codespaces secrets
 are never shared with other users, and theirs are not shared with you. Avoid
-writing the raw token to tracked files inside the Codespace so it is not
+writing raw tokens to tracked files inside the Codespace so they are not
 accidentally committed.
 
 The Codespace is set up so the VS Code Testing view is ready to run the project's

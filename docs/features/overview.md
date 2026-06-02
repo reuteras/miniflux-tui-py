@@ -344,5 +344,5 @@ Access with `Shift+S` key.
 - [Installation Guide](../installation.md) - Get started
 - [Configuration](../configuration.md) - Set up your preferences
 - [Usage Guide](../usage.md) - Learn keyboard shortcuts
-- [Feed Settings Integration](../feed-settings-integration.md) - Configure feeds
+- [Usage Guide](../usage.md) - Configure feeds and keyboard shortcuts
 - [Scraping Helper](scraping-helper.md) - Advanced content extraction

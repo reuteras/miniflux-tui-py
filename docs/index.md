@@ -8,7 +8,7 @@ A Python Terminal User Interface (TUI) client for [Miniflux](https://miniflux.ap
 
 ## Status
 
-**Production/Stable** - v0.7.3 (November 2025)
+**Production/Stable**
 
 This project has reached production stability with comprehensive features including runtime theme switching and non-blocking background operations, robust CI/CD, and high test coverage across Python 3.11-3.15.
 

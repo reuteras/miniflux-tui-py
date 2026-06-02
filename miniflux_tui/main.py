@@ -8,6 +8,7 @@ import shutil
 import subprocess  # nosec B404
 import sys
 import traceback
+from importlib.metadata import PackageNotFoundError, version
 from pathlib import Path
 
 from .config import (
@@ -268,6 +269,13 @@ def _run_application() -> int:
     return error_code
 
 
+def _get_version() -> str:
+    try:
+        return version("miniflux-tui-py")
+    except PackageNotFoundError:
+        return "unknown"
+
+
 def main() -> int:
     """Main entry point for the application."""
     parser = argparse.ArgumentParser(description="A Python TUI client for Miniflux RSS reader")
@@ -289,7 +297,7 @@ def main() -> int:
     parser.add_argument(
         "--version",
         action="version",
-        version="%(prog)s 0.1.0",
+        version=f"%(prog)s {_get_version()}",
     )
 
     args = parser.parse_args()
