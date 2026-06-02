@@ -123,11 +123,7 @@ For other inquiries not covered above, you can reach the maintainer:
 - **Email**: <peter@reuteras.net>
 - **GitHub**: [@reuteras](https://github.com/reuteras)
 
-**Response time**: As this is an open source project maintained in spare time, please allow reasonable time for responses. GitHub Issues and Discussions are monitored regularly.
-
-## Code of Conduct
-
-All interactions in this project are governed by our [Code of Conduct](CODE_OF_CONDUCT.md). We are committed to providing a welcoming and inclusive environment for everyone.
+**Response time**: As this is an open source project maintained in spare time, please allow reasonable time for responses. GitHub Issues are monitored regularly.
 
 ---
 
