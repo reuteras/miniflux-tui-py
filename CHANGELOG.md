@@ -4,6 +4,7 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
+
 ## [v0.8.9] - 2026-06-02
 
 ### MAINTENANCE
@@ -21,6 +22,7 @@ Thank you to everyone who contributed to this release!
 **Humans:** 👤 Peter Reuterås
 
 **AI & Automation:** 🤖 Claude (AI Assistant), dependabot[bot] (Dependencies)
+
 ## [v0.8.8] - 2026-05-31
 
 ### MAINTENANCE
@@ -36,6 +38,7 @@ Thank you to everyone who contributed to this release!
 **Humans:** 👤 Peter Reuterås
 
 **AI & Automation:** 🤖 Claude (AI Assistant)
+
 ## [v0.8.7] - 2026-05-30
 
 ### BUG FIXES
@@ -62,6 +65,7 @@ Thank you to everyone who contributed to this release!
 **Humans:** 👤 Peter Reuterås
 
 **AI & Automation:** 🤖 Claude (AI Assistant), dependabot[bot] (Dependencies)
+
 ## [v0.8.6] - 2026-05-12
 
 ### MAINTENANCE
@@ -82,6 +86,7 @@ Thank you to everyone who contributed to this release!
 **Humans:** 👤 Peter Reuterås
 
 **AI & Automation:** 🤖 Claude (AI Assistant), dependabot[bot] (Dependencies)
+
 ## [v0.8.5] - 2026-04-20
 
 ### BUG FIXES
@@ -101,6 +106,7 @@ Thank you to everyone who contributed to this release!
 **Humans:** 👤 Peter Reuterås
 
 **AI & Automation:** 🤖 Claude (AI Assistant)
+
 ## [v0.8.2] - 2026-04-20
 
 ### BUG FIXES
@@ -122,6 +128,7 @@ Thank you to everyone who contributed to this release!
 **Humans:** 👤 Peter Reuterås
 
 **AI & Automation:** 🤖 Claude (AI Assistant)
+
 ## [v0.7.6] - 2026-04-20
 
 ### BUG FIXES
@@ -169,6 +176,7 @@ Thank you to everyone who contributed to this release!
 **Humans:** 👤 Peter Reuterås
 
 **AI & Automation:** 🤖 Claude (AI Assistant), dependabot[bot] (Dependencies)
+
 ## [v0.7.5] - 2026-02-21
 
 ### BUG FIXES
@@ -226,6 +234,7 @@ Thank you to everyone who contributed to this release!
 **Humans:** 👤 Peter Reuterås
 
 **AI & Automation:** 🤖 Claude (AI Assistant), dependabot[bot] (Dependencies)
+
 ## [v0.7.4] - 2025-12-07
 
 ### BUG FIXES
@@ -245,6 +254,7 @@ Thank you to everyone who contributed to this release!
 **Humans:** 👤 Peter Reuterås
 
 **AI & Automation:** 🤖 Claude (AI Assistant)
+
 ## [v0.7.3] - 2025-12-01
 
 ### BUG FIXES
@@ -287,6 +297,7 @@ Thank you to everyone who contributed to this release!
 **Humans:** 👤 Peter Reuterås
 
 **AI & Automation:** 🤖 Claude (AI Assistant), dependabot[bot] (Dependencies)
+
 ## [v0.7.2] - 2025-11-17
 
 ### BUG FIXES
@@ -306,6 +317,7 @@ Thank you to everyone who contributed to this release!
 **Humans:** 👤 Peter Reuterås
 
 **AI & Automation:** 🤖 Claude (AI Assistant)
+
 ## [v0.7.1] - 2025-11-17
 
 ### BUG FIXES
@@ -335,6 +347,7 @@ Thank you to everyone who contributed to this release!
 **Humans:** 👤 Peter Reuterås
 
 **AI & Automation:** 🤖 Claude (AI Assistant), dependabot[bot] (Dependencies)
+
 ## [v0.6.5] - 2025-11-16
 
 ### BUG FIXES
@@ -370,6 +383,7 @@ Thank you to everyone who contributed to this release!
 **Humans:** 👤 Peter Reuterås
 
 **AI & Automation:** 🤖 Claude (AI Assistant)
+
 ## [v0.6.4] - 2025-11-14
 
 ### BUG FIXES
@@ -389,6 +403,7 @@ Thank you to everyone who contributed to this release!
 **Humans:** 👤 Peter Reuterås
 
 **AI & Automation:** 🤖 Claude (AI Assistant)
+
 ## [v0.6.3] - 2025-11-14
 
 ### BUG FIXES
@@ -409,6 +424,7 @@ Thank you to everyone who contributed to this release!
 **Humans:** 👤 Peter Reuterås
 
 **AI & Automation:** 🤖 Claude (AI Assistant)
+
 ## [v0.6.2] - 2025-11-14
 
 ### BUG FIXES
@@ -435,6 +451,7 @@ Thank you to everyone who contributed to this release!
 **Humans:** 👤 Peter Reuterås
 
 **AI & Automation:** 🤖 Claude (AI Assistant)
+
 ## [v0.6.1] - 2025-11-13
 
 ### BUG FIXES
@@ -472,6 +489,7 @@ Thank you to everyone who contributed to this release!
 **Humans:** 👤 Peter Reuterås
 
 **AI & Automation:** 🤖 Claude (AI Assistant), dependabot[bot] (Dependencies)
+
 ## [v0.6.0] - 2025-11-09
 
 ### BUG FIXES
@@ -500,6 +518,7 @@ Thank you to everyone who contributed to this release!
 **Humans:** 👤 Peter Reuterås
 
 **AI & Automation:** 🤖 Claude (AI Assistant)
+
 ## [v0.5.16] - 2025-11-07
 
 ### BUG FIXES
@@ -515,6 +534,7 @@ Thank you to everyone who contributed to this release!
 **Humans:** 👤 Peter Reuterås
 
 **AI & Automation:** 🤖 Claude (AI Assistant)
+
 ## [v0.5.15] - 2025-11-07
 
 ### MAINTENANCE
@@ -530,6 +550,7 @@ Thank you to everyone who contributed to this release!
 **Humans:** 👤 Peter Reuterås
 
 **AI & Automation:** 🤖 Claude (AI Assistant)
+
 ## [v0.5.14] - 2025-11-07
 
 ### BUG FIXES
@@ -555,6 +576,7 @@ Thank you to everyone who contributed to this release!
 **Humans:** 👤 Peter Reuterås
 
 **AI & Automation:** 🤖 Claude (AI Assistant)
+
 ## [v0.5.13] - 2025-11-07
 
 ### FEATURES
@@ -574,6 +596,7 @@ Thank you to everyone who contributed to this release!
 **Humans:** 👤 Peter Reuterås
 
 **AI & Automation:** 🤖 Claude (AI Assistant)
+
 ## [v0.5.12] - 2025-11-07
 
 ### BUG FIXES
@@ -591,6 +614,7 @@ Thank you to everyone who contributed to this release!
 **Humans:** 👤 Peter Reuterås
 
 **AI & Automation:** 🤖 Claude (AI Assistant)
+
 ## [v0.5.11] - 2025-11-05
 
 ### BUG FIXES
@@ -612,6 +636,7 @@ Thank you to everyone who contributed to this release!
 **Humans:** 👤 Peter Reuterås
 
 **AI & Automation:** 🤖 Claude (AI Assistant)
+
 ## [v0.5.10] - 2025-11-05
 
 ### MAINTENANCE
@@ -627,6 +652,7 @@ Thank you to everyone who contributed to this release!
 **Humans:** 👤 Peter Reuterås
 
 **AI & Automation:** 🤖 Claude (AI Assistant)
+
 ## [v0.5.8] - 2025-11-05
 
 ### BUG FIXES
@@ -647,6 +673,7 @@ Thank you to everyone who contributed to this release!
 **Humans:** 👤 Peter Reuterås
 
 **AI & Automation:** 🤖 Claude (AI Assistant)
+
 ## [v0.5.7] - 2025-11-05
 
 ### BUG FIXES
@@ -668,6 +695,7 @@ Thank you to everyone who contributed to this release!
 **Humans:** 👤 Peter Reuterås
 
 **AI & Automation:** 🤖 Claude (AI Assistant)
+
 ## [v0.5.6] - 2025-11-05
 
 ### BUG FIXES
@@ -708,6 +736,7 @@ Thank you to everyone who contributed to this release!
 **Humans:** 👤 Peter Reuterås
 
 **AI & Automation:** 🤖 Claude (AI Assistant)
+
 ## [v0.5.5] - 2025-11-04
 
 ### BUG FIXES
@@ -759,6 +788,7 @@ Thank you to everyone who contributed to this release!
 **Humans:** 👤 Peter Reuterås
 
 **AI & Automation:** 🤖 Claude (AI Assistant)
+
 ## [v0.5.4] - 2025-11-03
 
 ### DOCUMENTATION
@@ -779,6 +809,7 @@ Thank you to everyone who contributed to this release!
 **Humans:** 👤 Peter Reuterås
 
 **AI & Automation:** 🤖 Claude (AI Assistant)
+
 ## [v0.5.3] - 2025-11-03
 
 ### BUG FIXES
@@ -847,6 +878,7 @@ Thank you to everyone who contributed to this release!
 **Humans:** 👤 Peter Reuterås
 
 **AI & Automation:** 🤖 Claude (AI Assistant), dependabot[bot] (Dependencies)
+
 ## [v0.5.2] - 2025-11-02
 
 ### BUG FIXES
@@ -871,6 +903,7 @@ Thank you to everyone who contributed to this release!
 **Humans:** 👤 Peter Reuterås
 
 **AI & Automation:** 🤖 Claude (AI Assistant)
+
 ## [v0.5.1] - 2025-11-02
 
 ### BUG FIXES
@@ -959,6 +992,7 @@ Thank you to everyone who contributed to this release!
 **Humans:** 👤 Peter Reuterås
 
 **AI & Automation:** 🤖 Claude (AI Assistant), dependabot[bot] (Dependencies)
+
 ## [v0.5.0] - 2025-11-01
 
 ### BUG FIXES
@@ -996,6 +1030,7 @@ Thank you to everyone who contributed to this release!
 **Humans:** 👤 Peter Reuterås
 
 **AI & Automation:** 🤖 Claude (AI Assistant)
+
 ## [v0.4.22] - 2025-10-31
 
 ### BUG FIXES
@@ -1024,6 +1059,7 @@ Thank you to everyone who contributed to this release!
 **Humans:** 👤 Peter Reuterås
 
 **AI & Automation:** 🤖 Claude (AI Assistant)
+
 ## [v0.4.21] - 2025-10-30
 
 ### MAINTENANCE
@@ -1039,6 +1075,7 @@ Thank you to everyone who contributed to this release!
 **Humans:** 👤 Peter Reuterås
 
 **AI & Automation:** 🤖 Claude (AI Assistant)
+
 ## [v0.4.20] - 2025-10-30
 
 ### BUG FIXES
@@ -1064,6 +1101,7 @@ Thank you to everyone who contributed to this release!
 **Humans:** 👤 Peter Reuterås
 
 **AI & Automation:** 🤖 Claude (AI Assistant)
+
 ## [v0.4.19] - 2025-10-30
 
 ### MAINTENANCE
@@ -1087,6 +1125,7 @@ Thank you to everyone who contributed to this release!
 **Humans:** 👤 Peter Reuterås
 
 **AI & Automation:** 🤖 Claude (AI Assistant)
+
 ## [v0.4.18] - 2025-10-29
 
 ### CI/CD
@@ -1106,6 +1145,7 @@ Thank you to everyone who contributed to this release!
 **Humans:** 👤 Peter Reuterås
 
 **AI & Automation:** 🤖 Claude (AI Assistant)
+
 ## [v0.4.17] - 2025-10-29
 
 ### CI/CD
@@ -1126,6 +1166,7 @@ Thank you to everyone who contributed to this release!
 **Humans:** 👤 Peter Reuterås
 
 **AI & Automation:** 🤖 Claude (AI Assistant)
+
 ## [v0.4.15] - 2025-10-29
 
 ### BUG FIXES
@@ -1148,6 +1189,7 @@ Thank you to everyone who contributed to this release!
 **Humans:** 👤 Peter Reuterås
 
 **AI & Automation:** 🤖 Claude (AI Assistant)
+
 ## [v0.4.12] - 2025-10-29
 
 ### BUG FIXES
@@ -1196,6 +1238,7 @@ Thank you to everyone who contributed to this release!
 **Humans:** 👤 Peter Reuterås
 
 **AI & Automation:** 🤖 Claude (AI Assistant), dependabot[bot] (Dependencies), renovate[bot] (Dependencies)
+
 ## [v0.4.9] - 2025-10-28
 
 ### CI/CD
@@ -1221,6 +1264,7 @@ Thank you to everyone who contributed to this release!
 **Humans:** 👤 Peter Reuterås
 
 **AI & Automation:** 🤖 Claude (AI Assistant)
+
 ## [v0.4.11] - 2025-10-28
 
 ### MAINTENANCE
@@ -1236,6 +1280,7 @@ Thank you to everyone who contributed to this release!
 **Humans:** 👤 Peter Reuterås
 
 **AI & Automation:** 🤖 Claude (AI Assistant)
+
 ## [v0.4.8] - 2025-10-28
 
 ### BUG FIXES
@@ -1255,6 +1300,7 @@ Thank you to everyone who contributed to this release!
 **Humans:** 👤 Peter Reuterås
 
 **AI & Automation:** 🤖 Claude (AI Assistant)
+
 ## [v0.4.7] - 2025-10-28
 
 ### BUG FIXES
@@ -1274,6 +1320,7 @@ Thank you to everyone who contributed to this release!
 **Humans:** 👤 Peter Reuterås
 
 **AI & Automation:** 🤖 Claude (AI Assistant)
+
 ## [v0.4.6] - 2025-10-28
 
 ### BUG FIXES
@@ -1320,6 +1367,7 @@ Thank you to everyone who contributed to this release!
 **Humans:** 👤 Peter Reuterås
 
 **AI & Automation:** 🤖 Claude (AI Assistant)
+
 ## [v0.4.5] - 2025-10-27
 
 ### BUG FIXES
@@ -1364,6 +1412,7 @@ Thank you to everyone who contributed to this release!
 **Humans:** 👤 Peter Reuterås
 
 **AI & Automation:** 🤖 Claude (AI Assistant), dependabot[bot] (Dependencies)
+
 ## [v0.4.4] - 2025-10-26
 
 ### BUG FIXES
@@ -1385,6 +1434,7 @@ Thank you to everyone who contributed to this release!
 **Humans:** 👤 Peter Reuterås
 
 **AI & Automation:** 🤖 Claude (AI Assistant)
+
 ## [v0.4.3] - 2025-10-26
 
 ### BUG FIXES
@@ -1416,6 +1466,7 @@ Thank you to everyone who contributed to this release!
 **Humans:** 👤 Peter Reuterås
 
 **AI & Automation:** 🤖 Claude (AI Assistant), renovate[bot] (Dependencies)
+
 ## [v0.4.1] - 2025-10-26
 
 ### BUG FIXES
@@ -1474,6 +1525,7 @@ Thank you to everyone who contributed to this release!
 **Humans:** 👤 Peter Reuterås
 
 **AI & Automation:** 🤖 Claude (AI Assistant), renovate[bot] (Dependencies)
+
 ## [v0.4.0] - 2025-10-26
 
 ### BUG FIXES
@@ -1509,6 +1561,7 @@ Thank you to everyone who contributed to this release!
 **Humans:** 👤 Peter Reuterås
 
 **AI & Automation:** 🤖 Claude (AI Assistant)
+
 ## [v0.3.0] - 2025-10-26
 
 ### FEATURES
@@ -1535,6 +1588,7 @@ Thank you to everyone who contributed to this release!
 **Humans:** 👤 Peter Reuterås
 
 **AI & Automation:** 🤖 Claude (AI Assistant)
+
 ## [v0.2.9] - 2025-10-26
 
 ### BUG FIXES
@@ -1566,6 +1620,7 @@ Thank you to everyone who contributed to this release!
 **Humans:** 👤 Peter Reuterås
 
 **AI & Automation:** 🤖 Claude (AI Assistant)
+
 ## [v0.2.8] - 2025-10-25
 
 ### MAINTENANCE
@@ -1581,6 +1636,7 @@ Thank you to everyone who contributed to this release!
 **Humans:** 👤 Peter Reuterås
 
 **AI & Automation:** 🤖 Claude (AI Assistant)
+
 ## [v0.2.7] - 2025-10-25
 
 ### BUG FIXES
@@ -1618,6 +1674,7 @@ Thank you to everyone who contributed to this release!
 **Humans:** 👤 Peter Reuterås
 
 **AI & Automation:** 🤖 Claude (AI Assistant)
+
 ## [v0.2.6] - 2025-10-25
 
 ### MAINTENANCE
@@ -1633,6 +1690,7 @@ Thank you to everyone who contributed to this release!
 **Humans:** 👤 Peter Reuterås
 
 **AI & Automation:** 🤖 Claude (AI Assistant)
+
 ## [v0.2.5] - 2025-10-25
 
 ### BUG FIXES
@@ -1658,6 +1716,7 @@ Thank you to everyone who contributed to this release!
 **Humans:** 👤 Peter Reuterås
 
 **AI & Automation:** 🤖 Claude (AI Assistant)
+
 ## [v0.2.4] - 2025-10-25
 
 ### MAINTENANCE
@@ -1673,6 +1732,7 @@ Thank you to everyone who contributed to this release!
 **Humans:** 👤 Peter Reuterås
 
 **AI & Automation:** 🤖 Claude (AI Assistant)
+
 ## [v0.2.3] - 2025-10-25
 
 ### BUG FIXES
@@ -1696,6 +1756,7 @@ Thank you to everyone who contributed to this release!
 **Humans:** 👤 Peter Reuterås
 
 **AI & Automation:** 🤖 Claude (AI Assistant)
+
 ## [v0.2.2] - 2025-10-25
 
 ### BUG FIXES
@@ -1723,6 +1784,7 @@ Thank you to everyone who contributed to this release!
 **Humans:** 👤 Peter Reuterås
 
 **AI & Automation:** 🤖 Claude (AI Assistant)
+
 ## [v0.2.1] - 2025-10-25
 
 ### BUG FIXES
@@ -1747,6 +1809,7 @@ Thank you to everyone who contributed to this release!
 **Humans:** 👤 Peter Reuterås
 
 **AI & Automation:** 🤖 Claude (AI Assistant)
+
 ## [v0.2.0] - 2025-10-25
 
 ### BUG FIXES
@@ -1802,4 +1865,3 @@ Thank you to everyone who contributed to this release!
 **Humans:** 👤 Peter Reuterås
 
 **AI & Automation:** 🤖 Claude (AI Assistant)
-
