@@ -4,21 +4,7 @@ Welcome to miniflux-tui-py! This guide will help you set up your development env
 
 ## Quick Start
 
-### Option 1: GitHub Codespaces (Recommended)
-
-The easiest way to get started:
-
-1. Click **"Code"** → **"Codespaces"** → **"Create codespace on main"**
-2. Wait for the codespace to launch (~2-3 minutes)
-3. The environment will automatically:
-    - Install `uv` package manager
-    - Install all dependencies (dev, test, docs, fuzzing)
-    - Set up pre-commit hooks
-    - Show you helpful quick-start commands
-
-**That's it!** You're ready to develop.
-
-### Option 2: Local Setup
+Local development is easiest.
 
 ```bash
 # 1. Install uv (see: https://docs.astral.sh/uv/getting-started/installation/)
@@ -58,8 +44,6 @@ uv run pytest tests --cov=miniflux_tui --cov-report=html
 uv run pytest-watch tests
 ```
 
-**VS Code**: Press `Ctrl+Shift+T` → Select "🧪 Test (pytest)"
-
 ### Code Quality
 
 ```bash
@@ -76,12 +60,6 @@ uv run pyright miniflux_tui tests
 uv run pre-commit run --all-files
 ```
 
-**VS Code**: Use `Ctrl+Shift+B` to access build tasks:
-- `✨ Lint (ruff check)`
-- `🎨 Format (ruff format)`
-- `🔍 Type Check (pyright)`
-- `✅ Run Quality Checks` (all at once)
-
 ### Running the Application
 
 ```bash
@@ -95,8 +73,6 @@ uv run miniflux-tui
 uv run miniflux-tui --check-config
 ```
 
-**VS Code**: Press `Ctrl+Shift+B` → Select "🚀 Run App"
-
 ### Documentation
 
 ```bash
@@ -107,32 +83,7 @@ uv run mkdocs serve
 uv run mkdocs build
 ```
 
-**VS Code**: Press `Ctrl+Shift+B` → Select "📚 Build Docs (mkdocs serve)"
-
 Then visit `http://localhost:8000` to preview.
-
----
-
-## VS Code Extensions & Settings
-
-### Pre-installed Extensions in Codespaces
-
-- **ms-python.python** - Python support
-- **ms-python.vscode-pylance** - Intelligent Python analysis
-- **ms-python.debugpy** - Python debugging
-- **charliermarsh.ruff** - Ruff linting & formatting
-- **donjayamanne.githistory** - Git history browser
-- **eamodio.gitlens** - Advanced Git features
-- **esbenp.prettier-vscode** - Code formatting for JSON/YAML/Markdown
-- **redhat.vscode-yaml** - YAML validation
-- **ms-vscode.makefile-tools** - Makefile support
-
-### Key Settings
-
-- **Format on Save** - Automatically formats code with Ruff when you save
-- **Strict Type Checking** - Pyright in strict mode for maximum type safety
-- **Auto Test Discovery** - Tests are discovered automatically
-- **pytest as Default** - Test framework is configured
 
 ---
 
@@ -180,8 +131,8 @@ miniflux-tui-py/
 ├── .github/
 │   ├── workflows/             # CI/CD pipelines
 │   └── issue_templates/       # Issue/PR templates
-├── .devcontainer/             # VS Code Codespaces config
-├── .vscode/                   # VS Code settings
+├── .devcontainer/             # Codespaces config
+├── .vscode/                   # Editor settings
 ├── pyproject.toml             # Project metadata & dependencies
 └── .pre-commit-config.yaml    # Pre-commit hooks config
 ```
@@ -226,19 +177,6 @@ Dependencies are locked in `uv.lock` for reproducible builds.
 ---
 
 ## Debugging
-
-### Debug Tests in VS Code
-
-1. Set breakpoints in test files (click on line number)
-2. Press `Ctrl+Shift+D` to open Debug view
-3. Select "Python: pytest" and press Play
-4. Step through code with F10 (step over) / F11 (step into)
-
-### Debug the Application
-
-1. Create a run configuration in `.vscode/launch.json`
-2. Press `F5` to start debugging
-3. Use the debug console to inspect variables
 
 ### Logging
 
@@ -455,8 +393,8 @@ uv sync --all-groups --upgrade
 
 ### Python interpreter not found?
 ```bash
-# Codespaces: Reload window (Ctrl+Shift+P → Reload Window)
-# Local: uv sync creates .venv automatically
+# uv sync creates .venv automatically
+uv sync --all-groups
 ```
 
 ### Tests failing?
@@ -468,10 +406,9 @@ uv run pytest tests -vv
 uv run pytest tests/test_file.py::test_name -vv
 ```
 
-### Type errors in VS Code?
+### Type errors?
 ```bash
-# Rebuild Pylance index
-# Ctrl+Shift+P → "Python: Restart Language Server"
+uv run pyright
 ```
 
 ---
