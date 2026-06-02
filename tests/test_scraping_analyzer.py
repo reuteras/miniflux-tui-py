@@ -1,6 +1,7 @@
 # SPDX-License-Identifier: MIT
 """Tests for HTML content analyzer."""
 
+from bs4 import BeautifulSoup
 from miniflux_tui.scraping.analyzer import ContentAnalyzer
 
 # Sample HTML for testing
@@ -552,8 +553,10 @@ class TestContentAnalyzer:
         assert "</script>" not in remaining.lower()
         # Disallowed URL schemes must be stripped
         assert "javascript:" not in remaining.lower()
-        # Safe URL must survive
-        assert "https://good.example.com" in remaining
+        # Safe URL must survive as an actual anchor href (not arbitrary substring)
+        soup = BeautifulSoup(remaining, "html.parser")
+        hrefs = [a.get("href") for a in soup.find_all("a") if a.get("href")]
+        assert "https://good.example.com" in hrefs
 
     def test_preview_removal_multiple_elements(self):
         """Test removal of multiple matching elements."""
