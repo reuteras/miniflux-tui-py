@@ -8,7 +8,7 @@ on:
     paths:
       - 'docs/**'
       - 'assets/**'
-      - 'mkdocs.yml'
+      - 'zensical.toml'
       - '.github/workflows/docs-deploy.yml'
 
 permissions:
@@ -41,7 +41,7 @@ jobs:
         run: uv sync --group docs --locked
 
       - name: Build documentation
-        run: uv run mkdocs build
+        run: uv run zensical build --clean
 
       - name: Upload artifact
         uses: actions/upload-pages-artifact@fc324d3547104276b827a68afc52ff2a11cc49c9 # v5.0.0

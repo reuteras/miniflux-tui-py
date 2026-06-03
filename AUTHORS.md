@@ -45,7 +45,7 @@ Thank you to all who contribute to miniflux-tui-py, whether through code, bug re
 - [pytest](https://pytest.org/) - Testing framework
 - [ruff](https://github.com/astral-sh/ruff) - Fast Python linter
 - [pyright](https://github.com/microsoft/pyright) - Static type checker
-- [MkDocs](https://www.mkdocs.org/) - Documentation generator
+- [Zensical](https://zensical.org/) - Documentation generator
 - [git-cliff](https://git-cliff.org/) - Changelog generator
 
 ### Inspiration

@@ -30,7 +30,7 @@ Dependencies are grouped for easier management:
 - pytest, pytest-asyncio, pytest-cov
 - ruff (linter/formatter)
 - pyright (type checker)
-- mkdocs, mkdocs-material
+- zensical
 - pylint
 
 **Production Dependencies** (require review for major updates):

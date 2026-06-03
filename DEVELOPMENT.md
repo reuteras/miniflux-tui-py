@@ -77,10 +77,10 @@ uv run miniflux-tui --check-config
 
 ```bash
 # Preview docs locally
-uv run mkdocs serve
+uv run zensical serve
 
 # Build static docs (output: site/)
-uv run mkdocs build
+uv run zensical build
 ```
 
 Then visit `http://localhost:8000` to preview.
@@ -127,7 +127,7 @@ miniflux-tui-py/
 │       ├── app.py             # Main TUI app
 │       └── screens/           # Screen implementations
 ├── tests/                      # Test suite
-├── docs/                       # MkDocs documentation
+├── docs/                       # Zensical documentation
 ├── .github/
 │   ├── workflows/             # CI/CD pipelines
 │   └── issue_templates/       # Issue/PR templates
