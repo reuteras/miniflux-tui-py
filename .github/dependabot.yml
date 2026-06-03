@@ -28,7 +28,7 @@ updates:
           - "pytest*"
           - "ruff*"
           - "pyright*"
-          - "mkdocs*"
+          - "zensical*"
           - "pylint*"
       production-dependencies:
         patterns:

@@ -341,7 +341,7 @@ uv run pyright miniflux_tui tests
 uv run pytest tests --cov=miniflux_tui
 
 # Preview documentation locally
-uv run mkdocs serve
+uv run zensical serve
 ```
 
 ## Why Python?

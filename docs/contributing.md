@@ -29,7 +29,7 @@ cd miniflux-tui-py
 uv sync --all-groups
 ```
 
-This will install all development and documentation dependencies including pytest, ruff, pyright, and mkdocs.
+This will install all development and documentation dependencies including pytest, ruff, pyright, and zensical.
 
 3. **Verify your setup:**
 
@@ -190,14 +190,14 @@ uv run -p 3.11 pytest tests
 
 ## Updating Documentation
 
-Documentation is built with MkDocs and located in the `docs/` folder.
+Documentation is built with Zensical and located in the `docs/` folder.
 
 ### Editing Docs
 
 1. Edit files in the `docs/` folder (Markdown format)
 2. Preview locally:
   ```bash
-  uv run mkdocs serve
+  uv run zensical serve
   ```
 3. View at <http://localhost:8000>
 
@@ -205,7 +205,7 @@ Documentation is built with MkDocs and located in the `docs/` folder.
 
 - Use clear, simple language
 - Include code examples where helpful
-- Keep the table of contents in `mkdocs.yml` updated
+- Keep the table of contents in `zensical.toml` updated
 - Use relative links between docs
 
 ## Updating CHANGELOG

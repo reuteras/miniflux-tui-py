@@ -9,7 +9,7 @@ on:
       - '**/*.md'
       - 'docs/**'
       - 'assets/**'
-      - 'mkdocs.yml'
+      - 'zensical.toml'
       - 'config.toml.example'
   pull_request:
     branches:
@@ -18,7 +18,7 @@ on:
       - '**/*.md'
       - 'docs/**'
       - 'assets/**'
-      - 'mkdocs.yml'
+      - 'zensical.toml'
       - 'config.toml.example'
 
 permissions:
