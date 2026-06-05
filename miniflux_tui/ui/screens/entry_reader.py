@@ -185,7 +185,8 @@ class EntryReaderScreen(Screen):
     }
 
     .entry-url {
-        height: auto;
+        height: 1;
+        overflow: hidden hidden;
     }
 
     .separator {
@@ -369,6 +370,7 @@ class EntryReaderScreen(Screen):
         Re-checks terminal size constraints when terminal is resized.
         """
         self._check_terminal_size()
+        self._update_link_indicator()
 
     def _resolve_app(self) -> EntryReaderAppProtocol | None:
         """Return the parent TUI app if it satisfies the expected protocol."""
@@ -560,9 +562,12 @@ class EntryReaderScreen(Screen):
         h.ignore_links = False
         h.ignore_images = False
         h.ignore_emphasis = False
-        # Control wrapping: 0 = let Textual handle terminal wrapping, >0 = wrap at configured width
-        h.body_width = self.text_width
-        # Prevent wrapping inside [text](url) constructs; long URLs break Markdown link syntax
+        # Always disable html2text line-wrapping. The visual width is already
+        # constrained by the scroll container's CSS max_width (set in on_mount).
+        # html2text treats hyphens as word boundaries, so a non-zero body_width
+        # splits bare URLs like "cisco-sa-sdwan-privesc-..." across lines, which
+        # breaks them; Textual wraps at whitespace only and keeps URLs intact.
+        h.body_width = 0
         h.wrap_links = False
         return h.handle(sanitized)
 
@@ -967,7 +972,7 @@ class EntryReaderScreen(Screen):
             # Intentional silent failure for graceful degradation
             pass
 
-    def _update_link_indicator(self):
+    def _update_link_indicator(self) -> None:
         """Update the link indicator widget with current focused link info."""
         if not self.link_indicator:
             return
@@ -976,23 +981,39 @@ class EntryReaderScreen(Screen):
             self.link_indicator.update("")
             return
 
-        # Show focused link info
         link = self.links[self.focused_link_index]
         link_num = self.focused_link_index + 1
         total_links = len(self.links)
 
-        # Truncate long URLs/text for display
+        # Truncate to fit within the current terminal width so the indicator
+        # never wraps — a wrapping URL line looks broken on narrow terminals.
+        try:
+            term_width = max(40, self.app.size.width)  # type: ignore[attr-defined]
+        except Exception:
+            term_width = 80
+        prefix_len = len(f"Link {link_num}/{total_links}: ")
+        max_text_len = max(10, term_width - prefix_len - 2)
+        max_url_len = max(10, term_width - 2)
+
         display_text = link["text"]
-        if len(display_text) > 60:
-            display_text = display_text[:57] + "..."
+        if len(display_text) > max_text_len:
+            display_text = display_text[: max_text_len - 3] + "..."
 
         display_url = link["url"]
-        if len(display_url) > 80:
-            display_url = display_url[:77] + "..."
+        if len(display_url) > max_url_len:
+            display_url = display_url[: max_url_len - 3] + "..."
 
-        indicator_text = f"[bold yellow]Link {link_num}/{total_links}:[/bold yellow] [cyan]{display_text}[/cyan]\n[dim]{display_url}[/dim]"
-
-        self.link_indicator.update(indicator_text)
+        # Use Content.from_markup so display_text/display_url are variable-
+        # substituted (properly escaped) rather than interpolated raw into the
+        # markup string.  Raw interpolation breaks if text or URL contains
+        # square brackets (e.g. "[1]" references or query-string arrays).
+        self.link_indicator.update(
+            Content.from_markup(
+                f"[bold yellow]Link {link_num}/{total_links}:[/bold yellow] [cyan]$text[/cyan]\n[dim]$url[/dim]",
+                text=display_text,
+                url=display_url,
+            )
+        )
 
     def _generate_highlighted_markdown(self, original_content: str) -> str:
         """Generate markdown with visual highlight for the focused link.

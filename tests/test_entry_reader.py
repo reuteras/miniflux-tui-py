@@ -1274,10 +1274,12 @@ class TestEntryReaderLinkNavigation:
 
         # Should update the indicator
         screen.link_indicator.update.assert_called_once()
-        # The call should contain link information
-        call_args = screen.link_indicator.update.call_args[0][0]
-        assert "1/1" in call_args  # Link counter
-        assert "Test Link" in call_args
+        # The call should contain link information — update() receives a Content
+        # object, so check .plain for the visible text.
+        call_arg = screen.link_indicator.update.call_args[0][0]
+        plain = call_arg.plain if hasattr(call_arg, "plain") else str(call_arg)
+        assert "1/1" in plain  # Link counter
+        assert "Test Link" in plain
 
     def test_update_link_indicator_no_focus(self, sample_entry):
         """Test _update_link_indicator clears display when no focus."""
