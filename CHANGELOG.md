@@ -5,6 +5,42 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.8.11] - 2026-06-05
+
+### DOCUMENTATION
+
+- migrate documentation from MkDocs to Zensical (#836)
+
+### MAINTENANCE
+
+- bump docker/setup-qemu-action in the actions-deps group (#837) 🤖
+
+
+
+#### Contributors
+
+Thank you to everyone who contributed to this release!
+
+**Humans:** 👤 Peter Reuterås
+
+**AI & Automation:** 🤖 Claude (AI Assistant), dependabot[bot] (Dependencies)
+
+## [v0.8.10] - 2026-06-02
+
+### MAINTENANCE
+
+- Release v0.8.10 (#835)
+
+
+
+#### Contributors
+
+Thank you to everyone who contributed to this release!
+
+**Humans:** 👤 Peter Reuterås
+
+**AI & Automation:** 🤖 Claude (AI Assistant)
+
 ## [v0.8.9] - 2026-06-02
 
 ### MAINTENANCE
@@ -1865,3 +1901,4 @@ Thank you to everyone who contributed to this release!
 **Humans:** 👤 Peter Reuterås
 
 **AI & Automation:** 🤖 Claude (AI Assistant)
+
