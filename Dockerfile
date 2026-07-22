@@ -2,6 +2,7 @@
 ARG PYTHON_IMAGE=python:3.13.9-slim@sha256:0222b795db95bf7412cede36ab46a266cfb31f632e64051aac9806dabf840a61
 
 # hadolint ignore=DL3006
+# checkov:skip=CKV_DOCKER_7:PYTHON_IMAGE is pinned to an exact version and digest, not "latest"; checkov cannot resolve the ARG default
 FROM ${PYTHON_IMAGE} AS builder
 
 ENV PIP_NO_CACHE_DIR=1 \

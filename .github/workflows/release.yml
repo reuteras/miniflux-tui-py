@@ -1,6 +1,7 @@
 ---
 name: Create Release
 
+# checkov:skip=CKV_GHA_7:Manual release workflow requires version/bump_type inputs; permissions are scoped to contents:read
 on:
   workflow_dispatch:
     inputs:
