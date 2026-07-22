@@ -135,7 +135,7 @@ docker run --rm -it \
   ghcr.io/reuteras/miniflux-tui:latest
 ```
 
-The image is built in CI, published to GHCR, and signed with Sigstore Cosign using GitHub OIDC so you can verify it with:
+The image is built-in CI, published to GHCR, and signed with Sigstore Cosign using GitHub OIDC so you can verify it with:
 
 ```bash
 cosign verify ghcr.io/reuteras/miniflux-tui:latest
@@ -214,8 +214,8 @@ are never shared with other users, and theirs are not shared with you. Avoid
 writing raw tokens to tracked files inside the Codespace so they are not
 accidentally committed.
 
-The Codespace is set up so the VS Code Testing view is ready to run the project's
-pytest suite without extra configuration. VS Code also auto-formats Python files
+The Codespace is set up so the Visual Studio Code Testing view is ready to run the project's
+pytest suite without extra configuration. Visual Studio Code also auto-formats Python files
 with Ruff on save and wires up the default interpreter to the repo's `.venv`, so
 the editor, formatter, and tests all work straight away.
 
