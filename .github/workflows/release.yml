@@ -104,7 +104,7 @@ jobs:
         run: |
           git cliff \
             --config cliff.toml \
-            --tag ${STEPS_VERSION_OUTPUTS_VERSION} \
+            --tag "${STEPS_VERSION_OUTPUTS_VERSION}" \
             --output CHANGELOG.md
 
       - name: Create release branch and commit
