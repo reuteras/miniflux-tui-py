@@ -101,7 +101,6 @@ checks:
       - "CodeQL for Python-specific issues"
       - "Semgrep for general code patterns"
       - "Bandit for security-specific checks (via ruff)"
-      - "Zizmor for GitHub Actions security"
 
   # Security-Policy - Security policy in SECURITY.md
   - id: Security-Policy

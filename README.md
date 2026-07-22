@@ -13,7 +13,6 @@
 [![Python 3.15 Preview](https://img.shields.io/badge/Python%203.15-preview-yellow)](https://github.com/reuteras/miniflux-tui-py/actions/workflows/test.yml)
 [![OSV Scanner](https://github.com/reuteras/miniflux-tui-py/actions/workflows/osv-scanner.yml/badge.svg)](https://github.com/reuteras/miniflux-tui-py/actions/workflows/osv-scanner.yml)
 [![CodeQL](https://github.com/reuteras/miniflux-tui-py/actions/workflows/codeql.yml/badge.svg)](https://github.com/reuteras/miniflux-tui-py/actions/workflows/codeql.yml)
-[![zizmor](https://github.com/reuteras/miniflux-tui-py/actions/workflows/zizmor.yml/badge.svg)](https://github.com/reuteras/miniflux-tui-py/actions/workflows/zizmor.yml)
 [![Container Builds](https://github.com/reuteras/miniflux-tui-py/actions/workflows/container-image.yml/badge.svg)](https://github.com/reuteras/miniflux-tui-py/actions/workflows/container-image.yml)
 [![SBOM](https://img.shields.io/badge/SBOM-CycloneDX%20%26%20SPDX-5A45FF)](https://github.com/reuteras/miniflux-tui-py/releases/latest)
 [![Documentation](https://img.shields.io/badge/docs-GitHub%20Pages-blue)](https://reuteras.github.io/miniflux-tui-py/)
@@ -27,6 +26,7 @@ A [Python](https://www.python.org) TUI (Terminal User Interface) client for the 
 **Production/Stable**
 
 This project has reached production stability with:
+
 - ✅ Comprehensive feature set (categories, feeds, settings, history, runtime theme switching)
 - ✅ Non-blocking background operations (sync while using the UI)
 - ✅ Robust CI/CD with automated security and quality workflows
@@ -38,6 +38,7 @@ This project has reached production stability with:
 ## Features
 
 ### Core Functionality
+
 - 📖 **Browse and read** RSS entries with keyboard navigation
 - ✓ **Mark entries** as read/unread, starred/unstarred
 - 💾 **Save entries** to third-party services (Pocket, Instapaper, etc.)
@@ -45,6 +46,7 @@ This project has reached production stability with:
 - 📝 **HTML to Markdown** conversion for readable display
 
 ### Organization & Filtering
+
 - 🗂️ **Multiple sort modes** - date (newest first), feed (alphabetical), or status (unread first)
 - 📁 **Group by feed** or category with expand/collapse
 - 🔍 **Filter by status** - unread only or starred only
@@ -52,6 +54,7 @@ This project has reached production stability with:
 - 🏷️ **Category management** - organize feeds into categories
 
 ### Feed Management
+
 - 🔄 **Auto-discover** feeds from URLs
 - ⚙️ **Configure feeds** - scraping rules, rewrite rules, fetch settings, blocklist/allowlist
 - 🔁 **Refresh feeds** - individual feeds or all feeds
@@ -59,6 +62,7 @@ This project has reached production stability with:
 - 🛠️ **Feed settings editor** - comprehensive feed configuration
 
 ### User Experience
+
 - ⌨️ **Keyboard-driven** - extensive Vim-style shortcuts
 - 🎨 **Runtime theme switching** - toggle dark/light mode instantly with 'T' key
 - 🔄 **Non-blocking sync** - navigate and read entries while syncing in background
@@ -247,6 +251,7 @@ token to stdout. This keeps the secret in your password manager (for example
 1Password, Bitwarden, or pass).
 
 To create a token:
+
 1. Log into your Miniflux server.
 2. Go to **Settings** → **API Keys** → **Create a new API key**.
 3. Store the generated token in your password manager.
@@ -317,11 +322,13 @@ To create a token:
 ## Contributing
 
 Contributions are welcome! See [CONTRIBUTING.md](CONTRIBUTING.md) for details on:
+
 - Setting up your development environment
 - Running tests and checks
 - Submitting pull requests
 
 For release information and troubleshooting, see:
+
 - [RELEASE.md](RELEASE.md) - How to create releases
 - [docs/RELEASE_TROUBLESHOOTING.md](docs/RELEASE_TROUBLESHOOTING.md) - Handling release failures
 
