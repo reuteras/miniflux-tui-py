@@ -141,6 +141,7 @@ select = [
 ignore = [
     "S101",   # Use of assert detected (useful in tests)
     "PLR0913", # Too many arguments to function call
+    "PLR0917", # Too many positional arguments
     "PLR2004", # Magic value used in comparison
     "PLR0904", # Too many public methods
 ]
