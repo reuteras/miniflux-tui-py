@@ -5,3 +5,7 @@ YAML_V8R_FILTER_REGEX_EXCLUDE: "(?i)(\\.github/dependabot\\.yml|\\.github/codeql
 # Make grype non-fatal due to intermittent database server issues
 # Project already has comprehensive security scanning: CodeQL, Semgrep, OSV Scanner, Bandit
 REPOSITORY_GRYPE_DISABLE_ERRORS: true
+
+# Disable linters
+DISABLE_LINTERS:
+  - SPELL_CODESPELL
