@@ -5,7 +5,43 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [0.8.11] - 2026-06-05
+## [0.8.12] - 2026-07-28
+
+### BUG FIXES
+
+- Quote variable in git-cliff release step to satisfy shellcheck
+
+### FEATURES
+
+- Add unread/total counts and feed error indicator to title bar
+
+### MAINTENANCE
+
+- pre-commit autoupdate (#839)
+- pre-commit autoupdate (#841)
+- bump the actions-deps group with 4 updates (#840) 🤖
+- pre-commit autoupdate (#842)
+- bump the actions-deps group with 3 updates (#843) 🤖
+- pre-commit autoupdate (#844)
+- bump the actions-deps group with 3 updates (#845) 🤖
+- bump the actions-deps group with 9 updates (#846) 🤖
+- pre-commit autoupdate (#847)
+- bump the actions-deps group with 5 updates (#848) 🤖
+- pre-commit autoupdate (#849)
+- bump the actions-deps group with 6 updates (#850) 🤖
+- pre-commit autoupdate (#851)
+
+
+
+#### Contributors
+
+Thank you to everyone who contributed to this release!
+
+**Humans:** 👤 Peter Reuterås
+
+**AI & Automation:** 🤖 Claude (AI Assistant), dependabot[bot] (Dependencies)
+
+## [v0.8.11] - 2026-06-05
 
 ### DOCUMENTATION
 
@@ -14,6 +50,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### MAINTENANCE
 
 - bump docker/setup-qemu-action in the actions-deps group (#837) 🤖
+- Release v0.8.11 (#838)
 
 
 
