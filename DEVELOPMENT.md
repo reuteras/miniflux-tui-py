@@ -103,6 +103,7 @@ git commit --no-verify
 ```
 
 **Hooks that run:**
+
 - ruff (linting & formatting)
 - pyright (type checking)
 - YAML validation
@@ -253,7 +254,7 @@ def process_entries(entries: List[Entry], filter_unread: bool = False) -> Option
 ### Branch Naming Conventions
 
 - `feat/feature-name` - New features
-- `fix/bug-name` - Bug fixes
+- `fix/bug-name` - Bugfixes
 - `docs/document-name` - Documentation updates
 - `refactor/component-name` - Code refactoring
 - `test/feature-name` - Test additions
@@ -291,22 +292,27 @@ git push origin --delete feat/my-feature
 ## Code Style Guide
 
 ### Line Length
+
 - **140 characters** (configured in `pyproject.toml`)
 
 ### Formatting
+
 - Use `ruff format` (configured with Ruff)
 - No manual formatting needed (format on save!)
 
 ### Linting
+
 - Use `ruff check` for all linting
 - No bare URLs in markdown/docs (wrap in angle brackets: `<url>`)
 
 ### Type Checking
+
 - Strict mode enabled (pyright)
 - All public functions must have type hints
 - Use `Optional[T]` instead of `T | None` for Python 3.11 compatibility
 
 ### Docstrings
+
 - Use Google-style docstrings
 - Document parameters, return values, exceptions
 
@@ -341,6 +347,7 @@ def fetch_entries(feed_id: int, limit: int = 10) -> List[Entry]:
 ## Dependency Management
 
 ### Automated Updates
+
 The project uses **Renovate** to keep dependencies up to date:
 
 - **Security patches**: Created immediately when available (patch-level updates)
@@ -350,7 +357,9 @@ The project uses **Renovate** to keep dependencies up to date:
 - **Manual review**: Major version updates require your approval before merging
 
 ### Dependency Dashboard
+
 Check **Issue #70** for the Renovate Dependency Dashboard:
+
 - Shows all pending updates
 - Lists security and regular updates separately
 - Allows manual triggering of updates if needed
@@ -381,22 +390,26 @@ Check **Issue #70** for the Renovate Dependency Dashboard:
 ## Troubleshooting
 
 ### Pre-commit hooks not running?
+
 ```bash
 uv run pre-commit install
 ```
 
 ### Outdated dependencies?
+
 ```bash
 uv sync --all-groups --upgrade
 ```
 
 ### Python interpreter not found?
+
 ```bash
 # uv sync creates .venv automatically
 uv sync --all-groups
 ```
 
 ### Tests failing?
+
 ```bash
 # Run with verbose output
 uv run pytest tests -vv
@@ -406,6 +419,7 @@ uv run pytest tests/test_file.py::test_name -vv
 ```
 
 ### Type errors?
+
 ```bash
 uv run pyright
 ```

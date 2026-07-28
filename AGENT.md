@@ -78,14 +78,16 @@ uv sync --all-groups             # Install all dependencies
 uv run ruff check .              # Lint
 uv run ruff format .             # Format
 uv run pyright                   # Type check
+uv run mypy miniflux_tui tests   # Type check (CI's second checker)
 uv run pytest tests              # Run tests
 ```
 
 **Linting and CI failures:**
 
-When any linter or type checker (ruff, pyright, mypy via the `Lint Code Base` GitHub Action, etc.) reports an error, fix it. Do not spend effort determining which commit or model introduced the error, whether it predates the current change, or whether it's "in scope" for the current task — that investigation is a waste of resources and the answer never changes what needs to happen next. Fix what's reported, verify the fix locally with the relevant tool, and move on. If a genuinely large body of pre-existing errors surfaces (e.g. a linter newly enabled or newly run against untouched files), fix all of them rather than only the files touched by the current change, unless the user says otherwise.
+When any linter or type checker (ruff, pyright, mypy via the `Lint Code Base` GitHub Action, etc.) reports an error, fix it. Do not spend effort determining which commit or model introduced the error, whether it predates the current change, or whether it's "in scope" for the current task — that investigation is a waste of resources and the answer never changes what needs to happen next.
+Fix what's reported, verify the fix locally with the relevant tool, and move on. If a genuinely large body of pre-existing errors surfaces (e.g. a linter newly enabled or newly run against untouched files), fix all of them rather than only the files touched by the current change, unless the user says otherwise.
 
-Note: CI runs both `pyright` (this project's primary type checker, see below) and `mypy` via super-linter's `PYTHON_MYPY` check in `.github/workflows/linter.yml`. mypy is not a project dependency (`uv sync` won't install it) — verify with `uv run --with mypy==2.1.0 mypy miniflux_tui tests` before assuming a type-annotation fix is CI-clean. The two checkers disagree on some patterns (e.g. `BINDINGS` list typing on `Screen` subclasses) — a fix for one must not regress the other. Always verify both after touching type annotations.
+Note: CI runs both `pyright` and `mypy` via super-linter's `PYTHON_MYPY` check in `.github/workflows/linter.yml`. mypy is a `dev` dependency group member pinned to `mypy==2.1.0` (matching the version bundled by super-linter) — `uv sync --all-groups` installs it, so `uv run mypy miniflux_tui tests` works locally. The two checkers disagree on some patterns (e.g. `BINDINGS` list typing on `Screen` subclasses) — a fix for one must not regress the other. Always verify both after touching type annotations.
 
 **Commit message format:**
 
@@ -102,12 +104,14 @@ git commit -m "chore: Update dependencies"
 **If commit signing fails or doesn't work, STOP and WAIT immediately. Do NOT proceed.**
 
 **Never:**
+
 - ❌ Try to disable signing (commit.gpgsign=false)
 - ❌ Try to commit without signing
 - ❌ Use alternate signing methods
 - ❌ Attempt any workaround
 
 **If you get signing errors:**
+
 1. Stop all work
 
 This ensures all commits are verified and trusted.
@@ -161,7 +165,7 @@ Permitted schemes for user-facing URLs: `http`, `https`, `mailto`. Relative URLs
 - **Markdown**: No bare URLs — use `[text](url)` link syntax
 - **Target Python**: 3.11+
 - **Linting**: ruff — see `pyproject.toml` for full rule set
-- **Type checking**: pyright (standard mode)
+- **Type checking**: pyright (standard mode) and mypy (CI's second checker; see note above)
 - **Testing**: pytest, minimum 60% coverage
 - **Commit signing**: Required (SSH with 1Password)
 
@@ -174,6 +178,7 @@ Permitted schemes for user-facing URLs: `http`, `https`, `mailto`. Relative URLs
 3. For API calls, mark as `async def` and await the call
 
 Example:
+
 ```python
 BINDINGS = [
     Binding("x", "do_something", "Do Something"),
@@ -197,6 +202,7 @@ async def action_do_something(self):
 ### Screen Initialization
 
 Screens receive data via constructor params, not global state:
+
 ```python
 def __init__(self, entry: Entry, entry_list: list, current_index: int, **kwargs):
     super().__init__(**kwargs)
@@ -216,6 +222,7 @@ def __init__(self, entry: Entry, entry_list: list, current_index: int, **kwargs)
 **⚠️ CRITICAL: AI agents should NEVER manually run releases. Releases are maintainer-only operations.**
 
 **NEVER:**
+
 - ❌ Trigger the release workflow
 - ❌ Manually edit version in `pyproject.toml` for release
 - ❌ Create or push git tags
@@ -226,6 +233,7 @@ def __init__(self, entry: Entry, entry_list: list, current_index: int, **kwargs)
 ### Conventional Commit Format
 
 **Types:**
+
 - `feat`: New features
 - `fix`: Bug fixes
 - `docs`: Documentation changes
@@ -237,6 +245,7 @@ def __init__(self, entry: Entry, entry_list: list, current_index: int, **kwargs)
 - `chore`: Maintenance tasks
 
 **Examples:**
+
 ```bash
 feat: Add category filtering to entry list (#42)
 fix: Correct cursor position after feed collapse (#55)
@@ -248,6 +257,7 @@ test: Add integration tests for feed refresh
 ## Common Development Patterns
 
 ### Adding a New Feed Setting
+
 1. Check if the Miniflux API supports the setting (check miniflux Python client)
 2. Add field to `Feed` model in `api/models.py`
 3. Add UI widget in `feed_settings.py` compose method
@@ -255,12 +265,15 @@ test: Add integration tests for feed refresh
 5. Test with real Miniflux server
 
 ### Working with Dialogs
+
 Use existing dialog components:
+
 - `ConfirmDialog` - Yes/No confirmations
 - `InputDialog` - Text input
 - `SettingsEditDialog` - Settings editor
 
 Push dialog and await result:
+
 ```python
 result = await self.app.push_screen_wait(ConfirmDialog("Are you sure?"))
 if result:

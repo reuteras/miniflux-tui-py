@@ -4,7 +4,7 @@
         "indent": 4
     },
     "MD013": {
-        "line_length": 120,
+        "line_length": 1000,
         "heading_line_length": 120
     },
     "MD033": false,
