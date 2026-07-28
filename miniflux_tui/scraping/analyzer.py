@@ -77,7 +77,7 @@ class ContentAnalyzer:
             html: Raw HTML string to analyze
         """
         self.soup = BeautifulSoup(html, "html.parser")
-        self.analyzed_selectors = set()
+        self.analyzed_selectors: set[str] = set()
 
     def _add_candidate_if_new(self, element, selector: str, element_type: str, element_count: int, candidates: list) -> None:
         """Add element as candidate if selector not already analyzed.
@@ -243,7 +243,7 @@ class ContentAnalyzer:
 
         # More text content = better (but cap it)
         text_length = len(text)
-        score += min(text_length / 10, 100)
+        score += int(min(text_length / 10, 100))
 
         # Paragraphs are good indicators of article content
         paragraphs = len(element.find_all("p"))

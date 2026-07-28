@@ -81,6 +81,12 @@ uv run pyright                   # Type check
 uv run pytest tests              # Run tests
 ```
 
+**Linting and CI failures:**
+
+When any linter or type checker (ruff, pyright, mypy via the `Lint Code Base` GitHub Action, etc.) reports an error, fix it. Do not spend effort determining which commit or model introduced the error, whether it predates the current change, or whether it's "in scope" for the current task — that investigation is a waste of resources and the answer never changes what needs to happen next. Fix what's reported, verify the fix locally with the relevant tool, and move on. If a genuinely large body of pre-existing errors surfaces (e.g. a linter newly enabled or newly run against untouched files), fix all of them rather than only the files touched by the current change, unless the user says otherwise.
+
+Note: CI runs both `pyright` (this project's primary type checker, see below) and `mypy` via super-linter's `PYTHON_MYPY` check in `.github/workflows/linter.yml`. mypy is not a project dependency (`uv sync` won't install it) — verify with `uv run --with mypy==2.1.0 mypy miniflux_tui tests` before assuming a type-annotation fix is CI-clean. The two checkers disagree on some patterns (e.g. `BINDINGS` list typing on `Screen` subclasses) — a fix for one must not regress the other. Always verify both after touching type annotations.
+
 **Commit message format:**
 
 ```bash
@@ -172,6 +178,7 @@ Example:
 BINDINGS = [
     Binding("x", "do_something", "Do Something"),
 ]
+
 
 async def action_do_something(self):
     """Description."""

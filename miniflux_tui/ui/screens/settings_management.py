@@ -20,7 +20,7 @@ if TYPE_CHECKING:
 class SettingsScreen(Screen):
     """Screen displaying TUI application settings."""
 
-    BINDINGS: list[Binding] = [  # noqa: RUF012
+    BINDINGS: list[Binding] = [  # type: ignore[misc,assignment]  # noqa: RUF012
         Binding("escape", "close", "Close"),
         Binding("q", "close", "Close"),
         Binding("i", "toggle_info_messages", "Toggle Info Messages"),

@@ -330,7 +330,8 @@ class MinifluxTuiApp(App):
         Returns:
             Empty dict for backward compatibility (real mapping is in self.feed_category_map)
         """
-        if not self.client or not self.categories:
+        client = self.client
+        if not client or not self.categories:
             self.log("Skipping category mapping: no client or categories")
             self.feed_category_map = {}
             return {}
@@ -341,7 +342,7 @@ class MinifluxTuiApp(App):
             """Fetch feed IDs for a category (small limit for speed)."""
             try:
                 # Only fetch 100 entries - enough to discover all feeds in category
-                entries = await self.client.get_category_entries(category.id, limit=100)
+                entries = await client.get_category_entries(category.id, limit=100)
                 feed_ids = {entry.feed_id for entry in entries}
                 self.log(f"  Category '{category.title}': {len(feed_ids)} feeds")
                 return (category.id, feed_ids)

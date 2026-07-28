@@ -68,7 +68,7 @@ class TestConfirmDialogCompose:
             title="Confirm",
             message="Proceed?",
         )
-        binding_keys = [b.key for b in dialog.BINDINGS]  # type: ignore[attr-defined]
+        binding_keys = [b.key for b in dialog.BINDINGS]  # type: ignore[union-attr]
         assert "y" in binding_keys
         assert "n" in binding_keys
         assert "enter" in binding_keys
@@ -186,7 +186,7 @@ class TestConfirmDialogIntegration:
             message="Proceed?",
         )
         assert len(dialog.BINDINGS) == 4  # type: ignore[attr-defined]
-        assert all(binding.key in ["y", "n", "enter", "escape"] for binding in dialog.BINDINGS)  # type: ignore[attr-defined]
+        assert all(binding.key in ["y", "n", "enter", "escape"] for binding in dialog.BINDINGS)  # type: ignore[union-attr]
 
     def test_confirm_dialog_yes_shortcut(self) -> None:
         """Test ConfirmDialog has 'y' for yes shortcut."""
@@ -194,9 +194,9 @@ class TestConfirmDialogIntegration:
             title="Confirm",
             message="Proceed?",
         )
-        yes_bindings = [b for b in dialog.BINDINGS if b.key == "y"]  # type: ignore[attr-defined]
+        yes_bindings = [b for b in dialog.BINDINGS if b.key == "y"]  # type: ignore[union-attr]
         assert len(yes_bindings) == 1
-        assert "confirm" in yes_bindings[0].action  # type: ignore[attr-defined]
+        assert "confirm" in yes_bindings[0].action  # type: ignore[union-attr]
 
     def test_confirm_dialog_no_shortcut(self) -> None:
         """Test ConfirmDialog has 'n' for no shortcut."""
@@ -204,9 +204,9 @@ class TestConfirmDialogIntegration:
             title="Confirm",
             message="Proceed?",
         )
-        no_bindings = [b for b in dialog.BINDINGS if b.key == "n"]  # type: ignore[attr-defined]
+        no_bindings = [b for b in dialog.BINDINGS if b.key == "n"]  # type: ignore[union-attr]
         assert len(no_bindings) == 1
-        assert "cancel" in no_bindings[0].action  # type: ignore[attr-defined]
+        assert "cancel" in no_bindings[0].action  # type: ignore[union-attr]
 
     def test_confirm_dialog_escape_closes(self) -> None:
         """Test ConfirmDialog escape key cancels."""
@@ -214,9 +214,9 @@ class TestConfirmDialogIntegration:
             title="Confirm",
             message="Proceed?",
         )
-        escape_bindings = [b for b in dialog.BINDINGS if b.key == "escape"]  # type: ignore[attr-defined]
+        escape_bindings = [b for b in dialog.BINDINGS if b.key == "escape"]  # type: ignore[union-attr]
         assert len(escape_bindings) == 1
-        assert "cancel" in escape_bindings[0].action  # type: ignore[attr-defined]
+        assert "cancel" in escape_bindings[0].action  # type: ignore[union-attr]
 
     def test_confirm_dialog_custom_button_labels_are_used(self) -> None:
         """Test custom button labels are actually used."""

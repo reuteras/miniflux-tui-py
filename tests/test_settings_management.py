@@ -99,7 +99,7 @@ class TestSettingsScreenDisplay:
             screen = cast(SettingsScreen, app.screen)
 
             tui_config = screen.query_one("#tui-config")
-            content = tui_config.render().plain  # type: ignore[attr-defined]
+            content = tui_config.render().plain  # type: ignore[union-attr]
 
             # Should show TUI settings
             assert "cyan" in content  # unread_color
@@ -115,7 +115,7 @@ class TestSettingsScreenDisplay:
             screen = cast(SettingsScreen, app.screen)
 
             config_file = screen.query_one("#config-file")
-            content = config_file.render().plain  # type: ignore[attr-defined]
+            content = config_file.render().plain  # type: ignore[union-attr]
 
             # Should show config file info
             assert "config.toml" in content
@@ -196,5 +196,5 @@ class TestSettingsScreenErrorHandling:
 
             # Should not crash
             tui_config = screen.query_one("#tui-config")
-            content = tui_config.render().plain  # type: ignore[attr-defined]
+            content = tui_config.render().plain  # type: ignore[union-attr]
             assert "not available" in content

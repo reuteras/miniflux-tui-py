@@ -17,7 +17,7 @@ from miniflux_tui.utils import get_app_version
 class HelpScreen(Screen):
     """Screen displaying keyboard shortcuts and help information."""
 
-    BINDINGS: list[Binding] = [  # noqa: RUF012
+    BINDINGS: list[Binding] = [  # type: ignore[misc,assignment]  # noqa: RUF012
         Binding("escape", "close", "Close"),
         Binding("q", "close", "Close"),
     ]
@@ -179,14 +179,14 @@ class HelpScreen(Screen):
 
     async def _load_server_info(self) -> None:
         """Load server version and user information from API."""
-        if not hasattr(self.app, "client") or not getattr(self.app, "client", None):
+        client = getattr(self.app, "client", None)
+        if not client:
             self.api_version = "unavailable"
             self.server_version = "unavailable"
             self.username = "unavailable"
             return
 
         try:
-            client = getattr(self.app, "client", None)
             # Get version info
             version_info = await client.get_version()
             self.api_version = version_info.get("version", "unknown")

@@ -134,7 +134,7 @@ _FEED_URL_ATTRS: frozenset[str] = frozenset({"href", "src"})
 class EntryReaderScreen(Screen):
     """Screen for reading a single feed entry."""
 
-    BINDINGS: list[Binding] = [  # noqa: RUF012
+    BINDINGS: list[Binding] = [  # type: ignore[misc,assignment]  # noqa: RUF012
         # Scrolling
         Binding("j", "scroll_down", "Scroll Down", show=False),
         Binding("k", "scroll_up", "Scroll Up", show=False),
@@ -169,7 +169,7 @@ class EntryReaderScreen(Screen):
         Binding("q", "quit", "Quit"),
     ]
 
-    app: EntryReaderAppProtocol
+    app: EntryReaderAppProtocol  # type: ignore[assignment]
 
     DEFAULT_CSS = """
     EntryReaderScreen {
@@ -237,7 +237,7 @@ class EntryReaderScreen(Screen):
         self.text_width = max(0, text_width)
         self.link_highlight_bg = link_highlight_bg or "#ff79c6"  # Default: pink/magenta
         self.link_highlight_fg = link_highlight_fg or "#282a36"  # Default: dark text
-        self.scroll_container = None
+        self.scroll_container: Markdown | None = None
         self.group_stats_widget: Static | None = None  # Reference to group stats widget for updates
         self.links: list[dict[str, str]] = []  # List of {text: str, url: str}
         self.focused_link_index: int | None = None  # Currently focused link index

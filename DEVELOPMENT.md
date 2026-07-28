@@ -200,6 +200,7 @@ logger.error("Error message")
 import pytest
 from miniflux_tui.api.models import Entry
 
+
 class TestEntry:
     """Tests for Entry model."""
 
@@ -231,10 +232,8 @@ This project uses **strict type checking** with Pyright. All code should have ty
 from typing import Optional, List
 from miniflux_tui.api.models import Entry
 
-def process_entries(
-    entries: List[Entry],
-    filter_unread: bool = False
-) -> Optional[Entry]:
+
+def process_entries(entries: List[Entry], filter_unread: bool = False) -> Optional[Entry]:
     """Process entries and return the first one."""
     if not entries:
         return None

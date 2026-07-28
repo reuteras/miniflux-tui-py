@@ -17,7 +17,7 @@ class EntryReaderTestApp(App):
         super().__init__()
         self.entry = entry
         self.entry_list = entry_list or []
-        self.entry_reader_screen = None
+        self.entry_reader_screen: EntryReaderScreen | None = None
         self.client = None
 
     def compose(self) -> ComposeResult:

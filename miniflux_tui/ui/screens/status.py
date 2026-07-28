@@ -13,7 +13,7 @@ from miniflux_tui.api.models import Feed
 class StatusScreen(Screen):
     """Screen displaying server status and feed health information."""
 
-    BINDINGS: list[Binding] = [  # noqa: RUF012
+    BINDINGS: list[Binding] = [  # type: ignore[misc,assignment]  # noqa: RUF012
         Binding("escape", "close", "Close"),
         Binding("q", "close", "Close"),
         Binding("r", "refresh", "Refresh Status"),
@@ -71,13 +71,12 @@ class StatusScreen(Screen):
 
     async def _load_status(self) -> None:
         """Load server and feed status from API."""
-        if not hasattr(self.app, "client") or not getattr(self.app, "client", None):
+        client = getattr(self.app, "client", None)
+        if not client:
             self._update_error_state("API client not available")
             return
 
         try:
-            client = getattr(self.app, "client", None)
-
             # Get server version
             version_info = await client.get_version()
             self.server_version = version_info.get("version", "unknown")
@@ -220,8 +219,11 @@ class StatusScreen(Screen):
     async def action_refresh_failed_feeds(self):
         """Refresh all failed feeds shown on the status screen.
 
-        This iterates through all feeds with errors and attempts to refresh each one.
-        After refreshing, reloads the status display to show updated information.
+        Iterates through all feeds with errors and triggers a refresh for each.
+        The Miniflux server's refresh endpoint is synchronous: even when the
+        feed fails again (HTTP 500), the server updates checked_at and error
+        info in the database before returning. After triggering all refreshes,
+        reloads the status display to show updated information.
         """
         if not hasattr(self.app, "client") or not getattr(self.app, "client", None):
             self.app.notify("API client not available", severity="error")
@@ -241,7 +243,10 @@ class StatusScreen(Screen):
         except Exception as e:
             self.app.log(f"Could not update refresh message: {e}")
 
-        # Refresh each failed feed
+        # Refresh each failed feed.
+        # The server may return 500 if the feed still fails, but it updates
+        # checked_at in the database before returning the error, so the
+        # subsequent _load_status() will pick up the new timestamp.
         success_count = 0
         failed_count = 0
 
@@ -252,7 +257,7 @@ class StatusScreen(Screen):
                 self.app.log(f"Successfully refreshed feed: {feed.title}")
             except Exception as e:
                 failed_count += 1
-                self.app.log(f"Failed to refresh feed {feed.title}: {type(e).__name__}: {e}")
+                self.app.log(f"Refresh failed for feed {feed.title}: {type(e).__name__}: {e}")
 
         # Reload status to show updated information
         await self._load_status()
@@ -262,6 +267,6 @@ class StatusScreen(Screen):
             self.app.notify(f"Successfully refreshed {success_count} feed(s)", severity="information")
         else:
             self.app.notify(
-                f"Refreshed {success_count} feed(s), {failed_count} failed",
+                f"Refreshed {success_count} feed(s), {failed_count} still failing",
                 severity="warning",
             )

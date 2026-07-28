@@ -10,6 +10,7 @@ from textual.app import ComposeResult
 from textual.binding import Binding
 from textual.content import Content
 from textual.screen import Screen
+from textual.timer import Timer
 from textual.widgets import Footer, Header, Label, ListItem, ListView
 
 from miniflux_tui.api.models import Category, Entry
@@ -329,7 +330,7 @@ class EntryListScreen(Screen):
         self._header_widget: Header | None = None
         self._footer_widget: Footer | None = None
         # Loading animation state
-        self._loading_animation_timer = None  # Timer for loading animation
+        self._loading_animation_timer: Timer | None = None
         self._loading_animation_frame = 0  # Current animation frame
         self._loading_animation_frames = ["⠋", "⠙", "⠹", "⠸", "⠼", "⠴", "⠦", "⠧", "⠇", "⠏"]  # Spinner frames
         self._loading_message = ""  # Message to show during loading
@@ -564,7 +565,7 @@ class EntryListScreen(Screen):
         Returns:
             Index of the entry in list view, or None if not found
         """
-        if not entry_id:
+        if not entry_id or not self.list_view:
             return None
 
         for i, child in enumerate(self.list_view.children):
@@ -585,7 +586,7 @@ class EntryListScreen(Screen):
         Returns:
             Index of the feed header in list view, or None if not found
         """
-        if not feed_title or not self.group_by_feed or feed_title not in self.feed_header_map:
+        if not feed_title or not self.group_by_feed or feed_title not in self.feed_header_map or not self.list_view:
             return None
 
         feed_header = self.feed_header_map[feed_title]
@@ -608,21 +609,25 @@ class EntryListScreen(Screen):
             True if successful, False otherwise
         """
         self._safe_log(f"_set_cursor_to_index: Setting index to {index}")
-        max_index = len(self.list_view.children) - 1
-        self._safe_log(f"  max_index = {max_index}, current index = {self.list_view.index}")
+        list_view = self.list_view
+        if list_view is None:
+            return False
+
+        max_index = len(list_view.children) - 1
+        self._safe_log(f"  max_index = {max_index}, current index = {list_view.index}")
 
         if index > max_index:
             self._safe_log(f"  Index {index} > max_index {max_index}, returning False")
             return False
 
         try:
-            self.list_view.index = index
-            self._safe_log(f"  After setting index: list_view.index = {self.list_view.index}")
+            list_view.index = index
+            self._safe_log(f"  After setting index: list_view.index = {list_view.index}")
             # Scroll to center the entry in the viewport for better visibility
             # This prevents the entry from appearing at the bottom of the screen
-            if self.list_view.highlighted_child:
-                self._safe_log(f"  highlighted_child = {self.list_view.highlighted_child}")
-                self.list_view.scroll_to_center(self.list_view.highlighted_child, animate=False)
+            if list_view.highlighted_child:
+                self._safe_log(f"  highlighted_child = {list_view.highlighted_child}")
+                list_view.scroll_to_center(list_view.highlighted_child, animate=False)
             else:
                 self._safe_log("  No highlighted_child after setting index!")
             return True
@@ -989,6 +994,9 @@ class EntryListScreen(Screen):
             first_feed_ref: List with one element to track first feed (mutable ref pattern)
             entry: Entry object to extract category information from
         """
+        if self.list_view is None:
+            return
+
         # Track first feed for default positioning
         if first_feed_ref[0] is None:
             first_feed_ref[0] = current_feed
@@ -1035,6 +1043,9 @@ class EntryListScreen(Screen):
         Args:
             entry: The entry to add
         """
+        if self.list_view is None:
+            return
+
         item = EntryListItem(entry, self.unread_color, self.read_color)
         self.displayed_items.append(item)
         self.entry_item_map[entry.id] = item
@@ -1069,6 +1080,9 @@ class EntryListScreen(Screen):
 
     def _add_flat_entries(self, entries: list[Entry]):
         """Add entries as a flat list."""
+        if self.list_view is None:
+            return
+
         self.displayed_items = []
         self.entry_item_map.clear()
         for entry in entries:
@@ -1126,6 +1140,9 @@ class EntryListScreen(Screen):
             category_title: Title of the current category
             first_category_ref: List with one element to track first category (mutable ref pattern)
         """
+        if self.list_view is None:
+            return
+
         # Track first category for default positioning
         if first_category_ref[0] is None:
             first_category_ref[0] = category_title
@@ -1167,6 +1184,9 @@ class EntryListScreen(Screen):
             entry: The entry to add
             category_title: Title of the category this entry belongs to
         """
+        if self.list_view is None:
+            return
+
         item = EntryListItem(entry, self.unread_color, self.read_color)
         self.displayed_items.append(item)
         self.entry_item_map[entry.id] = item
@@ -1213,7 +1233,7 @@ class EntryListScreen(Screen):
             True if item was updated, False if item not found or refresh needed
         """
         # Check if item is in the current view
-        if entry.id not in self.entry_item_map:
+        if entry.id not in self.entry_item_map or self.list_view is None:
             return False
 
         old_item = self.entry_item_map[entry.id]
@@ -1650,6 +1670,9 @@ class EntryListScreen(Screen):
         If feed is collapsed, adds 'collapsed' class to hide entries.
         If feed is expanded, removes 'collapsed' class to show entries.
         """
+        if self.list_view is None:
+            return
+
         is_expanded = self.feed_fold_state.get(feed_title, True)
 
         # Find all entries for this feed and update their CSS class
@@ -1666,6 +1689,9 @@ class EntryListScreen(Screen):
         If category is collapsed, adds 'collapsed' class to hide entries.
         If category is expanded, removes 'collapsed' class to show entries.
         """
+        if self.list_view is None:
+            return
+
         is_expanded = self.category_fold_state.get(category_title, True)
 
         # Find all entries for this category and update their CSS class
@@ -2201,7 +2227,9 @@ class EntryListScreen(Screen):
                 self.filter_unread_only = False
                 self.filter_starred_only = False
                 self._update_subtitle()
-                self._populate_list()
+                # app.load_entries() already calls _populate_list() when this screen
+                # is current. Calling it again here races with ListView.clear()'s
+                # unawaited removal and can leave stale duplicate items in the DOM.
             finally:
                 # Always stop the loading animation
                 self._stop_loading_animation()
@@ -2221,7 +2249,9 @@ class EntryListScreen(Screen):
                 self.filter_unread_only = False
                 self.filter_starred_only = False
                 self._update_subtitle()
-                self._populate_list()
+                # app.load_entries() already calls _populate_list() when this screen
+                # is current. Calling it again here races with ListView.clear()'s
+                # unawaited removal and can leave stale duplicate items in the DOM.
             finally:
                 # Always stop the loading animation
                 self._stop_loading_animation()

@@ -13,7 +13,7 @@ from textual.widgets import Button, Checkbox, Input, Label, Select, Static
 class SettingsEditDialog(ModalScreen[dict | None]):
     """Modal dialog for editing user settings."""
 
-    BINDINGS: list[Binding] = [  # noqa: RUF012
+    BINDINGS: list[Binding] = [  # type: ignore[misc,assignment]  # noqa: RUF012
         Binding("escape", "cancel", "Cancel"),
     ]
 

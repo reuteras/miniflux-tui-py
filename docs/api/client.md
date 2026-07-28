@@ -31,10 +31,7 @@ All API calls are asynchronous and use `asyncio` for non-blocking operations.
 Example:
 
 ```python
-client = MinifluxClient(
-    base_url="https://miniflux.example.com",
-    api_key="your-api-key"
-)
+client = MinifluxClient(base_url="https://miniflux.example.com", api_key="your-api-key")
 
 # Fetch unread entries
 entries = await client.get_entries("unread")

@@ -126,7 +126,7 @@ class TestFeedManagementScreenBindings:
         """Test FeedManagementScreen has proper key bindings."""
         screen = FeedManagementScreen()
         bindings = list(screen.BINDINGS)  # type: ignore[attr-defined]
-        binding_keys = [b.key for b in bindings]  # type: ignore[attr-defined]
+        binding_keys = [b.key for b in bindings]  # type: ignore[union-attr]
         assert "n" in binding_keys  # Add feed
         assert "d" in binding_keys  # Delete feed
         assert "r" in binding_keys  # Refresh feed
@@ -139,7 +139,7 @@ class TestFeedManagementScreenBindings:
         """Test FeedManagementScreen bindings map to correct actions."""
         screen = FeedManagementScreen()
         bindings = list(screen.BINDINGS)  # type: ignore[attr-defined]
-        actions = {b.action for b in bindings}  # type: ignore[attr-defined]
+        actions = {b.action for b in bindings}  # type: ignore[union-attr]
         assert "add_feed" in actions
         assert "delete_feed" in actions
         assert "refresh_feed" in actions

@@ -10,6 +10,7 @@ from textual.app import ComposeResult
 from textual.binding import Binding
 from textual.containers import Container, ScrollableContainer
 from textual.screen import Screen
+from textual.timer import Timer
 from textual.widgets import Button, Checkbox, Footer, Header, Input, Select, Static, TextArea
 
 from miniflux_tui.docs_cache import DocsCache
@@ -257,7 +258,7 @@ class FeedSettingsScreen(Screen):
         self.status_severity = "info"  # "info", "success", "error", "warning"
 
         # Auto-save debounce timer
-        self._auto_save_handle = None
+        self._auto_save_handle: Timer | None = None
 
         # Categories for dropdown
         self.categories: list[Category] = []
@@ -931,6 +932,7 @@ class FeedSettingsScreen(Screen):
         # CRITICAL FIX: Only track if the value has actually changed
         # Convert new_value to the same type as original_value for comparison
         # This prevents false positives from widget initialization
+        new_value_cmp: Any
         if original_value is not None:
             # Convert new_value to match original_value type for comparison
             if isinstance(original_value, str):
@@ -1233,6 +1235,7 @@ class FeedSettingsScreen(Screen):
             original_value = self.original_values.get(field_name)
 
             # Type-aware comparison (same logic as _on_field_changed)
+            current_cmp: Any
             if original_value is not None:
                 if isinstance(original_value, str):
                     current_cmp = str(current_value) if current_value is not None else ""

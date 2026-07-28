@@ -150,6 +150,7 @@ Example:
 import pytest
 from miniflux_tui.api.models import Entry
 
+
 def test_entry_properties():
     """Test Entry model properties."""
     entry = Entry(

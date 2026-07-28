@@ -1973,7 +1973,10 @@ class TestViewFilteringActions:
         mock_app.load_entries.assert_awaited_once_with("unread")
         assert screen.filter_unread_only is False
         assert screen.filter_starred_only is False
-        screen._populate_list.assert_called_once()
+        # _populate_list() is called by app.load_entries() when the screen is
+        # current, not by _do_show_unread() itself (that call was redundant and
+        # raced with ListView.clear()'s unawaited removal).
+        screen._populate_list.assert_not_called()
 
     @pytest.mark.asyncio
     async def test_action_show_starred_resets_filters(self, diverse_entries):
@@ -1999,7 +2002,10 @@ class TestViewFilteringActions:
         mock_app.load_entries.assert_awaited_once_with("starred")
         assert screen.filter_unread_only is False
         assert screen.filter_starred_only is False
-        screen._populate_list.assert_called_once()
+        # _populate_list() is called by app.load_entries() when the screen is
+        # current, not by _do_show_starred() itself (that call was redundant and
+        # raced with ListView.clear()'s unawaited removal).
+        screen._populate_list.assert_not_called()
 
 
 class TestCategoryGrouping:

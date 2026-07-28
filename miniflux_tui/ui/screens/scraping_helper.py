@@ -140,12 +140,12 @@ class ScrapingHelperScreen(Screen):
         self.feed_id = feed_id
         self.feed_title = feed_title
         self.on_save_callback = on_save_callback
-        self.candidates = []
-        self.selected_selector = None
+        self.candidates: list[dict[str, Any]] = []
+        self.selected_selector: str | None = None
         self.rule_type = "add"
-        self.analyzer = None
-        self.fetcher = None
-        self.raw_html = None
+        self.analyzer: ContentAnalyzer | None = None
+        self.fetcher: SecureFetcher | None = None
+        self.raw_html: str | None = None
 
     def compose(self) -> ComposeResult:
         """Compose the screen layout."""
@@ -274,7 +274,7 @@ class ScrapingHelperScreen(Screen):
         if not self.analyzer:
             return
 
-        self.selected_selector = candidate["selector"]
+        self.selected_selector = str(candidate["selector"])
 
         # Get element stats
         stats = self.analyzer.get_element_stats(self.selected_selector)

@@ -82,7 +82,7 @@ class TestSettingsEditDialogActions:
                 captured_result.append(value)
                 # Don't call original to avoid actual dismissal
 
-            dialog.dismiss = mock_dismiss  # type: ignore[method-assign]
+            dialog.dismiss = mock_dismiss  # type: ignore[method-assign, assignment]
 
             # Trigger cancel action
             dialog.action_cancel()  # type: ignore[attr-defined]
@@ -104,7 +104,7 @@ class TestSettingsEditDialogActions:
             def mock_dismiss(value):
                 captured_result.append(value)
 
-            dialog.dismiss = mock_dismiss  # type: ignore[method-assign]
+            dialog.dismiss = mock_dismiss  # type: ignore[method-assign, assignment]
 
             # Trigger save action
             dialog.action_save()  # type: ignore[attr-defined]

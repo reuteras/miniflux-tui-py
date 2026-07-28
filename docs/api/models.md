@@ -58,13 +58,7 @@ feed = Feed(id=1, title="My Blog", url="https://example.com/feed")
 
 # Create an entry
 entry = Entry(
-    id=123,
-    title="My Article",
-    content="<p>Article content</p>",
-    published_at=1699564800,
-    is_read=False,
-    starred=False,
-    feed=feed
+    id=123, title="My Article", content="<p>Article content</p>", published_at=1699564800, is_read=False, starred=False, feed=feed
 )
 
 # Check properties

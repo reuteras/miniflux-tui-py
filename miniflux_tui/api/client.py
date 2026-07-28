@@ -8,7 +8,7 @@ from functools import partial
 from typing import TypeVar
 
 import requests
-from miniflux import Client as MinifluxClientBase
+from miniflux import Client as MinifluxClientBase  # type: ignore[import-untyped]
 
 from miniflux_tui.constants import BACKOFF_FACTOR, MAX_RETRIES
 

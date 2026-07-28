@@ -73,7 +73,7 @@ class TestInputDialogCompose:
             title="Test",
             label="Input:",
         )
-        binding_keys = [b.key for b in dialog.BINDINGS]  # type: ignore[attr-defined]
+        binding_keys = [b.key for b in dialog.BINDINGS]  # type: ignore[union-attr]
         assert "enter" in binding_keys
         assert "escape" in binding_keys
 
@@ -158,7 +158,7 @@ class TestInputDialogIntegration:
             label="Input:",
         )
         assert len(dialog.BINDINGS) == 2  # type: ignore[attr-defined]
-        assert all(binding.key in ["enter", "escape"] for binding in dialog.BINDINGS)  # type: ignore[attr-defined]
+        assert all(binding.key in ["enter", "escape"] for binding in dialog.BINDINGS)  # type: ignore[union-attr]
 
     def test_input_dialog_with_none_callbacks(self) -> None:
         """Test InputDialog works with None callbacks."""

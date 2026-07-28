@@ -90,7 +90,7 @@ def validate_config(config_dict: dict) -> tuple[bool, str]:
         # Validate server_url
         validations.append(
             (
-                isinstance(server_url, str) and server_url.strip(),
+                bool(isinstance(server_url, str) and server_url.strip()),
                 "server_url must be a non-empty string",
             )
         )
