@@ -1,0 +1,5 @@
+# CHANGELOG.md is fully regenerated from raw commit-message text by
+# git-cliff on every release (see cliff.toml, release.yml). It isn't
+# hand-authored, so content-based markdown rules can't reliably be
+# satisfied and shouldn't gate releases.
+CHANGELOG.md
