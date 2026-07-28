@@ -20,7 +20,7 @@ from miniflux_tui.constants import (
     SORT_MODES,
 )
 from miniflux_tui.performance import ScreenRefreshOptimizer
-from miniflux_tui.utils import api_call, get_star_icon, get_status_icon, strip_control_chars
+from miniflux_tui.utils import api_call, format_count_suffix, get_star_icon, get_status_icon, strip_control_chars
 
 if TYPE_CHECKING:
     MinifluxTuiApp = Any
@@ -368,15 +368,15 @@ class EntryListScreen(Screen):
         self._loading_animation_frame = (self._loading_animation_frame + 1) % len(self._loading_animation_frames)
 
     def _stop_loading_animation(self) -> None:
-        """Stop the loading animation and clear the subtitle."""
+        """Stop the loading animation and restore the subtitle."""
         # Stop the timer if it exists
         if self._loading_animation_timer:
             with suppress(Exception):
                 self._loading_animation_timer.stop()
             self._loading_animation_timer = None
-        # Clear the subtitle (safely handle if screen is unmounted)
+        # Restore the subtitle (safely handle if screen is unmounted)
         with suppress(Exception):
-            self.sub_title = ""
+            self._update_subtitle()
         self._loading_message = ""
         self._loading_animation_frame = 0
 
@@ -525,6 +525,8 @@ class EntryListScreen(Screen):
         self._safe_log(f"_populate_list: current children count after display = {len(self.list_view.children)}")
         self._safe_log(f"_populate_list: current index after display = {self.list_view.index}")
         self._safe_log(f"_populate_list: highlighted_child = {self.list_view.highlighted_child}")
+
+        self._update_subtitle()
 
         self.refresh_optimizer.track_full_refresh()
 
@@ -1562,10 +1564,12 @@ class EntryListScreen(Screen):
         return "Unread"
 
     def _update_subtitle(self) -> None:
-        """Update subtitle with current view and sort information."""
+        """Update subtitle with view, sort, and unread/total/error counts."""
         view_name = self._get_view_display_name()
         sort_name = self.current_sort.title()
-        self.sub_title = f"{view_name} | Sort: {sort_name}"
+        feeds = getattr(self.app, "feeds", [])
+        counts = format_count_suffix(self.entries, feeds)
+        self.sub_title = f"{view_name} | Sort: {sort_name} | {counts}"
 
     def action_cycle_sort(self):
         """Cycle through sort modes."""
@@ -2110,7 +2114,9 @@ class EntryListScreen(Screen):
             if hasattr(self, "app") and self.app and hasattr(self.app, "current_view"):
                 view_name = "Starred" if self.app.current_view == "starred" else "Unread"
             sort_name = self.current_sort.title() if hasattr(self, "current_sort") else "Date"
-            self.sub_title = f"{view_name} | Sort: {sort_name}"
+            feeds = getattr(self.app, "feeds", [])
+            counts = format_count_suffix(self.entries, feeds)
+            self.sub_title = f"{view_name} | Sort: {sort_name} | {counts}"
         except Exception as emergency_error:
             self._safe_log(f"Emergency subtitle update also failed: {emergency_error}")
 

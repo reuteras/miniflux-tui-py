@@ -2,13 +2,14 @@
 """Tests for utility functions."""
 
 import tomllib
+from dataclasses import replace
 from pathlib import Path
 from unittest.mock import AsyncMock, MagicMock
 
 import pytest
 
 from miniflux_tui import utils
-from miniflux_tui.utils import api_call, get_star_icon, get_status_icon
+from miniflux_tui.utils import api_call, format_count_suffix, get_star_icon, get_status_icon
 
 
 class TestGetStarIcon:
@@ -45,6 +46,30 @@ class TestGetStatusIcon:
         unread = get_status_icon(True)
         read = get_status_icon(False)
         assert unread != read
+
+
+class TestFormatCountSuffix:
+    """Test format_count_suffix function."""
+
+    def test_no_errors_omits_parenthesis(self, sample_entries, sample_feed):
+        """Unread/total is shown without an error count when no feeds have errors."""
+        # sample_entries has 2 unread out of 4 total, sample_feed has no errors.
+        assert format_count_suffix(sample_entries, [sample_feed]) == "2/4"
+
+    def test_feed_errors_are_appended(self, sample_entries, sample_feed):
+        """Error count is appended in parentheses when feeds have parsing errors."""
+        error_feed = replace(sample_feed, id=2, parsing_error_count=3)
+        assert format_count_suffix(sample_entries, [sample_feed, error_feed]) == "2/4 (1)"
+
+    def test_multiple_error_feeds_are_counted(self, sample_entries, sample_feed):
+        """Each feed with errors contributes to the error count."""
+        error_feed_1 = replace(sample_feed, id=2, parsing_error_count=1)
+        error_feed_2 = replace(sample_feed, id=3, parsing_error_message="fetch failed")
+        assert format_count_suffix(sample_entries, [sample_feed, error_feed_1, error_feed_2]) == "2/4 (2)"
+
+    def test_empty_entries_and_feeds(self):
+        """Empty inputs produce a "0/0" suffix with no error count."""
+        assert format_count_suffix([], []) == "0/0"
 
 
 class TestApiCallContextManager:

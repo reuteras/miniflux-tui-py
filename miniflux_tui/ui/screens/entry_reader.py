@@ -18,7 +18,7 @@ from textual.widgets import Footer, Header, Markdown, Static
 from miniflux_tui.api.models import Entry
 from miniflux_tui.constants import CONTENT_SEPARATOR
 from miniflux_tui.ui.protocols import EntryReaderAppProtocol
-from miniflux_tui.utils import get_star_icon, strip_control_chars
+from miniflux_tui.utils import format_count_suffix, get_star_icon, strip_control_chars
 
 # Tags whose *entire subtree* must be removed (decomposed), not just unwrapped.
 # Unlike script/style whose text content is preserved for security-blog use,
@@ -310,8 +310,8 @@ class EntryReaderScreen(Screen):
 
         # Set title to just the application name (no feed name or entry title)
         self.title = ""
-        # Clear subtitle (remove counts from there)
-        self.sub_title = ""
+        # Show unread/total counts and feed error indicator in the subtitle
+        self._update_sub_title()
 
         # Check terminal size constraints
         self._check_terminal_size()
@@ -456,9 +456,9 @@ class EntryReaderScreen(Screen):
         return f"Category {entry.feed.category_id}"
 
     def _update_sub_title(self) -> None:
-        """Clear the sub_title (counts are now in feed header)."""
-        # Subtitle is no longer used - title shows entry and feed info
-        self.sub_title = ""
+        """Show unread/total counts and feed error indicator in the header."""
+        feeds = getattr(self.app, "feeds", [])
+        self.sub_title = format_count_suffix(self.entry_list, feeds)
 
     def _get_group_stats_text(self) -> str:
         """Get formatted group statistics text for display in entry view.

@@ -11,7 +11,10 @@ from collections.abc import Generator, Iterator
 from contextlib import contextmanager
 from importlib import metadata
 from pathlib import Path
-from typing import Any
+from typing import TYPE_CHECKING, Any
+
+if TYPE_CHECKING:
+    from miniflux_tui.api.models import Entry, Feed
 
 # Strips C0 (0x00-0x1F) and C1 (0x7F-0x9F) control characters EXCEPT tab (0x09)
 # and newline (0x0A). Carriage return, ESC, BEL, etc. are removed so untrusted
@@ -226,6 +229,24 @@ def api_call(screen: Any, operation_name: str = "Operation") -> Generator[Any, N
         screen.log(f"ValueError during {operation_name}: {e}")
     except Exception as e:
         screen.log(f"Unexpected error during {operation_name}: {e}")
+
+
+def format_count_suffix(entries: list[Entry], feeds: list[Feed]) -> str:
+    """Format an "unread/total (errors)" suffix for the header sub_title.
+
+    Args:
+        entries: Currently loaded entries to count unread/total from
+        feeds: Feeds to check for parsing errors
+
+    Returns:
+        "unread/total" or "unread/total (error_count)" if any feeds have errors
+    """
+    unread = sum(1 for entry in entries if entry.is_unread)
+    suffix = f"{unread}/{len(entries)}"
+    error_count = sum(1 for feed in feeds if feed.has_errors)
+    if error_count:
+        suffix += f" ({error_count})"
+    return suffix
 
 
 def consolidate_blank_lines(text: str, max_consecutive: int = 2) -> str:
