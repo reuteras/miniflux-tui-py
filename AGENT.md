@@ -20,7 +20,7 @@ This is a Python reimplementation of [cliflux](https://github.com/spencerwi/clif
 
 ## Directory Structure
 
-```
+```text
 miniflux_tui/
 ├── main.py                      # Entry point; handles --init, --check-config
 ├── config.py                    # Config loading with platform-specific paths
@@ -87,7 +87,7 @@ uv run pytest tests              # Run tests
 When any linter or type checker (ruff, pyright, mypy via the `Lint Code Base` GitHub Action, etc.) reports an error, fix it. Do not spend effort determining which commit or model introduced the error, whether it predates the current change, or whether it's "in scope" for the current task — that investigation is a waste of resources and the answer never changes what needs to happen next.
 Fix what's reported, verify the fix locally with the relevant tool, and move on. If a genuinely large body of pre-existing errors surfaces (e.g. a linter newly enabled or newly run against untouched files), fix all of them rather than only the files touched by the current change, unless the user says otherwise.
 
-Note: CI runs both `pyright` and `mypy` via super-linter's `PYTHON_MYPY` check in `.github/workflows/linter.yml`. mypy is a `dev` dependency group member pinned to `mypy==2.1.0` (matching the version bundled by super-linter) — `uv sync --all-groups` installs it, so `uv run mypy miniflux_tui tests` works locally. The two checkers disagree on some patterns (e.g. `BINDINGS` list typing on `Screen` subclasses) — a fix for one must not regress the other. Always verify both after touching type annotations.
+Note: CI runs both `pyright` and `mypy` via super-linter check in `.github/workflows/linter.yml`. The two checkers disagree on some patterns (e.g. `BINDINGS` list typing on `Screen` subclasses) — a fix for one must not regress the other. Always verify both after touching type annotations.
 
 **Commit message format:**
 
