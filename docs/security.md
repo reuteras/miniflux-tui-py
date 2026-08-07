@@ -97,10 +97,10 @@ The project meets the criteria for the OpenSSF (formerly CII) Best Practices bad
 - **Trigger**: Before each local commit
 - **Purpose**: Enforces code quality and security before pushing
 - **Tools**:
-    - ruff (formatting and linting)
-    - pyright (type checking)
-    - YAML validation
-    - Security checks
+  - ruff (formatting and linting)
+  - pyright (type checking)
+  - YAML validation
+  - Security checks
 
 ## Dependency Management
 
