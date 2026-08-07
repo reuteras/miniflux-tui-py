@@ -29,6 +29,7 @@ For questions, ideas, or general discussions:
 3. Create a new discussion if needed
 
 **Best for:**
+
 - General questions about usage
 - Feature ideas and suggestions
 - Sharing tips and tricks
@@ -43,11 +44,13 @@ For bug reports and feature requests:
 3. Create a new issue using the appropriate template
 
 **Best for:**
+
 - Bug reports with reproducible steps
 - Feature requests with specific use cases
 - Documentation improvements
 
 **Before reporting a bug:**
+
 - Update to the latest version: `uv tool upgrade miniflux-tui-py` or `pip install --upgrade miniflux-tui-py`
 - Check if the issue is already reported
 - Gather relevant information (version, OS, error messages)
@@ -73,6 +76,7 @@ miniflux-tui --init
 ```
 
 Configuration file locations:
+
 - **Linux**: `~/.config/miniflux-tui/config.toml`
 - **macOS**: `~/.config/miniflux-tui/config.toml`
 - **Windows**: `%APPDATA%\miniflux-tui\config.toml`
@@ -93,6 +97,7 @@ Press `?` within the application to view the help screen with all available keyb
 ## Contributing
 
 Interested in contributing? See [CONTRIBUTING.md](CONTRIBUTING.md) for guidelines on:
+
 - Setting up the development environment
 - Running tests
 - Submitting pull requests

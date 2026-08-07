@@ -28,14 +28,15 @@ read_color = "gray"
 ```
 
 - **name**: Choose between `"dark"` or `"light"` theme (default: `"dark"`)
-  - `"dark"` - Dracula-inspired dark theme with high contrast
-  - `"light"` - Solarized-inspired light theme
-  - Press `T` in the app to toggle between themes (applies on restart)
+    - `"dark"` - Dracula-inspired dark theme with high contrast
+    - `"light"` - Solarized-inspired light theme
+    - Press `T` in the app to toggle between themes (applies on restart)
 
 - **unread_color**: Color for unread entries (default: `"cyan"`)
 - **read_color**: Color for read entries (default: `"gray"`)
 
 Available colors depend on your terminal, but common options include:
+
 - `black`, `red`, `green`, `yellow`, `blue`, `magenta`, `cyan`, `white`
 - `bright_*` variants (e.g., `bright_blue`)
 - `gray`, `dark_gray`
@@ -50,22 +51,22 @@ group_collapsed = false
 ```
 
 - **default_sort**: Default sort mode on startup
-  - `"date"` - Newest entries first (default)
-  - `"feed"` - Alphabetically by feed name
-  - `"status"` - Unread entries first
+    - `"date"` - Newest entries first (default)
+    - `"feed"` - Alphabetically by feed name
+    - `"status"` - Unread entries first
 
 - **default_group_by_feed**: Whether to group by feed on startup
-  - `false` - Show flat list (default)
-  - `true` - Show grouped by feed
+    - `false` - Show flat list (default)
+    - `true` - Show grouped by feed
 
 - **group_collapsed**: Default expand/collapse state when toggling group modes
-  - `false` - Groups start expanded (default)
-  - `true` - Groups start collapsed
-  - Applies to:
-    - Initial startup when `default_group_by_feed = true`
-    - When toggling feed grouping with `g` key
-    - When toggling category grouping with `c` key
-  - Tip: Set to `true` for a cleaner view with many feeds/categories
+    - `false` - Groups start expanded (default)
+    - `true` - Groups start collapsed
+    - Applies to:
+        - Initial startup when `default_group_by_feed = true`
+        - When toggling feed grouping with `g` key
+        - When toggling category grouping with `c` key
+    - Tip: Set to `true` for a cleaner view with many feeds/categories
 
 ### UI Settings
 
@@ -75,8 +76,8 @@ show_info_messages = true
 ```
 
 - **show_info_messages**: Control information message display
-  - `true` - Show all messages including info (default)
-  - `false` - Show only warnings and errors
+    - `true` - Show all messages including info (default)
+    - `false` - Show only warnings and errors
 
 ## Example Configuration
 

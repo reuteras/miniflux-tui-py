@@ -105,6 +105,7 @@ To clear the search, press `/` again and submit an empty search term.
 Press `Shift+H` to toggle the reading history view, which shows your 200 most recently read entries. Press `Shift+H` again to return to the main entry list.
 
 In history view:
+
 - All entry list keys work the same way
 - Navigate with `j/k` or arrow keys
 - Open entries with `Enter`
@@ -134,6 +135,7 @@ From the entry list, you can edit individual feed settings by pressing `X` (uppe
 The Feed Settings screen is organized into several sections:
 
 #### General Settings
+
 - **Title** - Custom name for the feed
 - **Site URL** - URL to the website the feed covers
 - **Feed URL** - Read-only feed URL (for reference)
@@ -141,6 +143,7 @@ The Feed Settings screen is organized into several sections:
 - **Disabled** - Temporarily disable feed from checking
 
 #### Network Settings
+
 - **Feed Username** - HTTP authentication username for feed server (optional)
 - **Feed Password** - HTTP authentication password for feed server (optional)
 - **Override Default User Agent** - Custom User-Agent header to use for requests (optional)
@@ -148,6 +151,7 @@ The Feed Settings screen is organized into several sections:
 - **HTTPS Settings** - Toggle HTTPS certificate verification
 
 #### Rules & Filtering
+
 Configure how Miniflux processes feed content:
 
 - **Scraper Rules** - Custom CSS selectors to extract article content
@@ -159,6 +163,7 @@ Configure how Miniflux processes feed content:
 For detailed documentation on rule syntax, focus on any rule field and press `x` to open the helper screen.
 
 #### Feed Information
+
 - **Last Checked** - Timestamp of the last successful fetch
 - **Parsing Errors** - Count of recent parsing errors
 - **Error Message** - Details of the last parsing error (if any)
@@ -166,6 +171,7 @@ For detailed documentation on rule syntax, focus on any rule field and press `x`
 - **Feed ID** - Unique identifier for the feed
 
 #### Danger Zone
+
 - **Delete Feed** - Permanently delete this feed (with confirmation)
 
 ### Editing Feed Settings
@@ -173,6 +179,7 @@ For detailed documentation on rule syntax, focus on any rule field and press `x`
 #### Making Changes
 
 When you modify any field:
+
 - An **unsaved indicator** appears showing the number of changed fields
 - Changes are **auto-saved** to a local draft every second
 - Your changes are preserved even if the app closes unexpectedly
@@ -207,6 +214,7 @@ Press `Escape` to cancel editing:
 #### Recovering Previous Changes
 
 If the application crashes or closes while editing:
+
 1. Open the feed settings again
 2. A recovery dialog appears asking if you want to recover the previous session
 3. Choose to **Recover** (restore previous changes), **Discard** (start fresh), or **Cancel** (stay in recovery mode)
@@ -214,12 +222,14 @@ If the application crashes or closes while editing:
 ### Rule Help
 
 Each rule field has an associated help screen. To view help:
+
 1. Focus on a rule field (Scraper, Rewrite, URL Rewrite, Blocking, or Keep Rules)
 2. Press `x` to open the help screen
 3. Review the rule syntax and examples
 4. Press `Escape` to close the help screen
 
 The help screen provides:
+
 - Complete rule syntax documentation
 - Common patterns and examples
 - Best practices for rule creation
@@ -227,6 +237,7 @@ The help screen provides:
 ### Deleting a Feed
 
 To delete a feed:
+
 1. Navigate to the "Danger Zone" section (scroll down)
 2. Press the delete button twice (first press shows confirmation)
 3. The feed is permanently removed from Miniflux
@@ -275,6 +286,7 @@ You can organize your feeds into categories via the Miniflux web interface or AP
 ### Category Information
 
 When deleting a category:
+
 - Feeds in that category will be moved to the default "Uncategorized" category
 - No feeds are deleted, only reassigned
 
@@ -283,6 +295,7 @@ When deleting a category:
 ### Feed Error Badges
 
 When viewing entries in grouped mode, feed headers display status information:
+
 - **⚠ ERRORS**: Feed has parsing errors (shown in yellow)
 - **⊘ DISABLED**: Feed is disabled (shown in red)
 - **(Category Name)**: Category assignment shown in parentheses
@@ -298,6 +311,7 @@ For detailed feed health information and error messages:
 | `i` | Show system status with detailed feed health |
 
 The status screen displays:
+
 - Total feed count and health summary
 - Detailed list of all problematic feeds
 - Error messages and last check timestamps
@@ -326,17 +340,20 @@ Fetch the latest entries from your Miniflux server to the TUI:
 | `,` | Sync entries from server (fetch new) |
 
 The sync will:
+
 1. Fetch the latest entries from your server
 2. Preserve your view settings and position
 3. Update the display with new/changed entries
 
 **Non-blocking sync (v0.7.0+):**
+
 - The sync runs in the background, so you can **continue navigating and reading entries** while it's happening
 - A loading animation shows sync progress in the header
 - You'll see a notification when sync completes showing what changed (e.g., "+5 new, -2 removed")
 - All operations (`r`, `R`, `,`, `g+u`, `g+b`) are non-blocking and keep the UI responsive
 
 **Typical workflow:**
+
 1. Press `r` or `Shift+R` to tell server to refresh feeds (non-blocking)
 2. Continue using the app while server fetches RSS content
 3. Press `,` to sync new entries to your TUI (non-blocking)
@@ -356,6 +373,7 @@ Press `Shift+T` to toggle between dark and light themes:
 - **Light Theme** - Using Textual's built-in light theme
 
 When you toggle the theme (v0.7.0+):
+
 1. The theme changes **instantly** without requiring a restart
 2. Your preference is saved to the config file
 3. A notification displays the selected theme

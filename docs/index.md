@@ -15,6 +15,7 @@ This project has reached production stability with comprehensive features includ
 ## Features
 
 ### Core Functionality
+
 - 📖 **Browse and read** RSS entries with keyboard navigation
 - ✓ **Mark entries** as read/unread, starred/unstarred
 - 💾 **Save entries** to third-party services (Pocket, Instapaper, etc.)
@@ -22,6 +23,7 @@ This project has reached production stability with comprehensive features includ
 - 📝 **HTML to Markdown** conversion for readable display
 
 ### Organization & Filtering
+
 - 🗂️ **Multiple sort modes** - date (newest first), feed (alphabetical), or status (unread first)
 - 📁 **Group by feed** or category with expand/collapse
 - 🔍 **Filter by status** - unread only or starred only
@@ -29,6 +31,7 @@ This project has reached production stability with comprehensive features includ
 - 🏷️ **Category management** - organize feeds into categories
 
 ### Feed Management
+
 - 🔄 **Auto-discover** feeds from URLs
 - ⚙️ **Configure feeds** - scraping rules, rewrite rules, fetch settings, blocklist/allowlist
 - 🔁 **Refresh feeds** - individual feeds or all feeds
@@ -36,6 +39,7 @@ This project has reached production stability with comprehensive features includ
 - 🛠️ **Feed settings editor** - comprehensive feed configuration
 
 ### User Experience
+
 - ⌨️ **Keyboard-driven** - extensive Vim-style shortcuts
 - 🎨 **Runtime theme switching** - toggle dark/light mode instantly with 'T' key (v0.7.0+)
 - 🔄 **Non-blocking sync** - navigate and read entries while syncing in background (v0.7.0+)

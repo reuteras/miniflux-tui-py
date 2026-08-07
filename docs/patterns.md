@@ -7,6 +7,7 @@ This guide covers common patterns used throughout miniflux-tui-py and how to app
 All API interactions should use the `api_call` context manager for consistent error handling.
 
 ### Bad Pattern (Pattern 1) - Avoid
+
 ```python
 async def action_toggle_read(self):
   """Mark entry as read."""

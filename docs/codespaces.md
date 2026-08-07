@@ -9,14 +9,17 @@ This guide explains how to use miniflux-tui-py in GitHub Codespaces with secure 
 Add your Miniflux credentials as Codespace secrets. If these are set before creating your codespace, the configuration will be created automatically on first run - no manual setup needed!
 
 **Repository Secrets** (recommended for project-specific setup):
+
 1. Go to your repository on GitHub
 2. Navigate to **Settings** → **Secrets and variables** → **Codespaces**
 3. Click **New repository secret**
 4. Add these secrets:
-  - `MINIFLUX_SERVER_URL`: Your Miniflux server URL (e.g., `https://miniflux.example.com`)
-  - `MINIFLUX_API_KEY`: Your Miniflux API token
+
+- `MINIFLUX_SERVER_URL`: Your Miniflux server URL (e.g., `https://miniflux.example.com`)
+- `MINIFLUX_API_KEY`: Your Miniflux API token
 
 **User Secrets** (for personal use across all your codespaces):
+
 1. Go to [GitHub Settings](https://github.com/settings/codespaces)
 2. Scroll to **Codespaces secrets**
 3. Add the same secrets as above
@@ -91,6 +94,7 @@ The easiest way to use Tailscale with Codespaces is to configure it in your `dev
 ```
 
 **Key Configuration:**
+
 - `runArgs`: Enables the TUN device required by Tailscale
 - `features`: Installs and configures Tailscale automatically
 - `postCreateCommand`: Installs miniflux-tui-py and creates the config
@@ -98,6 +102,7 @@ The easiest way to use Tailscale with Codespaces is to configure it in your `dev
 **Automatic Installation & Authentication:**
 
 If `TAILSCALE_AUTHKEY` is set as an environment variable, miniflux-tui will automatically:
+
 1. **Install Tailscale** (if not already installed) using the official install script
 2. **Authenticate** by running `tailscale set --accept-routes`
 3. Prompt you to visit a URL to complete authentication
@@ -123,17 +128,18 @@ If you prefer not to use devcontainer.json, you can install Tailscale manually u
 1. Go to [Tailscale Admin Console → Settings → Keys](https://login.tailscale.com/admin/settings/keys)
 2. Click **Generate auth key**
 3. Configure the key:
-  - **Reusable**: Enable (allows multiple codespace instances)
-  - **Ephemeral**: Enable (automatically removes device when disconnected)
-  - **Tags**: Optional (e.g., `tag:codespace`)
+    - **Reusable**: Enable (allows multiple codespace instances)
+    - **Ephemeral**: Enable (automatically removes device when disconnected)
+    - **Tags**: Optional (e.g., `tag:codespace`)
 4. Copy the generated key (starts with `tskey-auth-...`)
 
 #### Add Auth Key as Codespace Secret
 
 1. Go to your repository **Settings** → **Secrets and variables** → **Codespaces**
 2. Add a new secret:
-  - Name: `TAILSCALE_AUTHKEY`
-  - Value: Your auth key from above
+
+- Name: `TAILSCALE_AUTHKEY`
+- Value: Your auth key from above
 
 #### Install and Connect
 
@@ -187,6 +193,7 @@ allow_invalid_certs = true
 **Problem**: The application can't find the `MINIFLUX_SERVER_URL` environment variable.
 
 **Solution**:
+
 1. Verify the secret is set in GitHub Settings → Codespaces
 2. Restart your codespace (secrets are only loaded at codespace creation)
 3. Or manually set it in the terminal: `export MINIFLUX_SERVER_URL="https://your-server.com"`
@@ -196,6 +203,7 @@ allow_invalid_certs = true
 **Problem**: The `MINIFLUX_API_KEY` environment variable is not set or empty.
 
 **Solution**:
+
 1. Check the secret is set in GitHub Settings
 2. Restart your codespace
 3. Or manually set it: `export MINIFLUX_API_KEY="your-token-here"`
@@ -205,6 +213,7 @@ allow_invalid_certs = true
 **Problem**: `sudo tailscale up` fails with authentication error.
 
 **Solution**:
+
 1. Verify `TAILSCALE_AUTHKEY` secret is set correctly
 2. Check that the auth key hasn't expired
 3. Generate a new auth key and update the secret
@@ -215,6 +224,7 @@ allow_invalid_certs = true
 **Problem**: Connection times out or refused.
 
 **Solution**:
+
 1. Verify your Miniflux server is running and connected to Tailscale
 2. Check the Tailscale IP/hostname is correct: `tailscale status`
 3. Test connectivity: `curl http://[tailscale-ip]:8080/healthcheck`

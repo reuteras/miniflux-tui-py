@@ -161,6 +161,7 @@ The list items use CSS-based hiding for collapsed feeds (via the "collapsed" cla
 ## Styling
 
 The application uses Textual's CSS system. Main styles are defined in:
+
 - `miniflux_tui/ui/app.py` - Application-wide styles
 - Screen CSS in individual screen files
 

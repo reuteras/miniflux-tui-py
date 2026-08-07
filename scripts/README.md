@@ -9,6 +9,7 @@ This directory contains utility scripts for project maintenance and automation.
 Builds standalone binary distributions of miniflux-tui using PyInstaller.
 
 **Purpose:**
+
 - Creates single-file executable for distribution
 - Useful for users without Python installed
 
@@ -31,10 +32,10 @@ uv run scripts/build_binary.py
 When adding new scripts:
 
 1. Follow bash best practices:
-  - Use `set -euo pipefail` for error handling
-  - Add clear comments and documentation
-  - Include usage examples
-  - Add colored output for better UX
+    - Use `set -euo pipefail` for error handling
+    - Add clear comments and documentation
+    - Include usage examples
+    - Add colored output for better UX
 2. Make scripts executable: `chmod +x scripts/your_script.sh`
 3. Update this README with script description and usage
 4. Test thoroughly before committing

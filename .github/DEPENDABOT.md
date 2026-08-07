@@ -5,6 +5,7 @@ This project uses Dependabot to automatically update dependencies and GitHub Act
 ## How It Works
 
 ### Schedule
+
 - **Frequency**: Weekly (Mondays at 03:00 UTC)
 - **Max PRs**: 5 open at a time
 - **Packages**: Python dependencies (pip) and GitHub Actions
@@ -12,11 +13,13 @@ This project uses Dependabot to automatically update dependencies and GitHub Act
 ### Auto-Merge Strategy
 
 Dependabot PRs are automatically approved and merged if:
+
 1. ✅ All CI checks pass (tests, linting, type checking)
 2. ✅ PR is from `dependabot[bot]`
 3. ✅ Update is minor or patch version (not major)
 
 The workflow (`dependabot-auto-merge.yml`):
+
 - Approves the PR automatically
 - Enables auto-merge with squash strategy
 - Waits for all GitHub Status checks to pass
@@ -27,6 +30,7 @@ The workflow (`dependabot-auto-merge.yml`):
 Dependencies are grouped for easier management:
 
 **Development Dependencies** (auto-mergeable):
+
 - pytest, pytest-asyncio, pytest-cov
 - ruff (linter/formatter)
 - pyright (type checker)
@@ -34,6 +38,7 @@ Dependencies are grouped for easier management:
 - pylint
 
 **Production Dependencies** (require review for major updates):
+
 - textual (TUI framework)
 - miniflux (API client)
 - html2text (HTML to Markdown)
@@ -41,6 +46,7 @@ Dependencies are grouped for easier management:
 ### Manual Review
 
 Major version updates are NOT auto-merged and require manual review:
+
 - Review the changelog
 - Check for breaking changes
 - Run manual tests if needed
@@ -63,6 +69,7 @@ If Dependabot updates cause issues:
 ### GitHub Actions Updates
 
 Dependabot also updates GitHub Actions (workflows):
+
 - Auto-approved and merged
 - Always safe as they're tested before merge
 - Help keep CI/CD pipeline up to date

@@ -4,7 +4,7 @@ This guide documents the **fully automated** release process for miniflux-tui-py
 
 ## Quick Start (TL;DR)
 
-1. Go to: https://github.com/reuteras/miniflux-tui-py/actions/workflows/release.yml
+1. Go to: <https://github.com/reuteras/miniflux-tui-py/actions/workflows/release.yml>
 2. Click "Run workflow"
 3. Enter version (e.g., `0.5.3`) or choose bump type
 4. Click "Run workflow"
@@ -20,14 +20,15 @@ When you trigger the release workflow, GitHub Actions will:
 4. ✅ Auto-merge the PR
 5. ✅ Create a signed git tag (using Sigstore Gitsign)
 6. ✅ Trigger the publish workflow:
-  - Build Python packages (wheel + sdist)
-  - Publish to PyPI with attestations
-  - Build binaries for Linux, macOS, Windows
-  - Generate SBOMs (CycloneDX + SPDX)
-  - Sign all artifacts with cosign
-  - Generate SLSA provenance
-  - **Publish GitHub release** (not a draft!)
-  - Mark as "latest" release
+
+- Build Python packages (wheel + sdist)
+- Publish to PyPI with attestations
+- Build binaries for Linux, macOS, Windows
+- Generate SBOMs (CycloneDX + SPDX)
+- Sign all artifacts with cosign
+- Generate SLSA provenance
+- **Publish GitHub release** (not a draft!)
+- Mark as "latest" release
 
 **Total time**: ~10-15 minutes from trigger to published release on PyPI and GitHub.
 
@@ -60,6 +61,7 @@ gh run list --workflow=release.yml --limit 1
 ```
 
 The workflow will automatically:
+
 - Create release PR
 - Wait for CI to pass
 - Merge the PR
@@ -84,15 +86,18 @@ pip install miniflux-tui-py --upgrade
 Each release includes:
 
 ### Python Packages
+
 - `miniflux-tui-py-X.Y.Z.tar.gz` - Source distribution
 - `miniflux_tui_py-X.Y.Z-py3-none-any.whl` - Wheel
 
 ### Standalone Binaries
+
 - `miniflux-tui-linux-x86_64.tar.gz`
 - `miniflux-tui-macos.tar.gz`
 - `miniflux-tui-windows.zip`
 
 ### Security Artifacts
+
 - `*.sig` - Cosign signatures for all artifacts
 - `*.sig.bundle` - Signature bundles with certificates
 - `*.cdx.json` - CycloneDX SBOMs
@@ -177,6 +182,7 @@ We follow [Semantic Versioning](https://semver.org/):
 - **PATCH** (0.0.X): Bug fixes, backwards compatible
 
 When using `bump_type`:
+
 - `patch`: 0.5.2 → 0.5.3
 - `minor`: 0.5.2 → 0.6.0
 - `major`: 0.5.2 → 1.0.0
@@ -195,6 +201,7 @@ The release process uses **Sigstore Gitsign** and **Cosign** for keyless cryptog
 ### Prerequisites
 
 All signing is automatic! No local setup needed. The workflows require:
+
 1. `id-token: write` permission (already configured)
 2. GitHub provides OIDC tokens automatically
 3. Gitsign/Cosign use these tokens for signing
@@ -202,6 +209,7 @@ All signing is automatic! No local setup needed. The workflows require:
 ### Transparency Logs
 
 All signatures are publicly logged:
+
 - Git tags: [Sigstore Rekor](https://rekor.sigstore.dev/)
 - Artifacts: [Sigstore Rekor](https://rekor.sigstore.dev/)
 - Attestations: [GitHub](https://github.com/reuteras/miniflux-tui-py/attestations)
@@ -212,7 +220,7 @@ Changelogs are automatically generated using [git-cliff](https://git-cliff.org/)
 
 ### Conventional Commit Format
 
-```
+```text
 <type>(<scope>): <description>
 
 [optional body]
@@ -221,6 +229,7 @@ Changelogs are automatically generated using [git-cliff](https://git-cliff.org/)
 ```
 
 ### Types
+
 - `feat`: New feature
 - `fix`: Bug fix
 - `docs`: Documentation changes
@@ -241,13 +250,14 @@ git commit -m "docs: update installation instructions"
 
 The first release requires PyPI trusted publisher configuration:
 
-1. Visit https://pypi.org/account/publishing/
+1. Visit <https://pypi.org/account/publishing/>
 2. Add a trusted publisher with:
-  - **Project:** `miniflux-tui-py`
-  - **Repository owner:** `reuteras`
-  - **Repository name:** `miniflux-tui-py`
-  - **Workflow filename:** `publish.yml`
-  - **Environment:** `pypi`
+
+- **Project:** `miniflux-tui-py`
+- **Repository owner:** `reuteras`
+- **Repository name:** `miniflux-tui-py`
+- **Workflow filename:** `publish.yml`
+- **Environment:** `pypi`
 
 This is already configured for this project.
 

@@ -7,6 +7,7 @@ If you discover a security vulnerability in miniflux-tui-py, please **do not** c
 **[peter@reuteras.net](mailto:peter@reuteras.net)**
 
 Please include:
+
 1. A description of the vulnerability
 2. Steps to reproduce the issue
 3. Potential impact
@@ -44,6 +45,7 @@ pip install --upgrade miniflux-tui-py
 ## Dependency Security
 
 We use:
+
 - [Dependabot](https://dependabot.com/) to monitor for vulnerable dependencies
 - Pre-commit hooks to catch common security issues
 - Regular security audits
@@ -53,6 +55,7 @@ We use:
 ### Local Storage of Credentials
 
 The application stores your Miniflux API key in the configuration file. Ensure your system:
+
 - Has restricted file permissions on the config directory
 - Is protected with a password/lockscreen
 - Keeps the file on an encrypted filesystem when possible
@@ -60,6 +63,7 @@ The application stores your Miniflux API key in the configuration file. Ensure y
 ### Miniflux Server
 
 The security of your miniflux-tui-py installation depends on:
+
 - Your Miniflux server's security
 - The security of your network connection to the server
 - The strength of your API key
@@ -67,6 +71,7 @@ The security of your miniflux-tui-py installation depends on:
 ## Responsible Disclosure
 
 We follow responsible disclosure practices and ask that you:
+
 1. Give us reasonable time to fix the vulnerability before public disclosure
 2. Do not publicly disclose the vulnerability until a fix is available
 3. Do not access data beyond what's necessary to confirm the vulnerability

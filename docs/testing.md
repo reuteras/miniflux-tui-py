@@ -13,6 +13,7 @@ The miniflux-tui-py project has **78% test coverage** with **426 tests**. Tests 
 ## Running Tests
 
 ### Run All Tests
+
 ```bash
 uv run pytest tests/
 ```text

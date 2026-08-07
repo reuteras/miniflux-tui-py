@@ -66,11 +66,12 @@ The analyzer uses multiple signals to rank selectors:
 
 ### Scoring Algorithm
 
-```
+```text
 score = (paragraphs × 5) + min(text_length / 10, 100) + tag_bonus - link_penalty
 ```
 
 **Tag bonuses**:
+
 - `<article>`: +50
 - `<main>`: +40
 - `#content`, `#main-content`: +30
@@ -102,6 +103,7 @@ score = (paragraphs × 5) + min(text_length / 10, 100) + tag_bonus - link_penalt
 **URL**: `https://blog.example.com/post/123`
 
 **Top suggestions**:
+
 1. ⭐150 - `article.post-content`
 2. ⭐120 - `#main-content`
 3. ⭐100 - `.entry-content`
@@ -123,6 +125,7 @@ score = (paragraphs × 5) + min(text_length / 10, 100) + tag_bonus - link_penalt
 **Problem**: Generic classes, no semantic tags
 
 **Solution**:
+
 1. Review suggestions (not great)
 2. Enter custom: `div.story-text`
 3. Test → Preview looks good
@@ -140,6 +143,7 @@ score = (paragraphs × 5) + min(text_length / 10, 100) + tag_bonus - link_penalt
 ## Future Enhancements
 
 Potential improvements:
+
 - Rule templates for popular sites
 - Community rule database
 - Batch testing on multiple entries

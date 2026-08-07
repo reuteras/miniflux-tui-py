@@ -23,7 +23,7 @@ git clone https://github.com/YOUR_USERNAME/miniflux-tui-py.git
 cd miniflux-tui-py
 ```
 
-2. **Install dependencies with uv:**
+1. **Install dependencies with uv:**
 
 ```bash
 uv sync --all-groups
@@ -31,7 +31,7 @@ uv sync --all-groups
 
 This will install all development and documentation dependencies including pytest, ruff, pyright, and zensical.
 
-3. **Verify your setup:**
+1. **Verify your setup:**
 
 ```bash
 uv run miniflux-tui --check-config
@@ -105,7 +105,8 @@ Longer description of what changed and why.
 git push origin feature/your-feature-name
 ```
 
-2. **Create a pull request on GitHub:**
+1. **Create a pull request on GitHub:**
+
 - Go to the main repository
 - Click "New Pull Request"
 - Select your feature branch
@@ -170,6 +171,7 @@ def test_entry_properties():
 - PRs that reduce coverage may be rejected
 
 Check local coverage:
+
 ```bash
 uv run pytest tests --cov=miniflux_tui --cov-report=term-missing
 ```
@@ -177,6 +179,7 @@ uv run pytest tests --cov=miniflux_tui --cov-report=term-missing
 ### Python Version Support
 
 miniflux-tui-py is tested on:
+
 - **Supported versions**: Python 3.11, 3.12, 3.13, 3.14
 - **Preview versions**: Python 3.15 (optional, may fail)
 - **All platforms**: Linux (Ubuntu), macOS, Windows
@@ -197,9 +200,11 @@ Documentation is built with Zensical and located in the `docs/` folder.
 
 1. Edit files in the `docs/` folder (Markdown format)
 2. Preview locally:
-  ```bash
-  uv run zensical serve
-  ```
+
+    ```bash
+    uv run zensical serve
+    ```
+
 3. View at <http://localhost:8000>
 
 ### Documentation Guidelines
