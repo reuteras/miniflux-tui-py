@@ -47,10 +47,10 @@ repos:
         language: node
         types: [markdown]
         additional_dependencies: ["markdown-table-formatter@1.6.1"]
-  - repo: https://github.com/gitleaks/gitleaks
-    rev: v8.30.1
+  - repo: https://github.com/betterleaks/betterleaks
+    rev: v1.7.3
     hooks:
-      - id: gitleaks
+      - id: betterleaks
   - repo: https://github.com/pylint-dev/pylint
     rev: v4.0.6
     hooks:
