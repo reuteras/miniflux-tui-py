@@ -3,14 +3,15 @@
 
 from __future__ import annotations
 
-import httpx
+from miniflux_tui.docs_fetcher import DocsFetcher
 
 
 class DocsCache:
     """Session-based documentation cache for Miniflux rule documentation.
 
-    Fetches documentation snippets on-demand and caches them in memory for
-    the duration of the session to avoid repeated network requests.
+    Fetches documentation snippets on-demand (via DocsFetcher) and caches
+    them in memory for the duration of the session to avoid repeated
+    network requests.
 
     Attributes:
         cache: Dictionary storing cached documentation snippets by rule type
@@ -19,6 +20,7 @@ class DocsCache:
     def __init__(self) -> None:
         """Initialize the documentation cache."""
         self.cache: dict[str, str] = {}
+        self._fetcher = DocsFetcher()
 
     async def get_documentation(self, rule_type: str) -> str:
         """Fetch documentation snippet, cache it for session duration.
@@ -55,32 +57,10 @@ class DocsCache:
             Documentation snippet, or empty string if fetch fails
         """
         try:
-            return await self._fetch_docs_content(rule_type)
+            return await self._fetcher.fetch_snippet(rule_type)
         except Exception:
             # Return empty string on any error - don't crash the app
             return ""
-
-    async def _fetch_docs_content(self, rule_type: str) -> str:
-        """Fetch and extract documentation content from web.
-
-        Args:
-            rule_type: Type of rule documentation to fetch
-
-        Returns:
-            Cleaned documentation text
-
-        Raises:
-            Exception: Any network or parsing error
-        """
-        url = "https://miniflux.app/docs/rules.html"
-
-        async with httpx.AsyncClient(timeout=10.0) as client:
-            response = await client.get(url)
-            response.raise_for_status()
-
-        # Parse HTML and extract relevant section
-        # This will be implemented by DocsFetcher
-        return f"Documentation for {rule_type} would be extracted from {url}"
 
     def clear(self) -> None:
         """Clear all cached documentation."""

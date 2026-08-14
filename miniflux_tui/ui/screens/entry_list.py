@@ -40,7 +40,7 @@ class CollapsibleListView(ListView):
         if len(self.children) == 0:
             return
 
-        current_index = self.index
+        current_index: int | None = self.index
         if current_index is None:
             current_index = -1
 
@@ -60,7 +60,7 @@ class CollapsibleListView(ListView):
         if len(self.children) == 0:
             return
 
-        current_index = self.index
+        current_index: int | None = self.index
         if current_index is None:
             current_index = len(self.children)
 

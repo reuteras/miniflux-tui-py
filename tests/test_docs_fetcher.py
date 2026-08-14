@@ -78,8 +78,8 @@ class TestDocsFetcherValidation:
             "scraper_rules",
             "rewrite_rules",
             "url_rewrite_rules",
-            "blocking_rules",
-            "keep_rules",
+            "blocklist_rules",
+            "keeplist_rules",
             "entry_blocking_rules",
             "entry_allow_rules",
         }

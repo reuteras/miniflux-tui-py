@@ -16,8 +16,8 @@ RULE_TYPES = {
     "scraper_rules": "scraper-rules",
     "rewrite_rules": "rewrite-rules",
     "url_rewrite_rules": "url-rewrite-rules",
-    "blocking_rules": "regex-based-blocking-filters",
-    "keep_rules": "regex-based-keep-filters",
+    "blocklist_rules": "regex-based-blocking-filters",
+    "keeplist_rules": "regex-based-keep-filters",
     "entry_blocking_rules": "entry-blocking-rules",
     "entry_allow_rules": "entry-allow-rules",
 }

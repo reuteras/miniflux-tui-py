@@ -3,6 +3,8 @@
 
 from __future__ import annotations
 
+from unittest.mock import AsyncMock, patch
+
 import pytest
 
 from miniflux_tui.docs_cache import DocsCache
@@ -10,8 +12,10 @@ from miniflux_tui.docs_cache import DocsCache
 
 @pytest.fixture
 def cache():
-    """Create a fresh DocsCache instance for each test."""
-    return DocsCache()
+    """Create a fresh DocsCache instance with a mocked fetcher (no network)."""
+    docs_cache = DocsCache()
+    docs_cache._fetcher.fetch_snippet = AsyncMock(side_effect=lambda rule_type: f"Documentation for {rule_type}")
+    return docs_cache
 
 
 class TestDocsCacheInitialization:
@@ -53,6 +57,13 @@ class TestDocsCacheMethods:
         assert isinstance(result, str)
 
     @pytest.mark.asyncio
+    async def test_get_documentation_fetches_real_content_via_fetcher(self, cache):
+        """Test that get_documentation delegates to DocsFetcher.fetch_snippet."""
+        result = await cache.get_documentation("scraper_rules")
+        cache._fetcher.fetch_snippet.assert_awaited_once_with("scraper_rules")
+        assert result == "Documentation for scraper_rules"
+
+    @pytest.mark.asyncio
     async def test_get_documentation_caches_result(self, cache):
         """Test that documentation is cached after first fetch."""
         rule_type = "scraper_rules"
@@ -66,7 +77,7 @@ class TestDocsCacheMethods:
 
     @pytest.mark.asyncio
     async def test_get_documentation_returns_cached_value(self, cache):
-        """Test that subsequent calls return cached value."""
+        """Test that subsequent calls return cached value without re-fetching."""
         rule_type = "rewrite_rules"
 
         # First call
@@ -79,11 +90,12 @@ class TestDocsCacheMethods:
         result2 = await cache.get_documentation(rule_type)
         assert result2 == cached_value
         assert result1 == result2
+        cache._fetcher.fetch_snippet.assert_awaited_once()
 
     @pytest.mark.asyncio
     async def test_get_documentation_multiple_rule_types(self, cache):
         """Test caching multiple different rule types."""
-        rule_types = ["scraper_rules", "rewrite_rules", "blocking_rules"]
+        rule_types = ["scraper_rules", "rewrite_rules", "blocklist_rules"]
 
         for rule_type in rule_types:
             result = await cache.get_documentation(rule_type)
@@ -136,7 +148,7 @@ class TestDocsCacheGetCachedKeys:
     @pytest.mark.asyncio
     async def test_get_cached_keys_contains_cached_items(self, cache):
         """Test that get_cached_keys() contains all cached items."""
-        rule_types = ["scraper_rules", "rewrite_rules", "blocking_rules"]
+        rule_types = ["scraper_rules", "rewrite_rules", "blocklist_rules"]
 
         for rule_type in rule_types:
             await cache.get_documentation(rule_type)
@@ -160,12 +172,18 @@ class TestDocsCacheFetchError:
     """Test DocsCache error handling during fetch."""
 
     @pytest.mark.asyncio
-    async def test_fetch_returns_empty_string_on_error(self, cache):
-        """Test that fetch errors return empty string instead of raising."""
-        # This tests the error handling in _fetch_from_web
-        # It should return empty string rather than raising
+    async def test_fetch_returns_empty_string_on_unknown_rule_type(self, cache):
+        """Test that an unknown rule_type (rejected by DocsFetcher) returns empty string."""
+        cache._fetcher.fetch_snippet = AsyncMock(side_effect=ValueError("Unknown rule type"))
         result = await cache.get_documentation("invalid_rule_type_that_will_cause_error_xyz")
-        assert isinstance(result, str)
+        assert result == ""
+
+    @pytest.mark.asyncio
+    async def test_fetch_returns_empty_string_on_network_error(self, cache):
+        """Test that network errors are swallowed and return empty string, not raised."""
+        cache._fetcher.fetch_snippet = AsyncMock(side_effect=TimeoutError("Timeout fetching docs"))
+        result = await cache.get_documentation("scraper_rules")
+        assert result == ""
 
 
 class TestDocsCacheFetchFromWeb:
@@ -184,8 +202,8 @@ class TestDocsCacheFetchFromWeb:
             "scraper_rules",
             "rewrite_rules",
             "url_rewrite_rules",
-            "blocking_rules",
-            "keep_rules",
+            "blocklist_rules",
+            "keeplist_rules",
             "entry_blocking_rules",
             "entry_allow_rules",
         ]
@@ -206,8 +224,8 @@ class TestDocsCacheIntegration:
             "scraper_rules",
             "rewrite_rules",
             "url_rewrite_rules",
-            "blocking_rules",
-            "keep_rules",
+            "blocklist_rules",
+            "keeplist_rules",
             "entry_blocking_rules",
             "entry_allow_rules",
         ]
@@ -228,3 +246,16 @@ class TestDocsCacheIntegration:
         # Clear at end of session
         cache.clear()
         assert len(cache.get_cached_keys()) == 0
+
+
+class TestDocsCacheNoNetwork:
+    """Guard against accidental real network calls from DocsCache tests."""
+
+    @pytest.mark.asyncio
+    async def test_get_documentation_never_touches_httpx(self):
+        """Test that no real HTTP client is used when the fetcher is mocked out."""
+        with patch("httpx.AsyncClient.get", side_effect=AssertionError("real network call attempted")):
+            docs_cache = DocsCache()
+            docs_cache._fetcher.fetch_snippet = AsyncMock(return_value="mocked")
+            result = await docs_cache.get_documentation("scraper_rules")
+            assert result == "mocked"
