@@ -622,7 +622,7 @@ class TestStatusScreenIntegration:
     def test_status_screen_bindings_valid_keys(self):
         """Test that binding keys are valid."""
         status_screen = StatusScreen()
-        valid_keys = {"escape", "q", "r", "shift+r"}
+        valid_keys = {"escape", "q", "r", "R"}
         binding_keys = {b.key for b in status_screen.BINDINGS}  # type: ignore[attr-defined]
         assert binding_keys == valid_keys
 

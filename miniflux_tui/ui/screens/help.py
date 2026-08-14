@@ -65,7 +65,7 @@ class HelpScreen(Screen):
             yield Static("  s               Cycle sort mode (date/feed/status)")
             yield Static("  w               Toggle grouping by feed")
             yield Static("  C               Toggle grouping by category")
-            yield Static("  Shift+L         Expand all feeds")
+            yield Static("  Shift+l         Expand all feeds")
             yield Static("  Z               Collapse all feeds")
             yield Static("  /               Search entries (interactive dialog)")
             yield Static("  [dim]Feed headers show category and error status[/dim]")

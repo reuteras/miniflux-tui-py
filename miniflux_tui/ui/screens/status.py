@@ -17,7 +17,7 @@ class StatusScreen(Screen):
         Binding("escape", "close", "Close"),
         Binding("q", "close", "Close"),
         Binding("r", "refresh", "Refresh Status"),
-        Binding("shift+r", "refresh_failed_feeds", "Refresh Failed Feeds"),
+        Binding("R", "refresh_failed_feeds", "Refresh Failed Feeds"),
     ]
 
     def __init__(self, **kwargs):
@@ -61,7 +61,7 @@ class StatusScreen(Screen):
             yield Static(id="error-feeds-list")
             yield Static()
 
-            yield Static("[dim]Press r to refresh status, Shift+R to refresh failed feeds, Esc or q to close[/dim]")
+            yield Static("[dim]Press r to refresh status, Shift+r to refresh failed feeds, Esc or q to close[/dim]")
 
         yield footer
 

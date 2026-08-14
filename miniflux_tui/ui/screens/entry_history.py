@@ -7,7 +7,7 @@ from miniflux_tui.ui.screens.entry_list import EntryListScreen
 class EntryHistoryScreen(EntryListScreen):
     """Screen displaying previously read entries - extends EntryListScreen.
 
-    Pressing Shift+H in this screen returns to the main entry list.
+    Pressing Shift+h in this screen returns to the main entry list.
     """
 
     def __init__(self, **kwargs):
@@ -64,7 +64,7 @@ class EntryHistoryScreen(EntryListScreen):
     def action_show_history(self):
         """Return to main entry list (override parent method).
 
-        In history view, pressing Shift+H returns to the main entry list
+        In history view, pressing Shift+h returns to the main entry list
         instead of opening history again.
         """
         self.app.log("History screen: action_show_history - popping back to main list")

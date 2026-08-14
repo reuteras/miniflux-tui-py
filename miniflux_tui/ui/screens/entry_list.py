@@ -256,7 +256,7 @@ class EntryListScreen(Screen):
         Binding("s", "cycle_sort", "Cycle Sort"),
         Binding("w", "toggle_group_feed", "Group by Feed", show=False),
         Binding("C", "toggle_group_category", "Group by Category", show=False),
-        Binding("shift+l", "expand_all", "Expand All", show=False),
+        Binding("L", "expand_all", "Expand All", show=False),
         Binding("Z", "collapse_all", "Collapse All"),
         Binding("G", "go_to_bottom", "Go to Bottom", show=False),
         Binding("h", "collapse_fold", "Collapse Feed/Category"),
@@ -1766,7 +1766,7 @@ class EntryListScreen(Screen):
         self._handle_fold_action(expand=True)
 
     def action_expand_all(self):
-        """Expand all feeds or categories (Shift+G).
+        """Expand all feeds or categories (Shift+l).
 
         If not in grouped mode, enable feed grouping first.
         Then expand all collapsed items.
@@ -1794,7 +1794,7 @@ class EntryListScreen(Screen):
             self.notify("All categories expanded")
 
     def action_collapse_all(self):
-        """Collapse all feeds or categories (Shift+Z)."""
+        """Collapse all feeds or categories (Shift+z)."""
         if not self.list_view or (not self.group_by_feed and not self.group_by_category):
             return
 
