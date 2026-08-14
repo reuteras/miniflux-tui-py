@@ -5,6 +5,49 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.8.15] - 2026-08-14
+
+### CI/CD
+
+- switch from gitleaks to betterleaks
+
+### MAINTENANCE
+
+- bump the actions-deps group with 6 updates (#856) 🤖
+- bump mypy from 2.1.0 to 2.3.0 (#855) 🤖
+- pre-commit autoupdate (#857)
+- migrate pre-commit updates to Dependabot
+- add markdownlint pre-commit hook
+- bump the pre-commit-deps group with 7 updates (#858) 🤖
+- bump the actions-deps group with 6 updates (#859) 🤖
+- bump the actions-deps group with 4 updates (#860) 🤖
+
+
+
+#### Contributors
+
+Thank you to everyone who contributed to this release!
+
+**Humans:** 👤 Peter Reuterås
+
+**AI & Automation:** 🤖 Claude (AI Assistant), dependabot[bot] (Dependencies)
+
+## [v0.8.14] - 2026-07-28
+
+### MAINTENANCE
+
+- Release v0.8.14 (#854)
+
+
+
+#### Contributors
+
+Thank you to everyone who contributed to this release!
+
+**Humans:** 👤 Peter Reuterås
+
+**AI & Automation:** 🤖 Claude (AI Assistant)
+
 ## [v0.8.13] - 2026-07-28
 
 ### MAINTENANCE
@@ -1955,3 +1998,4 @@ Thank you to everyone who contributed to this release!
 **Humans:** 👤 Peter Reuterås
 
 **AI & Automation:** 🤖 Claude (AI Assistant)
+
