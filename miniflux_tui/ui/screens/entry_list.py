@@ -1326,6 +1326,10 @@ class EntryListScreen(Screen):
                 current_index = -1
                 self._safe_log("action_cursor_down: index was None, starting from -1")
 
+            # Clamp current_index to valid bounds to prevent an empty range/IndexError.
+            # This can happen if the list was rebuilt with fewer items (e.g. after sync).
+            current_index = min(current_index, len(self.list_view.children) - 1)
+
             # Move to next item and skip hidden ones
             for i in range(current_index + 1, len(self.list_view.children)):
                 widget = self.list_view.children[i]
@@ -1353,6 +1357,10 @@ class EntryListScreen(Screen):
             # If index is None, start from len so we search backwards from end
             if current_index is None:
                 current_index = len(self.list_view.children)
+
+            # Clamp current_index to valid bounds to prevent an IndexError.
+            # This can happen if the list was rebuilt with fewer items (e.g. after sync).
+            current_index = min(current_index, len(self.list_view.children))
 
             # Move to previous item and skip hidden ones
             for i in range(current_index - 1, -1, -1):
