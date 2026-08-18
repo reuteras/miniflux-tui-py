@@ -97,7 +97,7 @@ class StatusScreen(Screen):
             # Keep the app-level feed cache in sync so the header's failed-feed
             # count reflects what this screen just fetched.
             if hasattr(self.app, "feeds"):
-                self.app.feeds = self.feeds
+                self.app.feeds = self.feeds  # type: ignore[attr-defined]
 
             # Update the display
             self._update_display()
