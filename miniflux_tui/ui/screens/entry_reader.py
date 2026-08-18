@@ -320,6 +320,10 @@ class EntryReaderScreen(Screen):
         if self.entry.is_unread:
             await self._mark_entry_as_read()
 
+    def on_screen_resume(self) -> None:
+        """Called when screen is resumed (e.g., after closing the status screen)."""
+        self._update_sub_title()
+
     def _check_terminal_size(self) -> None:
         """Check if terminal meets minimum size requirements.
 

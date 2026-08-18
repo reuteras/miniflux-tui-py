@@ -94,6 +94,11 @@ class StatusScreen(Screen):
             # Filter feeds with errors
             self.error_feeds = [feed for feed in self.feeds if feed.has_errors or feed.disabled]
 
+            # Keep the app-level feed cache in sync so the header's failed-feed
+            # count reflects what this screen just fetched.
+            if hasattr(self.app, "feeds"):
+                self.app.feeds = self.feeds
+
             # Update the display
             self._update_display()
 

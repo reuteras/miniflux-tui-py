@@ -2195,6 +2195,10 @@ class EntryListScreen(Screen):
             new_count, removed_count, _, new_entry_ids = await self._perform_incremental_sync()
             self._safe_log(f"Incremental sync completed: +{new_count} new, -{removed_count} removed")
 
+            # Refresh the feed cache too, so the header's failed-feed count
+            # reflects feeds that were fixed/broken since the app started.
+            await self.app.load_feeds()
+
             self._format_sync_summary(new_count, removed_count)
 
             # Yield to event loop so Textual can process the first populate,
