@@ -19,7 +19,7 @@
 [![pre-commit](https://img.shields.io/badge/pre--commit-enabled-brightgreen?logo=pre-commit)](https://github.com/pre-commit/pre-commit)
 [![OpenSSF Best Practices](https://www.bestpractices.dev/projects/11362/badge?t=2025)](https://www.bestpractices.dev/projects/11362)
 
-A [Python](https://www.python.org) TUI (Terminal User Interface) client for the [Miniflux](https://miniflux.app) self-hosted RSS reader built with [Textual](https://github.com/textualize/textual/).
+A [Python](https://www.python.org) TUI (Terminal User Interface) client for the [Miniflux](https://miniflux.app) self-hosted feed reader built with [Textual](https://github.com/textualize/textual/).
 
 ## Status
 
@@ -39,7 +39,7 @@ This project has reached production stability with:
 
 ### Core Functionality
 
-- 📖 **Browse and read** RSS entries with keyboard navigation
+- 📖 **Browse and read** feed entries with keyboard navigation
 - ✓ **Mark entries** as read/unread, starred/unstarred
 - 💾 **Save entries** to third-party services (Pocket, Instapaper, etc.)
 - 🌐 **Open in browser** or fetch original content for truncated entries
