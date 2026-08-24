@@ -100,7 +100,7 @@ miniflux-tui
 
 **Note:** After installation with `uv tool install` or `pip install`, you can run the application directly with `miniflux-tui` (no `uv run` needed). You can also run it as a Python module: `python -m miniflux_tui`.
 
-### Prebuilt Binaries (GitHub Releases)
+### Pre-built Binaries (GitHub Releases)
 
 If you do not want to manage a Python environment, each tagged release now attaches standalone binaries for Linux (x86_64), macOS (arm64), and Windows (x86_64):
 
@@ -330,7 +330,6 @@ Contributions are welcome! See [CONTRIBUTING.md](CONTRIBUTING.md) for details on
 For release information and troubleshooting, see:
 
 - [RELEASE.md](RELEASE.md) - How to create releases
-- [docs/RELEASE_TROUBLESHOOTING.md](docs/RELEASE_TROUBLESHOOTING.md) - Handling release failures
 
 ## Development
 
