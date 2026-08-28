@@ -5,12 +5,36 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [0.8.17] - 2026-08-18
+## [0.8.19] - 2026-08-28
+
+### BUG FIXES
+
+- sync uv.lock with mypy 2.3.1 bump from dependabot
+
+### MAINTENANCE
+
+- pre-commit autoupdate
+- bump mypy from 2.3.0 to 2.3.1 (#866) 🤖
+- bump the actions-deps group with 6 updates (#867) 🤖
+- switch from httpx to httpx2 and bump version to 0.8.18
+
+
+
+#### Contributors
+
+Thank you to everyone who contributed to this release!
+
+**Humans:** 👤 Peter Reuterås
+
+**AI & Automation:** 🤖 Claude (AI Assistant), dependabot[bot] (Dependencies)
+
+## [v0.8.17] - 2026-08-18
 
 ### MAINTENANCE
 
 - bump the actions-deps group with 6 updates (#863) 🤖
 - bump https://github.com/astral-sh/ruff-pre-commit (#864) 🤖
+- Release v0.8.17 (#865)
 
 
 
