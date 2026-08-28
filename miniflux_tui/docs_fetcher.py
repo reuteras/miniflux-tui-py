@@ -6,7 +6,7 @@ from __future__ import annotations
 import re
 from html.parser import HTMLParser
 
-import httpx
+import httpx2
 from bs4 import BeautifulSoup
 
 from miniflux_tui.utils import strip_control_chars
@@ -74,7 +74,7 @@ class DocsFetcher:
             ValueError: If the response Content-Type is not HTML
             Exception: Network errors or HTTP errors
         """
-        async with httpx.AsyncClient(timeout=self.timeout) as client:
+        async with httpx2.AsyncClient(timeout=self.timeout) as client:
             response = await client.get(DOCS_URL)
             response.raise_for_status()
             content_type = response.headers.get("content-type", "")

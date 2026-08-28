@@ -4,7 +4,7 @@
 from typing import ClassVar, NoReturn
 from urllib.parse import urlparse
 
-import httpx
+import httpx2
 
 
 class SecureFetcher:
@@ -16,7 +16,7 @@ class SecureFetcher:
 
     def __init__(self):
         """Initialize secure HTTP client with safety settings."""
-        self.client = httpx.AsyncClient(
+        self.client = httpx2.AsyncClient(
             timeout=self.TIMEOUT,
             follow_redirects=True,
             max_redirects=5,
@@ -48,9 +48,9 @@ class SecureFetcher:
             return response.text
         except ValueError:
             raise
-        except httpx.TimeoutException as e:
+        except httpx2.TimeoutException as e:
             self._handle_timeout(url, e)
-        except httpx.HTTPStatusError as e:
+        except httpx2.HTTPStatusError as e:
             self._handle_http_error(url, e)
         except Exception as e:
             self._handle_generic_error(url, e)
@@ -68,7 +68,7 @@ class SecureFetcher:
             msg = f"Unsafe URL: {url}"
             raise ValueError(msg)
 
-    def _validate_response_size(self, response: httpx.Response, url: str) -> None:
+    def _validate_response_size(self, response: httpx2.Response, url: str) -> None:
         """Validate response size is within limits.
 
         Checks both headers and actual content size.
@@ -83,7 +83,7 @@ class SecureFetcher:
         self._check_content_length_header(response, url)
         self._check_actual_content_size(response, url)
 
-    def _check_content_length_header(self, response: httpx.Response, url: str) -> None:
+    def _check_content_length_header(self, response: httpx2.Response, url: str) -> None:
         """Check Content-Length header before reading full content.
 
         Args:
@@ -98,7 +98,7 @@ class SecureFetcher:
             msg = f"Response too large: {content_length} bytes from {url}"
             raise ValueError(msg)
 
-    def _check_actual_content_size(self, response: httpx.Response, url: str) -> None:
+    def _check_actual_content_size(self, response: httpx2.Response, url: str) -> None:
         """Check actual content size after reading.
 
         Args:
@@ -113,7 +113,7 @@ class SecureFetcher:
             msg = f"Response too large: {len(content)} bytes from {url}"
             raise ValueError(msg)
 
-    def _handle_timeout(self, url: str, e: httpx.TimeoutException) -> NoReturn:
+    def _handle_timeout(self, url: str, e: httpx2.TimeoutException) -> NoReturn:
         """Handle timeout exceptions.
 
         Args:
@@ -126,7 +126,7 @@ class SecureFetcher:
         msg = f"Timeout fetching {url}"
         raise TimeoutError(msg) from e
 
-    def _handle_http_error(self, url: str, e: httpx.HTTPStatusError) -> NoReturn:
+    def _handle_http_error(self, url: str, e: httpx2.HTTPStatusError) -> NoReturn:
         """Handle HTTP status errors.
 
         Args:

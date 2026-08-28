@@ -38,7 +38,7 @@ Thank you to all who contribute to miniflux-tui-py, whether through code, bug re
 - [html2text](https://github.com/Alir3z4/html2text) - HTML to Markdown conversion
 - [Beautiful Soup](https://www.crummy.com/software/BeautifulSoup/) - HTML parsing
 - [html5lib](https://github.com/html5lib/html5lib-python) - HTML5 parsing
-- [httpx](https://www.python-httpx.org/) - Modern HTTP client
+- [httpx2](https://github.com/pydantic/httpx2) - Modern HTTP client
 
 ### Development Tools
 

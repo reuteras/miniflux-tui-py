@@ -3,7 +3,7 @@
 
 from unittest.mock import AsyncMock, Mock, patch
 
-import httpx
+import httpx2
 import pytest
 
 from miniflux_tui.scraping.fetcher import SecureFetcher
@@ -14,9 +14,9 @@ class TestSecureFetcher:
 
     @pytest.fixture(autouse=True)
     def clear_proxy_env(self, monkeypatch):
-        """Clear proxy env vars so httpx.AsyncClient initialises without error.
+        """Clear proxy env vars so httpx2.AsyncClient initialises without error.
 
-        The sandbox NO_PROXY value contains '[::1]' which httpx cannot parse.
+        The sandbox NO_PROXY value contains '[::1]' which httpx2 cannot parse.
         Tests mock the actual HTTP calls, so no proxy is needed.
         """
         for var in ("HTTP_PROXY", "http_proxy", "HTTPS_PROXY", "https_proxy", "NO_PROXY", "no_proxy"):
@@ -143,7 +143,7 @@ class TestSecureFetcher:
         fetcher = SecureFetcher()
 
         with patch.object(fetcher.client, "get", new_callable=AsyncMock) as mock_get:
-            mock_get.side_effect = httpx.TimeoutException("Timeout")
+            mock_get.side_effect = httpx2.TimeoutException("Timeout")
 
             with pytest.raises(TimeoutError, match="Timeout fetching"):
                 await fetcher.fetch("https://example.com")
@@ -157,7 +157,7 @@ class TestSecureFetcher:
         mock_response.status_code = 404
 
         with patch.object(fetcher.client, "get", new_callable=AsyncMock) as mock_get:
-            mock_get.side_effect = httpx.HTTPStatusError("Not Found", request=Mock(), response=mock_response)
+            mock_get.side_effect = httpx2.HTTPStatusError("Not Found", request=Mock(), response=mock_response)
 
             with pytest.raises(RuntimeError, match="HTTP error 404"):
                 await fetcher.fetch("https://example.com/notfound")

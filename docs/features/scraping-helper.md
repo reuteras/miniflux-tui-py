@@ -153,7 +153,7 @@ Potential improvements:
 
 ## Dependencies
 
-- `httpx` (0.28.1) - Async HTTP
+- `httpx2` (2.12.0) - Async HTTP
 - `beautifulsoup4` (4.14.2) - HTML parsing
 - `html5lib` (1.1) - Secure parser
 - `bleach` (6.3.0) - Sanitization

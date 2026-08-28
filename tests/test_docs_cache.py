@@ -254,7 +254,7 @@ class TestDocsCacheNoNetwork:
     @pytest.mark.asyncio
     async def test_get_documentation_never_touches_httpx(self):
         """Test that no real HTTP client is used when the fetcher is mocked out."""
-        with patch("httpx.AsyncClient.get", side_effect=AssertionError("real network call attempted")):
+        with patch("httpx2.AsyncClient.get", side_effect=AssertionError("real network call attempted")):
             docs_cache = DocsCache()
             docs_cache._fetcher.fetch_snippet = AsyncMock(return_value="mocked")
             result = await docs_cache.get_documentation("scraper_rules")
