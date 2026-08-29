@@ -922,7 +922,7 @@ class EntryReaderScreen(Screen):
                 # Fallback: estimate position based on markdown content
                 # This is an approximation since we don't have exact widget positions
                 self._estimate_and_scroll_to_link(link_index)
-        except Exception:  # nosec B110  # noqa: S110
+        except Exception:  # noqa: S110
             # Silently fail if scrolling isn't possible (e.g., screen not mounted)
             # This is expected in test contexts or when the widget isn't available
             # Intentional silent failure for graceful degradation
@@ -970,7 +970,7 @@ class EntryReaderScreen(Screen):
                     scroll_y = max(0, y_pos - offset)
 
                     markdown_widget.scroll_to(y=scroll_y, animate=True, duration=0.3)
-        except Exception:  # nosec B110  # noqa: S110
+        except Exception:  # noqa: S110
             # Silently fail if scrolling isn't possible (e.g., screen not mounted)
             # This is expected in test contexts or when the widget isn't available
             # Intentional silent failure for graceful degradation
@@ -1054,7 +1054,7 @@ class EntryReaderScreen(Screen):
             replacement = f"***[{link_text}]({link_url})***"
 
             return re.sub(markdown_pattern, replacement, content, count=1)
-        except Exception:  # nosec B110
+        except Exception:
             # Silently fail and return original content if highlighting fails
             return original_content
 
@@ -1089,7 +1089,7 @@ class EntryReaderScreen(Screen):
 
                 # Scroll to make it visible
                 target_link.scroll_visible(animate=True, duration=0.3, top=True)
-        except Exception:  # nosec B110  # noqa: S110
+        except Exception:  # noqa: S110
             # Silently fail if focusing isn't possible (e.g., screen not mounted)
             # This is expected in test contexts or when the widget isn't available
             # Intentional silent failure for graceful degradation
@@ -1113,7 +1113,7 @@ class EntryReaderScreen(Screen):
                 # Estimate based on link position in content
                 if self.focused_link_index is not None:
                     self._scroll_to_link(self.focused_link_index)
-            except Exception:  # nosec B110  # noqa: S110
+            except Exception:  # noqa: S110
                 # If markdown update fails, that's okay - highlighting is optional
                 pass
 
@@ -1183,7 +1183,7 @@ class EntryReaderScreen(Screen):
             link_widgets = self._get_markdown_link_widgets()
             if link_widgets and self.focused_link_index is not None and self.focused_link_index < len(link_widgets):
                 link_widgets[self.focused_link_index].blur()
-        except Exception:  # nosec B110  # noqa: S110
+        except Exception:  # noqa: S110
             # Intentional silent failure for graceful degradation
             pass
 

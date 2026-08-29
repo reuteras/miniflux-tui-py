@@ -556,7 +556,7 @@ class FeedSettingsScreen(Screen):
                 self.categories = await self.app.client.get_categories()  # type: ignore[attr-defined]
                 # Update the Select widget with loaded categories
                 self._update_category_selector()
-        except Exception:  # noqa: S110  # nosec: B110
+        except Exception:  # noqa: S110
             # If categories fail to load, just continue with empty list
             pass
 
@@ -1108,7 +1108,7 @@ class FeedSettingsScreen(Screen):
                 category_select.value = str(self.feed.category_id)
             else:
                 category_select.value = ""
-        except Exception:  # noqa: S110  # nosec: B110
+        except Exception:  # noqa: S110
             # If update fails, the Select widget will remain with its default options
             pass
 
@@ -1185,7 +1185,7 @@ class FeedSettingsScreen(Screen):
             if widget_id in checkbox_widgets:
                 return self.query_one(f"#{widget_id}", Checkbox).value
 
-        except Exception:  # noqa: S110 - Intentional: widget not found is non-critical  # nosec: B110
+        except Exception:  # noqa: S110 - Intentional: widget not found is non-critical
             pass
 
         return None
@@ -1270,7 +1270,7 @@ class FeedSettingsScreen(Screen):
             else:
                 indicator.update("")
                 indicator.styles.color = "$text-muted"
-        except Exception:  # noqa: S110 - Intentional: widget not found is non-critical  # nosec: B110
+        except Exception:  # noqa: S110 - Intentional: widget not found is non-critical
             pass
 
     def _schedule_auto_save(self) -> None:
@@ -1322,7 +1322,7 @@ class FeedSettingsScreen(Screen):
             for select in self.query(Select):
                 if select.id:
                     field_values[select.id] = select.value
-        except Exception:  # noqa: S110  # nosec: B110
+        except Exception:  # noqa: S110
             pass
 
         return field_values

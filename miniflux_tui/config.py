@@ -6,7 +6,7 @@ from __future__ import annotations
 import os
 import re
 import shlex
-import subprocess  # nosec B404
+import subprocess
 import sys
 import tomllib
 from collections.abc import Sequence
@@ -203,7 +203,7 @@ class Config:
         """
         # Command originates from a trusted local configuration file.
         try:
-            completed: subprocess.CompletedProcess[str] = subprocess.run(  # nosec B603
+            completed: subprocess.CompletedProcess[str] = subprocess.run(
                 self._password_command,
                 capture_output=True,
                 text=True,
@@ -274,7 +274,7 @@ class Config:
         """
         hint_messages: list[str] = []
 
-        if "Missing required field: password" in error_msg:  # nosec: CWE-208 - Non-cryptographic string comparison
+        if "Missing required field: password" in error_msg:
             hint_messages.append(
                 dedent(
                     """

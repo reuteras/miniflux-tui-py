@@ -49,7 +49,6 @@ dev = [
     "mypy==2.3.1",
     "pylint>=4.0.2",
     "pytest-benchmark>=4.0.0",
-    "bandit[toml]>=1.7.5",
 ]
 docs = [
     "zensical>=0.0.43",
@@ -89,7 +88,6 @@ dev = [
     "pytest-cov>=4.0.0",
     "pyright>=1.1.0",
     "mypy==2.3.1",
-    "bandit[toml]>=1.7.5",
 ]
 docs = [
     "zensical>=0.0.43",
@@ -180,7 +178,3 @@ reportMissingTypeStubs = false
 reportPrivateUsage = false
 reportOptionalMemberAccess = false
 reportOptionalSubscript = false
-
-[tool.bandit]
-exclude_dirs = ["tests", "fuzz"]
-skips = ["B101"]  # Skip assert_used check (used in tests)

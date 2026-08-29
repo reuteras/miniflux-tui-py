@@ -5,7 +5,7 @@ from __future__ import annotations
 
 import re
 import shutil
-import subprocess  # nosec B404
+import subprocess
 import tomllib
 from collections.abc import Generator, Iterator
 from contextlib import contextmanager
@@ -92,7 +92,7 @@ def _get_git_version() -> str | None:
             return None
 
         # Get current branch name
-        branch = subprocess.run(  # nosec B603
+        branch = subprocess.run(
             [git_executable, "-C", str(REPO_ROOT), "rev-parse", "--abbrev-ref", "HEAD"],
             capture_output=True,
             text=True,
@@ -106,7 +106,7 @@ def _get_git_version() -> str | None:
         branch_name = branch.stdout.strip()
 
         # Get short commit hash
-        commit = subprocess.run(  # nosec B603
+        commit = subprocess.run(
             [git_executable, "-C", str(REPO_ROOT), "rev-parse", "--short", "HEAD"],
             capture_output=True,
             text=True,

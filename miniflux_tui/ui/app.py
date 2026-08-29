@@ -50,7 +50,7 @@ def _load_settings_screen_cls() -> type[SettingsScreen]:
     return cast("type[SettingsScreen]", module.SettingsScreen)
 
 
-def _load_history_screen_cls() -> type[EntryHistoryScreen]:  # nosec: CWE-1047 - Type-only import avoids cyclic dependency
+def _load_history_screen_cls() -> type[EntryHistoryScreen]:
     """Import and return the history screen class."""
 
     module = import_module("miniflux_tui.ui.screens.entry_history")

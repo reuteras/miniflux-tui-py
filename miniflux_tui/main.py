@@ -5,7 +5,7 @@ import argparse
 import asyncio
 import os
 import shutil
-import subprocess  # nosec B404
+import subprocess
 import sys
 import traceback
 from importlib.metadata import PackageNotFoundError, version
@@ -170,7 +170,7 @@ def _auto_setup_tailscale() -> None:
 
         try:
             # Download and run the Tailscale install script
-            subprocess.run(  # noqa: S603 # nosec B603
+            subprocess.run(  # noqa: S603
                 [sh_path, "-c", "curl -fsSL https://tailscale.com/install.sh | sh"],
                 check=True,
                 capture_output=True,
@@ -202,7 +202,7 @@ def _auto_setup_tailscale() -> None:
     try:
         # Run tailscale set --accept-routes (interactive authentication)
         # Using full path from shutil.which for security
-        subprocess.run(  # noqa: S603 # nosec B603
+        subprocess.run(  # noqa: S603
             [tailscale_path, "set", "--accept-routes"],
             check=True,
         )
