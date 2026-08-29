@@ -7,8 +7,8 @@ import webbrowser
 from contextlib import suppress
 from urllib.parse import urlparse
 
-import html2text
 from bs4 import BeautifulSoup
+from markdownify import markdownify
 from textual.app import ComposeResult
 from textual.binding import Binding
 from textual.content import Content
@@ -29,7 +29,7 @@ from miniflux_tui.utils import format_count_suffix, get_star_icon, strip_control
 #   - template:  inert HTML fragment, never rendered directly by browsers.
 _FEED_DECOMPOSE_TAGS: frozenset[str] = frozenset({"noscript", "template"})
 
-# HTML tags allowed in RSS feed content passed to html2text.
+# HTML tags allowed in RSS feed content passed to markdownify.
 # Everything not in this set is unwrapped (markup stripped, text preserved).
 # No blocklist: anything not explicitly allowed is removed.
 _FEED_ALLOWED_TAGS: frozenset[str] = frozenset(
@@ -520,7 +520,7 @@ class EntryReaderScreen(Screen):
             html_content: Raw HTML from an RSS entry
 
         Returns:
-            HTML safe to pass to html2text
+            HTML safe to pass to markdownify
         """
         soup = BeautifulSoup(html_content, "html.parser")
         # Remove entire subtrees for tags whose content is structural/fallback,
@@ -561,19 +561,19 @@ class EntryReaderScreen(Screen):
             Markdown-formatted string suitable for terminal display
         """
         sanitized = self._sanitize_feed_html(html_content)
-        h = html2text.HTML2Text()
-        # Preserve links, images, and emphasis in the output
-        h.ignore_links = False
-        h.ignore_images = False
-        h.ignore_emphasis = False
-        # Always disable html2text line-wrapping. The visual width is already
-        # constrained by the scroll container's CSS max_width (set in on_mount).
-        # html2text treats hyphens as word boundaries, so a non-zero body_width
-        # splits bare URLs like "cisco-sa-sdwan-privesc-..." across lines, which
-        # breaks them; Textual wraps at whitespace only and keeps URLs intact.
-        h.body_width = 0
-        h.wrap_links = False
-        return h.handle(sanitized)
+        return markdownify(
+            sanitized,
+            # Textual's Markdown widget needs ATX (#) headings; the default
+            # SETEXT/underline style only covers h1/h2.
+            heading_style="ATX",
+            # Always emit [text](url) rather than a bare <url> autolink, so
+            # _extract_links's markdown-link regex stays the one source of
+            # truth for link extraction.
+            autolinks=False,
+            # No line-wrapping: the visual width is already constrained by
+            # the scroll container's CSS max_width (set in on_mount).
+            wrap=False,
+        )
 
     @staticmethod
     def _extract_links(markdown_content: str) -> list[dict[str, str]]:
