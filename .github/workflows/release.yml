@@ -232,23 +232,22 @@ jobs:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           PR_NUMBER: ${{ needs.prepare-release.outputs.pr_number }}
         run: |
-          # Enable auto-merge - PR will be merged automatically after required approvals
-          # (auto-approve.yml provides 1 approval, need 1 more manual approval)
+          # Enable auto-merge - PR will be merged automatically once required
+          # status checks pass (branch protection requires no reviews, so no
+          # approval is needed).
           gh pr merge "$PR_NUMBER" --auto --squash --delete-branch
-          echo "::notice::Auto-merge enabled for PR #$PR_NUMBER - waiting for required approvals"
+          echo "::notice::Auto-merge enabled for PR #$PR_NUMBER - waiting for required checks"
 
       - name: Wait for PR to be merged
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           PR_NUMBER: ${{ needs.prepare-release.outputs.pr_number }}
         run: |
-          MAX_WAIT=1800  # 30 minutes - allows time for manual approval
+          MAX_WAIT=1800  # 30 minutes - allows time for required checks to complete
           ELAPSED=0
           CHECK_INTERVAL=30  # Check every 30 seconds
 
-          echo "Waiting for PR #$PR_NUMBER to be merged (requires 2 approvals)..."
-          echo "- Auto-approve workflow provides 1 approval"
-          echo "- Requires 1 more manual approval from code owner"
+          echo "Waiting for PR #$PR_NUMBER to be merged (auto-merge, no reviews required)..."
 
           while [ $ELAPSED -lt $MAX_WAIT ]; do
             # Check if PR is merged
@@ -268,18 +267,14 @@ jobs:
               exit 1
             fi
 
-            # Show approval status
-            REVIEW_DECISION=$(gh pr view "$PR_NUMBER" --json reviewDecision --jq '.reviewDecision // "PENDING"')
-            APPROVALS=$(gh pr view "$PR_NUMBER" --json reviews --jq '[.reviews[] | select(.state == "APPROVED")] | length')
-
-            echo "Status: $PR_STATE | Approvals: $APPROVALS/2 | Review Decision: $REVIEW_DECISION (${ELAPSED}s/${MAX_WAIT}s)"
+            echo "Status: $PR_STATE (${ELAPSED}s/${MAX_WAIT}s)"
 
             sleep "$CHECK_INTERVAL"
             ELAPSED=$((ELAPSED + CHECK_INTERVAL))
           done
 
           echo "::error::Timeout waiting for PR #$PR_NUMBER to be merged after ${MAX_WAIT} seconds"
-          echo "::error::Manual approval may be required. Please approve the PR and the workflow will continue."
+          echo "::error::Check whether required status checks are passing on the PR."
           exit 1
 
   create-tag:
