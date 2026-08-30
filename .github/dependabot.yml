@@ -53,13 +53,6 @@ updates:
     cooldown:
       default-days: 7
 
-  - package-ecosystem: docker
-    directory: /
-    schedule:
-      interval: daily
-    cooldown:
-      default-days: 7
-
   # Enable version updates for pre-commit hooks
   - package-ecosystem: "pre-commit"
     directory: "/"

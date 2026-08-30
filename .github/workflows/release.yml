@@ -153,7 +153,7 @@ jobs:
           1. Create a signed tag
           2. Trigger the publish workflow
           3. Publish to PyPI
-          4. Create GitHub release with binaries and SBOMs
+          4. Create GitHub release with SBOMs
           5. Publish the release (no longer a draft)
 
           ---

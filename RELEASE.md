@@ -23,7 +23,6 @@ When you trigger the release workflow, GitHub Actions will:
 
 - Build Python packages (wheel + sdist)
 - Publish to PyPI with attestations
-- Build binaries for Linux, macOS, Windows
 - Generate SBOMs (CycloneDX + SPDX)
 - Sign all artifacts with cosign
 - Generate SLSA provenance
@@ -89,12 +88,6 @@ Each release includes:
 
 - `miniflux-tui-py-X.Y.Z.tar.gz` - Source distribution
 - `miniflux_tui_py-X.Y.Z-py3-none-any.whl` - Wheel
-
-### Standalone Binaries
-
-- `miniflux-tui-linux-x86_64.tar.gz`
-- `miniflux-tui-macos.tar.gz`
-- `miniflux-tui-windows.zip`
 
 ### Security Artifacts
 

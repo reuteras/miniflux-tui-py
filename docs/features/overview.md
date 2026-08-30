@@ -349,8 +349,6 @@ Access with `Shift+S` key.
 ### Installation Methods
 
 - PyPI package (uv/pip)
-- Prebuilt binaries
-- Container images (Docker/Podman)
 - From source
 
 ## Performance

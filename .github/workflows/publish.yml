@@ -19,7 +19,6 @@ jobs:
   build:
     env:
       DIST_ARTIFACT_NAME: dist-${{ github.run_id }}-${{ github.run_attempt }}
-      BINARY_ARTIFACT_PREFIX: miniflux-tui-${{ github.run_id }}-${{ github.run_attempt }}
     permissions:
       contents: read
       actions: read
@@ -93,52 +92,11 @@ jobs:
           skip-existing: true
           attestations: true
 
-  binaries:
-    env:
-      BINARY_ARTIFACT_PREFIX: miniflux-tui-${{ github.run_id }}-${{ github.run_attempt }}
-    needs: build
-    strategy:
-      fail-fast: false
-      matrix:
-        os: [ubuntu-latest, macos-latest, windows-latest]
-    runs-on: ${{ matrix.os }}
-    permissions:
-      contents: read
-      actions: read
-    steps:
-      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
-        with:
-          ref: ${{ inputs.tag || github.ref }}
-          persist-credentials: false
-
-      - name: Install uv
-        uses: astral-sh/setup-uv@20cfd1bf945f4377ade1205e4dbc17946fc9a30d # v10.0.1
-        with:
-          github-token: ${{ secrets.GITHUB_TOKEN }}
-          enable-cache: "false"
-
-      - name: Set up Python
-        run: uv python install 3.11
-
-      - name: Install dependencies
-        run: uv sync --group binary --locked
-
-      - name: Build executable archive
-        run: uv run python scripts/build_binary.py
-
-      - name: Upload binary artifact
-        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
-        with:
-          name: ${{ env.BINARY_ARTIFACT_PREFIX }}-${{ matrix.os }}
-          path: build/binary/*
-          retention-days: 7
-
   release:
     env:
       DIST_ARTIFACT_NAME: dist-${{ github.run_id }}-${{ github.run_attempt }}
-      BINARY_ARTIFACT_PREFIX: miniflux-tui-${{ github.run_id }}-${{ github.run_attempt }}
       RELEASE_TAG: ${{ inputs.tag || github.ref_name }}
-    needs: [build, binaries]
+    needs: [build]
     runs-on: ubuntu-latest
     permissions:
       contents: write  # Required to publish release notes
@@ -156,14 +114,6 @@ jobs:
         with:
           name: dist-${{ github.run_id }}-${{ github.run_attempt }}
           path: dist/
-
-      - name: Download binary artifacts
-        if: github.event_name != 'pull_request'
-        uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v8.0.1
-        with:
-          pattern: ${{ env.BINARY_ARTIFACT_PREFIX }}-*
-          merge-multiple: true
-          path: binaries/
 
       - name: Create SBOM output directory
         if: github.event_name != 'pull_request'
@@ -191,14 +141,6 @@ jobs:
         if: github.event_name != 'pull_request'
         run: syft scan dir:dist/ -o spdx-json=sbom/miniflux-tui-pypi.spdx.json
 
-      - name: Generate SBOM for binaries (CycloneDX)
-        if: github.event_name != 'pull_request' && hashFiles('binaries/**') != ''
-        run: syft scan dir:binaries/ -o cyclonedx-json=sbom/miniflux-tui-binaries.cdx.json
-
-      - name: Generate SBOM for binaries (SPDX)
-        if: github.event_name != 'pull_request' && hashFiles('binaries/**') != ''
-        run: syft scan dir:binaries/ -o spdx-json=sbom/miniflux-tui-binaries.spdx.json
-
       - name: Upload SBOM artifacts
         if: github.event_name != 'pull_request'
         uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
@@ -212,7 +154,6 @@ jobs:
         with:
           subject-path: |
             dist/*
-            binaries/*
 
       - name: Install cosign
         env:
@@ -252,15 +193,6 @@ jobs:
             fi
           done
 
-          echo "Signing binary artifacts..."
-          if [ -d binaries ]; then
-            for file in binaries/*; do
-              if [ -f "$file" ]; then
-                sign_with_cosign "$file"
-              fi
-            done
-          fi
-
           echo "Signing SBOM artifacts..."
           for file in sbom/*.json; do
             if [ -f "$file" ]; then
@@ -294,7 +226,7 @@ jobs:
           PROVENANCE_EOF
 
           first=true
-          for file in dist/*.whl dist/*.tar.gz binaries/* sbom/*.json; do
+          for file in dist/*.whl dist/*.tar.gz sbom/*.json; do
             if [ -f "$file" ]; then
               sha256=$(sha256sum "$file" | awk '{print $1}')
               if [ "$first" = true ]; then
@@ -414,11 +346,6 @@ jobs:
 
           # Collect distribution artifacts and signatures
           add_signed_artifacts "dist"
-
-          # Collect binary artifacts and signatures
-          if [ -d binaries ]; then
-            add_signed_artifacts "binaries"
-          fi
 
           # Collect SBOM artifacts and signatures
           add_signed_artifacts "sbom"

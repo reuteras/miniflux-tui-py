@@ -50,7 +50,6 @@ dev = [
 ]
 docs = ["zensical>=0.0.43", "mkdocstrings[python]>=0.30.1"]
 fuzz = ["atheris>=2.3.0"]
-binary = ["pyinstaller>=6.10.0"]
 
 [project.scripts]
 miniflux-tui = "miniflux_tui.main:main"
@@ -82,7 +81,6 @@ dev = [
 ]
 docs = ["zensical>=0.0.43", "mkdocstrings[python]>=0.30.1"]
 fuzz = ["atheris>=2.3.0"]
-binary = ["pyinstaller>=6.10.0"]
 
 [tool.uv]
 managed = true
@@ -133,8 +131,6 @@ ignore = [
 [tool.ruff.lint.per-file-ignores]
 # Allow assert statements and other test-specific patterns in tests
 "tests/**/*.py" = ["S101", "PLR2004", "ARG001", "PLR6301"]
-# Allow subprocess calls in scripts (they use hardcoded commands)
-"scripts/**/*.py" = ["S603", "S607"]
 # Allow password command execution helpers and git version detection to import subprocess and run trusted commands
 "miniflux_tui/config.py" = ["S404", "S603"]
 "miniflux_tui/utils.py" = ["S404", "S603"]

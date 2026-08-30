@@ -13,7 +13,6 @@
 [![Python 3.15 Preview](https://img.shields.io/badge/Python%203.15-preview-yellow)](https://github.com/reuteras/miniflux-tui-py/actions/workflows/test.yml)
 [![OSV Scanner](https://github.com/reuteras/miniflux-tui-py/actions/workflows/osv-scanner.yml/badge.svg)](https://github.com/reuteras/miniflux-tui-py/actions/workflows/osv-scanner.yml)
 [![CodeQL](https://github.com/reuteras/miniflux-tui-py/actions/workflows/codeql.yml/badge.svg)](https://github.com/reuteras/miniflux-tui-py/actions/workflows/codeql.yml)
-[![Container Builds](https://github.com/reuteras/miniflux-tui-py/actions/workflows/container-image.yml/badge.svg)](https://github.com/reuteras/miniflux-tui-py/actions/workflows/container-image.yml)
 [![SBOM](https://img.shields.io/badge/SBOM-CycloneDX%20%26%20SPDX-5A45FF)](https://github.com/reuteras/miniflux-tui-py/releases/latest)
 [![Documentation](https://img.shields.io/badge/docs-GitHub%20Pages-blue)](https://reuteras.github.io/miniflux-tui-py/)
 [![pre-commit](https://img.shields.io/badge/pre--commit-enabled-brightgreen?logo=pre-commit)](https://github.com/pre-commit/pre-commit)
@@ -32,7 +31,7 @@ This project has reached production stability with:
 - ✅ Robust CI/CD with automated security and quality workflows
 - ✅ High test coverage (>60%) across Python 3.11-3.15
 - ✅ OpenSSF Best Practices badge
-- ✅ Container builds with SLSA attestation
+- ✅ PyPI packages with SLSA attestation
 - ✅ Professional documentation and API reference
 
 ## Features
@@ -99,47 +98,6 @@ miniflux-tui
 ```
 
 **Note:** After installation with `uv tool install` or `pip install`, you can run the application directly with `miniflux-tui` (no `uv run` needed). You can also run it as a Python module: `python -m miniflux_tui`.
-
-### Pre-built Binaries (GitHub Releases)
-
-If you do not want to manage a Python environment, each tagged release now attaches standalone binaries for Linux (x86_64), macOS (arm64), and Windows (x86_64):
-
-1. Download the archive for your platform from the [GitHub Releases page](https://github.com/reuteras/miniflux-tui-py/releases).
-2. Extract the archive:
-    - Linux/macOS: `tar -xzf miniflux-tui-<os>-<arch>.tar.gz`
-    - Windows: right-click the `.zip` file and choose **Extract All…**
-3. (Linux/macOS only) Make the binary executable: `chmod +x miniflux-tui`
-4. Run the TUI: `./miniflux-tui --init`
-
-> **Note:** macOS may quarantine binaries downloaded from the internet. If macOS blocks execution, run `xattr -d com.apple.quarantine miniflux-tui` once after extraction.
-
-### Container Image (Docker/Podman)
-
-```bash
-# Pull the signed image from GitHub Container Registry
-# `latest` tracks the default branch. Replace with a release tag (e.g. v0.4.0) to pin.
-docker pull ghcr.io/reuteras/miniflux-tui:latest
-
-# Create a configuration directory on the host if it does not exist
-mkdir -p ~/.config/miniflux-tui
-
-# Generate a config file (writes to the mounted directory)
-docker run --rm -it \
-  -v ~/.config/miniflux-tui:/home/miniflux/.config/miniflux-tui \
-  ghcr.io/reuteras/miniflux-tui:latest \
-  --init
-
-# Launch the TUI (shares configuration and uses your terminal)
-docker run --rm -it \
-  -v ~/.config/miniflux-tui:/home/miniflux/.config/miniflux-tui \
-  ghcr.io/reuteras/miniflux-tui:latest
-```
-
-The image is built-in CI, published to GHCR, and signed with Sigstore Cosign using GitHub OIDC so you can verify it with:
-
-```bash
-cosign verify ghcr.io/reuteras/miniflux-tui:latest
-```
 
 ### From Source (For Developers)
 
