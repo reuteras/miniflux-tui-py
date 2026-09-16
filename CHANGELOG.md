@@ -5,6 +5,48 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.8.21] - 2026-09-16
+
+### CI/CD
+
+- Fix stale approval messaging in release workflow
+
+### MAINTENANCE
+
+- Drop standalone binaries and Docker image, trim CI matrix
+- bump the actions-deps group with 3 updates (#870) 🤖
+- bump renovatebot/github-action in the actions-deps group (#871) 🤖
+- bump the actions-deps group with 4 updates (#872) 🤖
+- bump https://github.com/astral-sh/ruff-pre-commit (#873) 🤖
+- bump the actions-deps group with 2 updates (#874) 🤖
+- bump https://github.com/astral-sh/ruff-pre-commit (#875) 🤖
+
+
+
+#### Contributors
+
+Thank you to everyone who contributed to this release!
+
+**Humans:** 👤 Peter Reuterås
+
+**AI & Automation:** 🤖 Claude (AI Assistant), dependabot[bot] (Dependencies)
+
+## [v0.8.20] - 2026-08-29
+
+### MAINTENANCE
+
+- Release v0.8.20 (#869)
+
+
+
+#### Contributors
+
+Thank you to everyone who contributed to this release!
+
+**Humans:** 👤 Peter Reuterås
+
+**AI & Automation:** 🤖 Claude (AI Assistant)
+
 ## [v0.8.19] - 2026-08-28
 
 ### BUG FIXES
@@ -2057,3 +2099,4 @@ Thank you to everyone who contributed to this release!
 **Humans:** 👤 Peter Reuterås
 
 **AI & Automation:** 🤖 Claude (AI Assistant)
+
