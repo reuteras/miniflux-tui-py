@@ -2,6 +2,7 @@
 """Miniflux API client wrapper using official miniflux package."""
 
 import asyncio
+import logging
 import warnings
 from collections.abc import Callable
 from functools import partial
@@ -15,6 +16,37 @@ from miniflux_tui.constants import BACKOFF_FACTOR, MAX_RETRIES
 from .models import Category, Entry, Feed
 
 T = TypeVar("T")
+
+logger = logging.getLogger(__name__)
+
+# requests exceptions inherit from OSError, so without this list a TLS
+# verification failure or malformed URL would be retried like a flaky socket.
+_NON_RETRYABLE_ERRORS: tuple[type[Exception], ...] = (
+    requests.exceptions.SSLError,
+    requests.exceptions.HTTPError,
+    requests.exceptions.InvalidURL,
+    requests.exceptions.MissingSchema,
+    requests.exceptions.InvalidSchema,
+    requests.exceptions.TooManyRedirects,
+)
+
+_PAGE_SIZE = 100
+
+
+def _parse_entries(raw_entries: object) -> list[Entry]:
+    """Convert raw API entry records to models, skipping malformed ones.
+
+    One broken record from a misbehaving feed must not abort the whole list.
+    """
+    if not isinstance(raw_entries, list):
+        return []
+    entries: list[Entry] = []
+    for raw in raw_entries:
+        try:
+            entries.append(Entry.from_dict(raw))
+        except (KeyError, TypeError, ValueError, AttributeError) as exc:
+            logger.warning("Skipping malformed entry from server: %s: %s", type(exc).__name__, exc)
+    return entries
 
 
 class MinifluxClient:
@@ -35,8 +67,9 @@ class MinifluxClient:
             api_key: API key for authentication
             allow_invalid_certs: Whether to allow invalid SSL certificates (e.g. self-signed certs).
                 When True a custom requests.Session with verify=False is passed to the client.
-            timeout: Request timeout in seconds (not supported by official client)
+            timeout: Request timeout in seconds, passed to the official client
         """
+
         self.base_url = base_url.rstrip("/")
 
         # Create official Miniflux client (synchronous).
@@ -52,9 +85,9 @@ class MinifluxClient:
                 import urllib3  # noqa: PLC0415
 
                 urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
-            self.client = MinifluxClientBase(base_url, api_key=api_key, session=session)
+            self.client = MinifluxClientBase(base_url, api_key=api_key, timeout=timeout, session=session)
         else:
-            self.client = MinifluxClientBase(base_url, api_key=api_key)
+            self.client = MinifluxClientBase(base_url, api_key=api_key, timeout=timeout)
 
         self.allow_invalid_certs: bool = allow_invalid_certs
 
@@ -75,7 +108,7 @@ class MinifluxClient:
     @staticmethod
     async def _run_sync(func, *args, **kwargs):
         """Run a synchronous function in an executor."""
-        loop = asyncio.get_event_loop()
+        loop = asyncio.get_running_loop()
         return await loop.run_in_executor(None, partial(func, *args, **kwargs))
 
     async def _call_with_retry(
@@ -121,11 +154,15 @@ class MinifluxClient:
             try:
                 # Try the function call
                 return await self._run_sync(func, *args, **kwargs)
+            except _NON_RETRYABLE_ERRORS:
+                # Certificate failures, bad URLs and HTTP errors will not fix themselves
+                raise
             except (ConnectionError, TimeoutError, OSError, BrokenPipeError) as e:
                 # Transient network errors - retry with backoff
                 # OSError covers socket-level errors including stale connections
                 # BrokenPipeError occurs when connection is closed unexpectedly
                 last_exception = e
+
                 if attempt < max_retries - 1:
                     # Calculate exponential backoff delay
                     wait_time = backoff_factor**attempt
@@ -137,102 +174,57 @@ class MinifluxClient:
         # All retries exhausted - raise last exception
         raise last_exception or Exception("Unknown error in retry logic")
 
-    async def get_unread_entries(self, limit: int = 100, offset: int = 0) -> list[Entry]:
+    async def _get_entries_paged(self, limit: int | None, offset: int, **filters) -> list[Entry]:
+        """Fetch entries, paging through everything when ``limit`` is ``None``."""
+        if limit is not None:
+            response = await self._call_with_retry(
+                self.client.get_entries, limit=limit, offset=offset, order="published_at", direction="desc", **filters
+            )
+            return _parse_entries(response.get("entries", []))
+
+        all_entries: list[Entry] = []
+        current_offset = offset
+        while True:
+            response = await self._call_with_retry(
+                self.client.get_entries, limit=_PAGE_SIZE, offset=current_offset, order="published_at", direction="desc", **filters
+            )
+            raw_entries = response.get("entries", [])
+            if not raw_entries:
+                break
+            all_entries.extend(_parse_entries(raw_entries))
+            # Fewer records than a full page means we have reached the end
+            if len(raw_entries) < _PAGE_SIZE:
+                break
+            current_offset += _PAGE_SIZE
+        return all_entries
+
+    async def get_unread_entries(self, limit: int | None = None, offset: int = 0) -> list[Entry]:
         """
         Get unread feed entries with retry logic and automatic pagination.
 
-        Fetches all available entries if limit > 100 by making multiple API calls.
-
         Args:
-            limit: Maximum number of entries to retrieve (if > 100, fetches all)
+            limit: Maximum number of entries to retrieve in a single request,
+                or ``None`` (default) to page through all unread entries
             offset: Offset for pagination
 
         Returns:
             List of unread Entry objects
         """
-        # If limit is exactly 100 (default), fetch all entries
-        if limit == 100:
-            all_entries = []
-            current_offset = offset
-            batch_size = 100
+        return await self._get_entries_paged(limit, offset, status=["unread"])
 
-            while True:
-                response = await self._call_with_retry(
-                    self.client.get_entries,
-                    status=["unread"],
-                    limit=batch_size,
-                    offset=current_offset,
-                    order="published_at",
-                    direction="desc",
-                )
-
-                entries = [Entry.from_dict(entry) for entry in response.get("entries", [])]
-
-                if not entries:
-                    break
-
-                all_entries.extend(entries)
-
-                # If we got fewer entries than requested, we've reached the end
-                if len(entries) < batch_size:
-                    break
-
-                current_offset += batch_size
-
-            return all_entries
-
-        # For explicit limits other than default, use single request
-        response = await self._call_with_retry(
-            self.client.get_entries, status=["unread"], limit=limit, offset=offset, order="published_at", direction="desc"
-        )
-
-        return [Entry.from_dict(entry) for entry in response.get("entries", [])]
-
-    async def get_starred_entries(self, limit: int = 100, offset: int = 0) -> list[Entry]:
+    async def get_starred_entries(self, limit: int | None = None, offset: int = 0) -> list[Entry]:
         """
         Get starred feed entries with retry logic and automatic pagination.
 
-        Fetches all available entries if limit > 100 by making multiple API calls.
-
         Args:
-            limit: Maximum number of entries to retrieve (if > 100, fetches all)
+            limit: Maximum number of entries to retrieve in a single request,
+                or ``None`` (default) to page through all starred entries
             offset: Offset for pagination
 
         Returns:
             List of starred Entry objects
         """
-        # If limit is exactly 100 (default), fetch all entries
-        if limit == 100:
-            all_entries = []
-            current_offset = offset
-            batch_size = 100
-
-            while True:
-                response = await self._call_with_retry(
-                    self.client.get_entries, starred=True, limit=batch_size, offset=current_offset, order="published_at", direction="desc"
-                )
-
-                entries = [Entry.from_dict(entry) for entry in response.get("entries", [])]
-
-                if not entries:
-                    break
-
-                all_entries.extend(entries)
-
-                # If we got fewer entries than requested, we've reached the end
-                if len(entries) < batch_size:
-                    break
-
-                current_offset += batch_size
-
-            return all_entries
-
-        # For explicit limits other than default, use single request
-        response = await self._call_with_retry(
-            self.client.get_entries, starred=True, limit=limit, offset=offset, order="published_at", direction="desc"
-        )
-
-        return [Entry.from_dict(entry) for entry in response.get("entries", [])]
+        return await self._get_entries_paged(limit, offset, starred=True)
 
     async def get_read_entries(self, limit: int = 100, offset: int = 0) -> list[Entry]:
         """
@@ -249,7 +241,7 @@ class MinifluxClient:
             self.client.get_entries, status=["read"], limit=limit, offset=offset, order="changed_at", direction="desc"
         )
 
-        return [Entry.from_dict(entry) for entry in response.get("entries", [])]
+        return _parse_entries(response.get("entries", []))
 
     async def change_entry_status(self, entry_id: int, status: str) -> None:
         """
@@ -504,6 +496,6 @@ class MinifluxClient:
         response = await self._call_with_retry(self.client.get_category_entries, category_id, **kwargs)
         # Handle both dict and list responses
         if isinstance(response, list):
-            return [Entry.from_dict(entry) for entry in response]
+            return _parse_entries(response)
         entries_data = response.get("entries", []) if isinstance(response, dict) else []
-        return [Entry.from_dict(entry) for entry in entries_data]
+        return _parse_entries(entries_data)

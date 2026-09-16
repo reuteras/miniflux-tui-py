@@ -3,10 +3,11 @@
 
 from __future__ import annotations
 
+import asyncio
 import re
 from html.parser import HTMLParser
 
-import httpx2
+import requests
 from bs4 import BeautifulSoup
 
 from miniflux_tui.utils import strip_control_chars
@@ -23,6 +24,7 @@ RULE_TYPES = {
 }
 
 DOCS_URL = "https://miniflux.app/docs/rules.html"
+MAX_DOCS_SIZE = 2 * 1024 * 1024  # 2MB is far more than the rules page needs
 
 
 class DocsFetcher:
@@ -62,26 +64,33 @@ class DocsFetcher:
         html = await self._fetch_html()
         anchor = RULE_TYPES[rule_type]
         snippet = self._extract_section(html, anchor, rule_type)
-        return self._clean_text(snippet)
+        return self._clean_text(_sanitize_html(snippet))
 
     async def _fetch_html(self) -> str:
-        """Fetch HTML content from documentation URL.
+        """Fetch HTML content from documentation URL without blocking the event loop.
 
         Returns:
             Raw HTML content
 
         Raises:
-            ValueError: If the response Content-Type is not HTML
+            ValueError: If the response Content-Type is not HTML or the body is too large
             Exception: Network errors or HTTP errors
         """
-        async with httpx2.AsyncClient(timeout=self.timeout) as client:
-            response = await client.get(DOCS_URL)
-            response.raise_for_status()
-            content_type = response.headers.get("content-type", "")
-            if "text/html" not in content_type:
-                msg = f"Unexpected content type from docs URL: {content_type!r}"
-                raise ValueError(msg)
-            return response.text
+        loop = asyncio.get_running_loop()
+        return await loop.run_in_executor(None, self._fetch_html_sync)
+
+    def _fetch_html_sync(self) -> str:
+        """Blocking fetch of the documentation page."""
+        response = requests.get(DOCS_URL, timeout=self.timeout, headers={"User-Agent": "MinifluxTUI"})
+        response.raise_for_status()
+        content_type = response.headers.get("content-type", "")
+        if "text/html" not in content_type:
+            msg = f"Unexpected content type from docs URL: {content_type!r}"
+            raise ValueError(msg)
+        if len(response.content) > MAX_DOCS_SIZE:
+            msg = "Documentation page is unexpectedly large"
+            raise ValueError(msg)
+        return response.text
 
     def _extract_section(self, html: str, anchor: str, rule_type: str) -> str:
         """Extract documentation section for a rule type.

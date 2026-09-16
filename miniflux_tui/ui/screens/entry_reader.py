@@ -162,6 +162,7 @@ class EntryReaderScreen(Screen):
         Binding("b", "back", "Back to List"),
         Binding("escape", "back", "Back", show=False),
         Binding("X", "feed_settings", "Feed Settings"),
+        Binding("x", "scraping_helper", "Scraping Helper", show=False),
         # Help and status
         Binding("question_mark", "show_help", "Help"),
         Binding("i", "show_status", "Status"),
@@ -867,8 +868,36 @@ class EntryReaderScreen(Screen):
         )
         self.app.push_screen(screen)  # type: ignore[arg-type]
 
+    def action_scraping_helper(self) -> None:
+        """Open the scraping rule helper for the current entry's page."""
+        # Import here to avoid circular dependency
+        from miniflux_tui.ui.screens.scraping_helper import ScrapingHelperScreen  # noqa: PLC0415
+
+        client = self.app.client
+        if not client:
+            self.notify("API client not available", severity="error")
+            return
+        if not self.entry.url:
+            self.notify("Entry has no URL to analyze", severity="warning")
+            return
+
+        entry = self.entry
+
+        async def save_scraper_rule(feed_id: int, rule: str) -> None:
+            await client.update_feed(feed_id, scraper_rules=rule)  # type: ignore[attr-defined]
+            self.notify(f"Scraper rule saved for feed: {entry.feed.title}")
+
+        helper = ScrapingHelperScreen(
+            entry_url=entry.url,
+            feed_id=entry.feed_id,
+            feed_title=entry.feed.title,
+            on_save_callback=save_scraper_rule,
+        )
+        self.app.push_screen(helper)  # type: ignore[arg-type]
+
     def action_show_help(self):
         """Show keyboard help."""
+
         app = self._resolve_app()
         if app:
             app.push_screen("help")
@@ -938,8 +967,8 @@ class EntryReaderScreen(Screen):
             markdown_widget = self.query_one("#entry-content", expect_type=Markdown)
             link = self.links[link_index]
 
-            # Get the markdown content
-            content = self._html_to_markdown(self.entry.content)
+            # Reuse the already converted markdown instead of re-sanitizing on every Tab press
+            content = self.original_content or self._html_to_markdown(self.entry.content)
 
             # Find the position of the link in the content
             # For markdown links: [text](url)

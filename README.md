@@ -250,7 +250,7 @@ To create a token:
 | /          | Search entries (interactive dialog)              |
 | Shift+M    | Manage categories                                |
 | Shift+H    | Toggle reading history view                      |
-| Shift+X    | Open scraping rule helper                        |
+| x          | Open scraping rule helper                        |
 | Shift+T    | Toggle theme (dark/light)                        |
 | ?          | Show keyboard help                               |
 | i          | Show system status                               |
@@ -271,7 +271,7 @@ To create a token:
 | o               | Open in browser                   |
 | f               | Fetch original content            |
 | X               | Open feed settings                |
-| Shift+X         | Open scraping rule helper         |
+| x               | Open scraping rule helper         |
 | b or Esc        | Back to list                      |
 | ?               | Show keyboard help                |
 | i               | Show system status                |

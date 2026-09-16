@@ -7,6 +7,7 @@ from typing import TYPE_CHECKING, ClassVar
 from textual.app import ComposeResult
 from textual.binding import Binding
 from textual.containers import Container
+from textual.content import Content
 from textual.screen import Screen
 from textual.widgets import Footer, Header, Label, ListItem, ListView
 
@@ -14,7 +15,7 @@ from miniflux_tui.api.models import Category
 from miniflux_tui.security import sanitize_error_message
 from miniflux_tui.ui.screens.confirm_dialog import ConfirmDialog
 from miniflux_tui.ui.screens.input_dialog import InputDialog
-from miniflux_tui.utils import api_call
+from miniflux_tui.utils import api_call, strip_control_chars
 
 if TYPE_CHECKING:
     from miniflux_tui.api.models import Entry
@@ -43,9 +44,11 @@ class CategoryListItem(ListItem):
 
         # Format: 📁 Category Name (3 unread / 10 total)
         total = unread_count + read_count
-        label_text = f"📁 {category.title} ({unread_count} unread / {total} total)" if total > 0 else f"📁 {category.title}"
+        title = strip_control_chars(category.title)
+        label_text = f"📁 {title} ({unread_count} unread / {total} total)" if total > 0 else f"📁 {title}"
 
-        super().__init__(Label(label_text))
+        # Plain Content: the category title is user data and must not be parsed as markup
+        super().__init__(Label(Content(label_text)))
 
 
 class CategoryManagementScreen(Screen):

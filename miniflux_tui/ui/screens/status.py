@@ -4,10 +4,12 @@
 from textual.app import App, ComposeResult
 from textual.binding import Binding
 from textual.containers import VerticalScroll
+from textual.content import Content
 from textual.screen import Screen
 from textual.widgets import Footer, Header, Static
 
 from miniflux_tui.api.models import Feed
+from miniflux_tui.utils import strip_control_chars
 
 
 class StatusScreen(Screen):
@@ -110,7 +112,7 @@ class StatusScreen(Screen):
         """Update display when an error occurs."""
         try:
             server_info = self.query_one("#server-info", Static)
-            server_info.update(f"[red]{error_message}[/red]")
+            server_info.update(Content.from_markup("[red]$msg[/red]", msg=strip_control_chars(error_message)))
 
             feed_health = self.query_one("#feed-health-summary", Static)
             feed_health.update("[dim]Unable to load feed health information[/dim]")
@@ -130,12 +132,15 @@ class StatusScreen(Screen):
         """Update the server information display."""
         try:
             widget = self.query_one("#server-info", Static)
-            lines = [
-                f"  Server URL:      {self.server_url}",
-                f"  Server Version:  {self.server_version}",
-                f"  Username:        {self.username}",
-            ]
-            widget.update("\n".join(lines))
+            widget.update(
+                Content.from_markup(
+                    "  Server URL:      $url\n  Server Version:  $version\n  Username:        $user",
+                    url=strip_control_chars(str(self.server_url)),
+                    version=strip_control_chars(str(self.server_version)),
+                    user=strip_control_chars(str(self.username)),
+                )
+            )
+
         except Exception as e:
             self.app.log(f"Could not update server info: {e}")
 
@@ -174,30 +179,38 @@ class StatusScreen(Screen):
                 widget.update("  [green]No problematic feeds found ✓[/green]")
                 return
 
-            lines = []
-            for feed in self.error_feeds:
-                # Feed title and status
+            # Feed titles, URLs and error messages come from the server and the
+            # feeds themselves. Pass them as Content variables so they render
+            # verbatim and can never be parsed as markup.
+            template_lines: list[str] = []
+            variables: dict[str, str] = {}
+            for index, feed in enumerate(self.error_feeds):
                 status_parts = []
                 if feed.disabled:
                     status_parts.append("[red]DISABLED[/red]")
                 if feed.parsing_error_count > 0:
                     status_parts.append(f"[yellow]{feed.parsing_error_count} error(s)[/yellow]")
-
                 status = " ".join(status_parts)
-                lines.append(f"\n  [bold]{feed.title}[/bold] - {status}")
-                lines.append(f"    URL: {feed.feed_url}")
+
+                variables[f"title{index}"] = strip_control_chars(feed.title)
+                variables[f"url{index}"] = strip_control_chars(feed.feed_url)
+                template_lines.append(f"\n  [bold]$title{index}[/bold] - {status}")
+                template_lines.append(f"    URL: $url{index}")
 
                 if feed.parsing_error_message:
                     # Truncate long error messages
                     error_msg = feed.parsing_error_message[:200]
                     if len(feed.parsing_error_message) > 200:
                         error_msg += "..."
-                    lines.append(f"    Error: [red]{error_msg}[/red]")
+                    variables[f"error{index}"] = strip_control_chars(error_msg)
+                    template_lines.append(f"    Error: [red]$error{index}[/red]")
 
                 if feed.checked_at:
-                    lines.append(f"    Last checked: {feed.checked_at}")
+                    variables[f"checked{index}"] = strip_control_chars(feed.checked_at)
+                    template_lines.append(f"    Last checked: $checked{index}")
 
-            widget.update("\n".join(lines))
+            widget.update(Content.from_markup("\n".join(template_lines), **variables))
+
         except Exception as e:
             self.app.log(f"Could not update error feeds list: {e}")
 

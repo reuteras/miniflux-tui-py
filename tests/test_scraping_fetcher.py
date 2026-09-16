@@ -1,34 +1,73 @@
 # SPDX-License-Identifier: MIT
-"""Tests for secure content fetcher."""
+"""Tests for the secure content fetcher."""
 
-from unittest.mock import AsyncMock, Mock, patch
+from __future__ import annotations
 
-import httpx2
+from unittest.mock import patch
+
 import pytest
+import requests
+from requests.structures import CaseInsensitiveDict
 
+from miniflux_tui.scraping import fetcher as fetcher_module
 from miniflux_tui.scraping.fetcher import SecureFetcher
+
+PUBLIC_IP = "93.184.216.34"
+
+
+class _FakeResponse:
+    """Minimal stand-in for ``requests.Response`` supporting streaming and ``with``."""
+
+    def __init__(
+        self,
+        status: int = 200,
+        headers: dict[str, str] | None = None,
+        body: bytes = b"<html><body>Test content</body></html>",
+        encoding: str | None = "utf-8",
+        chunks: list[bytes] | None = None,
+    ) -> None:
+        self.status_code = status
+        self.headers = CaseInsensitiveDict(headers if headers is not None else {"content-type": "text/html; charset=utf-8"})
+        self._body = body
+        self._chunks = chunks
+        self.encoding = encoding
+        self.closed = False
+
+    def iter_content(self, chunk_size: int):
+        if self._chunks is not None:
+            yield from self._chunks
+            return
+        for i in range(0, len(self._body), chunk_size):
+            yield self._body[i : i + chunk_size]
+
+    def __enter__(self):
+        return self
+
+    def __exit__(self, *_exc):
+        self.closed = True
+        return False
+
+
+@pytest.fixture(autouse=True)
+def fake_dns(monkeypatch):
+    """Resolve every hostname to a public address so tests never hit DNS."""
+    monkeypatch.setattr(
+        fetcher_module.hostname_resolves_to_private.__globals__["socket"],
+        "getaddrinfo",
+        lambda *_a, **_k: [(0, 0, 0, "", (PUBLIC_IP, 80))],
+    )
 
 
 class TestSecureFetcher:
     """Test suite for SecureFetcher class."""
 
-    @pytest.fixture(autouse=True)
-    def clear_proxy_env(self, monkeypatch):
-        """Clear proxy env vars so httpx2.AsyncClient initialises without error.
-
-        The sandbox NO_PROXY value contains '[::1]' which httpx2 cannot parse.
-        Tests mock the actual HTTP calls, so no proxy is needed.
-        """
-        for var in ("HTTP_PROXY", "http_proxy", "HTTPS_PROXY", "https_proxy", "NO_PROXY", "no_proxy"):
-            monkeypatch.delenv(var, raising=False)
-
     def test_init(self):
-        """Test fetcher initialization."""
         fetcher = SecureFetcher()
         assert fetcher.MAX_SIZE == 5 * 1024 * 1024
         assert fetcher.TIMEOUT == 10
         assert {"http", "https"} == fetcher.ALLOWED_SCHEMES
-        assert fetcher.client is not None
+        # requests must never follow redirects on its own; each hop is validated manually
+        assert fetcher.session.max_redirects == 0
 
     @pytest.mark.parametrize(
         ("url", "expected"),
@@ -36,7 +75,7 @@ class TestSecureFetcher:
             # Valid URLs
             ("https://example.com", True),
             ("http://example.com", True),
-            ("https://example.com/path", True),
+            ("https://example.com/path?a=1&b=2", True),
             ("https://subdomain.example.com", True),
             ("http://example.com:8080/path", True),
             # Invalid schemes
@@ -48,168 +87,159 @@ class TestSecureFetcher:
             ("http://localhost", False),
             ("http://localhost:8080", False),
             ("https://LOCALHOST", False),
-            # Loopback IPs
+            # Loopback and private IPv4
             ("http://127.0.0.1", False),
             ("http://127.0.0.2", False),
-            ("http://127.255.255.255", False),
-            # Private IP ranges
             ("http://10.0.0.1", False),
             ("http://192.168.1.1", False),
-            ("http://192.168.255.255", False),
             ("http://172.16.0.1", False),
             ("http://172.31.255.255", False),
-            # Link-local
-            ("http://169.254.1.1", False),
-            # Current network
+            ("http://169.254.169.254", False),
             ("http://0.0.0.0", False),
-            # Invalid formats
+            ("http://100.64.1.1", False),
+            # Alternate spellings that used to bypass the prefix blocklist
+            ("http://[::1]/", False),
+            ("http://[::ffff:127.0.0.1]/", False),
+            ("http://[fd00::1]/", False),
+            ("http://2130706433/", False),
+            ("http://0x7f000001/", False),
+            # Junk
             ("", False),
-            ("not-a-url", False),
-            ("//example.com", False),
+            ("not a url", False),
+            ("http://", False),
+            ("http://exa mple.com", False),
         ],
     )
     def test_is_safe_url(self, url, expected):
-        """Test URL safety validation."""
         fetcher = SecureFetcher()
-        assert fetcher._is_safe_url(url) == expected
+        assert fetcher._is_safe_url(url) is expected
+
+    def test_hostname_resolving_to_private_address_is_unsafe(self, monkeypatch):
+        monkeypatch.setattr(
+            fetcher_module.hostname_resolves_to_private.__globals__["socket"],
+            "getaddrinfo",
+            lambda *_a, **_k: [(0, 0, 0, "", ("127.0.0.1", 80))],
+        )
+        assert SecureFetcher()._is_safe_url("http://localtest.me/") is False
 
     @pytest.mark.asyncio
     async def test_fetch_success(self):
-        """Test successful content fetch."""
         fetcher = SecureFetcher()
-
-        mock_response = Mock()
-        mock_response.status_code = 200
-        mock_response.headers = {"content-length": "1000"}
-        mock_response.content = b"<html>Test content</html>"
-        mock_response.text = "<html>Test content</html>"
-
-        with patch.object(fetcher.client, "get", new_callable=AsyncMock) as mock_get:
-            mock_get.return_value = mock_response
-
+        response = _FakeResponse(headers={"content-type": "text/html", "content-length": "38"})
+        with patch.object(fetcher.session, "get", return_value=response) as mock_get:
             result = await fetcher.fetch("https://example.com")
-
-            assert result == "<html>Test content</html>"
-            mock_get.assert_called_once_with("https://example.com")
+        assert result == "<html><body>Test content</body></html>"
+        mock_get.assert_called_once_with("https://example.com", timeout=fetcher.TIMEOUT, stream=True, allow_redirects=False)
+        assert response.closed is True
 
     @pytest.mark.asyncio
     async def test_fetch_unsafe_url(self):
-        """Test fetch rejects unsafe URLs."""
         fetcher = SecureFetcher()
-
-        with pytest.raises(ValueError, match="Unsafe URL"):
-            await fetcher.fetch("http://localhost")
-
-        with pytest.raises(ValueError, match="Unsafe URL"):
-            await fetcher.fetch("file:///etc/passwd")
+        with patch.object(fetcher.session, "get") as mock_get, pytest.raises(ValueError, match="Unsafe URL"):
+            await fetcher.fetch("http://127.0.0.1/admin")
+        mock_get.assert_not_called()
 
     @pytest.mark.asyncio
     async def test_fetch_response_too_large_header(self):
-        """Test fetch rejects oversized responses via header."""
         fetcher = SecureFetcher()
-
-        mock_response = Mock()
-        mock_response.status_code = 200
-        mock_response.headers = {"content-length": str(10 * 1024 * 1024)}  # 10MB
-
-        with patch.object(fetcher.client, "get", new_callable=AsyncMock) as mock_get:
-            mock_get.return_value = mock_response
-
-            with pytest.raises(ValueError, match="Response too large"):
-                await fetcher.fetch("https://example.com")
+        response = _FakeResponse(headers={"content-type": "text/html", "content-length": str(10 * 1024 * 1024)})
+        with patch.object(fetcher.session, "get", return_value=response), pytest.raises(ValueError, match="too large"):
+            await fetcher.fetch("https://example.com")
 
     @pytest.mark.asyncio
-    async def test_fetch_response_too_large_content(self):
-        """Test fetch rejects oversized responses via actual content."""
+    async def test_fetch_malformed_content_length(self):
         fetcher = SecureFetcher()
+        response = _FakeResponse(headers={"content-type": "text/html", "content-length": "lots"})
+        with patch.object(fetcher.session, "get", return_value=response), pytest.raises(ValueError, match="Malformed"):
+            await fetcher.fetch("https://example.com")
 
-        # Create content > 5MB
-        large_content = b"x" * (6 * 1024 * 1024)
+    @pytest.mark.asyncio
+    async def test_fetch_response_too_large_streamed(self):
+        """Without a Content-Length header the body is still capped while streaming."""
+        fetcher = SecureFetcher()
+        chunk = b"x" * (1024 * 1024)
+        response = _FakeResponse(headers={"content-type": "text/html"}, chunks=[chunk] * 6)
+        with patch.object(fetcher.session, "get", return_value=response), pytest.raises(ValueError, match="too large"):
+            await fetcher.fetch("https://example.com")
 
-        mock_response = Mock()
-        mock_response.status_code = 200
-        mock_response.headers = {}
-        mock_response.content = large_content
+    @pytest.mark.asyncio
+    async def test_fetch_rejects_binary_content_type(self):
+        fetcher = SecureFetcher()
+        response = _FakeResponse(headers={"content-type": "application/octet-stream"})
+        with patch.object(fetcher.session, "get", return_value=response), pytest.raises(ValueError, match="content type"):
+            await fetcher.fetch("https://example.com/file.bin")
 
-        with patch.object(fetcher.client, "get", new_callable=AsyncMock) as mock_get:
-            mock_get.return_value = mock_response
+    @pytest.mark.asyncio
+    async def test_fetch_follows_safe_redirect(self):
+        fetcher = SecureFetcher()
+        redirect = _FakeResponse(status=302, headers={"location": "/moved"})
+        final = _FakeResponse(body=b"<p>moved</p>")
+        with patch.object(fetcher.session, "get", side_effect=[redirect, final]) as mock_get:
+            result = await fetcher.fetch("https://example.com/start")
+        assert result == "<p>moved</p>"
+        assert [c.args[0] for c in mock_get.call_args_list] == ["https://example.com/start", "https://example.com/moved"]
 
-            with pytest.raises(ValueError, match="Response too large"):
-                await fetcher.fetch("https://example.com")
+    @pytest.mark.asyncio
+    async def test_fetch_rejects_redirect_to_private_address(self):
+        """A public page redirecting to an internal address is refused before the second request."""
+        fetcher = SecureFetcher()
+        redirect = _FakeResponse(status=302, headers={"location": "http://169.254.169.254/latest/meta-data/"})
+        with patch.object(fetcher.session, "get", side_effect=[redirect]) as mock_get, pytest.raises(ValueError, match="Unsafe URL"):
+            await fetcher.fetch("https://example.com/start")
+        assert mock_get.call_count == 1
+
+    @pytest.mark.asyncio
+    async def test_fetch_rejects_redirect_loop(self):
+        fetcher = SecureFetcher()
+        responses = [_FakeResponse(status=301, headers={"location": "https://example.com/loop"}) for _ in range(10)]
+        with patch.object(fetcher.session, "get", side_effect=responses), pytest.raises(ValueError, match="Too many redirects"):
+            await fetcher.fetch("https://example.com/loop")
+
+    @pytest.mark.asyncio
+    async def test_fetch_redirect_without_location(self):
+        fetcher = SecureFetcher()
+        response = _FakeResponse(status=302, headers={})
+        with patch.object(fetcher.session, "get", return_value=response), pytest.raises(RuntimeError, match="Location"):
+            await fetcher.fetch("https://example.com")
 
     @pytest.mark.asyncio
     async def test_fetch_timeout(self):
-        """Test fetch handles timeout errors."""
         fetcher = SecureFetcher()
-
-        with patch.object(fetcher.client, "get", new_callable=AsyncMock) as mock_get:
-            mock_get.side_effect = httpx2.TimeoutException("Timeout")
-
-            with pytest.raises(TimeoutError, match="Timeout fetching"):
-                await fetcher.fetch("https://example.com")
+        with patch.object(fetcher.session, "get", side_effect=requests.Timeout("slow")), pytest.raises(TimeoutError, match="Timeout"):
+            await fetcher.fetch("https://example.com")
 
     @pytest.mark.asyncio
     async def test_fetch_http_error(self):
-        """Test fetch handles HTTP errors."""
         fetcher = SecureFetcher()
-
-        mock_response = Mock()
-        mock_response.status_code = 404
-
-        with patch.object(fetcher.client, "get", new_callable=AsyncMock) as mock_get:
-            mock_get.side_effect = httpx2.HTTPStatusError("Not Found", request=Mock(), response=mock_response)
-
-            with pytest.raises(RuntimeError, match="HTTP error 404"):
-                await fetcher.fetch("https://example.com/notfound")
+        response = _FakeResponse(status=404)
+        with patch.object(fetcher.session, "get", return_value=response), pytest.raises(RuntimeError, match="HTTP error 404"):
+            await fetcher.fetch("https://example.com/missing")
 
     @pytest.mark.asyncio
-    async def test_fetch_generic_error(self):
-        """Test fetch handles unexpected errors."""
+    async def test_fetch_connection_error_does_not_leak_details(self):
         fetcher = SecureFetcher()
+        error = requests.ConnectionError("socket says: internal detail")
+        with patch.object(fetcher.session, "get", side_effect=error), pytest.raises(RuntimeError) as excinfo:
+            await fetcher.fetch("https://example.com")
+        assert "ConnectionError" in str(excinfo.value)
+        assert "internal detail" not in str(excinfo.value)
 
-        with patch.object(fetcher.client, "get", new_callable=AsyncMock) as mock_get:
-            mock_get.side_effect = Exception("Network error")
-
-            with pytest.raises(RuntimeError, match="Fetch error"):
-                await fetcher.fetch("https://example.com")
+    @pytest.mark.asyncio
+    async def test_fetch_decodes_with_declared_encoding(self):
+        fetcher = SecureFetcher()
+        response = _FakeResponse(body="<p>héllo</p>".encode("latin-1"), encoding="latin-1")
+        with patch.object(fetcher.session, "get", return_value=response):
+            result = await fetcher.fetch("https://example.com")
+        assert result == "<p>héllo</p>"
 
     @pytest.mark.asyncio
     async def test_close(self):
-        """Test fetcher cleanup."""
         fetcher = SecureFetcher()
-
-        with patch.object(fetcher.client, "aclose", new_callable=AsyncMock) as mock_close:
+        with patch.object(fetcher.session, "close") as mock_close:
             await fetcher.close()
-            mock_close.assert_called_once()
+        mock_close.assert_called_once()
 
     @pytest.mark.asyncio
     async def test_context_manager(self):
-        """Test fetcher as async context manager."""
         async with SecureFetcher() as fetcher:
-            assert fetcher is not None
-            assert fetcher.client is not None
-
-        # Client should be closed after context exit
-        # We can't easily verify this without accessing internals
-
-    def test_private_ip_ranges_comprehensive(self):
-        """Test all private IP range prefixes are blocked."""
-        fetcher = SecureFetcher()
-
-        # Test all Class B private ranges
-        for i in range(16, 32):
-            url = f"http://172.{i}.0.1"
-            assert not fetcher._is_safe_url(url), f"Should block {url}"
-
-        # Test public IPs that should be allowed
-        public_ips = [
-            "http://8.8.8.8",  # Google DNS
-            "http://1.1.1.1",  # Cloudflare DNS
-            "http://172.15.0.1",  # Just before private range
-            "http://172.32.0.1",  # Just after private range
-            "http://192.167.0.1",  # Before 192.168
-            "http://192.169.0.1",  # After 192.168
-        ]
-
-        for url in public_ips:
-            assert fetcher._is_safe_url(url), f"Should allow {url}"
+            assert isinstance(fetcher, SecureFetcher)

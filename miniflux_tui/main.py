@@ -4,23 +4,19 @@
 import argparse
 import asyncio
 import os
-import shutil
-import subprocess
 import sys
 import traceback
-from importlib.metadata import PackageNotFoundError, version
-from pathlib import Path
 
 from .config import (
     Config,
     ConfigurationError,
     create_codespace_config,
     create_default_config,
-    get_config_dir,
     get_config_file_path,
     load_config,
 )
 from .ui.app import run_tui
+from .utils import get_app_version
 
 
 def _print_config_summary(config: Config) -> bool:
@@ -135,96 +131,10 @@ def _auto_create_codespace_config() -> bool:
     return False
 
 
-def _auto_setup_tailscale() -> None:
-    """
-    Automatically install and authenticate Tailscale on first startup if TAILSCALE_AUTHKEY is set.
-
-    This function checks for a marker file to ensure it only runs once per Codespace.
-    """
-    # Check if Tailscale auth key is present
-    if not os.environ.get("TAILSCALE_AUTHKEY"):
-        return
-
-    # Check if we've already run Tailscale setup
-    config_dir = Path(get_config_dir())
-    marker_file = config_dir / ".tailscale-initialized"
-
-    if marker_file.exists():
-        return
-
-    # Check if tailscale command is available
-    tailscale_path = shutil.which("tailscale")
-
-    if not tailscale_path:
-        # Tailscale not installed - install it
-        print("\nDetected TAILSCALE_AUTHKEY environment variable.")
-        print("Tailscale not found. Installing Tailscale...")
-
-        # Get full path to sh for security
-        sh_path = shutil.which("sh")
-        if not sh_path:
-            print("⚠ Shell (sh) not found. Cannot install Tailscale automatically.")
-            print("Please install Tailscale manually:")
-            print("  curl -fsSL https://tailscale.com/install.sh | sh")
-            return
-
-        try:
-            # Download and run the Tailscale install script
-            subprocess.run(  # noqa: S603
-                [sh_path, "-c", "curl -fsSL https://tailscale.com/install.sh | sh"],
-                check=True,
-                capture_output=True,
-                text=True,
-            )
-            print("✓ Tailscale installed successfully!")
-
-            # Get the tailscale path after installation
-            tailscale_path = shutil.which("tailscale")
-            if not tailscale_path:
-                print("⚠ Tailscale installation completed but command not found in PATH.")
-                print("You may need to restart your shell or manually authenticate:")
-                print("  tailscale set --accept-routes")
-                return
-
-        except subprocess.CalledProcessError as exc:
-            print(f"\n⚠ Tailscale installation failed: {exc}")
-            print("You can manually install Tailscale by running:")
-            print("  curl -fsSL https://tailscale.com/install.sh | sh")
-            return
-        except FileNotFoundError:
-            print("\n⚠ Required commands not found.")
-            print("Please install Tailscale manually.")
-            return
-
-    print("\nAuthenticating Tailscale for first-time setup...")
-    print("Please visit the URL that appears to complete authentication.\n")
-
-    try:
-        # Run tailscale set --accept-routes (interactive authentication)
-        # Using full path from shutil.which for security
-        subprocess.run(  # noqa: S603
-            [tailscale_path, "set", "--accept-routes"],
-            check=True,
-        )
-        print("\n✓ Tailscale authentication completed successfully!")
-
-        # Create marker file to prevent running again
-        config_dir.mkdir(parents=True, exist_ok=True, mode=0o700)
-        marker_file.touch(mode=0o600)
-
-    except subprocess.CalledProcessError as exc:
-        print(f"\n⚠ Tailscale authentication failed: {exc}")
-        print("You can manually authenticate later by running:")
-        print("  tailscale set --accept-routes")
-
-
 def _run_application() -> int:
     """Run the main TUI application."""
     # Auto-create Codespace config if environment variables are present
     _auto_create_codespace_config()
-
-    # Auto-setup Tailscale authentication on first startup
-    _auto_setup_tailscale()
 
     try:
         config = load_config()
@@ -269,13 +179,6 @@ def _run_application() -> int:
     return error_code
 
 
-def _get_version() -> str:
-    try:
-        return version("miniflux-tui-py")
-    except PackageNotFoundError:
-        return "unknown"
-
-
 def main() -> int:
     """Main entry point for the application."""
     parser = argparse.ArgumentParser(description="A Python TUI client for Miniflux RSS reader")
@@ -297,7 +200,7 @@ def main() -> int:
     parser.add_argument(
         "--version",
         action="version",
-        version=f"%(prog)s {_get_version()}",
+        version=f"%(prog)s {get_app_version()}",
     )
 
     args = parser.parse_args()

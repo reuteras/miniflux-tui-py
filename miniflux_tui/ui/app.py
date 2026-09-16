@@ -10,12 +10,13 @@ from typing import TYPE_CHECKING, cast
 
 from textual.app import App
 from textual.driver import Driver
+from textual.notifications import SeverityLevel
 
 from miniflux_tui.api.client import MinifluxClient
 from miniflux_tui.api.models import Category, Entry, Feed
 from miniflux_tui.config import Config
-from miniflux_tui.constants import DEFAULT_ENTRY_LIMIT
 from miniflux_tui.themes import get_available_themes, get_theme
+from miniflux_tui.utils import strip_control_chars
 
 from .screens.help import HelpScreen
 from .screens.loading import LoadingScreen
@@ -148,6 +149,25 @@ class MinifluxTuiApp(App):
         self._status_screen_cls: type[StatusScreen] | None = None
         # Runtime setting for showing info messages (can be toggled during session)
         self.show_info_messages = config.show_info_messages
+
+    def notify(  # type: ignore[override]
+        self,
+        message: str,
+        *,
+        title: str = "",
+        severity: SeverityLevel = "information",
+        timeout: float | None = None,
+        markup: bool = False,
+    ) -> None:
+        """Show a toast notification with markup parsing disabled by default.
+
+        Notification text routinely embeds feed titles, URLs and exception
+        messages. Textual parses toast messages as markup, so an untrusted
+        ``[/x]`` would raise ``MarkupError`` and ``[bold]`` would restyle the
+        toast. Callers that really want markup must opt in explicitly and
+        escape untrusted parts with :func:`miniflux_tui.utils.escape_markup`.
+        """
+        super().notify(strip_control_chars(message), title=title, severity=severity, timeout=timeout, markup=markup)
 
     def notify_info(self, message: str) -> None:
         """Send an information notification if info messages are enabled.
@@ -407,10 +427,10 @@ class MinifluxTuiApp(App):
 
         try:
             if view == "starred":
-                self.entries = await self.client.get_starred_entries(limit=DEFAULT_ENTRY_LIMIT)
+                self.entries = await self.client.get_starred_entries()
                 self.current_view = "starred"
             else:
-                self.entries = await self.client.get_unread_entries(limit=DEFAULT_ENTRY_LIMIT)
+                self.entries = await self.client.get_unread_entries()
                 self.current_view = "unread"
 
             # Enrich entries with category information using the feed mapping (fast)

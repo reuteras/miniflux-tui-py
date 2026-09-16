@@ -297,7 +297,7 @@ password = ["/bin/sh", "-c", "printf %s \"$MINIFLUX_TOKEN\""]
 
 ### Scraping Rule Helper
 
-Access with `Shift+X` from entry reader or feed settings.
+Access with `x` from the entry list or entry reader.
 
 **Features**
 

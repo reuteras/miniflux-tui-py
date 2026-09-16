@@ -11,6 +11,7 @@ from textual.screen import Screen
 from textual.widgets import Button, Footer, Header, Input, Label, ListItem, ListView, RadioButton, RadioSet, Static
 
 from miniflux_tui.scraping import ContentAnalyzer, SecureFetcher
+from miniflux_tui.utils import strip_control_chars
 
 
 class SelectorListItem(ListItem):
@@ -152,9 +153,10 @@ class ScrapingHelperScreen(Screen):
         yield Header()
 
         with Container(id="main-container"):
-            yield Label(f"Feed: {self.feed_title}", id="feed-display")
-            yield Label(f"URL: {self.entry_url}", id="url-display")
-            yield Static("", id="status-message")
+            # Feed title, URL, selectors and page content are untrusted: never parse as markup
+            yield Label(f"Feed: {strip_control_chars(self.feed_title)}", id="feed-display", markup=False)
+            yield Label(f"URL: {strip_control_chars(self.entry_url)}", id="url-display", markup=False)
+            yield Static("", id="status-message", markup=False)
 
             with Vertical(id="rule-type-container"):
                 yield Label("Rule Type:")
@@ -178,7 +180,7 @@ class ScrapingHelperScreen(Screen):
             with Container(id="preview-container"):
                 yield Label("👁 Preview - Selected Content", id="preview-title")
                 with VerticalScroll(id="preview-scroll"):
-                    yield Static("", id="preview-content")
+                    yield Static("", id="preview-content", markup=False)
 
         yield Footer()
 
@@ -217,7 +219,7 @@ class ScrapingHelperScreen(Screen):
                 count_str = f" ({elem_count}x)" if elem_count > 1 else ""
 
                 item = SelectorListItem(
-                    Label(f"{i}. ⭐{score:3d} - {selector}{count_str}"),
+                    Label(f"{i}. ⭐{score:3d} - {strip_control_chars(selector)}{count_str}", markup=False),
                     classes="selector-item",
                     data=candidate,
                 )

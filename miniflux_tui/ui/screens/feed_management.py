@@ -6,6 +6,7 @@ from typing import ClassVar
 from textual.app import ComposeResult
 from textual.binding import Binding
 from textual.containers import Container
+from textual.content import Content
 from textual.screen import Screen
 from textual.widgets import Footer, Header, Label, ListItem, ListView
 
@@ -13,7 +14,7 @@ from miniflux_tui.api.models import Feed
 from miniflux_tui.security import sanitize_error_message, validate_feed_url
 from miniflux_tui.ui.screens.confirm_dialog import ConfirmDialog
 from miniflux_tui.ui.screens.input_dialog import InputDialog
-from miniflux_tui.utils import api_call
+from miniflux_tui.utils import api_call, strip_control_chars
 
 
 class FeedListItem(ListItem):
@@ -36,10 +37,11 @@ class FeedListItem(ListItem):
         disabled_flag = " [disabled]" if feed.disabled else ""
 
         # Truncate title if too long
-        title = feed.title[:40]
+        title = strip_control_chars(feed.title)[:40]
         label_text = f"{status_icon} {title}{disabled_flag}"
 
-        super().__init__(Label(label_text))
+        # Plain Content: the feed title is untrusted and must not be parsed as markup
+        super().__init__(Label(Content(label_text)))
 
 
 class FeedManagementScreen(Screen):

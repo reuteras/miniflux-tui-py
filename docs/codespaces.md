@@ -99,22 +99,17 @@ The easiest way to use Tailscale with Codespaces is to configure it in your `dev
 - `features`: Installs and configures Tailscale automatically
 - `postCreateCommand`: Installs miniflux-tui-py and creates the config
 
-**Automatic Installation & Authentication:**
+**Authentication:**
 
-If `TAILSCALE_AUTHKEY` is set as an environment variable, miniflux-tui will automatically:
+The devcontainer feature installs Tailscale, but authentication is a manual
+step. miniflux-tui itself never installs software or runs network scripts:
+an earlier version ran `curl | sh` at startup when `TAILSCALE_AUTHKEY` was
+set, and that behaviour has been removed.
 
-1. **Install Tailscale** (if not already installed) using the official install script
-2. **Authenticate** by running `tailscale set --accept-routes`
-3. Prompt you to visit a URL to complete authentication
-
-This happens automatically on first startup - no manual steps required!
-
-**Manual Authentication (optional):**
-
-If you prefer to authenticate manually, you can run:
+To authenticate, run:
 
 ```bash
-tailscale set --accept-routes
+sudo tailscale up --accept-routes
 ```
 
 This will generate a URL to visit in your browser to authenticate and connect your codespace to your Tailscale network.

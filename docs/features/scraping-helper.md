@@ -34,7 +34,7 @@ See [PR #405](https://github.com/reuteras/miniflux-tui-py/pull/405) for full tec
 ### Quick Start
 
 1. Navigate to entry in entry list
-2. Press `Shift+X`
+2. Press `x`
 3. Review suggestions (auto-ranked)
 4. Select best match or test custom
 5. Press `Ctrl+S` to save
@@ -44,7 +44,7 @@ See [PR #405](https://github.com/reuteras/miniflux-tui-py/pull/405) for full tec
 
 | Key       | Action               |
 |-----------|----------------------|
-| `Shift+X` | Open from entry list |
+| `x`       | Open from entry list or entry reader |
 | `↑/↓`     | Navigate suggestions |
 | `Enter`   | Select suggestion    |
 | `t`       | Test custom selector |
@@ -153,7 +153,7 @@ Potential improvements:
 
 ## Dependencies
 
-- `httpx2` (2.12.0) - Async HTTP
+- `requests` - HTTP client (already required by the Miniflux API client)
 - `beautifulsoup4` (4.14.2) - HTML parsing
 - `html5lib` (1.1) - Secure parser
 - `bleach` (6.3.0) - Sanitization

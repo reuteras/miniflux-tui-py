@@ -1,10 +1,24 @@
 # SPDX-License-Identifier: MIT
-"""Secure web content fetcher with strict validation and safety measures."""
+"""Secure web content fetcher with strict validation and safety measures.
 
-from typing import ClassVar, NoReturn
-from urllib.parse import urlparse
+Runs from the user's machine, so every URL it touches is treated as hostile:
+the scheme, host, resolved addresses and each redirect hop are validated, and
+the response body is streamed with a hard size cap.
+"""
 
-import httpx2
+from __future__ import annotations
+
+import asyncio
+from functools import partial
+from typing import ClassVar
+from urllib.parse import urljoin
+
+import requests
+
+from miniflux_tui.security import hostname_resolves_to_private, validate_feed_url
+
+_REDIRECT_STATUSES: frozenset[int] = frozenset({301, 302, 303, 307, 308})
+_ALLOWED_CONTENT_TYPES: tuple[str, ...] = ("text/html", "application/xhtml+xml", "text/xml", "application/xml", "text/plain")
 
 
 class SecureFetcher:
@@ -12,18 +26,16 @@ class SecureFetcher:
 
     MAX_SIZE: ClassVar[int] = 5 * 1024 * 1024  # 5MB max response size
     TIMEOUT: ClassVar[int] = 10  # seconds
+    MAX_REDIRECTS: ClassVar[int] = 5
     ALLOWED_SCHEMES: ClassVar[set[str]] = {"http", "https"}
+    _CHUNK_SIZE: ClassVar[int] = 64 * 1024
 
-    def __init__(self):
-        """Initialize secure HTTP client with safety settings."""
-        self.client = httpx2.AsyncClient(
-            timeout=self.TIMEOUT,
-            follow_redirects=True,
-            max_redirects=5,
-            headers={
-                "User-Agent": "Mozilla/5.0 (compatible; MinifluxTUI/0.6.0)",
-            },
-        )
+    def __init__(self) -> None:
+        """Initialize a requests session with safety settings."""
+        self.session = requests.Session()
+        self.session.headers["User-Agent"] = "Mozilla/5.0 (compatible; MinifluxTUI)"
+        # Never let requests follow redirects on its own; each hop is validated in _fetch_sync.
+        self.session.max_redirects = 0
 
     async def fetch(self, url: str) -> str:
         """Safely fetch URL content with validation and size limits.
@@ -35,25 +47,49 @@ class SecureFetcher:
             The response text content
 
         Raises:
-            ValueError: If URL is unsafe or response too large
+            ValueError: If URL is unsafe, redirects somewhere unsafe, or the response is too large
             TimeoutError: If request times out
             RuntimeError: For other fetch errors
         """
         self._validate_url(url)
+        loop = asyncio.get_running_loop()
+        return await loop.run_in_executor(None, partial(self._fetch_sync, url))
 
-        try:
-            response = await self.client.get(url)
-            response.raise_for_status()
-            self._validate_response_size(response, url)
-            return response.text
-        except ValueError:
-            raise
-        except httpx2.TimeoutException as e:
-            self._handle_timeout(url, e)
-        except httpx2.HTTPStatusError as e:
-            self._handle_http_error(url, e)
-        except Exception as e:
-            self._handle_generic_error(url, e)
+    def _fetch_sync(self, url: str) -> str:
+        """Blocking fetch that follows redirects manually, validating every hop."""
+        current = url
+        for _ in range(self.MAX_REDIRECTS + 1):
+            try:
+                response = self.session.get(current, timeout=self.TIMEOUT, stream=True, allow_redirects=False)
+            except requests.Timeout as e:
+                msg = f"Timeout fetching {current}"
+                raise TimeoutError(msg) from e
+            except requests.RequestException as e:
+                msg = f"Fetch error for {current}: {type(e).__name__}"
+                raise RuntimeError(msg) from e
+
+            with response:
+                if response.status_code in _REDIRECT_STATUSES:
+                    location = response.headers.get("location")
+                    if not location:
+                        msg = f"Redirect without Location header from {current}"
+                        raise RuntimeError(msg)
+                    current = urljoin(current, location)
+                    self._validate_url(current)
+                    continue
+
+                if response.status_code >= 400:
+                    msg = f"HTTP error {response.status_code}: {current}"
+                    raise RuntimeError(msg)
+
+                self._check_content_type(response, current)
+                self._check_content_length_header(response, current)
+                body = self._read_capped(response, current)
+                encoding = response.encoding or "utf-8"
+                return body.decode(encoding, errors="replace")
+
+        msg = f"Too many redirects fetching {url}"
+        raise ValueError(msg)
 
     def _validate_url(self, url: str) -> None:
         """Validate that URL is safe to fetch.
@@ -68,98 +104,49 @@ class SecureFetcher:
             msg = f"Unsafe URL: {url}"
             raise ValueError(msg)
 
-    def _validate_response_size(self, response: httpx2.Response, url: str) -> None:
-        """Validate response size is within limits.
+    def _check_content_type(self, response: requests.Response, url: str) -> None:
+        """Reject binary responses; only text-like documents are analyzable."""
+        content_type = response.headers.get("content-type", "").split(";")[0].strip().lower()
+        if content_type and not content_type.startswith(_ALLOWED_CONTENT_TYPES):
+            msg = f"Unsupported content type {content_type!r} from {url}"
+            raise ValueError(msg)
 
-        Checks both headers and actual content size.
-
-        Args:
-            response: The HTTP response object
-            url: The URL being fetched (for error messages)
-
-        Raises:
-            ValueError: If response exceeds MAX_SIZE
-        """
-        self._check_content_length_header(response, url)
-        self._check_actual_content_size(response, url)
-
-    def _check_content_length_header(self, response: httpx2.Response, url: str) -> None:
-        """Check Content-Length header before reading full content.
-
-        Args:
-            response: The HTTP response object
-            url: The URL being fetched (for error messages)
+    def _check_content_length_header(self, response: requests.Response, url: str) -> None:
+        """Check Content-Length header before reading the body.
 
         Raises:
-            ValueError: If Content-Length header exceeds MAX_SIZE
+            ValueError: If Content-Length header exceeds MAX_SIZE or is malformed
         """
         content_length = response.headers.get("content-length")
-        if content_length and int(content_length) > self.MAX_SIZE:
-            msg = f"Response too large: {content_length} bytes from {url}"
+        if content_length is None:
+            return
+        try:
+            declared = int(content_length)
+        except ValueError as e:
+            msg = f"Malformed Content-Length header from {url}"
+            raise ValueError(msg) from e
+        if declared > self.MAX_SIZE:
+            msg = f"Response too large: {declared} bytes from {url}"
             raise ValueError(msg)
 
-    def _check_actual_content_size(self, response: httpx2.Response, url: str) -> None:
-        """Check actual content size after reading.
-
-        Args:
-            response: The HTTP response object
-            url: The URL being fetched (for error messages)
-
-        Raises:
-            ValueError: If actual content exceeds MAX_SIZE
-        """
-        content = response.content
-        if len(content) > self.MAX_SIZE:
-            msg = f"Response too large: {len(content)} bytes from {url}"
-            raise ValueError(msg)
-
-    def _handle_timeout(self, url: str, e: httpx2.TimeoutException) -> NoReturn:
-        """Handle timeout exceptions.
-
-        Args:
-            url: The URL that timed out
-            e: The timeout exception
-
-        Raises:
-            TimeoutError: Always raises with formatted message
-        """
-        msg = f"Timeout fetching {url}"
-        raise TimeoutError(msg) from e
-
-    def _handle_http_error(self, url: str, e: httpx2.HTTPStatusError) -> NoReturn:
-        """Handle HTTP status errors.
-
-        Args:
-            url: The URL that returned an error
-            e: The HTTP status error
-
-        Raises:
-            RuntimeError: Always raises with formatted message
-        """
-        msg = f"HTTP error {e.response.status_code}: {url}"
-        raise RuntimeError(msg) from e
-
-    def _handle_generic_error(self, url: str, e: Exception) -> NoReturn:
-        """Handle generic fetch errors.
-
-        Args:
-            url: The URL being fetched
-            e: The exception that occurred
-
-        Raises:
-            RuntimeError: Always raises with formatted message
-        """
-        msg = f"Fetch error for {url}: {e}"
-        raise RuntimeError(msg) from e
+    def _read_capped(self, response: requests.Response, url: str) -> bytes:
+        """Stream the body, aborting as soon as MAX_SIZE is exceeded."""
+        chunks: list[bytes] = []
+        total = 0
+        for chunk in response.iter_content(chunk_size=self._CHUNK_SIZE):
+            total += len(chunk)
+            if total > self.MAX_SIZE:
+                msg = f"Response too large: more than {self.MAX_SIZE} bytes from {url}"
+                raise ValueError(msg)
+            chunks.append(chunk)
+        return b"".join(chunks)
 
     def _is_safe_url(self, url: str) -> bool:
-        """Validate URL is safe to fetch.
+        """Validate URL is safe to fetch from this machine.
 
-        Checks for:
-        - Valid http/https scheme
-        - Valid domain name
-        - No localhost or private IPs
-        - No file:// or other dangerous schemes
+        Reuses the shared SSRF checks (scheme, IP literal ranges, control
+        characters) and additionally resolves the hostname so that names
+        pointing at loopback, link-local or private addresses are rejected.
 
         Args:
             url: The URL to validate
@@ -167,61 +154,19 @@ class SecureFetcher:
         Returns:
             True if URL is safe to fetch, False otherwise
         """
-        try:
-            parsed = urlparse(url)
-
-            # Must have valid scheme
-            if parsed.scheme not in self.ALLOWED_SCHEMES:
-                return False
-
-            # Must have a network location (domain)
-            if not parsed.netloc:
-                return False
-
-            netloc_lower = parsed.netloc.lower()
-
-            # Block localhost
-            if netloc_lower.startswith("localhost"):
-                return False
-
-            # Block common private IP ranges
-            private_prefixes = (
-                "127.",  # Loopback
-                "0.",  # Current network
-                "10.",  # Private Class A
-                "192.168.",  # Private Class C
-                "172.16.",  # Private Class B
-                "172.17.",
-                "172.18.",
-                "172.19.",
-                "172.20.",
-                "172.21.",
-                "172.22.",
-                "172.23.",
-                "172.24.",
-                "172.25.",
-                "172.26.",
-                "172.27.",
-                "172.28.",
-                "172.29.",
-                "172.30.",
-                "172.31.",
-                "169.254.",  # Link-local
-            )
-
-            # Check if any private prefix matches
-            return all(not netloc_lower.startswith(prefix) for prefix in private_prefixes)
-        except Exception:
+        is_valid, _ = validate_feed_url(url)
+        if not is_valid:
             return False
+        return not hostname_resolves_to_private(url)
 
-    async def close(self):
-        """Close the HTTP client."""
-        await self.client.aclose()
+    async def close(self) -> None:
+        """Close the HTTP session."""
+        self.session.close()
 
-    async def __aenter__(self):
+    async def __aenter__(self) -> SecureFetcher:
         """Async context manager entry."""
         return self
 
-    async def __aexit__(self, exc_type, exc_val, exc_tb):
+    async def __aexit__(self, exc_type, exc_val, exc_tb) -> None:
         """Async context manager exit."""
         await self.close()

@@ -15,7 +15,6 @@ from textual.widgets import Footer, Header, Label, ListItem, ListView
 
 from miniflux_tui.api.models import Category, Entry
 from miniflux_tui.constants import (
-    DEFAULT_ENTRY_LIMIT,
     FOLD_COLLAPSED,
     FOLD_EXPANDED,
     SORT_MODES,
@@ -269,8 +268,9 @@ class EntryListScreen(Screen):
         Binding("comma", "sync_entries", "Sync Entries", show=False),
         # Section navigation (g prefix)
         Binding("g", "g_prefix_mode", "Section Navigation", show=False),
-        # Feed settings
+        # Feed settings and scraping helper
         Binding("X", "feed_settings", "Feed Settings"),
+        Binding("x", "scraping_helper", "Scraping Helper", show=False),
         # Search and help
         Binding("slash", "search", "Search"),
         Binding("question_mark", "show_help", "Help"),
@@ -1958,8 +1958,8 @@ class EntryListScreen(Screen):
         """
         try:
             if self.app.current_view == "starred":
-                return await self.app.client.get_starred_entries(limit=DEFAULT_ENTRY_LIMIT)
-            return await self.app.client.get_unread_entries(limit=DEFAULT_ENTRY_LIMIT)
+                return await self.app.client.get_starred_entries()
+            return await self.app.client.get_unread_entries()
         except Exception as e:
             self.notify(f"Error fetching entries: {e}", severity="error")
             return None
@@ -2369,8 +2369,45 @@ class EntryListScreen(Screen):
             self.app.log(f"Error pushing history screen: {type(e).__name__}: {e}")
             self.app.notify(f"Failed to show history: {e}", severity="error")
 
+    def action_scraping_helper(self) -> None:
+        """Open the scraping rule helper for the selected entry's page."""
+        # Import here to avoid circular dependency
+        from miniflux_tui.ui.screens.scraping_helper import ScrapingHelperScreen  # noqa: PLC0415
+
+        if not self.list_view or not self.list_view.highlighted_child:
+            self.notify("No entry selected", severity="warning")
+            return
+
+        selected_item = self.list_view.highlighted_child
+        if not isinstance(selected_item, EntryListItem):
+            self.notify("Please select an entry first", severity="warning")
+            return
+
+        entry = selected_item.entry
+        client = self.app.client
+        if not client:
+            self.notify("API client not available", severity="error")
+            return
+        if not entry.url:
+            self.notify("Entry has no URL to analyze", severity="warning")
+            return
+
+        async def save_scraper_rule(feed_id: int, rule: str) -> None:
+            await client.update_feed(feed_id, scraper_rules=rule)
+            self.notify(f"Scraper rule saved for feed: {entry.feed.title}")
+
+        self.app.push_screen(
+            ScrapingHelperScreen(
+                entry_url=entry.url,
+                feed_id=entry.feed_id,
+                feed_title=entry.feed.title,
+                on_save_callback=save_scraper_rule,
+            )
+        )
+
     async def action_feed_settings(self) -> None:
         """Open feed settings screen for selected entry's feed."""
+
         # Import here to avoid circular dependency
         from miniflux_tui.ui.screens.feed_settings import FeedSettingsScreen  # noqa: PLC0415
 

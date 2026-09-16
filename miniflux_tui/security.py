@@ -3,6 +3,7 @@
 
 import ipaddress
 import re
+import socket
 from urllib.parse import urlparse
 
 
@@ -83,15 +84,37 @@ def _is_private_ip(hostname: str) -> bool:
     Returns:
         True if hostname is a private/reserved IP, False otherwise
     """
-    try:
-        addr = ipaddress.ip_address(hostname)
-        if addr.is_private or addr.is_loopback or addr.is_link_local or addr.is_multicast or addr.is_reserved or addr.is_unspecified:
-            return True
-        return any(addr in net for net in _ADDITIONAL_RESERVED_NETWORKS)
-    except ValueError:
-        # Not a valid IP literal — it is a hostname; DNS-based access is
-        # controlled server-side by Miniflux itself.
+    addr = _parse_ip_literal(hostname)
+    if addr is None:
+        # Not an IP literal — it is a hostname. Callers that fetch from this
+        # machine resolve it via hostname_resolves_to_private().
         return False
+    if addr.is_private or addr.is_loopback or addr.is_link_local or addr.is_multicast or addr.is_reserved or addr.is_unspecified:
+        return True
+    return any(addr in net for net in _ADDITIONAL_RESERVED_NETWORKS)
+
+
+_LEGACY_IPV4_RE = re.compile(r"[0-9a-fA-Fx.]+")
+
+
+def _parse_ip_literal(hostname: str) -> ipaddress.IPv4Address | ipaddress.IPv6Address | None:
+    """Parse an IP literal, including legacy IPv4 spellings resolvers accept.
+
+    ``ipaddress`` only understands dotted-quad IPv4, but resolvers treat
+    ``2130706433``, ``0x7f000001``, ``127.1`` and ``0177.0.0.1`` as
+    127.0.0.1 via ``inet_aton``. Parse those too so they cannot bypass the
+    private-range check.
+    """
+    try:
+        return ipaddress.ip_address(hostname)
+    except ValueError:
+        pass
+    if hostname and _LEGACY_IPV4_RE.fullmatch(hostname):
+        try:
+            return ipaddress.IPv4Address(socket.inet_aton(hostname))
+        except OSError:
+            return None
+    return None
 
 
 def _check_url_suspicious_content(url: str) -> str | None:
@@ -111,7 +134,7 @@ def _check_url_suspicious_content(url: str) -> str | None:
     if "\n" in url or "\r" in url:
         return "URL contains invalid characters (newlines)"
 
-    # Check for shell metacharacters and null bytes
+    # Check for characters that are never valid in a URL and null bytes
     if _has_suspicious_patterns(url):
         return "URL contains suspicious characters"
 
@@ -121,6 +144,11 @@ def _check_url_suspicious_content(url: str) -> str | None:
 def _has_suspicious_patterns(url: str) -> bool:
     """Check if URL contains suspicious patterns.
 
+    URLs are sent to the Miniflux API as JSON and never reach a shell, so
+    legitimate query-string characters such as ``&``, ``;`` and ``$`` are
+    allowed. Angle brackets, backticks, whitespace and encoded null bytes are
+    never valid in a URL and indicate injected text.
+
     Args:
         url: The URL to validate
 
@@ -128,10 +156,40 @@ def _has_suspicious_patterns(url: str) -> bool:
         True if suspicious patterns found, False otherwise
     """
     suspicious_patterns = [
-        r"[;|&$`<>]",  # Shell metacharacters
+        r"[`<>\s]",
         r"%00",  # Null byte
     ]
     return any(re.search(pattern, url) for pattern in suspicious_patterns)
+
+
+def hostname_resolves_to_private(url: str) -> bool:
+    """Return True if the URL's host resolves to any private or reserved address.
+
+    Used for fetches performed from the user's machine, where a public-looking
+    hostname may point at loopback, link-local or LAN addresses (DNS rebinding,
+    ``*.localtest.me`` style names, split-horizon DNS). Resolution failures are
+    treated as unsafe.
+
+    Args:
+        url: The URL whose host should be resolved
+
+    Returns:
+        True if unsafe (private, reserved or unresolvable), False if all
+        resolved addresses are public
+    """
+    parsed = urlparse(url)
+    hostname = parsed.hostname
+    if not hostname:
+        return True
+    if _is_private_ip(hostname):
+        return True
+    try:
+        infos = socket.getaddrinfo(hostname, parsed.port or (443 if parsed.scheme == "https" else 80), proto=socket.IPPROTO_TCP)
+    except (socket.gaierror, UnicodeError, OSError):
+        return True
+    if not infos:
+        return True
+    return any(_is_private_ip(str(info[4][0])) for info in infos)
 
 
 def validate_feed_url(url: str) -> tuple[bool, str]:

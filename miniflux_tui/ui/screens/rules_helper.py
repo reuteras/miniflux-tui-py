@@ -150,9 +150,11 @@ class RulesHelperScreen(Screen):
                 yield Static(
                     "Loading documentation...",
                     id="help-text",
+                    markup=False,
                 )
 
-        yield Static("", id="status-message")
+        yield Static("", id="status-message", markup=False)
+
         yield Footer()
 
     async def on_mount(self) -> None:

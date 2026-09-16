@@ -25,10 +25,10 @@ class _FakeClient:
     async def get_categories(self):
         return self._categories
 
-    async def get_unread_entries(self, limit):
+    async def get_unread_entries(self, limit=None):
         return self._entries[:limit]
 
-    async def get_starred_entries(self, limit):
+    async def get_starred_entries(self, limit=None):
         return self._entries[:limit]
 
     async def toggle_starred(self, _entry_id):  # pragma: no cover - side-effect free

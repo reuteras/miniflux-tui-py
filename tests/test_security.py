@@ -3,6 +3,7 @@
 
 import pytest
 
+from miniflux_tui import security
 from miniflux_tui.security import sanitize_error_message, validate_feed_url
 from miniflux_tui.ui.screens.confirm_dialog import ConfirmDialog
 from miniflux_tui.ui.screens.input_dialog import InputDialog
@@ -131,19 +132,27 @@ class TestURLValidation:
         assert is_valid is False
         assert "suspicious" in error.lower()
 
-    def test_reject_url_with_shell_metacharacters(self) -> None:
-        """Test URLs with shell metacharacters are rejected."""
+    def test_reject_url_with_characters_invalid_in_urls(self) -> None:
+        """Characters that can never appear unencoded in a URL are rejected."""
         suspicious_urls = [
-            "https://example.com;whoami",
-            "https://example.com|cat /etc/passwd",
-            "https://example.com&id",
-            "https://example.com`whoami`",
-            "https://example.com$(whoami)",
+            "https://example.com/`whoami`",
+            "https://example.com/<script>",
+            "https://example.com/a b",
         ]
         for url in suspicious_urls:
             is_valid, error = validate_feed_url(url)
             assert is_valid is False
             assert "suspicious" in error.lower()
+
+    def test_accept_query_strings_with_ampersand_and_semicolon(self) -> None:
+        """Ordinary query-string characters are valid; URLs never reach a shell."""
+        for url in (
+            "https://example.com/feed?a=1&b=2",
+            "https://example.com/feed;jsessionid=1",
+            "https://example.com/feed?price=$5",
+        ):
+            is_valid, error = validate_feed_url(url)
+            assert is_valid is True, error
 
     def test_accept_url_with_valid_path(self) -> None:
         """Test URLs with valid paths are accepted."""
@@ -324,3 +333,46 @@ class TestCallbackTypeValidation:
         )
         assert callable(dialog.on_submit)
         assert callable(dialog.on_cancel)
+
+
+class TestHostnameResolvesToPrivate:
+    """Tests for :func:`hostname_resolves_to_private`."""
+
+    @staticmethod
+    def _addrinfo(*addresses: str) -> list[tuple]:
+        return [(0, 0, 0, "", (addr, 80)) for addr in addresses]
+
+    def test_public_resolution_is_safe(self, monkeypatch) -> None:
+        monkeypatch.setattr(security.socket, "getaddrinfo", lambda *_a, **_k: self._addrinfo("93.184.216.34"))
+        assert security.hostname_resolves_to_private("https://example.com/") is False
+
+    def test_any_private_address_is_unsafe(self, monkeypatch) -> None:
+        monkeypatch.setattr(security.socket, "getaddrinfo", lambda *_a, **_k: self._addrinfo("93.184.216.34", "10.0.0.5"))
+        assert security.hostname_resolves_to_private("https://example.com/") is True
+
+    def test_ipv6_loopback_is_unsafe(self, monkeypatch) -> None:
+        monkeypatch.setattr(security.socket, "getaddrinfo", lambda *_a, **_k: self._addrinfo("::1"))
+        assert security.hostname_resolves_to_private("http://localtest.example/") is True
+
+    def test_resolution_failure_is_unsafe(self, monkeypatch) -> None:
+        def _fail(*_a, **_k):
+            msg = "no such host"
+            raise security.socket.gaierror(msg)
+
+        monkeypatch.setattr(security.socket, "getaddrinfo", _fail)
+        assert security.hostname_resolves_to_private("https://does-not-exist.example/") is True
+
+    @pytest.mark.parametrize(
+        "url",
+        [
+            "http://[::1]/",
+            "http://[::ffff:127.0.0.1]/",
+            "http://2130706433/",
+            "http://0x7f000001/",
+            "http://100.64.1.1/",
+            "http://169.254.169.254/latest/meta-data/",
+        ],
+    )
+    def test_ip_literal_bypass_attempts_are_unsafe(self, url: str) -> None:
+        """Alternate IP spellings never reach DNS and are rejected outright."""
+        assert security.hostname_resolves_to_private(url) is True

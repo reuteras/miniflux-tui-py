@@ -409,7 +409,7 @@ In the entry reader, you can also:
 | `e`       | Save the entry                     |
 | `o`       | Open in your default browser       |
 | `f`       | Fetch the original article content |
-| `Shift+X` | Open scraping rule helper for feed |
+| `x`       | Open scraping rule helper for feed |
 | `i`       | Show system status                 |
 | `Shift+S` | Show TUI settings                  |
 | `?`       | Show keyboard help                 |
@@ -465,7 +465,7 @@ Press `?` in the application at any time to see this same reference in a help sc
 | /          | Search entries (interactive dialog)              |
 | Shift+M    | Manage categories                                |
 | Shift+H    | Toggle reading history view                      |
-| Shift+X    | Open scraping rule helper                        |
+| x          | Open scraping rule helper                        |
 | Shift+T    | Toggle theme (dark/light)                        |
 | ?          | Show keyboard help                               |
 | i          | Show system status                               |
@@ -486,7 +486,7 @@ Press `?` in the application at any time to see this same reference in a help sc
 | o               | Open in browser                    |
 | f               | Fetch original content             |
 | X               | Open feed settings                 |
-| Shift+X         | Open scraping rule helper          |
+| x               | Open scraping rule helper          |
 | b or Esc        | Back to list                       |
 | ?               | Show keyboard help                 |
 | i               | Show system status                 |

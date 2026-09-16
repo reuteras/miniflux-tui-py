@@ -18,7 +18,7 @@ class TestMinifluxClientInit:
             assert client.base_url == "http://localhost:8080"
             assert client.allow_invalid_certs is False
             assert client.timeout == 30.0
-            mock_base.assert_called_once_with("http://localhost:8080", api_key="test-key")
+            mock_base.assert_called_once_with("http://localhost:8080", api_key="test-key", timeout=30.0)
 
     def test_init_with_trailing_slash(self):
         """Test that trailing slash is removed from base_url."""

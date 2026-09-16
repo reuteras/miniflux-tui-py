@@ -13,18 +13,32 @@ from importlib import metadata
 from pathlib import Path
 from typing import TYPE_CHECKING, Any
 
+from textual.markup import escape as _escape_textual_markup
+
 if TYPE_CHECKING:
     from miniflux_tui.api.models import Entry, Feed
 
 # Strips C0 (0x00-0x1F) and C1 (0x7F-0x9F) control characters EXCEPT tab (0x09)
 # and newline (0x0A). Carriage return, ESC, BEL, etc. are removed so untrusted
-# feed text cannot inject terminal escape sequences.
-_CONTROL_CHARS_RE = re.compile(r"[\x00-\x08\x0b-\x1f\x7f-\x9f]")
+# feed text cannot inject terminal escape sequences. Also strips Unicode
+# characters that reorder or hide text (bidi overrides and isolates, zero-width
+# characters, BOM) so a displayed URL cannot read differently from the one that
+# actually opens.
+_CONTROL_CHARS_RE = re.compile(r"[\x00-\x08\x0b-\x1f\x7f-\x9f\u200b-\u200f\u202a-\u202e\u2060-\u2064\u2066-\u2069\ufeff]")
 
 
 def strip_control_chars(text: str | None) -> str:
-    """Remove terminal control characters from untrusted text."""
+    """Remove terminal control characters and text-direction tricks from untrusted text."""
     return _CONTROL_CHARS_RE.sub("", text or "")
+
+
+def escape_markup(text: str | None) -> str:
+    """Make untrusted text safe to embed in a Textual markup string.
+
+    Strips control characters and escapes square brackets so feed or server
+    supplied text can neither restyle the UI nor raise ``MarkupError``.
+    """
+    return _escape_textual_markup(strip_control_chars(text))
 
 
 PYPROJECT_PATH = Path(__file__).resolve().parent.parent / "pyproject.toml"
@@ -53,21 +67,16 @@ def get_app_version() -> str:
         return git_version
 
     # If not in a git repo, try to get the installed package version
-    last_metadata_error: Exception | None = None
-
     for distribution_name in _iter_distribution_candidates():
         try:
             return metadata.version(distribution_name)
         except metadata.PackageNotFoundError:
             pass
-        except Exception as error:
+        except Exception:  # noqa: S112
             # Unexpected metadata errors should not crash the application. Try
             # any remaining candidates before falling back to the file-based
             # lookup instead.
-            last_metadata_error = error
-
-    if last_metadata_error is not None:
-        return _get_version_from_pyproject()
+            continue
 
     return _get_version_from_pyproject()
 
