@@ -81,8 +81,11 @@ jobs:
       - name: Install dependencies
         run: uv sync --locked
 
-      - name: Check formatting with ruff
+      - name: Lint with ruff
         run: uv run ruff check miniflux_tui tests
+
+      - name: Check formatting with ruff
+        run: uv run ruff format --check miniflux_tui tests
 
       - name: Type check with pyright
         run: uv run pyright miniflux_tui tests
@@ -194,8 +197,11 @@ jobs:
       - name: Install dependencies
         run: uv sync --locked
 
-      - name: Check formatting with ruff
+      - name: Lint with ruff
         run: uv run ruff check miniflux_tui tests
+
+      - name: Check formatting with ruff
+        run: uv run ruff format --check miniflux_tui tests
 
       - name: Type check with pyright
         run: uv run pyright miniflux_tui tests
