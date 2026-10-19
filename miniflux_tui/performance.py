@@ -128,7 +128,7 @@ class ScreenRefreshOptimizer:
     Tracks refresh patterns and provides recommendations for optimization.
     """
 
-    def __init__(self):
+    def __init__(self) -> None:
         """Initialize refresh optimizer."""
         self.refresh_count = 0
         self.full_refresh_count = 0

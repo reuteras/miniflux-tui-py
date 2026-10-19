@@ -1,6 +1,7 @@
 # SPDX-License-Identifier: MIT
 """Scraping rule helper screen for discovering optimal content extraction rules."""
 
+from collections.abc import Awaitable, Callable
 from typing import Any
 
 from textual import on
@@ -126,8 +127,8 @@ class ScrapingHelperScreen(Screen):
         entry_url: str,
         feed_id: int,
         feed_title: str,
-        on_save_callback=None,
-    ):
+        on_save_callback: Callable[[int, str], Awaitable[None]] | None = None,
+    ) -> None:
         """Initialize scraping helper screen.
 
         Args:

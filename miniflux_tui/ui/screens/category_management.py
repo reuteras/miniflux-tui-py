@@ -2,7 +2,7 @@
 """Category management screen for viewing and managing categories."""
 
 # pylint: disable=no-value-for-parameter
-from typing import TYPE_CHECKING, ClassVar
+from typing import TYPE_CHECKING, Any, ClassVar
 
 from textual.app import ComposeResult
 from textual.binding import Binding
@@ -100,7 +100,7 @@ class CategoryManagementScreen(Screen):
     }
     """
 
-    def __init__(self, categories: list[Category] | None = None, entries: list["Entry"] | None = None, **kwargs):
+    def __init__(self, categories: list[Category] | None = None, entries: list["Entry"] | None = None, **kwargs: Any) -> None:
         """Initialize category management screen.
 
         Args:

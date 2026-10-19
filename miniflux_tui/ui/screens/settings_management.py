@@ -3,7 +3,7 @@
 
 from __future__ import annotations
 
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, Any
 
 from textual.app import ComposeResult
 from textual.binding import Binding
@@ -32,7 +32,7 @@ class SettingsScreen(Screen):
     }
     """
 
-    def __init__(self, **kwargs):
+    def __init__(self, **kwargs: Any) -> None:
         """Initialize settings screen."""
         super().__init__(**kwargs)
         self._header_widget: Header | None = None
@@ -128,7 +128,7 @@ class SettingsScreen(Screen):
         except Exception as e:
             self.app.log(f"Could not update config file info: {e}")
 
-    def action_toggle_info_messages(self):
+    def action_toggle_info_messages(self) -> None:
         """Toggle the display of information messages."""
         toggle_func = getattr(self.app, "toggle_info_messages", None)
         if toggle_func and callable(toggle_func):
@@ -136,6 +136,6 @@ class SettingsScreen(Screen):
             # Update the display to show the new state
             self._update_tui_config()
 
-    def action_close(self):
+    def action_close(self) -> None:
         """Close the settings screen."""
         self.app.pop_screen()

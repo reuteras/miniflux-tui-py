@@ -5,6 +5,7 @@ import re
 import traceback
 import webbrowser
 from contextlib import suppress
+from typing import Any
 from urllib.parse import urlparse
 
 from bs4 import BeautifulSoup
@@ -13,6 +14,7 @@ from textual.app import ComposeResult
 from textual.binding import Binding
 from textual.content import Content
 from textual.screen import Screen
+from textual.widget import Widget
 from textual.widgets import Footer, Header, Markdown, Static
 
 from miniflux_tui.api.models import Entry
@@ -226,8 +228,8 @@ class EntryReaderScreen(Screen):
         text_width: int = 120,
         link_highlight_bg: str | None = None,
         link_highlight_fg: str | None = None,
-        **kwargs,
-    ):
+        **kwargs: Any,
+    ) -> None:
         super().__init__(**kwargs)
         self.entry = entry
         self.entry_list = entry_list or []
@@ -481,7 +483,7 @@ class EntryReaderScreen(Screen):
             return f"[dim]{mode_label}: {unread} unread / {total} total[/dim]"
         return ""
 
-    async def _mark_entry_as_read(self):
+    async def _mark_entry_as_read(self) -> None:
         """Mark the current entry as read via API."""
         app = self._resolve_app()
         if app and app.client:
@@ -621,34 +623,34 @@ class EntryReaderScreen(Screen):
             self.scroll_container = self.query_one(Markdown)
         return self.scroll_container
 
-    def action_scroll_down(self):
+    def action_scroll_down(self) -> None:
         """Scroll down one line."""
         self._ensure_scroll_container().scroll_down()
 
-    def action_scroll_up(self):
+    def action_scroll_up(self) -> None:
         """Scroll up one line."""
         self._ensure_scroll_container().scroll_up()
 
-    def action_page_down(self):
+    def action_page_down(self) -> None:
         """Scroll down one page."""
         self._ensure_scroll_container().scroll_page_down()
 
-    def action_page_up(self):
+    def action_page_up(self) -> None:
         """Scroll up one page."""
         self._ensure_scroll_container().scroll_page_up()
 
-    def action_back(self):
+    def action_back(self) -> None:
         """Return to entry list."""
         app = self._resolve_app()
         if app:
             app.pop_screen()
 
-    async def action_mark_read(self):
+    async def action_mark_read(self) -> None:
         """Mark entry as read."""
         await self._mark_entry_as_read()
         self.notify("Marked as read")
 
-    async def action_mark_unread(self):
+    async def action_mark_unread(self) -> None:
         """Mark entry as unread."""
         app = self._resolve_app()
         if app and app.client:
@@ -661,7 +663,7 @@ class EntryReaderScreen(Screen):
             except Exception as e:
                 self.notify(f"Error marking as unread: {e}", severity="error")
 
-    async def action_toggle_star(self):
+    async def action_toggle_star(self) -> None:
         """Toggle star status."""
         app = self._resolve_app()
         if app and app.client:
@@ -676,7 +678,7 @@ class EntryReaderScreen(Screen):
             except Exception as e:
                 self.notify(f"Error toggling star: {e}", severity="error")
 
-    async def action_save_entry(self):
+    async def action_save_entry(self) -> None:
         """Save entry to third-party service."""
         app = self._resolve_app()
         if app and app.client:
@@ -706,7 +708,7 @@ class EntryReaderScreen(Screen):
         # to the underlying shell invocation used by webbrowser.open()
         return "%00" not in url.lower()
 
-    def action_open_browser(self):
+    def action_open_browser(self) -> None:
         """Open entry URL in web browser."""
         url = (self.entry.url or "").strip()
         if not url:
@@ -725,7 +727,7 @@ class EntryReaderScreen(Screen):
         except Exception as e:
             self.notify(f"Error opening browser: {e}", severity="error")
 
-    async def action_fetch_original(self):
+    async def action_fetch_original(self) -> None:
         """Fetch original content from source."""
         app = self._resolve_app()
         if app and app.client:
@@ -750,7 +752,7 @@ class EntryReaderScreen(Screen):
                 self.log(traceback.format_exc())
                 self.notify(f"Error fetching content: {e}", severity="error")
 
-    async def action_next_entry(self):
+    async def action_next_entry(self) -> None:
         """Navigate to next entry."""
         if not self.entry_list or self.current_index >= len(self.entry_list) - 1:
             self.notify("No next entry", severity="warning")
@@ -766,7 +768,7 @@ class EntryReaderScreen(Screen):
         # Update sub_title with new group stats
         self._update_sub_title()
 
-    async def action_previous_entry(self):
+    async def action_previous_entry(self) -> None:
         """Navigate to previous entry."""
         if not self.entry_list or self.current_index <= 0:
             self.notify("No previous entry", severity="warning")
@@ -782,17 +784,17 @@ class EntryReaderScreen(Screen):
         # Update sub_title with new group stats
         self._update_sub_title()
 
-    async def refresh_screen(self):
+    async def refresh_screen(self) -> None:
         """Refresh the screen with current entry.
 
         Updates all entry content widgets with the new entry's information
         and scrolls back to the top.
         """
         # Update title widget
-        title_widgets = self.query(".entry-title")
+        title_widgets = list(self.query(".entry-title").results(Static))
         if title_widgets:
             star_icon = get_star_icon(self.entry.starred)
-            title_widgets[0].update(  # type: ignore[union-attr]
+            title_widgets[0].update(
                 Content.from_markup(
                     f"[bold cyan]{star_icon} $title[/bold cyan]",
                     title=strip_control_chars(self.entry.title),
@@ -800,9 +802,9 @@ class EntryReaderScreen(Screen):
             )
 
         # Update metadata widget (feed name and date)
-        meta_widgets = self.query(".entry-meta")
+        meta_widgets = list(self.query(".entry-meta").results(Static))
         if meta_widgets:
-            meta_widgets[0].update(  # type: ignore[union-attr]
+            meta_widgets[0].update(
                 Content.from_markup(
                     f"[dim]$feed | {self.entry.published_at.strftime('%Y-%m-%d %H:%M')}[/dim]",
                     feed=strip_control_chars(self.entry.feed.title),
@@ -813,23 +815,21 @@ class EntryReaderScreen(Screen):
         group_stats_text = self._get_group_stats_text()
         if group_stats_text:
             if len(meta_widgets) > 1:
-                meta_widgets[1].update(group_stats_text)  # type: ignore[union-attr]
-                self.group_stats_widget = meta_widgets[1]  # type: ignore[assignment]
+                meta_widgets[1].update(group_stats_text)
+                self.group_stats_widget = meta_widgets[1]
             else:
                 # Create new group stats widget if it doesn't exist
                 title_widget = title_widgets[0] if title_widgets else None
-                if title_widget and title_widget.parent:
+                if title_widget and isinstance(title_widget.parent, Widget):
                     group_stats = Static(group_stats_text, classes="entry-meta")
                     self.group_stats_widget = group_stats
                     # Insert after first meta widget
-                    title_widget.parent.mount(group_stats, before=meta_widgets[0] if meta_widgets else None)  # type: ignore[union-attr]
+                    title_widget.parent.mount(group_stats, before=meta_widgets[0] if meta_widgets else None)
 
         # Update URL widget
-        url_widgets = self.query(".entry-url")
+        url_widgets = list(self.query(".entry-url").results(Static))
         if url_widgets:
-            url_widgets[0].update(  # type: ignore[union-attr]
-                Content.from_markup("[dim]$url[/dim]", url=strip_control_chars(self.entry.url))
-            )
+            url_widgets[0].update(Content.from_markup("[dim]$url[/dim]", url=strip_control_chars(self.entry.url)))
 
         # Update content (Markdown widget)
         markdown_widgets = self.query_one("#entry-content", expect_type=Markdown)  # type: ignore[arg-type]
@@ -895,20 +895,20 @@ class EntryReaderScreen(Screen):
         )
         self.app.push_screen(helper)  # type: ignore[arg-type]
 
-    def action_show_help(self):
+    def action_show_help(self) -> None:
         """Show keyboard help."""
 
         app = self._resolve_app()
         if app:
             app.push_screen("help")
 
-    def action_show_status(self):
+    def action_show_status(self) -> None:
         """Show system status and feed health."""
         app = self._resolve_app()
         if app:
             app.push_screen("status")
 
-    def action_show_settings(self):
+    def action_show_settings(self) -> None:
         """Show user settings and integrations."""
         app = self._resolve_app()
         if app:
@@ -929,7 +929,7 @@ class EntryReaderScreen(Screen):
             # If we can't query links, return empty list
             return []
 
-    def _scroll_to_link(self, link_index: int):
+    def _scroll_to_link(self, link_index: int) -> None:
         """Scroll to make the focused link visible.
 
         Args:
@@ -957,7 +957,7 @@ class EntryReaderScreen(Screen):
             # Intentional silent failure for graceful degradation
             pass
 
-    def _estimate_and_scroll_to_link(self, link_index: int):
+    def _estimate_and_scroll_to_link(self, link_index: int) -> None:
         """Estimate link position and scroll there (fallback method).
 
         Args:
@@ -1124,7 +1124,7 @@ class EntryReaderScreen(Screen):
             # Intentional silent failure for graceful degradation
             pass
 
-    def _update_markdown_display(self):
+    def _update_markdown_display(self) -> None:
         """Update the markdown display to highlight the currently focused link.
 
         This method regenerates the markdown content with visual highlighting
@@ -1149,7 +1149,7 @@ class EntryReaderScreen(Screen):
         # Also try the widget focusing approach as a fallback
         self._focus_link_widget()
 
-    def action_next_link(self):
+    def action_next_link(self) -> None:
         """Navigate to the next link in the content."""
         if not self.links:
             self.notify("No links found in this entry", severity="warning")
@@ -1166,7 +1166,7 @@ class EntryReaderScreen(Screen):
         # Update markdown display with highlighting (includes scrolling)
         self._update_markdown_display()
 
-    def action_previous_link(self):
+    def action_previous_link(self) -> None:
         """Navigate to the previous link in the content."""
         if not self.links:
             self.notify("No links found in this entry", severity="warning")
@@ -1183,7 +1183,7 @@ class EntryReaderScreen(Screen):
         # Update markdown display with highlighting (includes scrolling)
         self._update_markdown_display()
 
-    def action_open_focused_link(self):
+    def action_open_focused_link(self) -> None:
         """Open the currently focused link in the browser."""
         if self.focused_link_index is None or not self.links:
             self.notify("No link focused. Use Tab to focus a link first.", severity="warning")
@@ -1205,7 +1205,7 @@ class EntryReaderScreen(Screen):
         except Exception as e:
             self.notify(f"Error opening link: {e}", severity="error")
 
-    def action_clear_link_focus(self):
+    def action_clear_link_focus(self) -> None:
         """Clear the current link focus."""
         # First blur the currently focused link widget if any
         try:
@@ -1220,7 +1220,7 @@ class EntryReaderScreen(Screen):
         self._update_link_indicator()
         self.notify("Link focus cleared")
 
-    def action_quit(self):
+    def action_quit(self) -> None:
         """Quit the application."""
         app = self._resolve_app()
         if app:

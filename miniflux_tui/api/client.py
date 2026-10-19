@@ -6,7 +6,8 @@ import logging
 import warnings
 from collections.abc import Callable
 from functools import partial
-from typing import TypeVar
+from types import TracebackType
+from typing import Any, Self, TypeVar
 
 import requests
 from miniflux import Client as MinifluxClientBase  # type: ignore[import-untyped]
@@ -94,19 +95,24 @@ class MinifluxClient:
         # Timeout for network calls
         self.timeout: float = timeout
 
-    async def close(self):
+    async def close(self) -> None:
         """Close the HTTP client (no-op for official client)."""
 
-    async def __aenter__(self):
+    async def __aenter__(self) -> Self:
         """Async context manager entry."""
         return self
 
-    async def __aexit__(self, exc_type, exc_val, exc_tb):
+    async def __aexit__(
+        self,
+        exc_type: type[BaseException] | None,
+        exc_val: BaseException | None,
+        exc_tb: TracebackType | None,
+    ) -> None:
         """Async context manager exit."""
         await self.close()
 
     @staticmethod
-    async def _run_sync(func, *args, **kwargs):
+    async def _run_sync(func: Callable[..., T], *args: Any, **kwargs: Any) -> T:
         """Run a synchronous function in an executor."""
         loop = asyncio.get_running_loop()
         return await loop.run_in_executor(None, partial(func, *args, **kwargs))
@@ -114,10 +120,10 @@ class MinifluxClient:
     async def _call_with_retry(
         self,
         func: Callable[..., T],
-        *args,
+        *args: Any,
         max_retries: int = MAX_RETRIES,
         backoff_factor: float = BACKOFF_FACTOR,
-        **kwargs,
+        **kwargs: Any,
     ) -> T:
         """Call function with exponential backoff retry logic.
 
@@ -174,7 +180,7 @@ class MinifluxClient:
         # All retries exhausted - raise last exception
         raise last_exception or Exception("Unknown error in retry logic")
 
-    async def _get_entries_paged(self, limit: int | None, offset: int, **filters) -> list[Entry]:
+    async def _get_entries_paged(self, limit: int | None, offset: int, **filters: Any) -> list[Entry]:
         """Fetch entries, paging through everything when ``limit`` is ``None``."""
         if limit is not None:
             response = await self._call_with_retry(
@@ -376,7 +382,7 @@ class MinifluxClient:
     async def update_feed(
         self,
         feed_id: int,
-        **kwargs,
+        **kwargs: Any,
     ) -> Feed:
         """Update feed settings with retry logic (Issue #58 - Feed Management).
 
@@ -454,7 +460,7 @@ class MinifluxClient:
         """
         return await self._call_with_retry(self.client.get_integrations_status)
 
-    async def update_user_settings(self, user_id: int, **settings) -> dict:
+    async def update_user_settings(self, user_id: int, **settings: Any) -> dict:
         """Update user settings.
 
         Args:
@@ -480,7 +486,7 @@ class MinifluxClient:
         feeds_data = response.get("feeds", []) if isinstance(response, dict) else []
         return [Feed.from_dict(feed) for feed in feeds_data]
 
-    async def get_category_entries(self, category_id: int, **kwargs) -> list[Entry]:
+    async def get_category_entries(self, category_id: int, **kwargs: Any) -> list[Entry]:
         """Get all entries for a specific category with retry logic.
 
         This is useful for building a category_id → entry mapping when the

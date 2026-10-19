@@ -2,7 +2,7 @@
 """Input dialog screen for requesting user input."""
 
 from collections.abc import Callable
-from typing import ClassVar
+from typing import Any, ClassVar
 
 from textual.app import ComposeResult
 from textual.binding import Binding
@@ -81,8 +81,8 @@ class InputDialog(Screen):
         value: str = "",
         on_submit: Callable[[str], None] | None = None,
         on_cancel: Callable[[], None] | None = None,
-        **kwargs,
-    ):
+        **kwargs: Any,
+    ) -> None:
         """Initialize input dialog.
 
         Args:

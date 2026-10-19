@@ -4,7 +4,7 @@
 import ipaddress
 import re
 import socket
-from urllib.parse import urlparse
+from urllib.parse import ParseResult, urlparse
 
 
 def _check_url_basic_validity(url: str) -> str | None:
@@ -23,7 +23,7 @@ def _check_url_basic_validity(url: str) -> str | None:
     return None
 
 
-def _check_url_scheme(parsed) -> str | None:
+def _check_url_scheme(parsed: ParseResult) -> str | None:
     """Check that URL uses allowed scheme (HTTP/HTTPS).
 
     Args:
@@ -39,7 +39,7 @@ def _check_url_scheme(parsed) -> str | None:
     return None
 
 
-def _check_url_hostname(parsed) -> str | None:
+def _check_url_hostname(parsed: ParseResult) -> str | None:
     """Check that hostname is not local or private.
 
     Args:

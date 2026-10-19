@@ -1,6 +1,8 @@
 # SPDX-License-Identifier: MIT
 """Entry history screen showing previously read entries."""
 
+from typing import Any
+
 from miniflux_tui.ui.screens.entry_list import EntryListScreen
 
 
@@ -10,7 +12,7 @@ class EntryHistoryScreen(EntryListScreen):
     Pressing Shift+h in this screen returns to the main entry list.
     """
 
-    def __init__(self, **kwargs):
+    def __init__(self, **kwargs: Any) -> None:
         """Initialize with empty entries list - will be populated on mount."""
         super().__init__(entries=[], **kwargs)
 
@@ -61,7 +63,7 @@ class EntryHistoryScreen(EntryListScreen):
             self.entries = []
             self._populate_list()
 
-    def action_show_history(self):
+    def action_show_history(self) -> None:
         """Return to main entry list (override parent method).
 
         In history view, pressing Shift+h returns to the main entry list
@@ -70,11 +72,11 @@ class EntryHistoryScreen(EntryListScreen):
         self.app.log("History screen: action_show_history - popping back to main list")
         self.app.pop_screen()
 
-    def action_show_unread(self):
+    def action_show_unread(self) -> None:
         """Load unread entries and return to main entry list."""
         self.run_worker(self._do_show_unread(), exclusive=True)
 
-    async def _do_show_unread(self):
+    async def _do_show_unread(self) -> None:
         """Override: load unread entries then navigate back to main screen."""
         if hasattr(self.app, "load_entries"):
             try:
@@ -84,11 +86,11 @@ class EntryHistoryScreen(EntryListScreen):
                 self._stop_loading_animation()
         self.app.pop_screen()
 
-    def action_show_starred(self):
+    def action_show_starred(self) -> None:
         """Load starred entries and return to main entry list."""
         self.run_worker(self._do_show_starred(), exclusive=True)
 
-    async def _do_show_starred(self):
+    async def _do_show_starred(self) -> None:
         """Override: load starred entries then navigate back to main screen."""
         if hasattr(self.app, "load_entries"):
             try:

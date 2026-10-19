@@ -1,7 +1,7 @@
 # SPDX-License-Identifier: MIT
 """Dialog for editing user settings."""
 
-from typing import ClassVar
+from typing import Any, ClassVar
 
 from textual.app import ComposeResult
 from textual.binding import Binding
@@ -108,7 +108,7 @@ class SettingsEditDialog(ModalScreen[dict | None]):
 
     SORT_DIRECTIONS: ClassVar[list[tuple[str, str]]] = [("Descending (Newest First)", "desc"), ("Ascending (Oldest First)", "asc")]
 
-    def __init__(self, current_settings: dict, **kwargs):
+    def __init__(self, current_settings: dict, **kwargs: Any) -> None:
         """Initialize the settings edit dialog.
 
         Args:

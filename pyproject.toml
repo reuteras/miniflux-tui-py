@@ -87,6 +87,9 @@ fuzz = ["atheris>=2.3.0"]
 [tool.uv]
 managed = true
 
+[tool.mypy]
+check_untyped_defs = true
+
 [tool.ruff]
 line-length = 140
 target-version = "py311"

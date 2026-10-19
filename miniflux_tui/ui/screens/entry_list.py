@@ -296,8 +296,8 @@ class EntryListScreen(Screen):
         default_sort: str = "date",
         group_by_feed: bool = False,
         group_collapsed: bool = False,
-        **kwargs,
-    ):
+        **kwargs: Any,
+    ) -> None:
         super().__init__(**kwargs)
         self.entries = entries
         self.categories = categories or []
@@ -498,9 +498,9 @@ class EntryListScreen(Screen):
                 group_info=group_info,
             )
 
-    def _populate_list(self):
+    def _populate_list(self) -> None:
         """Populate the list with sorted and filtered entries."""
-        if not self._ensure_list_view():
+        if not self._ensure_list_view() or self.list_view is None:
             return
 
         # Log the current index before clearing
@@ -871,7 +871,7 @@ class EntryListScreen(Screen):
             )
         return self._sort_entries(entries)
 
-    def _display_entries(self, entries: list[Entry]):
+    def _display_entries(self, entries: list[Entry]) -> None:
         """Display entries in list view based on grouping setting."""
         if self.group_by_category:
             self._add_grouped_entries_by_category(entries)
@@ -1057,7 +1057,7 @@ class EntryListScreen(Screen):
 
         self.list_view.append(item)
 
-    def _add_grouped_entries(self, entries: list[Entry]):
+    def _add_grouped_entries(self, entries: list[Entry]) -> None:
         """Add entries grouped by feed with optional collapsible headers.
 
         All entries are added to the list, but entries in collapsed feeds
@@ -1078,7 +1078,7 @@ class EntryListScreen(Screen):
             # Add the entry with appropriate visibility
             self._add_entry_with_visibility(entry)
 
-    def _add_flat_entries(self, entries: list[Entry]):
+    def _add_flat_entries(self, entries: list[Entry]) -> None:
         """Add entries as a flat list."""
         if self.list_view is None:
             return
@@ -1212,7 +1212,7 @@ class EntryListScreen(Screen):
 
         self.list_view.append(item)
 
-    def _add_grouped_entries_by_category(self, entries: list[Entry]):
+    def _add_grouped_entries_by_category(self, entries: list[Entry]) -> None:
         """Add entries grouped by category with optional collapsible headers.
 
         All entries are added to the list, but entries in collapsed categories
@@ -1326,7 +1326,7 @@ class EntryListScreen(Screen):
         else:
             await super()._on_key(event)
 
-    def action_cursor_down(self):
+    def action_cursor_down(self) -> None:
         """Move cursor down to next visible entry item, skipping collapsed entries."""
         if not self.list_view or len(self.list_view.children) == 0:
             self._safe_log("action_cursor_down: No list view or no children")
@@ -1362,7 +1362,7 @@ class EntryListScreen(Screen):
             # Silently ignore index errors when navigating beyond list bounds
             self._safe_log(f"action_cursor_down: Exception: {type(e).__name__}: {e}")
 
-    def action_cursor_up(self):
+    def action_cursor_up(self) -> None:
         """Move cursor up to previous visible entry item, skipping collapsed entries."""
         if not self.list_view or len(self.list_view.children) == 0:
             return
@@ -1440,7 +1440,7 @@ class EntryListScreen(Screen):
                     self.notify("Jumped to bottom", timeout=1)
                     return
 
-    async def action_toggle_read(self):
+    async def action_toggle_read(self) -> None:
         """Toggle read/unread status of current entry."""
         if not self.list_view:
             return
@@ -1469,7 +1469,7 @@ class EntryListScreen(Screen):
                 # Notify user of success
                 self.notify(f"Entry marked as {new_status}")
 
-    async def action_toggle_read_previous(self):
+    async def action_toggle_read_previous(self) -> None:
         """Toggle read/unread status and focus previous entry (M key)."""
         if not self.list_view:
             return
@@ -1502,7 +1502,7 @@ class EntryListScreen(Screen):
         # Then move to previous entry
         self.action_cursor_up()
 
-    async def action_toggle_star(self):
+    async def action_toggle_star(self) -> None:
         """Toggle star status of current entry."""
         if not self.list_view:
             return
@@ -1529,7 +1529,7 @@ class EntryListScreen(Screen):
                 status = "starred" if highlighted.entry.starred else "unstarred"
                 self.notify(f"Entry {status}")
 
-    async def action_save_entry(self):
+    async def action_save_entry(self) -> None:
         """Save entry to third-party service."""
         if not self.list_view:
             return
@@ -1544,7 +1544,7 @@ class EntryListScreen(Screen):
                 await client.save_entry(highlighted.entry.id)
                 self.notify(f"Entry saved: {highlighted.entry.title}")
 
-    async def action_mark_all_as_read(self):
+    async def action_mark_all_as_read(self) -> None:
         """Mark all visible entries as read (A key) with confirmation."""
         if not self.list_view or len(self.list_view.children) == 0:
             self.notify("No entries to mark", severity="warning")
@@ -1614,7 +1614,7 @@ class EntryListScreen(Screen):
         counts = format_count_suffix(self.entries, feeds)
         self.sub_title = f"{view_name} | Sort: {sort_name} | {counts}"
 
-    def action_cycle_sort(self):
+    def action_cycle_sort(self) -> None:
         """Cycle through sort modes."""
         current_index = SORT_MODES.index(self.current_sort)
         self.current_sort = SORT_MODES[(current_index + 1) % len(SORT_MODES)]
@@ -1625,7 +1625,7 @@ class EntryListScreen(Screen):
         # Re-populate list
         self._populate_list()
 
-    def action_toggle_group_feed(self):
+    def action_toggle_group_feed(self) -> None:
         """Toggle grouping by feed (g key)."""
         # Disable category grouping when enabling feed grouping
         if not self.group_by_feed and self.group_by_category:
@@ -1642,7 +1642,7 @@ class EntryListScreen(Screen):
 
         self._populate_list()
 
-    def action_toggle_group_category(self):
+    def action_toggle_group_category(self) -> None:
         """Toggle grouping by category (c key - Issue #54 - Category support)."""
         if not self.categories:
             self.notify("No categories available", severity="warning")
@@ -1664,7 +1664,7 @@ class EntryListScreen(Screen):
 
         self._populate_list()
 
-    def action_toggle_fold(self):
+    def action_toggle_fold(self) -> None:
         """Toggle fold state of highlighted feed or category (o key)."""
         if not self.list_view or (not self.group_by_feed and not self.group_by_category):
             return
@@ -1780,15 +1780,15 @@ class EntryListScreen(Screen):
             category_title = self._get_category_title(item.entry.feed.category_id)
             self._toggle_category_fold(category_title, expand)
 
-    def action_collapse_fold(self):
+    def action_collapse_fold(self) -> None:
         """Collapse the highlighted feed or category (h or left arrow)."""
         self._handle_fold_action(expand=False)
 
-    def action_expand_fold(self):
+    def action_expand_fold(self) -> None:
         """Expand the highlighted feed or category (l or right arrow)."""
         self._handle_fold_action(expand=True)
 
-    def action_expand_all(self):
+    def action_expand_all(self) -> None:
         """Expand all feeds or categories (Shift+l).
 
         If not in grouped mode, enable feed grouping first.
@@ -1816,7 +1816,7 @@ class EntryListScreen(Screen):
                     self._set_category_fold_state(category_title, True)
             self.notify("All categories expanded")
 
-    def action_collapse_all(self):
+    def action_collapse_all(self) -> None:
         """Collapse all feeds or categories (Shift+z)."""
         if not self.list_view or (not self.group_by_feed and not self.group_by_category):
             return
@@ -1835,7 +1835,7 @@ class EntryListScreen(Screen):
                     self._set_category_fold_state(category_title, False)
             self.notify("All categories collapsed")
 
-    def action_refresh(self):
+    def action_refresh(self) -> None:
         """Refresh the current feed on the server (Issue #55 - Feed operations)."""
         if not hasattr(self.app, "client") or not self.app.client:
             self.notify("API client not initialized", severity="error")
@@ -1873,7 +1873,7 @@ class EntryListScreen(Screen):
         # Run the refresh in background to keep UI responsive
         self.run_worker(self._do_refresh(feed_id, feed_title), exclusive=True)
 
-    async def _do_refresh(self, feed_id: int, feed_title: str):
+    async def _do_refresh(self, feed_id: int, feed_title: str) -> None:
         """Background worker for refreshing a feed."""
         try:
             # Start loading animation in header
@@ -1900,7 +1900,7 @@ class EntryListScreen(Screen):
             # Always stop the loading animation
             self._stop_loading_animation()
 
-    def action_refresh_all_feeds(self):
+    def action_refresh_all_feeds(self) -> None:
         """Refresh all feeds on the server (Issue #55 - Feed operations).
 
         This tells the Miniflux server to fetch new content from RSS feeds.
@@ -1913,7 +1913,7 @@ class EntryListScreen(Screen):
         # Run the refresh in background to keep UI responsive
         self.run_worker(self._do_refresh_all_feeds(), exclusive=True)
 
-    async def _do_refresh_all_feeds(self):
+    async def _do_refresh_all_feeds(self) -> None:
         """Background worker for refreshing all feeds."""
         try:
             # Start loading animation in header
@@ -2025,7 +2025,7 @@ class EntryListScreen(Screen):
 
                 # Fallback: trigger full reload to ensure UI consistency
                 # Use run_worker to execute the async reload in background
-                async def _sync_fallback_reload():
+                async def _sync_fallback_reload() -> None:
                     try:
                         await self.app.load_entries(self.app.current_view)
                     except Exception as reload_error:
@@ -2095,7 +2095,7 @@ class EntryListScreen(Screen):
                 self.notify("Sync completed but display appears empty - reloading...", severity="warning")
 
                 # Trigger fallback reload
-                async def _sync_validation_reload():
+                async def _sync_validation_reload() -> None:
                     try:
                         await self.app.load_entries(self.app.current_view)
                     except Exception as e:
@@ -2104,7 +2104,7 @@ class EntryListScreen(Screen):
 
                 self.run_worker(_sync_validation_reload(), exclusive=True)
 
-    def action_sync_entries(self):
+    def action_sync_entries(self) -> None:
         """Sync/reload entries from server without refreshing feeds.
 
         This fetches the latest entries that already exist on the Miniflux server
@@ -2195,7 +2195,7 @@ class EntryListScreen(Screen):
             self._safe_log(f"Reconnection failed: {error}")
             self.notify(f"Network error syncing entries: {error}", severity="error")
 
-    async def _do_sync_entries(self):
+    async def _do_sync_entries(self) -> None:
         """Background worker for syncing entries.
 
         This runs in the background allowing the UI to remain responsive
@@ -2237,11 +2237,11 @@ class EntryListScreen(Screen):
                 self._safe_log(f"Failed to update UI state after sync: {e}")
                 self._emergency_subtitle_update()
 
-    def action_show_unread(self):
+    def action_show_unread(self) -> None:
         """Load and show only unread entries."""
         self.run_worker(self._do_show_unread(), exclusive=True)
 
-    async def _do_show_unread(self):
+    async def _do_show_unread(self) -> None:
         """Background worker for loading unread entries."""
         if hasattr(self.app, "load_entries"):
             try:
@@ -2261,11 +2261,11 @@ class EntryListScreen(Screen):
                 # Always stop the loading animation
                 self._stop_loading_animation()
 
-    def action_show_starred(self):
+    def action_show_starred(self) -> None:
         """Load and show only starred entries."""
         self.run_worker(self._do_show_starred(), exclusive=True)
 
-    async def _do_show_starred(self):
+    async def _do_show_starred(self) -> None:
         """Background worker for loading starred entries."""
         if hasattr(self.app, "load_entries"):
             try:
@@ -2319,7 +2319,7 @@ class EntryListScreen(Screen):
 
         self.notify(f"Filtered to: {category_name}")
 
-    def action_search(self):
+    def action_search(self) -> None:
         """Open search dialog to filter entries by search term.
 
         Shows an interactive input dialog for entering search terms.
@@ -2362,19 +2362,19 @@ class EntryListScreen(Screen):
         """Open the category management screen."""
         await self.app.push_category_management_screen()
 
-    def action_show_help(self):
+    def action_show_help(self) -> None:
         """Show keyboard help."""
         self.app.push_screen("help")
 
-    def action_show_status(self):
+    def action_show_status(self) -> None:
         """Show system status and feed health."""
         self.app.push_screen("status")
 
-    def action_show_settings(self):
+    def action_show_settings(self) -> None:
         """Show user settings and integrations."""
         self.app.push_screen("settings")
 
-    def action_show_history(self):
+    def action_show_history(self) -> None:
         """Show reading history."""
         self.app.log("action_show_history called - pushing history screen")
         try:
@@ -2465,6 +2465,6 @@ class EntryListScreen(Screen):
         """Toggle between dark and light themes."""
         self.app.toggle_theme()
 
-    def action_quit(self):
+    def action_quit(self) -> None:
         """Quit the application."""
         self.app.exit()
