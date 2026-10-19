@@ -3,6 +3,7 @@
 
 import platform
 import sys
+from typing import Any
 
 import textual
 from textual.app import ComposeResult
@@ -22,7 +23,7 @@ class HelpScreen(Screen):
         Binding("q", "close", "Close"),
     ]
 
-    def __init__(self, **kwargs):
+    def __init__(self, **kwargs: Any) -> None:
         """Initialize help screen with server info placeholders."""
         super().__init__(**kwargs)
         self.server_version: str = "Loading..."
@@ -217,6 +218,6 @@ class HelpScreen(Screen):
             # If widget not found, silently fail (widget might not be mounted yet)
             self.app.log(f"Could not update system info widget: {e}")
 
-    def action_close(self):
+    def action_close(self) -> None:
         """Close the help screen."""
         self.app.pop_screen()

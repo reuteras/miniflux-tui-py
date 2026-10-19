@@ -3,7 +3,7 @@
 
 from typing import Any, ClassVar
 
-from bs4 import BeautifulSoup
+from bs4 import BeautifulSoup, Tag
 
 from miniflux_tui.utils import strip_control_chars
 
@@ -79,7 +79,7 @@ class ContentAnalyzer:
         self.soup = BeautifulSoup(html, "html.parser")
         self.analyzed_selectors: set[str] = set()
 
-    def _add_candidate_if_new(self, element, selector: str, element_type: str, element_count: int, candidates: list) -> None:
+    def _add_candidate_if_new(self, element: Tag, selector: str, element_type: str, element_count: int, candidates: list) -> None:
         """Add element as candidate if selector not already analyzed.
 
         Args:
@@ -227,7 +227,7 @@ class ContentAnalyzer:
                     )
         return candidates
 
-    def _score_element(self, element) -> int:
+    def _score_element(self, element: Tag) -> int:
         """Score element likelihood of being main content.
 
         Higher score = more likely to be the main article content
@@ -271,7 +271,7 @@ class ContentAnalyzer:
 
         # ID/class name hints
         if element.get("id"):
-            id_lower = element["id"].lower()
+            id_lower = str(element["id"]).lower()
             if any(word in id_lower for word in ["content", "article", "post", "entry", "main"]):
                 score += 30
 
@@ -282,7 +282,7 @@ class ContentAnalyzer:
 
         return int(score)
 
-    def _generate_selector(self, element) -> str:
+    def _generate_selector(self, element: Tag) -> str:
         """Generate CSS selector for element.
 
         Args:
@@ -294,13 +294,13 @@ class ContentAnalyzer:
         if element.get("id"):
             return f"#{element['id']}"
         if element.get("class"):
-            classes = element.get("class", [])
+            classes = element.get_attribute_list("class")
             if classes:
                 # Use first class only for simpler selectors
                 return f"{element.name}.{classes[0]}"
         return element.name
 
-    def _get_text_preview(self, element, max_len: int = 500) -> str:
+    def _get_text_preview(self, element: Tag, max_len: int = 500) -> str:
         """Get sanitized text preview of element content.
 
         Args:

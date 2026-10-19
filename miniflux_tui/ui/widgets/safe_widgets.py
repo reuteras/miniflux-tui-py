@@ -9,6 +9,7 @@ from contextlib import suppress
 
 from textual.css.query import NoMatches
 from textual.dom import NoScreen
+from textual.events import Mount
 from textual.widgets._header import Header, HeaderTitle
 
 
@@ -36,7 +37,7 @@ class SafeHeader(Header):
         with suppress(NoMatches, NoScreen):
             self.query_one(HeaderTitle).update(self.format_title())
 
-    def _on_mount(self, _) -> None:
+    def _on_mount(self, _: Mount) -> None:
         """Called when the Header is mounted, with improved exception handling.
 
         This override catches NoMatches in addition to NoScreen, fixing

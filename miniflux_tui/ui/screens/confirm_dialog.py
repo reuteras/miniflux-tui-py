@@ -2,7 +2,7 @@
 """Confirmation dialog screen for destructive operations."""
 
 from collections.abc import Callable
-from typing import ClassVar
+from typing import Any, ClassVar
 
 from textual.app import ComposeResult
 from textual.binding import Binding
@@ -89,8 +89,8 @@ class ConfirmDialog(Screen):
         on_cancel: Callable[[], None] | None = None,
         confirm_label: str = "Confirm",
         cancel_label: str = "Cancel",
-        **kwargs,
-    ):
+        **kwargs: Any,
+    ) -> None:
         """Initialize confirmation dialog.
 
         Args:

@@ -225,8 +225,8 @@ class FeedSettingsScreen(Screen):
         feed_id: int,
         feed: Feed,
         client: MinifluxClient,
-        **kwargs,
-    ):
+        **kwargs: Any,
+    ) -> None:
         """Initialize the feed settings screen.
 
         Args:

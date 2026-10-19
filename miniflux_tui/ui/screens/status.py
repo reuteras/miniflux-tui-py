@@ -1,6 +1,8 @@
 # SPDX-License-Identifier: MIT
 """Status screen showing server information and problematic feeds."""
 
+from typing import Any
+
 from textual.app import App, ComposeResult
 from textual.binding import Binding
 from textual.containers import VerticalScroll
@@ -22,7 +24,7 @@ class StatusScreen(Screen):
         Binding("R", "refresh_failed_feeds", "Refresh Failed Feeds"),
     ]
 
-    def __init__(self, **kwargs):
+    def __init__(self, **kwargs: Any) -> None:
         """Initialize status screen."""
         super().__init__(**kwargs)
         self.server_version: str = "Loading..."
@@ -214,11 +216,11 @@ class StatusScreen(Screen):
         except Exception as e:
             self.app.log(f"Could not update error feeds list: {e}")
 
-    def action_close(self):
+    def action_close(self) -> None:
         """Close the status screen."""
         self.app.pop_screen()
 
-    async def action_refresh(self):
+    async def action_refresh(self) -> None:
         """Refresh the status information."""
         # Show loading message
         try:
@@ -234,7 +236,7 @@ class StatusScreen(Screen):
         # Notify user
         self.app.notify("Status refreshed")
 
-    async def action_refresh_failed_feeds(self):
+    async def action_refresh_failed_feeds(self) -> None:
         """Refresh all failed feeds shown on the status screen.
 
         Iterates through all feeds with errors and triggers a refresh for each.
@@ -243,7 +245,8 @@ class StatusScreen(Screen):
         info in the database before returning. After triggering all refreshes,
         reloads the status display to show updated information.
         """
-        if not hasattr(self.app, "client") or not getattr(self.app, "client", None):
+        client = getattr(self.app, "client", None)
+        if not client:
             self.app.notify("API client not available", severity="error")
             return
 
@@ -251,7 +254,6 @@ class StatusScreen(Screen):
             self.app.notify("No failed feeds to refresh", severity="warning")
             return
 
-        client = getattr(self.app, "client", None)
         feed_count = len(self.error_feeds)
 
         # Show progress message

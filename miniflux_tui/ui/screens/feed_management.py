@@ -1,7 +1,7 @@
 # SPDX-License-Identifier: MIT
 """Feed management screen for viewing and managing feeds."""
 
-from typing import ClassVar
+from typing import Any, ClassVar
 
 from textual.app import ComposeResult
 from textual.binding import Binding
@@ -95,7 +95,7 @@ class FeedManagementScreen(Screen):
     }
     """
 
-    def __init__(self, feeds: list[Feed] | None = None, **kwargs):
+    def __init__(self, feeds: list[Feed] | None = None, **kwargs: Any) -> None:
         """Initialize feed management screen.
 
         Args:

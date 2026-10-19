@@ -3,7 +3,7 @@
 
 from __future__ import annotations
 
-from typing import TYPE_CHECKING, ClassVar
+from typing import TYPE_CHECKING, Any, ClassVar
 
 from textual.app import ComposeResult
 from textual.binding import Binding
@@ -117,8 +117,8 @@ class RulesHelperScreen(Screen):
         self,
         rule_type: str,
         docs_cache: DocsCache | None = None,
-        **kwargs,
-    ):
+        **kwargs: Any,
+    ) -> None:
         """Initialize the rules helper screen.
 
         Args:

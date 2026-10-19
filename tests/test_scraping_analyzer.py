@@ -1,7 +1,7 @@
 # SPDX-License-Identifier: MIT
 """Tests for HTML content analyzer."""
 
-from bs4 import BeautifulSoup
+from bs4 import BeautifulSoup, Tag
 
 from miniflux_tui.scraping.analyzer import ContentAnalyzer
 
@@ -169,6 +169,7 @@ class TestContentAnalyzer:
         """Test scoring rewards paragraphs."""
         analyzer = ContentAnalyzer(SIMPLE_ARTICLE_HTML)
         article = analyzer.soup.find("article")
+        assert isinstance(article, Tag)
 
         score = analyzer._score_element(article)
 
@@ -186,7 +187,9 @@ class TestContentAnalyzer:
         analyzer_short = ContentAnalyzer(short_html)
 
         long_article = analyzer_long.soup.find("article")
+        assert isinstance(long_article, Tag)
         short_article = analyzer_short.soup.find("article")
+        assert isinstance(short_article, Tag)
 
         score_long = analyzer_long._score_element(long_article)
         score_short = analyzer_short._score_element(short_article)
@@ -222,7 +225,9 @@ class TestContentAnalyzer:
         analyzer_article = ContentAnalyzer(article_html)
 
         nav_div = analyzer_nav.soup.find("div")
+        assert isinstance(nav_div, Tag)
         article_div = analyzer_article.soup.find("div")
+        assert isinstance(article_div, Tag)
 
         score_nav = analyzer_nav._score_element(nav_div)
         score_article = analyzer_article._score_element(article_div)
@@ -235,6 +240,7 @@ class TestContentAnalyzer:
         html = """<div id="main-content" class="content wrapper">Text</div>"""
         analyzer = ContentAnalyzer(html)
         elem = analyzer.soup.find("div")
+        assert isinstance(elem, Tag)
 
         selector = analyzer._generate_selector(elem)
 
@@ -245,6 +251,7 @@ class TestContentAnalyzer:
         html = """<div class="post-content wrapper">Text</div>"""
         analyzer = ContentAnalyzer(html)
         elem = analyzer.soup.find("div")
+        assert isinstance(elem, Tag)
 
         selector = analyzer._generate_selector(elem)
 
@@ -255,6 +262,7 @@ class TestContentAnalyzer:
         html = """<article>Text</article>"""
         analyzer = ContentAnalyzer(html)
         elem = analyzer.soup.find("article")
+        assert isinstance(elem, Tag)
 
         selector = analyzer._generate_selector(elem)
 
@@ -266,6 +274,7 @@ class TestContentAnalyzer:
         html = f"""<div>{long_text}</div>"""
         analyzer = ContentAnalyzer(html)
         elem = analyzer.soup.find("div")
+        assert isinstance(elem, Tag)
 
         preview = analyzer._get_text_preview(elem, max_len=100)
 
