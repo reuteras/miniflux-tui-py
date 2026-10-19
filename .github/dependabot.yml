@@ -30,6 +30,7 @@ updates:
           - "pyright*"
           - "zensical*"
           - "pylint*"
+          - "pyscn*"
       production-dependencies:
         patterns:
           - "textual*"
