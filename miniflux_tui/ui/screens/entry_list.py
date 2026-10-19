@@ -1155,25 +1155,40 @@ class EntryListScreen(Screen):
             # Default: expanded if not set, unless group_collapsed is True
             self.category_fold_state[category_title] = not self.group_collapsed
 
-        # Calculate entry counts for this category
-        category_id = None
-        for entry in self.sorted_entries:
-            entry_category = self._get_category_title(entry.feed.category_id)
-            if entry_category == category_title:
-                category_id = entry.feed.category_id
-                break
-
-        unread_count = 0
-        read_count = 0
-        if category_id is not None:
-            unread_count = sum(1 for e in self.sorted_entries if e.feed.category_id == category_id and e.is_unread)
-            read_count = sum(1 for e in self.sorted_entries if e.feed.category_id == category_id and not e.is_unread)
+        unread_count, read_count = self._count_category_entries(category_title)
 
         # Create and add a fold-aware header item with counts
         is_expanded = self.category_fold_state[category_title]
         header = CategoryHeaderItem(category_title, is_expanded=is_expanded, unread_count=unread_count, read_count=read_count)
         self.category_header_map[category_title] = header
         self.list_view.append(header)
+
+    def _count_category_entries(self, category_title: str) -> tuple[int, int]:
+        """Count unread and read entries in the category with the given title.
+
+        Args:
+            category_title: Title of the category to count entries for
+
+        Returns:
+            Tuple of (unread_count, read_count)
+        """
+        category_id = next(
+            (e.feed.category_id for e in self.sorted_entries if self._get_category_title(e.feed.category_id) == category_title),
+            None,
+        )
+        if category_id is None:
+            return 0, 0
+
+        unread_count = 0
+        read_count = 0
+        for entry in self.sorted_entries:
+            if entry.feed.category_id != category_id:
+                continue
+            if entry.is_unread:
+                unread_count += 1
+            else:
+                read_count += 1
+        return unread_count, read_count
 
     def _add_entry_with_category_visibility(self, entry: Entry, category_title: str) -> None:
         """Add an entry item with appropriate visibility based on category state.

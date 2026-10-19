@@ -91,7 +91,7 @@ jobs:
         run: |
           # Check for complexity issues (fail if any found)
           # Use temp file to avoid subshell variable loss
-          uvx pyscn check . 2>&1 | grep "^miniflux" | grep "is too complex" > /tmp/complexity_issues.txt || true
+          uv run pyscn check . 2>&1 | grep "^miniflux" | grep "is too complex" > /tmp/complexity_issues.txt || true
           COMPLEXITY_ISSUES=$(wc -l < /tmp/complexity_issues.txt)
           if [ "$COMPLEXITY_ISSUES" -gt 0 ]; then
             echo "❌ Found $COMPLEXITY_ISSUES code complexity issue(s):"
@@ -204,7 +204,7 @@ jobs:
         run: |
           # Check for complexity issues (fail if any found)
           # Use temp file to avoid subshell variable loss
-          uvx pyscn check . 2>&1 | grep "^miniflux" | grep "is too complex" > /tmp/complexity_issues.txt || true
+          uv run pyscn check . 2>&1 | grep "^miniflux" | grep "is too complex" > /tmp/complexity_issues.txt || true
           COMPLEXITY_ISSUES=$(wc -l < /tmp/complexity_issues.txt)
           if [ "$COMPLEXITY_ISSUES" -gt 0 ]; then
             echo "❌ Found $COMPLEXITY_ISSUES code complexity issue(s):"
