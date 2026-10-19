@@ -50,6 +50,9 @@ jobs:
           # mypy check runs as its own job in test.yml instead.
           VALIDATE_PYTHON_MYPY: false
           VALIDATE_PYTHON_PYLINT: false
+          # Super-linter runs ruff with its own template config (via --config), which
+          # ignores pyproject.toml; ruff runs with the project config in test.yml.
+          VALIDATE_PYTHON_RUFF: false
           VALIDATE_PYTHON_RUFF_FORMAT: false
           VALIDATE_SPELL_CODESPELL: false
           VALIDATE_YAML_PRETTIER: false
