@@ -1,7 +1,7 @@
 # SPDX-License-Identifier: MIT
 """Tests for CategoryManagementScreen."""
 
-import asyncio
+import inspect
 from typing import cast
 from unittest.mock import AsyncMock, MagicMock, patch
 
@@ -302,32 +302,32 @@ class TestCategoryManagementAsyncMethods:
     def test_action_create_category_is_async(self) -> None:
         """Test that action_create_category is an async method."""
         screen = CategoryManagementScreen()
-        assert asyncio.iscoroutinefunction(screen.action_create_category)
+        assert inspect.iscoroutinefunction(screen.action_create_category)
 
     def test_do_create_category_is_async(self) -> None:
         """Test that _do_create_category is an async method."""
         screen = CategoryManagementScreen()
-        assert asyncio.iscoroutinefunction(screen._do_create_category)
+        assert inspect.iscoroutinefunction(screen._do_create_category)
 
     def test_action_edit_category_is_async(self) -> None:
         """Test that action_edit_category is an async method."""
         screen = CategoryManagementScreen()
-        assert asyncio.iscoroutinefunction(screen.action_edit_category)
+        assert inspect.iscoroutinefunction(screen.action_edit_category)
 
     def test_do_edit_category_is_async(self) -> None:
         """Test that _do_edit_category is an async method."""
         screen = CategoryManagementScreen()
-        assert asyncio.iscoroutinefunction(screen._do_edit_category)
+        assert inspect.iscoroutinefunction(screen._do_edit_category)
 
     def test_action_delete_category_is_async(self) -> None:
         """Test that action_delete_category is an async method."""
         screen = CategoryManagementScreen()
-        assert asyncio.iscoroutinefunction(screen.action_delete_category)
+        assert inspect.iscoroutinefunction(screen.action_delete_category)
 
     def test_do_delete_category_is_async(self) -> None:
         """Test that _do_delete_category is an async method."""
         screen = CategoryManagementScreen()
-        assert asyncio.iscoroutinefunction(screen._do_delete_category)
+        assert inspect.iscoroutinefunction(screen._do_delete_category)
 
 
 class TestCategoryManagementCRUDOperations:

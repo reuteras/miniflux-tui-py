@@ -29,7 +29,7 @@ See the [Installation Guide](installation.md) for pip/source installs and Codesp
 
 ## Requirements
 
-- Python 3.11+ (tested on 3.11-3.14, 3.15 preview)
+- Python 3.11+ (tested on 3.11-3.15)
 - A running Miniflux instance
 - Terminal with 24+ colors (for best experience)
 

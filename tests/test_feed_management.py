@@ -1,7 +1,7 @@
 # SPDX-License-Identifier: MIT
 """Tests for FeedManagementScreen."""
 
-import asyncio
+import inspect
 from typing import cast
 from unittest.mock import AsyncMock, MagicMock, patch
 
@@ -531,17 +531,17 @@ class TestFeedManagementAsyncMethods:
     def test_create_feed_is_async(self) -> None:
         """Test that _create_feed is an async method."""
         screen = FeedManagementScreen()
-        assert asyncio.iscoroutinefunction(screen._create_feed)
+        assert inspect.iscoroutinefunction(screen._create_feed)
 
     def test_action_refresh_feed_is_async(self) -> None:
         """Test that action_refresh_feed is an async method."""
         screen = FeedManagementScreen()
-        assert asyncio.iscoroutinefunction(screen.action_refresh_feed)
+        assert inspect.iscoroutinefunction(screen.action_refresh_feed)
 
     def test_do_delete_feed_is_async(self) -> None:
         """Test that _do_delete_feed is an async method."""
         screen = FeedManagementScreen()
-        assert asyncio.iscoroutinefunction(screen._do_delete_feed)
+        assert inspect.iscoroutinefunction(screen._do_delete_feed)
 
 
 class TestFeedManagementCRUDOperations:

@@ -180,8 +180,7 @@ uv run pytest tests --cov=miniflux_tui --cov-report=term-missing
 
 miniflux-tui-py is tested on:
 
-- **Supported versions**: Python 3.11, 3.12, 3.13, 3.14
-- **Preview versions**: Python 3.15 (optional, may fail)
+- **Supported versions**: Python 3.11, 3.12, 3.13, 3.14, 3.15
 - **All platforms**: Linux (Ubuntu), macOS, Windows
 
 Tests run automatically on all combinations in CI/CD. If your changes have version-specific behavior, test locally:

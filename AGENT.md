@@ -7,7 +7,7 @@ This document provides context about the miniflux-tui-py project for coding agen
 **miniflux-tui-py** is a Python Terminal User Interface (TUI) client for [Miniflux](https://miniflux.app) - a self-hosted RSS reader. It provides a keyboard-driven interface to browse, read, and manage RSS feeds directly from the terminal.
 
 - **Language**: Python 3.11+
-- **Supported Python Versions**: 3.11, 3.12, 3.13, 3.14, 3.15 (preview)
+- **Supported Python Versions**: 3.11, 3.12, 3.13, 3.14, 3.15
 - **Framework**: Textual (TUI framework)
 - **Status**: Production/Stable
 - **License**: MIT

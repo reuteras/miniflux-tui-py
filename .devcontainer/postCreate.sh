@@ -39,7 +39,8 @@ fi
 echo "📦 Installing Python dependencies..."
 # Install dev and docs groups, but skip fuzz (requires clang/libFuzzer)
 # and binary (requires heavy PyInstaller) for faster setup
-uv sync --locked --group dev --group docs
+# Base image ships 3.14 (no 3.15 devcontainer image yet); uv fetches 3.15
+uv sync --locked --python 3.15 --group dev --group docs
 
 # Activate virtual environment in shell sessions
 echo "Setting up automatic virtual environment activation..."
