@@ -4,10 +4,17 @@
 from datetime import UTC, datetime
 
 import pytest
+from textual.binding import Binding
+from textual.screen import Screen
 
 from miniflux_tui.api.models import Category, Entry, Feed
 from miniflux_tui.ui.screens.entry_history import EntryHistoryScreen
 from miniflux_tui.ui.screens.entry_list import EntryListScreen
+
+
+def _bindings(screen: Screen) -> list[Binding]:
+    """Return the screen's Binding objects (BINDINGS may also hold plain tuples)."""
+    return [b for b in screen.BINDINGS if isinstance(b, Binding)]
 
 
 @pytest.fixture
@@ -63,39 +70,39 @@ class TestEntryListKeyBindings:
         screen = EntryListScreen(sample_entries)
 
         # Check binding exists (now uses 'w' instead of 'g' since 'g' is for g-prefix mode)
-        binding_keys = [b.key for b in screen.BINDINGS]  # type: ignore[attr-defined]
+        binding_keys = [b.key for b in _bindings(screen)]
         assert "w" in binding_keys
 
         # Check it maps to correct action
-        w_binding = next(b for b in screen.BINDINGS if b.key == "w")  # type: ignore[attr-defined]
-        assert w_binding.action == "toggle_group_feed"  # type: ignore[attr-defined]
-        assert "Group by Feed" in w_binding.description  # type: ignore[attr-defined]
+        w_binding = next(b for b in _bindings(screen) if b.key == "w")
+        assert w_binding.action == "toggle_group_feed"
+        assert "Group by Feed" in w_binding.description
 
     def test_has_group_by_category_binding(self, sample_entries):
         """Test that 'C' (Shift+C) key binding exists for group by category."""
         screen = EntryListScreen(sample_entries)
 
         # Check binding exists (now uses 'C' instead of 'c' since 'g+c' is for g-prefix mode)
-        binding_keys = [b.key for b in screen.BINDINGS]  # type: ignore[attr-defined]
+        binding_keys = [b.key for b in _bindings(screen)]
         assert "C" in binding_keys
 
         # Check it maps to correct action
-        c_binding = next(b for b in screen.BINDINGS if b.key == "C")  # type: ignore[attr-defined]
-        assert c_binding.action == "toggle_group_category"  # type: ignore[attr-defined]
-        assert "Group by Category" in c_binding.description  # type: ignore[attr-defined]
+        c_binding = next(b for b in _bindings(screen) if b.key == "C")
+        assert c_binding.action == "toggle_group_category"
+        assert "Group by Category" in c_binding.description
 
     def test_has_history_binding(self, sample_entries):
         """Test that 'H' (Shift+H) key binding exists for history."""
         screen = EntryListScreen(sample_entries)
 
         # Check binding exists (should be 'H' not 'shift+h')
-        binding_keys = [b.key for b in screen.BINDINGS]  # type: ignore[attr-defined]
+        binding_keys = [b.key for b in _bindings(screen)]
         assert "H" in binding_keys
 
         # Check it maps to correct action
-        h_binding = next(b for b in screen.BINDINGS if b.key == "H")  # type: ignore[attr-defined]
-        assert h_binding.action == "show_history"  # type: ignore[attr-defined]
-        assert "History" in h_binding.description  # type: ignore[attr-defined]
+        h_binding = next(b for b in _bindings(screen) if b.key == "H")
+        assert h_binding.action == "show_history"
+        assert "History" in h_binding.description
 
     def test_group_by_feed_respects_config(self, sample_entries, sample_categories, monkeypatch):
         """Test that enabling group by feed respects the group_collapsed config."""
@@ -244,7 +251,7 @@ class TestHistoryScreen:
         screen = EntryHistoryScreen()
 
         # Should have all the same bindings as EntryListScreen
-        binding_keys = [b.key for b in screen.BINDINGS]  # type: ignore[attr-defined]
+        binding_keys = [b.key for b in _bindings(screen)]
 
         # Check key bindings exist (updated for new g-prefix mode)
         assert "g" in binding_keys  # g-prefix mode (for g+u, g+b, g+h, g+c, g+f, g+s)
@@ -263,8 +270,8 @@ class TestKeyBindingNoConflicts:
         screen = EntryListScreen(sample_entries)
 
         # Get all visible bindings (show != False)
-        visible_bindings = [b for b in screen.BINDINGS if b.show]  # type: ignore[attr-defined]
-        visible_keys = [b.key for b in visible_bindings]  # type: ignore[attr-defined]
+        visible_bindings = [b for b in _bindings(screen) if b.show]
+        visible_keys = [b.key for b in visible_bindings]
 
         # Check for duplicates
         seen = set()
@@ -280,17 +287,17 @@ class TestKeyBindingNoConflicts:
         """Test that 'h' and 'H' (Shift+H) don't conflict."""
         screen = EntryListScreen(sample_entries)
 
-        binding_keys = [b.key for b in screen.BINDINGS]  # type: ignore[attr-defined]
+        binding_keys = [b.key for b in _bindings(screen)]
 
         # Should have 'h' for collapse
         assert "h" in binding_keys
-        h_binding = next(b for b in screen.BINDINGS if b.key == "h")  # type: ignore[attr-defined]
-        assert h_binding.action == "collapse_fold"  # type: ignore[attr-defined]
+        h_binding = next(b for b in _bindings(screen) if b.key == "h")
+        assert h_binding.action == "collapse_fold"
 
         # Should have 'H' for history (NOT 'shift+h')
         assert "H" in binding_keys
-        shift_h_binding = next(b for b in screen.BINDINGS if b.key == "H")  # type: ignore[attr-defined]
-        assert shift_h_binding.action == "show_history"  # type: ignore[attr-defined]
+        shift_h_binding = next(b for b in _bindings(screen) if b.key == "H")
+        assert shift_h_binding.action == "show_history"
 
         # Should NOT have 'shift+h' which would conflict
         assert "shift+h" not in binding_keys

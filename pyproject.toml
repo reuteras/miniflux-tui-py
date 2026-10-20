@@ -90,6 +90,11 @@ managed = true
 [tool.mypy]
 check_untyped_defs = true
 
+[[tool.mypy.overrides]]
+# atheris (fuzz group) ships no type stubs
+module = "atheris"
+ignore_missing_imports = true
+
 [tool.ruff]
 line-length = 140
 target-version = "py311"

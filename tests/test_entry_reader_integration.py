@@ -5,9 +5,16 @@ from datetime import UTC, datetime
 
 import pytest
 from textual.app import App, ComposeResult
+from textual.binding import Binding
+from textual.screen import Screen
 
 from miniflux_tui.api.models import Entry, Feed
 from miniflux_tui.ui.screens.entry_reader import EntryReaderScreen
+
+
+def _bindings(screen: Screen) -> list[Binding]:
+    """Return the screen's Binding objects (BINDINGS may also hold plain tuples)."""
+    return [b for b in screen.BINDINGS if isinstance(b, Binding)]
 
 
 class EntryReaderTestApp(App):
@@ -17,7 +24,6 @@ class EntryReaderTestApp(App):
         super().__init__()
         self.entry = entry
         self.entry_list = entry_list or []
-        self.entry_reader_screen: EntryReaderScreen | None = None
         self.client = None
 
     def compose(self) -> ComposeResult:
@@ -336,7 +342,7 @@ class TestEntryReaderScreenBindings:
         async with app.run_test():
             screen = app.entry_reader_screen
             assert len(screen.BINDINGS) > 0
-            binding_keys = [b.key for b in screen.BINDINGS]  # type: ignore[attr-defined]
+            binding_keys = [b.key for b in _bindings(screen)]
             assert "j" in binding_keys  # Scroll down
             assert "k" in binding_keys  # Scroll up
             assert "J" in binding_keys  # Next entry
@@ -349,7 +355,7 @@ class TestEntryReaderScreenBindings:
 
         async with app.run_test():
             screen = app.entry_reader_screen
-            for binding in screen.BINDINGS:
+            for binding in _bindings(screen):
                 assert binding.description is not None
                 assert len(binding.description) > 0
 

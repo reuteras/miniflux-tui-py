@@ -304,6 +304,7 @@ class TestChangeTrackerTracking:
         )
 
         history = tracker.get_history(1)
+        assert history is not None
         assert history.changes[0].is_added()
 
     def test_track_removed_change(self):
@@ -319,6 +320,7 @@ class TestChangeTrackerTracking:
         )
 
         history = tracker.get_history(1)
+        assert history is not None
         assert history.changes[0].is_removed()
 
     def test_track_multiple_changes(self):
@@ -330,6 +332,7 @@ class TestChangeTrackerTracking:
         tracker.track_change(1, "desc", "Description", None, "Added")
 
         history = tracker.get_history(1)
+        assert history is not None
         assert history.get_change_count() == 3
 
     def test_track_changes_for_multiple_feeds(self):
@@ -343,9 +346,10 @@ class TestChangeTrackerTracking:
         assert tracker.has_changes(1)
         assert tracker.has_changes(2)
         assert tracker.has_changes(3)
-        assert tracker.get_history(1).get_change_count() == 1
-        assert tracker.get_history(2).get_change_count() == 1
-        assert tracker.get_history(3).get_change_count() == 1
+        for feed_id in (1, 2, 3):
+            history = tracker.get_history(feed_id)
+            assert history is not None
+            assert history.get_change_count() == 1
 
 
 class TestChangeTrackerQueries:
@@ -451,6 +455,7 @@ class TestChangeTrackerComplexValues:
         tracker.track_change(1, "tags", "Tags", ["old1", "old2"], ["new1", "new2", "new3"])
 
         diff = tracker.get_field_diff(1, "tags")
+        assert diff is not None
         assert diff["before"] == ["old1", "old2"]
         assert diff["after"] == ["new1", "new2", "new3"]
 
@@ -464,6 +469,7 @@ class TestChangeTrackerComplexValues:
         tracker.track_change(1, "config", "Config", before, after)
 
         diff = tracker.get_field_diff(1, "config")
+        assert diff is not None
         assert diff["before"] == before
         assert diff["after"] == after
 
@@ -474,8 +480,12 @@ class TestChangeTrackerComplexValues:
         tracker.track_change(1, "field", "Field", None, "value")
         tracker.track_change(1, "other", "Other", "value", None)
 
-        assert tracker.get_last_change(1, "field").is_added()
-        assert tracker.get_last_change(1, "other").is_removed()
+        added = tracker.get_last_change(1, "field")
+        removed = tracker.get_last_change(1, "other")
+        assert added is not None
+        assert removed is not None
+        assert added.is_added()
+        assert removed.is_removed()
 
 
 class TestChangeTrackerIntegration:
@@ -492,16 +502,19 @@ class TestChangeTrackerIntegration:
 
         # Verify history
         history = tracker.get_history(1)
+        assert history is not None
         assert history.get_change_count() == 3
 
         # Get summary
         summary = tracker.get_summary(1)
+        assert summary is not None
         assert summary["total_changes"] == 3
         assert summary["modified_count"] == 2
         assert summary["added_count"] == 1
 
         # Get specific diffs
         title_diff = tracker.get_field_diff(1, "title")
+        assert title_diff is not None
         assert title_diff["before"] == "Original"
         assert title_diff["after"] == "Updated"
 
@@ -519,8 +532,11 @@ class TestChangeTrackerIntegration:
 
         # Verify independence
         diff1 = tracker.get_field_diff(1, "title")
+        assert diff1 is not None
         diff2 = tracker.get_field_diff(2, "title")
+        assert diff2 is not None
         diff3 = tracker.get_field_diff(3, "title")
+        assert diff3 is not None
 
         assert diff1["after"] == "Feed1New"
         assert diff2["after"] == "Feed2New"

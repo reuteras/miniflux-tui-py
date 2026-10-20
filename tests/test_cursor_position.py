@@ -1,4 +1,5 @@
 # SPDX-License-Identifier: MIT
+# mypy: disable-error-code="method-assign"
 """Comprehensive cursor position tests for entry list navigation.
 
 Tests verify cursor behavior in:
@@ -26,7 +27,6 @@ class CursorTestApp(App):
         super().__init__(**kwargs)
         self.entries = entries or []
         self.categories = categories or []
-        self.entry_list_screen = None
 
     def compose(self) -> ComposeResult:
         """Compose the app with entry list screen."""
@@ -114,6 +114,7 @@ class TestCursorPositionStandardMode:
             screen = app.entry_list_screen
 
             # Verify cursor is at position 0
+            assert screen.list_view is not None
             assert screen.list_view.index == 0
 
             # Verify first item is the first entry (newest by date)
@@ -129,6 +130,7 @@ class TestCursorPositionStandardMode:
             screen = app.entry_list_screen
 
             # Start at position 0
+            assert screen.list_view is not None
             assert screen.list_view.index == 0
 
             # Press j three times
@@ -159,7 +161,6 @@ class TestCursorPositionGroupByFeed:
             def __init__(self, entries=None, **kwargs):
                 super().__init__(**kwargs)
                 self.entries = entries or []
-                self.entry_list_screen = None
 
             def compose(self) -> ComposeResult:
                 """Compose with grouped mode enabled from start."""
@@ -183,6 +184,7 @@ class TestCursorPositionGroupByFeed:
 
             # CRITICAL: Verify cursor is automatically at position 0
             # This should happen WITHOUT manual intervention
+            assert screen.list_view is not None
             assert screen.list_view.index == 0, (
                 f"Cursor should auto-initialize at position 0 in grouped mode, but got index={screen.list_view.index}"
             )
@@ -231,7 +233,6 @@ class TestCursorPositionGroupByFeed:
             def __init__(self, entries=None, **kwargs):
                 super().__init__(**kwargs)
                 self.entries = entries or []
-                self.entry_list_screen = None
 
             def compose(self) -> ComposeResult:
                 """Compose with collapsed grouped mode from start."""
@@ -254,6 +255,7 @@ class TestCursorPositionGroupByFeed:
             await pilot.pause()
 
             # CRITICAL: Verify cursor is at position 0
+            assert screen.list_view is not None
             assert screen.list_view.index == 0, (
                 f"Cursor should be at position 0 with collapsed groups, but got index={screen.list_view.index}"
             )
@@ -298,6 +300,7 @@ class TestCursorPositionGroupByFeed:
             await pilot.pause()
 
             # Manually set cursor to 0 for this test (simulating fresh group mode)
+            assert screen.list_view is not None
             screen.list_view.index = 0
             await pilot.pause()
 
@@ -325,6 +328,7 @@ class TestCursorPositionGroupByFeed:
             await pilot.pause()
 
             # Manually set cursor to 0
+            assert screen.list_view is not None
             screen.list_view.index = 0
             await pilot.pause()
 
@@ -359,6 +363,7 @@ class TestCursorPositionGroupByFeed:
             await pilot.pause()
 
             # Manually set cursor to 0
+            assert screen.list_view is not None
             screen.list_view.index = 0
             await pilot.pause()
 
@@ -403,6 +408,7 @@ class TestCursorPositionGroupByCategory:
             await pilot.pause()
 
             # Verify cursor is at position 0
+            assert screen.list_view is not None
             assert screen.list_view.index == 0
 
             # First item should be a CategoryHeaderItem
@@ -426,6 +432,7 @@ class TestCursorPositionGroupByCategory:
             await pilot.pause()
 
             # Manually set cursor to 0
+            assert screen.list_view is not None
             screen.list_view.index = 0
             await pilot.pause()
 
@@ -460,6 +467,7 @@ class TestCursorPositionGroupByCategory:
             await pilot.pause()
 
             # Manually set cursor to 0
+            assert screen.list_view is not None
             screen.list_view.index = 0
             await pilot.pause()
 
@@ -494,6 +502,7 @@ class TestCursorPositionEdgeCases:
             screen = app.entry_list_screen
 
             # Get total number of visible items
+            assert screen.list_view is not None
             total_items = len(screen.list_view.children)
 
             # Navigate to the end (press j more times than needed to ensure we reach the end)
@@ -516,6 +525,7 @@ class TestCursorPositionEdgeCases:
                 await pilot.press("j")
 
             # Remember position before opening entry
+            assert screen.list_view is not None
             position_before = screen.list_view.index
             assert position_before == 5
 
@@ -553,6 +563,7 @@ class TestCursorPositionEdgeCases:
             await pilot.pause()
 
             # Remember position before opening entry
+            assert screen.list_view is not None
             position_before = screen.list_view.index
 
             # Try to open entry reader (if cursor is on a header, this won't work)
@@ -620,6 +631,7 @@ class TestLifecycleAndCursorPosition:
             # If this assertion fails, it confirms tests don't match real app!
 
             # Most importantly: verify cursor is at position 0 after full lifecycle
+            assert screen.list_view is not None
             assert screen.list_view.index == 0, f"Cursor should be at position 0 after lifecycle, but got {screen.list_view.index}"
 
             # Verify visual and actual position match
@@ -641,7 +653,6 @@ class TestLifecycleAndCursorPosition:
             def __init__(self, entries=None, **kwargs):
                 super().__init__(**kwargs)
                 self.entries = entries or []
-                self.entry_list_screen = None
                 self.lifecycle_log = []
 
             def compose(self) -> ComposeResult:
@@ -690,6 +701,7 @@ class TestLifecycleAndCursorPosition:
                 print(f"  _populate_list call #{i + 1}: {call}")
 
             # CRITICAL ASSERTION: Cursor must be at position 0 after full lifecycle
+            assert screen.list_view is not None
             assert screen.list_view.index == 0, (
                 f"Cursor should be at position 0 after complete lifecycle in grouped mode, "
                 f"but got {screen.list_view.index}. "
@@ -720,7 +732,6 @@ class TestLifecycleAndCursorPosition:
             def __init__(self, entries=None, **kwargs):
                 super().__init__(**kwargs)
                 self.entries = entries or []
-                self.entry_list_screen = None
 
             def compose(self) -> ComposeResult:
                 self.entry_list_screen = EntryListScreen(

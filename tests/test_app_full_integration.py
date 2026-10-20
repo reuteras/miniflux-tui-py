@@ -1,4 +1,5 @@
 # SPDX-License-Identifier: MIT
+# mypy: disable-error-code="method-assign"
 """Full application integration tests with realistic data scenarios.
 
 These tests start the complete MinifluxTuiApp with realistic data structures
@@ -763,7 +764,7 @@ class TestComplexScenarios:
                 await pilot.pause()
 
                 # Count entries per feed
-                feed_counts = {}
+                feed_counts: dict[int, int] = {}
                 for entry in realistic_entries:
                     if entry.is_unread:
                         feed_id = entry.feed_id

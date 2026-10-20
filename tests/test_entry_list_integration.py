@@ -17,7 +17,6 @@ class EntryListTestApp(App):
     def __init__(self, entries=None):
         super().__init__()
         self.entries = entries or []
-        self.entry_list_screen = None
 
     def compose(self) -> ComposeResult:
         """Compose the app with entry list screen."""

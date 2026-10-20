@@ -247,6 +247,7 @@ class TestGroupedFeedStatistics:
 
         # Verify stats after marking first entry read
         stats = screen._calculate_group_info()
+        assert stats is not None
         assert stats["unread"] == 4, "After marking first entry read, should have 4 unread"
         assert stats["total"] == 5
 
@@ -256,6 +257,7 @@ class TestGroupedFeedStatistics:
 
         # Stats should still show 4 unread for Feed 1 (not 5/5!)
         stats = screen._calculate_group_info()
+        assert stats is not None
         assert stats["unread"] == 4, "After navigating to second Feed 1 entry, stats should show 4 unread, not 5"
         assert stats["total"] == 5
         assert stats["name"] == feed1.title
@@ -264,6 +266,7 @@ class TestGroupedFeedStatistics:
         grouped_entry_list[1].status = "read"
 
         stats = screen._calculate_group_info()
+        assert stats is not None
         assert stats["unread"] == 3, "After marking second entry read, should have 3 unread"
 
         # Step 4: Navigate to Feed 2 entry with J key
@@ -274,6 +277,7 @@ class TestGroupedFeedStatistics:
 
         # Stats should now show Feed 2 stats
         stats = screen._calculate_group_info()
+        assert stats is not None
         assert stats["name"] == feed2.title
         assert stats["total"] == 3, f"Feed 2 should have 3 total entries, got {stats['total']}"
         assert stats["unread"] == 3, f"Feed 2 should have 3 unread, got {stats['unread']}"
@@ -357,4 +361,5 @@ class TestGroupedFeedStatistics:
 
         # Stats should reflect the change
         group_info = screen._calculate_group_info()
+        assert group_info is not None
         assert group_info["unread"] == 4, "Should have 4 unread after marking first entry as read"

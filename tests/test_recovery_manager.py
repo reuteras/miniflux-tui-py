@@ -300,6 +300,7 @@ class TestRecoveryManagerIntegration:
 
             # Recover draft
             field_values = manager.recover_draft(1)
+            assert field_values is not None
             assert field_values["title"] == "Recovered Feed"
 
             # Clear recovery

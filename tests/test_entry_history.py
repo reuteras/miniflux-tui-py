@@ -1,4 +1,5 @@
 # SPDX-License-Identifier: MIT
+# mypy: disable-error-code="method-assign"
 """Tests for the entry history screen."""
 
 from datetime import UTC, datetime
