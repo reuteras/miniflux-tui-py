@@ -21,6 +21,34 @@ if TYPE_CHECKING:
     from miniflux_tui.api.client import MinifluxClient
     from miniflux_tui.api.models import Category, Feed
 
+# Map widget IDs to feed field names
+WIDGET_FIELD_MAPPING: dict[str, str] = {
+    # General Settings
+    "feed-title": "title",
+    "site-url": "site_url",
+    "feed-url": "feed_url",
+    "category-id": "category_id",
+    "feed-description": "description",
+    "hide-globally": "hide_globally",
+    "no-media-player": "no_media_player",
+    "feed-disabled": "disabled",
+    # Network Settings
+    "auth-username": "username",
+    "auth-password": "password",  # gitleaks:allow - field name, not a secret
+    "user-agent": "user_agent",
+    "proxy-url": "proxy_url",
+    "crawler": "crawler",
+    "ignore-http-cache": "ignore_http_cache",
+    "ignore-https-errors": "ignore_https_errors",
+    # Rules & Filtering
+    "scraper-rules": "scraper_rules",
+    "rewrite-rules": "rewrite_rules",
+    "blocklist-rules": "blocklist_rules",
+    "keeplist-rules": "keeplist_rules",
+    # Feed Information
+    "check-interval": "check_interval",
+}
+
 
 class FeedSettingsScreen(Screen):
     """Full-screen scrollable feed settings interface.
@@ -880,6 +908,30 @@ class FeedSettingsScreen(Screen):
             self._delete_confirmed = False
             delete_button.disabled = False
 
+    @staticmethod
+    def _coerce_for_comparison(value: Any, original_value: Any) -> Any:
+        """Convert a widget value to the type of the original value for comparison.
+
+        This prevents false positives from widget initialization (e.g. None vs "").
+
+        Args:
+            value: Current widget value
+            original_value: Original feed value
+
+        Returns:
+            The value converted to match the original value's type
+        """
+        if original_value is None or isinstance(original_value, bool):
+            return value
+        if isinstance(original_value, str):
+            return str(value) if value is not None else ""
+        if isinstance(original_value, int):
+            try:
+                return int(value) if value else None
+            except (ValueError, TypeError):
+                return value
+        return value
+
     def _on_field_changed(self, widget_id: str, new_value: Any) -> None:
         """Mark a field as dirty when its value changes.
 
@@ -891,35 +943,7 @@ class FeedSettingsScreen(Screen):
         if self._initializing:
             return
 
-        # Map widget IDs to feed field names
-        field_mapping = {
-            # General Settings
-            "feed-title": "title",
-            "site-url": "site_url",
-            "feed-url": "feed_url",
-            "category-id": "category_id",
-            "feed-description": "description",
-            "hide-globally": "hide_globally",
-            "no-media-player": "no_media_player",
-            "feed-disabled": "disabled",
-            # Network Settings
-            "auth-username": "username",
-            "auth-password": "password",
-            "user-agent": "user_agent",
-            "proxy-url": "proxy_url",
-            "crawler": "crawler",
-            "ignore-http-cache": "ignore_http_cache",
-            "ignore-https-errors": "ignore_https_errors",
-            # Rules & Filtering
-            "scraper-rules": "scraper_rules",
-            "rewrite-rules": "rewrite_rules",
-            "blocklist-rules": "blocklist_rules",
-            "keeplist-rules": "keeplist_rules",
-            # Feed Information
-            "check-interval": "check_interval",
-        }
-
-        field_name = field_mapping.get(widget_id, widget_id)
+        field_name = WIDGET_FIELD_MAPPING.get(widget_id, widget_id)
 
         # Store original value on first change (if not already stored)
         # This handles cases where _store_original_values() wasn't called yet
@@ -930,27 +954,8 @@ class FeedSettingsScreen(Screen):
         original_value = self.original_values[field_name]
 
         # CRITICAL FIX: Only track if the value has actually changed
-        # Convert new_value to the same type as original_value for comparison
-        # This prevents false positives from widget initialization
-        new_value_cmp: Any
-        if original_value is not None:
-            # Convert new_value to match original_value type for comparison
-            if isinstance(original_value, str):
-                new_value_cmp = str(new_value) if new_value is not None else ""
-            elif isinstance(original_value, bool):
-                new_value_cmp = new_value
-            elif isinstance(original_value, int):
-                try:
-                    new_value_cmp = int(new_value) if new_value else None
-                except (ValueError, TypeError):
-                    new_value_cmp = new_value
-            else:
-                new_value_cmp = new_value
-        else:
-            new_value_cmp = new_value
-
         # If the value hasn't actually changed from the original, skip tracking
-        if new_value_cmp == original_value:
+        if self._coerce_for_comparison(new_value, original_value) == original_value:
             # CRITICAL: Still need to update the indicator because another field might have changed
             # We need to recount all fields to get accurate total
             self._update_unsaved_indicator()
@@ -1201,32 +1206,8 @@ class FeedSettingsScreen(Screen):
         """
         changed_count = 0
 
-        # Map widget IDs to field names (same mapping as _on_field_changed)
-        field_mapping = {
-            "feed-title": "title",
-            "site-url": "site_url",
-            "feed-url": "feed_url",
-            "category-id": "category_id",
-            "feed-description": "description",
-            "hide-globally": "hide_globally",
-            "no-media-player": "no_media_player",
-            "feed-disabled": "disabled",
-            "auth-username": "username",
-            "auth-password": "password",
-            "user-agent": "user_agent",
-            "proxy-url": "proxy_url",
-            "crawler": "crawler",
-            "ignore-http-cache": "ignore_http_cache",
-            "ignore-https-errors": "ignore_https_errors",
-            "scraper-rules": "scraper_rules",
-            "rewrite-rules": "rewrite_rules",
-            "blocklist-rules": "blocklist_rules",
-            "keeplist-rules": "keeplist_rules",
-            "check-interval": "check_interval",
-        }
-
         # Check each field for changes
-        for widget_id, field_name in field_mapping.items():
+        for widget_id, field_name in WIDGET_FIELD_MAPPING.items():
             current_value = self._get_widget_value_for_field(widget_id)
             if current_value is None:
                 # Widget not found, skip
@@ -1234,25 +1215,8 @@ class FeedSettingsScreen(Screen):
 
             original_value = self.original_values.get(field_name)
 
-            # Type-aware comparison (same logic as _on_field_changed)
-            current_cmp: Any
-            if original_value is not None:
-                if isinstance(original_value, str):
-                    current_cmp = str(current_value) if current_value is not None else ""
-                elif isinstance(original_value, bool):
-                    current_cmp = current_value
-                elif isinstance(original_value, int):
-                    try:
-                        current_cmp = int(current_value) if current_value else None
-                    except (ValueError, TypeError):
-                        current_cmp = current_value
-                else:
-                    current_cmp = current_value
-            else:
-                current_cmp = current_value
-
             # If values differ, count this field as changed
-            if current_cmp != original_value:
+            if self._coerce_for_comparison(current_value, original_value) != original_value:
                 changed_count += 1
 
         return changed_count
