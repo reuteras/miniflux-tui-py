@@ -2026,6 +2026,15 @@ class TestSanitizeFeedHtml:
         assert "style=" not in result
         assert "text" in result
 
+    def test_unbalanced_bracket_href_removed(self):
+        """An href urlparse rejects (Invalid IPv6 URL) is dropped, not raised (SANS ISC)."""
+        result = self._sanitize('<p>[<a href="http://] https://www.fortinet.com/blog">3</a>]</p>')
+        assert "href=" not in result
+        assert "3" in result
+
+    def test_unbalanced_bracket_url_is_not_safe_external(self):
+        assert EntryReaderScreen._is_safe_external_url("http://] https://example.com") is False
+
     def test_class_attribute_removed(self):
         result = self._sanitize('<p class="tracking">text</p>')
         assert "class=" not in result

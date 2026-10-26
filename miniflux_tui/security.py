@@ -177,14 +177,19 @@ def hostname_resolves_to_private(url: str) -> bool:
         True if unsafe (private, reserved or unresolvable), False if all
         resolved addresses are public
     """
-    parsed = urlparse(url)
-    hostname = parsed.hostname
+    try:
+        parsed = urlparse(url)
+        hostname = parsed.hostname
+        port = parsed.port
+    except ValueError:
+        # Unbalanced IPv6 brackets or an out-of-range port
+        return True
     if not hostname:
         return True
     if _is_private_ip(hostname):
         return True
     try:
-        infos = socket.getaddrinfo(hostname, parsed.port or (443 if parsed.scheme == "https" else 80), proto=socket.IPPROTO_TCP)
+        infos = socket.getaddrinfo(hostname, port or (443 if parsed.scheme == "https" else 80), proto=socket.IPPROTO_TCP)
     except (socket.gaierror, UnicodeError, OSError):
         return True
     if not infos:
@@ -206,8 +211,11 @@ def validate_feed_url(url: str) -> tuple[bool, str]:
     if error:
         return False, error
 
-    # Parse URL (urlparse doesn't raise exceptions, just returns parsed components)
-    parsed = urlparse(url)
+    # urlparse raises ValueError on e.g. unbalanced IPv6 brackets ("http://]x")
+    try:
+        parsed = urlparse(url)
+    except ValueError:
+        return False, "Invalid URL format"
 
     # Protocol validation
     error = _check_url_scheme(parsed)
