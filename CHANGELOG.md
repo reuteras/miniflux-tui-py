@@ -5,7 +5,45 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [0.8.21] - 2026-09-16
+## [0.8.22] - 2026-10-26
+
+### BUG FIXES
+
+- pin pyscn and reduce _add_category_header_if_needed complexity (#887)
+- handle unparsable URLs (Invalid IPv6 URL) in feed sanitizer and URL validators (#891)
+
+### MAINTENANCE
+
+- bump https://github.com/astral-sh/ruff-pre-commit (#878) 🤖
+- bump the actions-deps group with 6 updates (#877) 🤖
+- bump https://github.com/astral-sh/ruff-pre-commit (#880) 🤖
+- bump the actions-deps group with 5 updates (#879) 🤖
+- bump the actions-deps group with 4 updates (#881) 🤖
+- bump https://github.com/astral-sh/ruff-pre-commit (#882) 🤖
+- bump the actions-deps group with 2 updates (#883) 🤖
+- bump the pre-commit-deps group with 2 updates (#884) 🤖
+- bump the actions-deps group with 8 updates (#885) 🤖
+- bump https://github.com/astral-sh/ruff-pre-commit (#886) 🤖
+- promote Python 3.15 to fully supported
+- make `mypy .` clean across tests and fuzz
+- bump the actions-deps group with 4 updates (#890) 🤖
+- bump https://github.com/astral-sh/ruff-pre-commit (#889) 🤖
+
+### REFACTORING
+
+- reduce complexity flagged by pyscn 1.33.0
+
+
+
+#### Contributors
+
+Thank you to everyone who contributed to this release!
+
+**Humans:** 👤 Peter Reuterås
+
+**AI & Automation:** 🤖 Claude (AI Assistant), dependabot[bot] (Dependencies)
+
+## [v0.8.21] - 2026-09-16
 
 ### CI/CD
 
@@ -20,6 +58,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - bump https://github.com/astral-sh/ruff-pre-commit (#873) 🤖
 - bump the actions-deps group with 2 updates (#874) 🤖
 - bump https://github.com/astral-sh/ruff-pre-commit (#875) 🤖
+- Release v0.8.21 (#876)
 
 
 
