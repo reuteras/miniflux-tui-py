@@ -24,6 +24,12 @@ class TestURLValidation:
         assert is_valid is True
         assert error == ""
 
+    def test_reject_unbalanced_ipv6_brackets(self) -> None:
+        """URLs urlparse cannot parse are rejected instead of raising ValueError."""
+        is_valid, error = validate_feed_url("http://[::1/feed")
+        assert is_valid is False
+        assert error
+
     def test_reject_file_url(self) -> None:
         """Test file:// URLs are rejected."""
         is_valid, error = validate_feed_url("file:///etc/passwd")
@@ -341,6 +347,10 @@ class TestHostnameResolvesToPrivate:
     @staticmethod
     def _addrinfo(*addresses: str) -> list[tuple]:
         return [(0, 0, 0, "", (addr, 80)) for addr in addresses]
+
+    @pytest.mark.parametrize("url", ["http://] https://example.com/", "http://example.com:99999/"])
+    def test_unparsable_url_is_unsafe(self, url: str) -> None:
+        assert security.hostname_resolves_to_private(url) is True
 
     def test_public_resolution_is_safe(self, monkeypatch) -> None:
         monkeypatch.setattr(security.socket, "getaddrinfo", lambda *_a, **_k: self._addrinfo("93.184.216.34"))

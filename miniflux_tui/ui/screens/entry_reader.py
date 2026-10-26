@@ -133,6 +133,18 @@ _FEED_ALLOWED_SCHEMES: frozenset[str] = frozenset({"http", "https", "mailto"})
 _FEED_URL_ATTRS: frozenset[str] = frozenset({"href", "src"})
 
 
+def _is_malformed_url(url: str) -> bool:
+    """Return True for URLs that cannot be real (overlong, spaces in host, unparsable)."""
+    if len(url) > 2048:
+        return True
+    try:
+        netloc = urlparse(url).netloc
+    except ValueError:
+        # e.g. unbalanced "[" / "]" in the netloc ("Invalid IPv6 URL")
+        return True
+    return " " in netloc
+
+
 class EntryReaderScreen(Screen):
     """Screen for reading a single feed entry."""
 
@@ -543,11 +555,10 @@ class EntryReaderScreen(Screen):
                         colon = raw.find(":")
                         if colon != -1 and raw[:colon] not in _FEED_ALLOWED_SCHEMES:
                             del tag.attrs[attr]
-                        elif colon != -1 and (len(raw) > 2048 or " " in urlparse(raw).netloc):
+                        elif colon != -1 and _is_malformed_url(raw):
                             # Reject malformed URLs where article text was accidentally
                             # used as an href value (e.g. SANS ISC feed corruption).
-                            # Spaces in the hostname or extreme length are impossible in
-                            # real URLs; keeping them causes Markdown link-parse breakage.
+                            # Keeping them causes Markdown link-parse breakage.
                             del tag.attrs[attr]
         return strip_control_chars(str(soup))
 
@@ -694,7 +705,11 @@ class EntryReaderScreen(Screen):
         if not url:
             return False
 
-        parsed = urlparse(url.strip())
+        try:
+            parsed = urlparse(url.strip())
+        except ValueError:
+            # e.g. unbalanced "[" / "]" in the netloc ("Invalid IPv6 URL")
+            return False
         if parsed.scheme not in {"http", "https"}:
             return False
         if not parsed.netloc:
