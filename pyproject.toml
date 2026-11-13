@@ -3,7 +3,7 @@ name = "miniflux-tui-py"
 version = "0.8.22"
 description = "A Python TUI client for Miniflux RSS reader with feed sorting capabilities"
 readme = "README.md"
-requires-python = ">=3.11"
+requires-python = ">=3.11.6"
 authors = [{ name = "Peter Reuterås", email = "peter@reuteras.net" }]
 license = { text = "MIT" }
 keywords = ["tui", "terminal", "miniflux", "rss", "feed-reader"]
