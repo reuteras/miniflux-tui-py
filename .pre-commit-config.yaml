@@ -24,7 +24,7 @@ repos:
       - id: destroyed-symlinks
       - id: check-shebang-scripts-are-executable
   - repo: https://github.com/astral-sh/ruff-pre-commit
-    rev: v0.17.4
+    rev: v0.17.5
     hooks:
       - id: ruff
         args: ["--fix"]
@@ -40,6 +40,6 @@ repos:
     hooks:
       - id: markdownlint
   - repo: https://github.com/betterleaks/betterleaks
-    rev: v1.10.0
+    rev: v1.10.1
     hooks:
       - id: betterleaks
