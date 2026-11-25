@@ -106,6 +106,8 @@ jobs:
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1  # v7.0.1
         with:
+          # The release's uv.lock, not main's, when run by hand for an older tag
+          ref: ${{ inputs.tag || github.ref }}
           persist-credentials: false
 
       - name: Download artifacts
@@ -114,6 +116,13 @@ jobs:
         with:
           name: dist-${{ github.run_id }}-${{ github.run_attempt }}
           path: dist/
+
+      - name: Install uv
+        if: github.event_name != 'pull_request'
+        uses: astral-sh/setup-uv@68559e99cc807c1eb7e9238fd43a15bba460eec2 # v10.3.3
+        with:
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          enable-cache: "false"
 
       - name: Create SBOM output directory
         if: github.event_name != 'pull_request'
@@ -133,13 +142,35 @@ jobs:
           tar xf /tmp/syft/syft_*_linux_amd64.tar.gz -C /tmp/syft/
           install -m 0755 /tmp/syft/syft /usr/local/bin/syft
 
-      - name: Generate SBOM for PyPI dist (CycloneDX)
+      # syft can't see the dependencies inside a wheel (`dir:dist/` gave an SBOM with
+      # 0 components), so install the wheel with the locked runtime dependencies into a
+      # clean venv and scan what is installed there.
+      - name: Install the release into a clean venv
         if: github.event_name != 'pull_request'
-        run: syft scan dir:dist/ -o cyclonedx-json=sbom/miniflux-tui-pypi.cdx.json
+        run: |
+          set -euo pipefail
+          uv export --frozen --no-dev --no-emit-project -o /tmp/sbom-requirements.txt
+          uv venv --python 3.11 /tmp/sbom-venv
+          uv pip install --python /tmp/sbom-venv --require-hashes -r /tmp/sbom-requirements.txt
+          uv pip install --python /tmp/sbom-venv --no-deps dist/*.whl
 
-      - name: Generate SBOM for PyPI dist (SPDX)
+      - name: Generate SBOMs (CycloneDX and SPDX)
         if: github.event_name != 'pull_request'
-        run: syft scan dir:dist/ -o spdx-json=sbom/miniflux-tui-pypi.spdx.json
+        env:
+          SYFT_FILE_METADATA_SELECTION: none  # packages only, no per-file entries
+        run: |
+          set -euo pipefail
+          syft scan dir:/tmp/sbom-venv \
+            --source-name miniflux-tui-py --source-version "${RELEASE_TAG#v}" \
+            -o cyclonedx-json=sbom/miniflux-tui-pypi.cdx.json \
+            -o spdx-json=sbom/miniflux-tui-pypi.spdx.json
+          count=$(jq '[.components[]? | select(.purl // "" | startswith("pkg:pypi/"))] | length' \
+            sbom/miniflux-tui-pypi.cdx.json)
+          echo "SBOM lists ${count} PyPI packages"
+          if [ "${count}" -lt 2 ]; then
+            echo "::error::SBOM has ${count} PyPI packages; expected the app and its dependencies"
+            exit 1
+          fi
 
       - name: Upload SBOM artifacts
         if: github.event_name != 'pull_request'
