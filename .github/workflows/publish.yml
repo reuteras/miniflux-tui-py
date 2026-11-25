@@ -135,10 +135,13 @@ jobs:
           SYFT_VERSION: v1.22.0
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
+          set -euo pipefail
           gh release download "${SYFT_VERSION}" \
             -R anchore/syft \
             --pattern "syft_*_linux_amd64.tar.gz" \
+            --pattern "syft_*_checksums.txt" \
             -D /tmp/syft/
+          (cd /tmp/syft && sha256sum --ignore-missing --strict -c syft_*_checksums.txt)
           tar xf /tmp/syft/syft_*_linux_amd64.tar.gz -C /tmp/syft/
           install -m 0755 /tmp/syft/syft /usr/local/bin/syft
 
@@ -192,10 +195,13 @@ jobs:
           COSIGN_VERSION: v2.4.3
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
+          set -euo pipefail
           gh release download "${COSIGN_VERSION}" \
             -R sigstore/cosign \
             --pattern "cosign-linux-amd64" \
+            --pattern "cosign_checksums.txt" \
             -D /tmp/cosign/
+          (cd /tmp/cosign && sha256sum --ignore-missing --strict -c cosign_checksums.txt)
           install -m 0755 /tmp/cosign/cosign-linux-amd64 /usr/local/bin/cosign
 
       - name: Sign release artifacts with cosign

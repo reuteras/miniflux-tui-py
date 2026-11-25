@@ -90,10 +90,13 @@ jobs:
           GIT_CLIFF_VERSION: v2.13.1
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
+          set -euo pipefail
           gh release download "${GIT_CLIFF_VERSION}" \
             -R orhun/git-cliff \
             --pattern "git-cliff-*-x86_64-unknown-linux-gnu.tar.gz" \
+            --pattern "git-cliff-*-x86_64-unknown-linux-gnu.tar.gz.sha512" \
             -D /tmp/gc/
+          (cd /tmp/gc && sha512sum --strict -c git-cliff-*-x86_64-unknown-linux-gnu.tar.gz.sha512)
           tar xf /tmp/gc/git-cliff-*-x86_64-unknown-linux-gnu.tar.gz -C /tmp/gc/
           find /tmp/gc -name "git-cliff" -type f -exec install -m 0755 {} /usr/local/bin/git-cliff \;
 

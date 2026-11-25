@@ -20,5 +20,8 @@ jobs:
           persist-credentials: false
 
       - uses: renovatebot/github-action@acdd6bda8b035c99ce59d5675816af2aa65a1774 # v46.3.14
+        env:
+          # Without a repository Renovate does nothing ("No repositories found")
+          RENOVATE_REPOSITORIES: ${{ github.repository }}
         with:
           token: ${{ secrets.BOT_TOKEN }}
