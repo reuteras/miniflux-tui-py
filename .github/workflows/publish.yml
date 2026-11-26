@@ -206,19 +206,16 @@ jobs:
 
       - name: Sign release artifacts with cosign
         if: github.event_name != 'pull_request'
-        env:
-          COSIGN_EXPERIMENTAL: "1"
         run: |
           set -euo pipefail
 
+          # cosign v3 writes a single Sigstore bundle (signature, certificate
+          # and transparency log entry); verify with `cosign verify-blob --bundle`
           sign_with_cosign() {
             local file="$1"
-            local signature="${file}.sig"
-            local bundle="${file}.sig.bundle"
 
             cosign sign-blob --yes \
-              --bundle "${bundle}" \
-              --output-signature "${signature}" \
+              --bundle "${file}.sig.bundle" \
               "${file}"
             echo "Signed: ${file}"
           }
@@ -237,10 +234,8 @@ jobs:
             fi
           done
 
-      - name: Generate SLSA provenance with cosign
+      - name: Generate SLSA provenance
         if: github.event_name != 'pull_request'
-        env:
-          COSIGN_EXPERIMENTAL: "1"
         run: |
           set -euo pipefail
 
@@ -248,9 +243,6 @@ jobs:
 
           # Create a manifest of all artifacts for provenance
           mkdir -p provenance
-
-          # Generate SLSA v1.0 provenance using cosign
-          cosign generate-key 2>/dev/null || true
 
           echo "Creating provenance records..."
 
@@ -365,7 +357,7 @@ jobs:
 
             while IFS= read -r -d '' file; do
               case "${file}" in
-                *.sig|*.sig.bundle)
+                *.sig.bundle)
                   # Signature bundles may occasionally exist without the primary artifact
                   add_upload_file "${file}"
                   continue
@@ -373,11 +365,7 @@ jobs:
               esac
 
               add_upload_file "${file}"
-
-              for extension in sig sig.bundle; do
-                local signed_file="${file}.${extension}"
-                add_upload_file "${signed_file}"
-              done
+              add_upload_file "${file}.sig.bundle"
             done < <(find "${directory}" -maxdepth 1 -type f -print0)
           }
 
