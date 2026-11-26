@@ -19,9 +19,34 @@ jobs:
         with:
           persist-credentials: false
 
+      # Short-lived installation token from the repo's own GitHub App,
+      # limited to what Renovate needs.
+      - id: app-token
+        uses: actions/create-github-app-token@64ab729a6294000f5aa4a4bc0b73d1f32bc45510 # v3.3.0
+        with:
+          client-id: ${{ vars.RENOVATE_APP_CLIENT_ID }}
+          private-key: ${{ secrets.RENOVATE_APP_PRIVATE_KEY }}
+          permission-contents: write
+          permission-pull-requests: write
+          permission-workflows: write
+          permission-statuses: write
+          permission-issues: write
+          permission-checks: read
+          permission-vulnerability-alerts: read
+
+      # Commit as the app's bot user instead of Mend's default author
+      - id: git-author
+        env:
+          GH_TOKEN: ${{ steps.app-token.outputs.token }}
+          APP_SLUG: ${{ steps.app-token.outputs.app-slug }}
+        run: |
+          user_id=$(gh api "/users/${APP_SLUG}%5Bbot%5D" --jq .id)
+          echo "author=${APP_SLUG}[bot] <${user_id}+${APP_SLUG}[bot]@users.noreply.github.com>" >> "$GITHUB_OUTPUT"
+
       - uses: renovatebot/github-action@acdd6bda8b035c99ce59d5675816af2aa65a1774 # v46.3.14
         env:
           # Without a repository Renovate does nothing ("No repositories found")
           RENOVATE_REPOSITORIES: ${{ github.repository }}
+          RENOVATE_GIT_AUTHOR: ${{ steps.git-author.outputs.author }}
         with:
-          token: ${{ secrets.BOT_TOKEN }}
+          token: ${{ steps.app-token.outputs.token }}
