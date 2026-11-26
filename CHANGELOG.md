@@ -5,7 +5,41 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [0.8.23] - 2026-11-13
+## [0.8.24] - 2026-11-26
+
+### BUG FIXES
+
+- build the SBOMs from an installed venv, not dist/
+
+### CI/CD
+
+- make Renovate run, wait 7 days, verify downloaded binaries
+
+### DEPENDABOT
+
+- check daily instead of weekly (#900)
+
+### MAINTENANCE
+
+- bump the actions-deps group with 4 updates (#898) 🤖
+- bump the pre-commit-deps group with 2 updates (#899) 🤖
+- bump google/osv-scanner-action/.github/workflows/osv-scanner-reusable.yml (#901) 🤖
+- bump the pre-commit-deps group with 2 updates 🤖
+- bump the pre-commit-deps group with 2 updates (#902)
+- bump renovatebot/github-action 🤖
+- bump astral-sh/setup-uv 🤖
+
+
+
+#### Contributors
+
+Thank you to everyone who contributed to this release!
+
+**Humans:** 👤 Peter Reuterås
+
+**AI & Automation:** 🤖 Claude (AI Assistant), dependabot[bot] (Dependencies)
+
+## [v0.8.23] - 2026-11-13
 
 ### MAINTENANCE
 
@@ -13,6 +47,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - bump the actions-deps group with 6 updates (#893) 🤖
 - bump the actions-deps group with 2 updates (#895) 🤖
 - bump https://github.com/astral-sh/ruff-pre-commit (#896) 🤖
+- Release v0.8.23 (#897)
 
 
 
