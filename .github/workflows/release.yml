@@ -87,7 +87,7 @@ jobs:
       - name: Install git-cliff
         env:
           # renovate: datasource=github-releases depName=orhun/git-cliff
-          GIT_CLIFF_VERSION: v2.13.1
+          GIT_CLIFF_VERSION: v2.14.2
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
           set -euo pipefail
