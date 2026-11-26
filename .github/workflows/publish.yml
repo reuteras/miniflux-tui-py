@@ -192,7 +192,7 @@ jobs:
       - name: Install cosign
         env:
           # renovate: datasource=github-releases depName=sigstore/cosign
-          COSIGN_VERSION: v2.4.3
+          COSIGN_VERSION: v2.6.5
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
           set -euo pipefail
