@@ -11,15 +11,11 @@ on:
       - 'assets/**'
       - 'zensical.toml'
       - 'config.toml.example'
+  # No paths-ignore here: "Checks passed" is a required check, and a PR where
+  # it never runs can't be merged.
   pull_request:
     branches:
       - main
-    paths-ignore:
-      - '**/*.md'
-      - 'docs/**'
-      - 'assets/**'
-      - 'zensical.toml'
-      - 'config.toml.example'
 
 permissions:
   contents: read
@@ -335,3 +331,24 @@ jobs:
 
       - name: Run mypy
         run: uv run mypy miniflux_tui
+
+  # The required check (ruleset required-checks) that Dependabot and release
+  # auto-merge wait for; see dev-docs docs/github.md. test-future and
+  # mutation-testing are informational (continue-on-error) and left out.
+  checks-passed:
+    name: Checks passed
+    if: always()
+    needs: [test, mypy]
+    runs-on: ubuntu-latest
+    permissions: {}
+    steps:
+      - name: Check job results
+        env:
+          RESULTS: ${{ join(needs.*.result, ' ') }}
+        run: |
+          for result in $RESULTS; do
+            if [ "$result" != "success" ]; then
+              echo "A job ended with: $result"
+              exit 1
+            fi
+          done
