@@ -5,10 +5,7 @@
 name: Security patch release
 
 "on":
-  # pull_request_target: Dependabot's pull_request token is read-only, so it
-  # could not dispatch the release. This workflow never checks out PR code.
-  pull_request_target:
-    types: [closed]
+  push:
     branches: [main]
 
 permissions: {}
@@ -17,18 +14,27 @@ jobs:
   release:
     name: Dispatch patch release
     runs-on: ubuntu-latest
-    if: >-
-      github.event.pull_request.merged == true &&
-      github.event.pull_request.user.login == 'dependabot[bot]' &&
-      startsWith(github.event.pull_request.head.ref, 'dependabot/uv/security-deps-')
     permissions:
       actions: write # gh workflow run
+      pull-requests: read # find the PR that produced this commit
     steps:
-      - name: Dispatch release workflow (patch bump)
+      - name: Dispatch release workflow if a security PR was merged
         env:
           GH_TOKEN: ${{ github.token }}
           REPO: ${{ github.repository }}
-          PR_URL: ${{ github.event.pull_request.html_url }}
+          SHA: ${{ github.sha }}
         run: |
-          echo "::notice::Security PR merged ($PR_URL); starting patch release"
+          set -euo pipefail
+          # PRs associated with the commit pushed to main (the merge/squash commit)
+          match=$(gh api "repos/${REPO}/commits/${SHA}/pulls" --jq '
+            [.[] | select(
+              .merged_at != null
+              and .user.login == "dependabot[bot]"
+              and (.head.ref | startswith("dependabot/uv/security-deps-"))
+            ) | .html_url] | first // empty')
+          if [ -z "$match" ]; then
+            echo "No merged Dependabot security PR for ${SHA}; nothing to release."
+            exit 0
+          fi
+          echo "::notice::Security PR merged (${match}); starting patch release"
           gh workflow run release.yml --repo "$REPO" --ref main -f bump_type=patch
