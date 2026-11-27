@@ -1,0 +1,34 @@
+---
+# Starts a patch release when a Dependabot security-updates PR for runtime
+# dependencies (group "security-deps" in dependabot.yml) has been merged.
+# The PR itself is reviewed and merged by hand; only the release is automatic.
+name: Security patch release
+
+"on":
+  # pull_request_target: Dependabot's pull_request token is read-only, so it
+  # could not dispatch the release. This workflow never checks out PR code.
+  pull_request_target:
+    types: [closed]
+    branches: [main]
+
+permissions: {}
+
+jobs:
+  release:
+    name: Dispatch patch release
+    runs-on: ubuntu-latest
+    if: >-
+      github.event.pull_request.merged == true &&
+      github.event.pull_request.user.login == 'dependabot[bot]' &&
+      startsWith(github.event.pull_request.head.ref, 'dependabot/uv/security-deps-')
+    permissions:
+      actions: write # gh workflow run
+    steps:
+      - name: Dispatch release workflow (patch bump)
+        env:
+          GH_TOKEN: ${{ github.token }}
+          REPO: ${{ github.repository }}
+          PR_URL: ${{ github.event.pull_request.html_url }}
+        run: |
+          echo "::notice::Security PR merged ($PR_URL); starting patch release"
+          gh workflow run release.yml --repo "$REPO" --ref main -f bump_type=patch
