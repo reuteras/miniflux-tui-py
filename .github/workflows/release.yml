@@ -6,8 +6,8 @@ on:
   workflow_dispatch:
     inputs:
       version:
-        description: 'Version to release (e.g., 0.5.3)'
-        required: true
+        description: 'Version to release (e.g., 0.5.3); leave empty to use bump_type'
+        required: false
         type: string
       bump_type:
         description: 'Version bump type (if version not specified)'

@@ -15,6 +15,13 @@ updates:
         # It's only used for optional fuzzing (not production)
         # CIFuzz workflow has proper build tools configured
     groups:
+      # Security fixes for runtime dependencies. Reviewed and merged by hand;
+      # merging triggers a patch release (security-release.yml).
+      security-deps:
+        applies-to: security-updates
+        dependency-type: "production"
+        patterns:
+          - "*"
       package-dev-deps:
         dependency-type: "development"
         patterns:
